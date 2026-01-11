@@ -1,33 +1,30 @@
 <!DOCTYPE html>
-<html lang="hi">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gyan Bindu Physics Quiz</title>
+    <title>Physics Mastery Quiz - Gyan Bindu Academy</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #1a2a6c;
-            --secondary: #b21f1f;
-            --accent: #fdbb2d;
-            --glass: rgba(255, 255, 255, 0.15);
-            --correct: #2ecc71;
-            --wrong: #e74c3c;
+            --glass: rgba(255, 255, 255, 0.1);
+            --border: rgba(255, 255, 255, 0.2);
+            --correct: #4CAF50;
+            --wrong: #f44336;
         }
 
-        * { box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
 
         body {
-            margin: 0;
             min-height: 100vh;
-            background: linear-gradient(135deg, var(--primary), var(--secondary), var(--accent));
+            background: linear-gradient(45deg, #6a11cb, #2575fc, #ff007f);
             background-size: 400% 400%;
             animation: gradientBG 15s ease infinite;
             display: flex;
             justify-content: center;
             align-items: center;
-            overflow: hidden;
-            color: #fff;
+            color: white;
+            overflow-x: hidden;
         }
 
         @keyframes gradientBG {
@@ -40,293 +37,370 @@
             background: var(--glass);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            border: 1px solid var(--border);
             border-radius: 25px;
-            padding: 30px;
-            width: 95%;
+            padding: 2rem;
+            width: 90%;
             max-width: 600px;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
-            text-align: center;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
             position: relative;
-            z-index: 10;
         }
 
-        h1 { font-size: 1.8rem; margin-bottom: 10px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
-        .hidden { display: none !important; }
+        /* Progress Bar */
+        #progress-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 6px;
+            background: rgba(255,255,255,0.1);
+            z-index: 1000;
+        }
+        #progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(to right, #00f2fe, #4facfe);
+            box-shadow: 0 0 10px #00f2fe;
+            transition: width 0.3s ease;
+        }
 
-        /* Inputs & Progress */
-        .settings-group { margin: 20px 0; text-align: left; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 15px; }
+        /* Typography */
+        h1 { text-align: center; margin-bottom: 1rem; font-weight: 600; }
+        .hindi-sub { display: block; font-size: 0.85rem; color: #ddd; font-weight: 400; margin-top: 4px; }
+        
+        /* Form Elements */
+        .input-group { margin-bottom: 1.5rem; }
+        label { display: block; margin-bottom: 0.5rem; font-size: 0.9rem; }
         input[type="number"] {
-            padding: 8px; border-radius: 8px; border: none; width: 100%; margin-top: 5px;
+            width: 100%;
+            padding: 12px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background: rgba(255,255,255,0.05);
+            color: white;
+            outline: none;
         }
-
-        .progress-bar-container {
-            width: 100%; height: 8px; background: rgba(255,255,255,0.1); border-radius: 10px; margin: 20px 0; overflow: hidden;
-        }
-        #progress-fill { height: 100%; width: 0%; background: var(--accent); transition: width 0.4s ease; }
 
         .btn {
-            background: #fff; color: #333; border: none; padding: 15px; border-radius: 12px;
-            cursor: pointer; font-weight: 600; width: 100%; margin-top: 10px; transition: 0.2s;
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 15px;
+            background: white;
+            color: #2575fc;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, background 0.2s;
+            margin-top: 10px;
         }
-        .btn:active { transform: scale(0.98); }
+        .btn:hover { transform: scale(1.02); background: #f0f0f0; }
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
-        .option-btn {
-            background: rgba(255, 255, 255, 0.1); color: #fff; border: 1px solid rgba(255,255,255,0.3);
-            text-align: left; font-size: 0.95rem; display: block;
-        }
-        .option-btn.correct { background: var(--correct) !important; border-color: var(--correct); font-weight: bold; }
-        .option-btn.wrong { background: var(--wrong) !important; border-color: var(--wrong); }
-
-        #timer { font-weight: 600; font-size: 1.2rem; }
-        .timer-red { color: #ff4d4d; animation: pulse 0.5s infinite; }
+        /* Quiz UI */
+        #quiz-header { display: flex; justify-content: space-between; margin-bottom: 1rem; font-size: 0.9rem; }
+        #timer.pulse { color: #ff4d4d; animation: pulse 1s infinite; font-weight: bold; }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
 
-        /* Overlays */
-        #emoji-overlay {
-            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            font-size: 120px; z-index: 1000; pointer-events: none; display: none;
+        .option-btn {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid var(--border);
+            color: white;
+            text-align: left;
+            margin-bottom: 12px;
+            padding: 12px 20px;
         }
-        .shake { animation: shakeAnim 0.5s cubic-bezier(.36,.07,.19,.97) both; }
-        @keyframes shakeAnim { 10%, 90% { transform: translate(-52%, -50%); } 20%, 80% { transform: translate(-48%, -50%); } }
+        .option-btn.correct { background: var(--correct) !important; border-color: var(--correct); }
+        .option-btn.wrong { background: var(--wrong) !important; border-color: var(--wrong); }
 
-        canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 999; }
+        /* Feedback */
+        #emoji-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 80px;
+            display: none;
+            z-index: 10;
+        }
+        .shake { animation: shake 0.5s; }
+        @keyframes shake {
+            0%, 100% { transform: translate(-50%, -50%) rotate(0deg); }
+            25% { transform: translate(-55%, -50%) rotate(-5deg); }
+            75% { transform: translate(-45%, -50%) rotate(5deg); }
+        }
+
+        /* Result */
+        .hidden { display: none; }
+        .result-score { font-size: 3rem; font-weight: 600; margin: 1rem 0; text-align: center; }
+
+        /* Confetti Canvas */
+        #confetti {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 9999;
+        }
     </style>
 </head>
 <body>
 
-<canvas id="canvas"></canvas>
-<div id="emoji-overlay">😢</div>
+    <div id="progress-container"><div id="progress-bar"></div></div>
+    <canvas id="confetti"></canvas>
 
-<div id="start-screen" class="glass-card">
-    <h1>ज्ञान बिन्दु एकेडमी</h1>
-    <p>Physics: Units & Dimensions (50 Qs)</p>
-    <div class="settings-group">
-        <label>Timer per Question (seconds):</label>
-        <input type="number" id="timer-val" value="15" min="0">
-        <p style="font-size: 0.7rem; color: #eee; margin-top: 5px;">* Set 0 to disable timer.</p>
+    <div class="glass-card">
+        <div id="start-screen">
+            <h1>Physics Quiz <span class="hindi-sub">भौतिकी प्रश्नोत्तरी</span></h1>
+            <div class="input-group">
+                <label>Timer (Seconds per question, 0 to disable):</label>
+                <input type="number" id="timer-input" value="30" min="0">
+            </div>
+            <div class="input-group" style="display:flex; align-items:center; gap:10px;">
+                <input type="checkbox" id="shuffle-input" checked>
+                <label for="shuffle-input">Shuffle Questions (प्रश्नों को मिलाएँ)</label>
+            </div>
+            <button class="btn" onclick="startQuiz()">Start Quiz</button>
+        </div>
+
+        <div id="quiz-screen" class="hidden">
+            <div id="quiz-header">
+                <span id="q-count">Question: 1/50</span>
+                <span id="timer"></span>
+                <span id="score-display">Score: 0</span>
+            </div>
+            <div id="question-box" style="margin-bottom: 20px;">
+                <h3 id="question-text-en"></h3>
+                <p id="question-text-hi" class="hindi-sub"></p>
+            </div>
+            <div id="options-container"></div>
+            <div id="emoji-overlay">😢</div>
+            <button class="btn" style="background: rgba(255,0,0,0.2); color:white; margin-top:20px;" onclick="endQuiz()">Finish & Show Results</button>
+        </div>
+
+        <div id="result-screen" class="hidden">
+            <h2 id="result-msg"></h2>
+            <div class="result-score" id="final-score">0/50</div>
+            <button class="btn" onclick="location.reload()">Restart Quiz</button>
+        </div>
     </div>
-    <div class="settings-group">
-        <label><input type="checkbox" id="shuffle-check" checked> Shuffle Questions</label>
-    </div>
-    <button class="btn" onclick="initQuiz()">Start Quiz</button>
-</div>
 
-<div id="quiz-screen" class="glass-card hidden">
-    <div class="progress-bar-container"><div id="progress-fill"></div></div>
-    <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
-        <span id="q-count">Q 1/50</span>
-        <span id="timer">⏳ 15s</span>
-    </div>
-    <h3 id="question-text">Question content...</h3>
-    <div id="options-box"></div>
-</div>
+    <script>
+        const quizData = [
+            { qEn: "Which of the following is NOT a fundamental quantity?", qHi: "निम्न में कौन आधारी राशि नहीं है?", options: [ {en: "Mass", hi: "द्रव्यमान"}, {en: "Velocity", hi: "वेग"}, {en: "Time", hi: "समय"}, {en: "Electric Current", hi: "विद्युत धारा"} ], correct: 1 },
+            { qEn: "How many fundamental (Basic) units are in SI system?", qHi: "SI मात्रक में कितने आधारी मात्रक हैं?", options: [ {en: "Three", hi: "तीन"}, {en: "Four", hi: "चार"}, {en: "Six", hi: "छह"}, {en: "Seven", hi: "सात"} ], correct: 3 },
+            { qEn: "Measurement is mainly a process of?", qHi: "मापन मुख्य रूप से एक प्रक्रिया है-", options: [ {en: "Calculation", hi: "गणना की"}, {en: "Differentiation", hi: "अंतर स्पष्ट करने की"}, {en: "Comparison", hi: "तुलना करने की"}, {en: "Changing", hi: "बदलने की"} ], correct: 2 },
+            { qEn: "What is required for the complete description of a magnitude?", qHi: "किसी राशि के परिमाण के पूर्ण विवरण के लिए आवश्यक है-", options: [ {en: "Unit", hi: "मात्रक"}, {en: "Numeral", hi: "संख्यांक"}, {en: "Both Unit and Numeral", hi: "मात्रक और संख्यांक दोनों"}, {en: "None of these", hi: "इनमें से कोई नहीं"} ], correct: 2 },
+            { qEn: "Dyne-second is a unit of?", qHi: "डाइन सेकंड मात्रक है-", options: [ {en: "Force", hi: "बल का"}, {en: "Impulse", hi: "आवेग का"}, {en: "Energy", hi: "ऊर्जा का"}, {en: "Power", hi: "शक्ति का"} ], correct: 1 },
+            { qEn: "What is the unit of Surface Tension?", qHi: "पृष्ठ तनाव का मात्रक होता है-", options: [ {en: "Nm^-2", hi: "Nm^-2"}, {en: "Nm^-1", hi: "Nm^-1"}, {en: "Kgm^-1", hi: "Kgm^-1"}, {en: "Kgm^-2", hi: "Kgm^-2"} ], correct: 1 },
+            { qEn: "If density is 8 g/cc in CGS, what is it in SI?", qHi: "CGS पद्धति में घनत्व 8 g/cc है, तो SI पद्धति में होगा-", options: [ {en: "4x10^3 kg/m³", hi: "4x10^3 kg/m³"}, {en: "6x10^8 kg/m³", hi: "6x10^8 kg/m³"}, {en: "8x10^3 kg/m³", hi: "8x10^3 kg/m³"}, {en: "2x10^3 kg/m³", hi: "2x10^3 kg/m³"} ], correct: 2 },
+            { qEn: "1 Newton is equal to?", qHi: "1 न्यूटन बराबर होता है-", options: [ {en: "10^5 Dyne", hi: "10^5 डाइन"}, {en: "10^7 Dyne", hi: "10^7 डाइन"}, {en: "1 Pound", hi: "1 पाउंड"}, {en: "10^3 Dyne", hi: "10^3 डाइन"} ], correct: 0 },
+            { qEn: "1 Joule of Energy is equivalent to?", qHi: "ऊर्जा का SI मात्रक Joule है और यह समतुल्य है-", options: [ {en: "10^6 Erg", hi: "10^6 अर्ग का"}, {en: "10^-7 Erg", hi: "10^-7 अर्ग का"}, {en: "10^7 Erg", hi: "10^7 अर्ग का"}, {en: "10^5 Erg", hi: "10^5 अर्ग का"} ], correct: 2 },
+            { qEn: "SI unit of force Newton is equivalent to?", qHi: "बल का SI मात्रक न्यूटन है यह समतुल्य है-", options: [ {en: "10^4 Dyne", hi: "10^4 डाइन"}, {en: "10^5 Dyne", hi: "10^5 डाइन"}, {en: "10^6 Dyne", hi: "10^6 डाइन"}, {en: "10^7 Dyne", hi: "10^7 डाइन"} ], correct: 1 },
+            { qEn: "Dimensional formula for Angular Velocity?", qHi: "कोणीय वेग का विमीय सूत्र है-", options: [ {en: "[M0 L0 T-1]", hi: "[M0 L0 T-1]"}, {en: "[M0 L0 T-1]", hi: "[M0 L0 T-1]"}, {en: "[M1 L0 T-1]", hi: "[M1 L0 T-1]"}, {en: "[M0 L1 T1]", hi: "[M0 L1 T1]"} ], correct: 0 },
+            { qEn: "Dimensions of Universal Gravitational Constant?", qHi: "गुरुत्वाकर्षण नियतांक की विमा है-", options: [ {en: "[MLT-1]", hi: "[MLT-1]"}, {en: "[M-1 L3 T-2]", hi: "[M-1 L3 T-2]"}, {en: "[M2 LT-2]", hi: "[M2 LT-2]"}, {en: "[ML-1 T-1]", hi: "[ML-1 T-1]"} ], correct: 1 },
+            { qEn: "A physical quantity can be defined as?", qHi: "भौतिक राशि निम्नांकित रूप से परिभाषित की जा सकती है-", options: [ {en: "That which has mass", hi: "वह जिसमें द्रव्यमान हो"}, {en: "That which has weight", hi: "वह जिसमें भार हो"}, {en: "That which can be measured", hi: "वह जो मापी जा सके"}, {en: "That which has dimensions", hi: "वह जिसमें विमा हो"} ], correct: 2 },
+            { qEn: "[ML-1 T-1] is the dimensional formula of?", qHi: "[ML-1 T-1] विमीय सूत्र है-", options: [ {en: "Surface Tension", hi: "पृष्ठ तनाव का"}, {en: "Viscosity Coefficient", hi: "श्यानता गुणांक का"}, {en: "Momentum", hi: "संवेग का"}, {en: "Young's Modulus", hi: "यंग-गुणांक का"} ], correct: 1 },
+            { qEn: "Which pair has the same dimensions?", qHi: "किस भौतिक-राशि युग्म की विमायें समान हैं-", options: [ {en: "Work and Energy", hi: "कार्य और ऊर्जा"}, {en: "Force and Momentum", hi: "बल और संवेग"}, {en: "Force and Power", hi: "बल और शक्ति"}, {en: "Momentum and Energy", hi: "संवेग और ऊर्जा"} ], correct: 0 },
+            { qEn: "Dimensional formula for Thermal Conductivity?", qHi: "ऊष्मा चालकता की विमा है-", options: [ {en: "[MLT-2 K]", hi: "[MLT-2 K]"}, {en: "[MLT-2 K-1]", hi: "[MLT-2 K-1]"}, {en: "[MLT-3 K-1]", hi: "[MLT-3 K-1]"}, {en: "[MLT-3]", hi: "[MLT-3]"} ], correct: 2 },
+            { qEn: "[MLT-1] represents?", qHi: "[MLT-1] निरूपित करता है-", options: [ {en: "Force", hi: "बल"}, {en: "Energy", hi: "ऊर्जा"}, {en: "Pressure", hi: "दाब"}, {en: "Momentum", hi: "संवेग"} ], correct: 3 },
+            { qEn: "Dimensional formula of Planck's Constant h?", qHi: "प्लांक नियतांक h का विमीय सूत्र-", options: [ {en: "[ML2 T-1]", hi: "[ML2 T-1]"}, {en: "[M2 L-1 T-1]", hi: "[M2 L-1 T-1]"}, {en: "[MLT-3]", hi: "[MLT-3]"}, {en: "[ML2 T-2]", hi: "[ML2 T-2]"} ], correct: 0 },
+            { qEn: "Dimensions of sin θ are?", qHi: "sin θ की विमाएँ हैं-", options: [ {en: "L2", hi: "L2"}, {en: "M", hi: "M"}, {en: "ML", hi: "ML"}, {en: "Dimensionless", hi: "नहीं होती है"} ], correct: 3 },
+            { qEn: "Which of the following are fundamental units?", qHi: "निम्नलिखित में कौन मूल मात्रक है-", options: [ {en: "Length, Force, Time", hi: "लंबाई, बल, समय"}, {en: "Length, Mass, Time", hi: "लंबाई, द्रव्यमान, समय"}, {en: "Mass, Volume, Height", hi: "द्रव्यमान, आयतन, ऊँचाई"}, {en: "Mass, Velocity, Pressure", hi: "द्रव्यमान, वेग, दाब"} ], correct: 1 },
+            { qEn: "25 kg m s^-1 represents?", qHi: "25 kg m s^-1 निम्नलिखित को व्यक्त कर सकता है-", options: [ {en: "Angular Momentum", hi: "कोणीय संवेग"}, {en: "Linear Momentum", hi: "रेखीय संवेग"}, {en: "Force", hi: "बल"}, {en: "Pressure", hi: "दाब"} ], correct: 1 },
+            { qEn: "Dimensions of Frequency?", qHi: "आवृत्ति की विमा है-", options: [ {en: "[M-1 L3 T-2]", hi: "[M-1 L3 T-2]"}, {en: "[MLT-1]", hi: "[MLT-1]"}, {en: "[M0 L0 T-1]", hi: "[M0 L0 T-1]"}, {en: "[ML-1 T-1]", hi: "[ML-1 T-1]"} ], correct: 2 },
+            { qEn: "Which combination is suitable for Force?", qHi: "मात्रकों के निम्नलिखित संयोगों में से कौन बल के लिए उपयुक्त है?", options: [ {en: "kg", hi: "किग्रा"}, {en: "m/s^2", hi: "मी/से²"}, {en: "kg m / s^2", hi: "किग्रा मी / से²"}, {en: "kg x m / s^2", hi: "किग्रा x मी / से²"} ], correct: 3 },
+            { qEn: "Which of the following is dimensionless?", qHi: "निम्नलिखित में से कौन-सी अविमीय राशि है?", options: [ {en: "Strain", hi: "विकृति"}, {en: "Viscosity Coeff", hi: "श्यानता गुणांक"}, {en: "Gas Constant", hi: "गैस नियतांक"}, {en: "Planck's Constant", hi: "प्लांक नियतांक"} ], correct: 0 },
+            { qEn: "An Astronomical Unit is related to?", qHi: "एक खगोलीय इकाई सम्बन्धित है-", options: [ {en: "Distance between Sun and Earth", hi: "सूर्य एवं पृथ्वी के बीच की दूरी से"}, {en: "Distance between Moon and Earth", hi: "चन्द्रमा एवं पृथ्वी के बीच की दूरी से"}, {en: "Distance between Sun and Moon", hi: "सूर्य एवं चन्द्रमा के बीच की दूरी से"}, {en: "None of these", hi: "उपर्युक्त में से कोई नहीं"} ], correct: 0 },
+            { qEn: "Which pair does NOT have the same dimensions?", qHi: "किन भौतिक राशियों के समान विमीय सूत्र नहीं है?", options: [ {en: "Force and Pressure", hi: "बल एवं दाब"}, {en: "Work and Energy", hi: "कार्य एवं ऊर्जा"}, {en: "Impulse and Momentum", hi: "आवेग एवं संवेग"}, {en: "Weight and Force", hi: "भार एवं बल"} ], correct: 0 },
+            { qEn: "SI Unit of Young's Modulus is?", qHi: "यंग प्रत्यास्थता गुणांक का SI मात्रक है-", options: [ {en: "dyne/cm", hi: "डाइन/सेमी"}, {en: "N/m", hi: "न्यूटन/मी"}, {en: "N/m^2", hi: "न्यूटन/मी²"}, {en: "m^2/s", hi: "मी²/से"} ], correct: 2 },
+            { qEn: "Parsec is a unit of?", qHi: "पारसेक (Parsec) इकाई है-", options: [ {en: "Distance", hi: "दूरी"}, {en: "Time", hi: "समय की"}, {en: "Brightness", hi: "प्रकाश की चमक की"}, {en: "Magnetic Force", hi: "चुम्बकीय बल की"} ], correct: 0 },
+            { qEn: "Unit of Electric Charge quantity is?", qHi: "विद्युत मात्रा की इकाई है-", options: [ {en: "Ampere", hi: "एम्पियर"}, {en: "Ohm", hi: "ओम"}, {en: "Volt", hi: "वोल्ट"}, {en: "Coulomb", hi: "कुलम्ब"} ], correct: 3 },
+            { qEn: "Candela is the unit of?", qHi: "कैण्डेला मात्रक है-", options: [ {en: "Luminous Flux", hi: "ज्योति फ्लक्स"}, {en: "Luminous Effect", hi: "ज्योति प्रभाव"}, {en: "Luminous Pressure", hi: "ज्योति दाब"}, {en: "Luminous Intensity", hi: "ज्योति तीव्रता"} ], correct: 3 },
+            { qEn: "Unit of Work is?", qHi: "कार्य का मात्रक है-", options: [ {en: "Joule", hi: "जूल"}, {en: "Newton", hi: "न्यूटन"}, {en: "Watt", hi: "वाट"}, {en: "Dyne", hi: "डाइन"} ], correct: 0 },
+            { qEn: "Light Year is a unit of?", qHi: "प्रकाश वर्ष किसकी इकाई है?", options: [ {en: "Distance", hi: "दूरी"}, {en: "Time", hi: "समय"}, {en: "Light", hi: "प्रकाश"}, {en: "Current", hi: "धारा"} ], correct: 0 },
+            { qEn: "Which of the following is NOT a unit of time?", qHi: "निम्नलिखित में से समय का मात्रक नहीं है-", options: [ {en: "Leap Year", hi: "अधि वर्ष"}, {en: "Lunar Month", hi: "चन्द्र माह"}, {en: "Light Year", hi: "प्रकाश वर्ष"}, {en: "None of these", hi: "इनमें से कोई नहीं"} ], correct: 2 },
+            { qEn: "Ampere measures what?", qHi: "एम्पियर क्या मापने की इकाई है?", options: [ {en: "Voltage", hi: "वोल्टेज"}, {en: "Current", hi: "करेंट"}, {en: "Resistance", hi: "प्रतिरोध"}, {en: "Power", hi: "पावर"} ], correct: 1 },
+            { qEn: "Decibel is used to measure?", qHi: "डेलीबल किसे मापने के लिए प्रयोग में लाया जाता है?", options: [ {en: "Hemoglobin", hi: "खून में हीमोग्लोबिन"}, {en: "Sugar in Urine", hi: "पेशाब में शक्कर"}, {en: "Sound in Env", hi: "वातावरण में ध्वनि"}, {en: "Air Particles", hi: "वायु में कण"} ], correct: 2 },
+            { qEn: "What is the SI unit of Force?", qHi: "बल की एस.आई. (SI) यूनिट क्या है?", options: [ {en: "Kelvin", hi: "केल्विन"}, {en: "Newton", hi: "न्यूटन"}, {en: "Pascal", hi: "पैस्कल"}, {en: "Volt", hi: "वोल्ट"} ], correct: 1 },
+            { qEn: "When was the SI system implemented?", qHi: "मात्रकों की अन्तर्राष्ट्रीय पद्धति कब लागू की गई?", options: [ {en: "1969", hi: "1969 ई."}, {en: "1971", hi: "1971 ई."}, {en: "1983", hi: "1983 ई."}, {en: "1991", hi: "1991 ई."} ], correct: 1 },
+            { qEn: "Unit of Lens Power in SI system?", qHi: "SI पद्धति में लेंस की शक्ति की इकाई क्या है?", options: [ {en: "Watt", hi: "वाट"}, {en: "Diopter", hi: "डायोप्टर"}, {en: "Optre", hi: "ऑप्टर"}, {en: "Meter", hi: "मीटर"} ], correct: 1 },
+            { qEn: "Which is NOT correctly matched?", qHi: "निम्नलिखित में से कौन-सा एक सुमेलित नहीं है?", options: [ {en: "Decibel - Sound Intensity", hi: "डेसीबल - ध्वनि की तीव्रता"}, {en: "Horse Power - Power", hi: "अश्व शक्ति - शक्ति"}, {en: "Nautical Mile - Distance", hi: "समुद्री मील - दूरी"}, {en: "Celsius - Heat", hi: "सेल्सियस - ऊष्मा"} ], correct: 3 },
+            { qEn: "Lumen is the unit of?", qHi: "ल्यूमेन किसका मात्रक है?", options: [ {en: "Luminous Intensity", hi: "ज्योति तीव्रता"}, {en: "Luminous Flux", hi: "ज्योति फ्लक्स"}, {en: "Both", hi: "उपर्युक्त दोनों"}, {en: "None", hi: "इनमें से कोई नहीं"} ], correct: 1 },
+            { qEn: "What is the unit of physical quantity 'Jyoti'?", qHi: "भौतिक मात्रा 'ज्योति' की इकाई क्या है?", options: [ {en: "Siemens", hi: "सीमेंस"}, {en: "Tesla", hi: "टेस्ला"}, {en: "Lux", hi: "लक्स"}, {en: "Weber", hi: "वेबर"} ], correct: 2 },
+            { qEn: "Pascal is a unit of?", qHi: "पास्कल इकाई है-", options: [ {en: "Humidity", hi: "आद्रता की"}, {en: "Pressure", hi: "दाब की"}, {en: "Rainfall", hi: "वर्षा की"}, {en: "Temperature", hi: "तापमान की"} ], correct: 1 },
+            { qEn: "Joule is a unit of?", qHi: "जूल निम्नलिखित की इकाई है-", options: [ {en: "Energy", hi: "ऊर्जा"}, {en: "Force", hi: "बल"}, {en: "Pressure", hi: "दाब"}, {en: "Temperature", hi: "तापमान"} ], correct: 0 },
+            { qEn: "Hertz (Hz) measures what?", qHi: "हर्ट्ज (Hz) क्या मापने की यूनिट है?", options: [ {en: "Wavelength", hi: "तरंगदैर्घ्य"}, {en: "Clarity", hi: "तरंगों की स्पष्टता"}, {en: "Intensity", hi: "तरंगों की तीव्रता"}, {en: "Frequency", hi: "तरंगों की आवृत्ति"} ], correct: 3 }
+        ];
 
-<div id="result-screen" class="glass-card hidden">
-    <h1>Quiz Completed!</h1>
-    <div id="final-score" style="font-size: 2.5rem; margin: 20px 0;">0 / 50</div>
-    <p id="feedback-msg"></p>
-    <button class="btn" onclick="location.reload()">Restart Quiz</button>
-</div>
+        let currentQuestions = [];
+        let currentIdx = 0;
+        let score = 0;
+        let timerSeconds = 0;
+        let interval;
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
-<script>
-// Data extracted from your images (50 Questions)
-const masterData = [
-    { q: "निम्न में कौन आधारी राशि (Base Quantity) नहीं है?", a: ["द्रव्यमान", "वेग", "समय", "विद्युत धारा"], c: 1 },
-    { q: "SI मात्रक में कितने आधारी (Base Unit) मात्रक हैं?", a: ["3", "4", "9", "7"], c: 3 },
-    { q: "मापन (Measurement) मुख्य रूप से एक प्रक्रिया है?", a: ["गणना की", "तुलना करने की", "अंतर स्पष्ट करने की", "बदलने की"], c: 1 },
-    { q: "डाइन सेकंड (Dyne-sec) मात्रक है-", a: ["बल का", "आवेग का", "ऊर्जा का", "शक्ति का"], c: 1 },
-    { q: "पृष्ठ तनाव (Surface Tension) का मात्रक होता है-", a: ["Nm⁻²", "Nm⁻¹", "Kgm⁻¹", "Kgm⁻²"], c: 1 },
-    { q: "1 न्यूटन (Newton) बराबर होता है-", a: ["10⁵ डाइन", "10⁷ डाइन", "1 पाउंड", "10³ डाइन"], c: 0 },
-    { q: "ऊर्जा का SI मात्रक Joule है और यह समतुल्य है-", a: ["10⁶ अर्ग", "10⁷ अर्ग", "10⁸ अर्ग", "10⁵ अर्ग"], c: 1 },
-    { q: "कोणीय वेग (Angular Velocity) का विमीय सूत्र है-", a: ["[M⁰L⁰T⁻¹]", "[MLT⁻¹]", "[M¹L⁰T⁻¹]", "[M⁰L¹T¹]"], c: 0 },
-    { q: "गुरुत्वाकर्षण नियतांक (G) की विमा है-", a: ["MLT⁻¹", "M⁻¹L³T⁻²", "M²LT⁻¹", "ML⁻¹T⁻¹"], c: 1 },
-    { q: "[ML⁻¹T⁻¹] विमीय सूत्र है-", a: ["पृष्ठ तनाव", "श्यानता गुणांक", "संवेग", "यंग-गुणांक"], c: 1 },
-    { q: "निम्नलिखित में किस भौतिक राशि युग्म की विमाएं समान हैं?", a: ["कार्य और ऊर्जा", "बल और संवेग", "बल और शक्ति", "संवेग और ऊर्जा"], c: 0 },
-    { q: "उष्मा चालकता (Thermal Conductivity) की विमा है-", a: ["[MLT⁻²K]", "[MLT⁻³K⁻¹]", "[MLT⁻²K⁻¹]", "[MLT⁻³]"], c: 1 },
-    { q: "[MLT⁻¹] निरूपित करता है-", a: ["बल", "ऊर्जा", "दाब", "संवेग"], c: 3 },
-    { q: "प्लांक नियतांक (h) का विमीय सूत्र है-", a: ["[ML²T⁻¹]", "[M²L⁻¹T⁻¹]", "[MLT⁻¹]", "[ML²T⁻²]"], c: 0 },
-    { q: "sinθ की विमाएं हैं-", a: ["L²", "M", "ML", "नहीं होती है"], c: 3 },
-    { q: "25 kg m s⁻¹ निम्नलिखित में किसे व्यक्त कर सकता है?", a: ["कोणीय संवेग", "रेखीय संवेग", "बल", "दाब"], c: 1 },
-    { q: "एक खगोलीय इकाई (Astronomical Unit) सम्बन्धित है-", a: ["सूर्य एवं पृथ्वी के बीच की दूरी", "चन्द्रमा एवं पृथ्वी के बीच की दूरी", "सूर्य एवं चन्द्रमा के बीच की दूरी", "उपर्युक्त में कोई नहीं"], c: 0 },
-    { q: "यंग प्रत्यास्थता गुणांक का SI मात्रक है-", a: ["डाइन/सेमी", "न्यूटन/मी", "न्यूटन/मी²", "मी²/से"], c: 2 },
-    { q: "पारसेक (Parsec) इकाई है-", a: ["दूरी की", "समय की", "प्रकाश की चमक", "चुम्बकीय बल"], c: 0 },
-    { q: "विद्युत मात्रक (Electric Charge) की इकाई है-", a: ["एम्पियर", "ओम", "वोल्ट", "कुलम्ब"], c: 3 },
-    { q: "कैंडेला (Candela) मात्रक है-", a: ["ज्योति फ्लक्स", "ज्योति प्रभाव", "ज्योति दाब", "ज्योति तीव्रता"], c: 3 },
-    { q: "ल्युमेन (Lumen) किसका मात्रक है?", a: ["ज्योति तीव्रता", "ज्योति फ्लक्स", "प्रकाश", "दहन"], c: 1 },
-    { q: "प्रकाश वर्ष किसकी इकाई है?", a: ["दूरी", "समय", "प्रकाश", "धारा"], c: 0 },
-    { q: "एम्पियर क्या मापने की इकाई है?", a: ["वोल्टेज", "करंट", "प्रतिरोध", "पावर"], c: 1 },
-    { q: "डेसिबल (Decibel) किसे मापने के लिए प्रयोग में लाया जाता है?", a: ["खून में हीमोग्लोबिन", "पेशाब में शक्कर", "वातावरण में ध्वनि", "वायु में कण"], c: 2 },
-    { q: "बल की SI यूनिट क्या है?", a: ["केल्विन", "न्यूटन", "पास्कल", "वोल्ट"], c: 1 },
-    { q: "SI पद्धति में लेंस की शक्ति की इकाई क्या है?", a: ["वाट", "डायोप्टर", "ऑप्टर", "मीटर"], c: 1 },
-    { q: "जूल निम्नलिखित की इकाई है-", a: ["ऊर्जा", "बल", "दाब", "तापमान"], c: 0 },
-    { q: "पास्कल इकाई है-", a: ["आर्द्रता की", "दाब की", "वर्षा की", "तापमान की"], c: 1 },
-    { q: "हर्ट्ज़ (Hz) क्या मापने की यूनिट है?", a: ["तरंगदैर्ध्य", "तरंगों की तीव्रता", "तरंगों की स्पष्टता", "तरंगों की आवृत्ति"], c: 3 },
-    { q: "विद्युत धारा की इकाई है-", a: ["एम्पियर", "ओम", "वोल्ट", "कुलम्ब"], c: 0 },
-    { q: "चुम्बकीय फ्लक्स का मात्रक है-", a: ["वेबर", "टेस्ला", "गॉस", "ओर्स्टेड"], c: 0 },
-    { q: "श्यानता की इकाई है-", a: ["प्वाइज़", "पास्कल", "प्वॉइजुली", "इनमें कोई नहीं"], c: 0 },
-    { q: "ध्वनि की तीव्रता मापने की इकाई है-", a: ["कैंडेला", "एम्पियर", "समुद्री मील", "डेसिबल"], c: 3 },
-    { q: "फैराडे किसका मात्रक है?", a: ["धारिता", "प्रेरकत्व", "प्रतिरोध", "चुम्बकीय क्षेत्र"], c: 0 },
-    { q: "त्वरण (Acceleration) का SI मात्रक है-", a: ["m/s", "m/s²", "m.s", "m²s"], c: 1 },
-    { q: "कार्य का मात्रक है-", a: ["जूल", "न्यूटन", "वाट", "डाइन"], c: 0 },
-    { q: "ल्यूमेन किसका मात्रक है-", a: ["ज्योति तीव्रता", "ज्योति फ्लक्स", "उपर्युक्त दोनों", "इनमें कोई नहीं"], c: 1 },
-    { q: "क्यूरी (Curie) किसकी इकाई का नाम है?", a: ["रेडियोएक्टिव धर्मिता", "तापक्रम", "ऊष्मा", "ऊर्जा"], c: 0 },
-    { q: "दाब का मात्रक है-", a: ["पास्कल", "डाइन", "अर्ग", "जूल"], c: 0 },
-    { q: "कैंडेला मात्रक है-", a: ["ज्योति फ्लक्स", "ज्योति प्रभाव", "ज्योति दाब", "ज्योति तीव्रता"], c: 3 },
-    { q: "अदिश राशि (Scalar Quantity) है-", a: ["ऊर्जा", "बल आघूर्ण", "संवेग", "उपर्युक्त सभी"], c: 0 },
-    { q: "निम्नलिखित में सदिश राशि है-", a: ["वेग", "द्रव्यमान", "समय", "लंबाई"], c: 0 },
-    { q: "पदार्थ के संवेग और वेग के अनुपात से कौन सी भौतिक राशि प्राप्त की जाती है?", a: ["वेग", "त्वरण", "द्रव्यमान", "बल"], c: 2 },
-    { q: "शून्य में स्वतंत्र रूप से गिरने वाली वस्तुओं की/का-", a: ["समान गति होती है", "समान वेग होता है", "समान त्वरण होता है", "समान बल होता है"], c: 2 },
-    { q: "चलती हुई बस जब अचानक ब्रेक लगाती है, तो उसमें बैठे यात्री आगे की दिशा में गिरते हैं, इसको किसके द्वारा समझाया जा सकता है?", a: ["सापेक्षता सिद्धांत", "न्यूटन का पहला नियम", "न्यूटन का दूसरा नियम", "न्यूटन का तीसरा नियम"], c: 1 },
-    { q: "रॉकेट (Rocket) किस सिद्धांत पर कार्य करता है?", a: ["ऊर्जा संरक्षण", "बर्नोली प्रमेय", "एवोगेड्रो परिकल्पना", "संवेग संरक्षण"], c: 3 },
-    { q: "अश्व (Horse) यदि एकाएक चलना प्रारम्भ कर दे तो अश्वारोही के गिरने की आशंका का कारण है-", a: ["जड़त्व आघूर्ण", "द्रव्यमान का संरक्षण", "विश्राम जड़त्व", "गति का तीसरा नियम"], c: 2 },
-    { q: "क्रिकेट का खिलाड़ी तेजी से आती हुई बॉल को क्यों अपने हाथ को पीछे खींचकर पकड़ता है?", a: ["बॉल विश्राम की स्थिति में आ सकती है", "बॉल त्वरित स्थिति में रह सकती है", "हो सकता है उसे कम बल लगाने की आवश्यकता हो", "हो सकता है उसे अधिक बल लगाने की आवश्यकता हो"], c: 0 },
-    { q: "1 किग्रा राशि का वजन है-", a: ["1 N", "10 N", "9.8 N", "9 N"], c: 2 }
-];
-
-let quizQuestions = [];
-let currentIdx = 0;
-let score = 0;
-let timerObj;
-let timeLimit = 15;
-let canAnswer = true;
-
-// Sound Engine
-const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-function playTone(freq, type, dur) {
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-    osc.type = type;
-    osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + dur);
-    osc.connect(gain); gain.connect(audioCtx.destination);
-    osc.start(); osc.stop(audioCtx.currentTime + dur);
-}
-
-function initQuiz() {
-    timeLimit = parseInt(document.getElementById('timer-val').value) || 0;
-    const shuffle = document.getElementById('shuffle-check').checked;
-    quizQuestions = shuffle ? [...masterData].sort(() => Math.random() - 0.5) : [...masterData];
-    
-    document.getElementById('start-screen').classList.add('hidden');
-    document.getElementById('quiz-screen').classList.remove('hidden');
-    loadQuestion();
-}
-
-function loadQuestion() {
-    canAnswer = true;
-    const q = quizQuestions[currentIdx];
-    document.getElementById('q-count').innerText = `Q ${currentIdx + 1}/${quizQuestions.length}`;
-    document.getElementById('question-text').innerText = q.q;
-    document.getElementById('progress-fill').style.width = `${(currentIdx / quizQuestions.length) * 100}%`;
-    
-    const box = document.getElementById('options-box');
-    box.innerHTML = '';
-    q.a.forEach((opt, i) => {
-        const b = document.createElement('button');
-        b.className = 'btn option-btn';
-        b.innerText = opt;
-        b.onclick = () => checkAnswer(i, b);
-        box.appendChild(b);
-    });
-
-    if (timeLimit > 0) startTimer();
-    else document.getElementById('timer').innerText = "⏳ Off";
-}
-
-function startTimer() {
-    let timeLeft = timeLimit;
-    const el = document.getElementById('timer');
-    el.classList.remove('timer-red');
-    el.innerText = `⏳ ${timeLeft}s`;
-    
-    clearInterval(timerObj);
-    timerObj = setInterval(() => {
-        timeLeft--;
-        el.innerText = `⏳ ${timeLeft}s`;
-        if (timeLeft <= 5) el.classList.add('timer-red');
-        if (timeLeft <= 0) {
-            clearInterval(timerObj);
-            checkAnswer(-1, null);
+        function playSound(type) {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            
+            if(type === 'correct') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(880, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(440, audioCtx.currentTime + 0.1);
+            } else {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+            }
+            
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.2);
         }
-    }, 1000);
-}
 
-function checkAnswer(idx, btn) {
-    if (!canAnswer) return;
-    canAnswer = false;
-    clearInterval(timerObj);
+        function startQuiz() {
+            const timeVal = parseInt(document.getElementById('timer-input').value);
+            const shuffle = document.getElementById('shuffle-input').checked;
+            
+            timerSeconds = isNaN(timeVal) ? 0 : timeVal;
+            currentQuestions = [...quizData];
+            if(shuffle) currentQuestions.sort(() => Math.random() - 0.5);
+            
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('quiz-screen').classList.remove('hidden');
+            showQuestion();
+        }
 
-    const correct = quizQuestions[currentIdx].c;
-    const btns = document.querySelectorAll('.option-btn');
+        function showQuestion() {
+            if(currentIdx >= currentQuestions.length) return endQuiz();
+            
+            const q = currentQuestions[currentIdx];
+            document.getElementById('q-count').innerText = `Question: ${currentIdx + 1}/${currentQuestions.length}`;
+            document.getElementById('question-text-en').innerText = q.qEn;
+            document.getElementById('question-text-hi').innerText = q.qHi;
+            
+            const container = document.getElementById('options-container');
+            container.innerHTML = '';
+            
+            q.options.forEach((opt, i) => {
+                const btn = document.createElement('button');
+                btn.className = 'btn option-btn';
+                btn.innerHTML = `${opt.en}<br><span class="hindi-sub">${opt.hi}</span>`;
+                btn.onclick = () => handleAnswer(i);
+                container.appendChild(btn);
+            });
 
-    if (idx === correct) {
-        score++;
-        btn.classList.add('correct');
-        playTone(800, 'sine', 0.2);
-        launchConfetti();
-    } else {
-        if (btn) btn.classList.add('wrong');
-        btns[correct].classList.add('correct');
-        playTone(200, 'sawtooth', 0.4);
-        showSadEmoji();
-    }
+            updateProgress();
+            startTimer();
+        }
 
-    setTimeout(() => {
-        currentIdx++;
-        if (currentIdx < quizQuestions.length) loadQuestion();
-        else finalize();
-    }, 1500);
-}
+        function handleAnswer(selectedIdx) {
+            clearInterval(interval);
+            const q = currentQuestions[currentIdx];
+            const btns = document.querySelectorAll('.option-btn');
+            btns.forEach(b => b.disabled = true);
 
-function showSadEmoji() {
-    const ov = document.getElementById('emoji-overlay');
-    ov.style.display = 'block';
-    ov.classList.add('shake');
-    setTimeout(() => { ov.style.display = 'none'; ov.classList.remove('shake'); }, 1000);
-}
+            if(selectedIdx === q.correct) {
+                btns[selectedIdx].classList.add('correct');
+                score++;
+                document.getElementById('score-display').innerText = `Score: ${score}`;
+                playSound('correct');
+                triggerConfetti();
+            } else {
+                if(selectedIdx !== -1) btns[selectedIdx].classList.add('wrong');
+                btns[q.correct].classList.add('correct');
+                playSound('wrong');
+                showSadEmoji();
+            }
 
-function finalize() {
-    document.getElementById('quiz-screen').classList.add('hidden');
-    const rs = document.getElementById('result-screen');
-    rs.classList.remove('hidden');
-    document.getElementById('final-score').innerText = `${score} / ${quizQuestions.length}`;
-    
-    const p = (score / quizQuestions.length) * 100;
-    let m = p > 80 ? "Excellent! You are a master! 🏆" : p > 50 ? "Good Job! Keep it up! 👍" : "Needs Practice! Try again. 📚";
-    document.getElementById('feedback-msg').innerText = m;
-}
+            setTimeout(() => {
+                currentIdx++;
+                showQuestion();
+            }, 1500);
+        }
 
-// Confetti Engine
-const canvas = document.getElementById('canvas');
-const ctx = canvas.getContext('2d');
-let particles = [];
-function launchConfetti() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    for(let i=0; i<60; i++) {
-        particles.push({
-            x: Math.random() * canvas.width,
-            y: -20,
-            s: Math.random() * 8 + 4,
-            c: `hsl(${Math.random() * 360}, 80%, 60%)`,
-            v: Math.random() * 4 + 2
-        });
-    }
-}
-function draw() {
-    ctx.clearRect(0,0,canvas.width, canvas.height);
-    particles.forEach((p, i) => {
-        p.y += p.v;
-        ctx.fillStyle = p.c;
-        ctx.fillRect(p.x, p.y, p.s, p.s);
-        if(p.y > canvas.height) particles.splice(i, 1);
-    });
-    requestAnimationFrame(draw);
-}
-draw();
-window.onresize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
-</script>
+        function startTimer() {
+            clearInterval(interval);
+            const display = document.getElementById('timer');
+            if(timerSeconds <= 0) { display.innerText = ""; return; }
+            
+            let timeLeft = timerSeconds;
+            display.innerText = `⏱ ${timeLeft}s`;
+            display.classList.remove('pulse');
+
+            interval = setInterval(() => {
+                timeLeft--;
+                display.innerText = `⏱ ${timeLeft}s`;
+                if(timeLeft < 5) display.classList.add('pulse');
+                if(timeLeft <= 0) {
+                    clearInterval(interval);
+                    handleAnswer(-1);
+                }
+            }, 1000);
+        }
+
+        function updateProgress() {
+            const prog = ((currentIdx) / currentQuestions.length) * 100;
+            document.getElementById('progress-bar').style.width = prog + "%";
+        }
+
+        function showSadEmoji() {
+            const emoji = document.getElementById('emoji-overlay');
+            emoji.style.display = 'block';
+            emoji.classList.add('shake');
+            setTimeout(() => {
+                emoji.style.display = 'none';
+                emoji.classList.remove('shake');
+            }, 1000);
+        }
+
+        function endQuiz() {
+            clearInterval(interval);
+            document.getElementById('quiz-screen').classList.add('hidden');
+            document.getElementById('result-screen').classList.remove('hidden');
+            document.getElementById('progress-bar').style.width = "100%";
+            
+            const percent = (score / currentQuestions.length) * 100;
+            const msg = document.getElementById('result-msg');
+            const scoreDisp = document.getElementById('final-score');
+            
+            scoreDisp.innerText = `${score}/${currentQuestions.length}`;
+            if(percent >= 80) msg.innerText = "🏆 Outstanding Performance!";
+            else if(percent >= 50) msg.innerText = "👏 Well Done! Keep it up.";
+            else msg.innerText = "📚 Practice makes perfect! Try again.";
+        }
+
+        // Confetti Logic
+        const canvas = document.getElementById('confetti');
+        const ctx = canvas.getContext('2d');
+        let pieces = [];
+        function triggerConfetti() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            for(let i=0; i<50; i++) {
+                pieces.push({
+                    x: Math.random()*canvas.width,
+                    y: Math.random()*canvas.height - canvas.height,
+                    s: Math.random()*10 + 5,
+                    c: `hsl(${Math.random()*360}, 100%, 50%)`,
+                    v: Math.random()*5 + 2
+                });
+            }
+        }
+
+        function updateConfetti() {
+            ctx.clearRect(0,0,canvas.width, canvas.height);
+            pieces.forEach((p, i) => {
+                p.y += p.v;
+                ctx.fillStyle = p.c;
+                ctx.fillRect(p.x, p.y, p.s, p.s);
+                if(p.y > canvas.height) pieces.splice(i, 1);
+            });
+            requestAnimationFrame(updateConfetti);
+        }
+        updateConfetti();
+    </script>
 </body>
 </html>

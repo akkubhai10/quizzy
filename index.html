@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quizzy - Master Your Skills</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+
+    <style>
+        /* --- 1. THEME VARIABLES --- */
+        :root {
+            --primary: #4F46E5;
+            --primary-dark: #4338ca;
+            --primary-light: #EEF2FF;
+            --bg: #F3F4F6;
+            --surface: #FFFFFF;
+            --text: #1F2937;
+            --text-muted: #6B7280;
+            --border: #E5E7EB;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            --radius: 12px;
+            --header-height: 60px;
+        }
+
+        body.dark-mode {
+            --bg: #111827;
+            --surface: #1F2937;
+            --text: #F9FAFB;
+            --text-muted: #9CA3AF;
+            --border: #374151;
+            --primary-light: #374151;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+        }
+
+        /* --- 2. BASE STYLES --- */
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; transition: background 0.3s, color 0.3s; }
+        
+        .hidden { display: none !important; }
+        .flex-center { display: flex; align-items: center; justify-content: center; }
+        
+        /* --- 3. COMPONENTS --- */
+        .btn {
+            display: inline-flex; align-items: center; justify-content: center;
+            padding: 12px 20px; border-radius: var(--radius); border: none;
+            cursor: pointer; font-weight: 500; transition: 0.2s; font-size: 0.95rem; width: 100%;
+        }
+        .btn-primary { background: var(--primary); color: white; box-shadow: 0 4px 10px rgba(79, 70, 229, 0.3); }
+        .btn-primary:active { transform: scale(0.98); }
+        .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+        
+        .input-field {
+            width: 100%; padding: 14px; border: 1px solid var(--border);
+            border-radius: var(--radius); background: var(--surface); color: var(--text);
+            outline: none; margin-bottom: 15px; transition: 0.2s;
+        }
+        .input-field:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-light); }
+
+        /* --- 4. SPLASH SCREEN --- */
+        #splash-screen {
+            position: fixed; inset: 0; background: var(--surface); z-index: 9999;
+            flex-direction: column;
+        }
+        .splash-logo {
+            width: 80px; height: 80px; border-radius: 20px; object-fit: cover;
+            box-shadow: 0 10px 25px rgba(79, 70, 229, 0.4);
+            animation: pulse 2s infinite; margin-bottom: 20px;
+        }
+        @keyframes pulse { 0% {transform: scale(1);} 50% {transform: scale(1.05);} 100% {transform: scale(1);} }
+
+        /* --- 5. AUTH (Login/Signup) --- */
+        #auth-container {
+            min-height: 100vh; display: flex; flex-direction: column; justify-content: center;
+            padding: 20px; max-width: 450px; margin: 0 auto;
+        }
+        .auth-card {
+            background: var(--surface); padding: 30px; border-radius: 24px;
+            box-shadow: var(--shadow); border: 1px solid var(--border);
+        }
+        .auth-logo { width: 50px; height: 50px; border-radius: 12px; margin-bottom: 15px; }
+
+        /* --- 6. MAIN APP HEADER --- */
+        #app-header {
+            position: fixed; top: 0; left: 0; width: 100%; height: var(--header-height);
+            background: var(--surface); display: flex; align-items: center; justify-content: space-between;
+            padding: 0 20px; box-shadow: var(--shadow); z-index: 100;
+            border-bottom: 1px solid var(--border);
+        }
+        .app-brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 1.2rem; color: var(--primary); }
+        .header-logo-img { width: 32px; height: 32px; border-radius: 8px; object-fit: cover; }
+        
+        .hamburger { font-size: 1.5rem; cursor: pointer; color: var(--text); padding: 5px; }
+
+        /* --- 7. MAIN CONTENT --- */
+        #main-content { margin-top: var(--header-height); padding: 20px; padding-bottom: 80px; max-width: 800px; margin-left: auto; margin-right: auto; }
+
+        /* Search */
+        .search-box { position: relative; margin-bottom: 25px; }
+        .search-input {
+            width: 100%; padding: 15px 45px 15px 20px; border-radius: 30px; border: none;
+            background: var(--surface); box-shadow: var(--shadow); color: var(--text);
+        }
+        .search-icon { position: absolute; right: 20px; top: 50%; transform: translateY(-50%); color: var(--text-muted); }
+
+        /* Breadcrumbs */
+        .breadcrumbs { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; color: var(--text-muted); margin-bottom: 15px; }
+        .bc-active { color: var(--primary); font-weight: 600; }
+
+        /* Grid & Cards */
+        .grid-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px; }
+        .card {
+            background: var(--surface); border-radius: 16px; overflow: hidden;
+            box-shadow: var(--shadow); border: 1px solid var(--border);
+            transition: transform 0.2s; cursor: pointer;
+        }
+        .card:active { transform: scale(0.97); }
+        .card-poster { height: 100px; width: 100%; object-fit: cover; background: var(--primary-light); }
+        .card-body { padding: 15px; }
+        .card-title { font-weight: 600; font-size: 1rem; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        
+        /* List Items (Chapters/Quizzes) */
+        .list-item {
+            background: var(--surface); padding: 15px; border-radius: 12px;
+            margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between;
+            box-shadow: var(--shadow); border: 1px solid var(--border); cursor: pointer;
+        }
+        .icon-btn { width: 35px; height: 35px; border-radius: 50%; background: var(--bg); display: grid; place-items: center; color: var(--primary); }
+
+        /* --- 8. SIDEBAR --- */
+        .sidebar-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200; opacity: 0; pointer-events: none; transition: 0.3s; }
+        .sidebar-overlay.active { opacity: 1; pointer-events: auto; }
+        
+        .sidebar {
+            position: fixed; top: 0; right: -280px; width: 280px; height: 100%;
+            background: var(--surface); z-index: 201; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex; flex-direction: column; box-shadow: -5px 0 15px rgba(0,0,0,0.1);
+        }
+        .sidebar.active { right: 0; }
+        
+        .sidebar-header { padding: 25px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 15px; }
+        .user-avatar { width: 50px; height: 50px; background: var(--primary); color: white; border-radius: 50%; display: grid; place-items: center; font-size: 1.2rem; }
+        
+        .menu-items { padding: 15px; overflow-y: auto; flex: 1; }
+        .menu-link {
+            padding: 15px; display: flex; align-items: center; gap: 15px;
+            color: var(--text); border-radius: 10px; cursor: pointer; transition: 0.2s;
+        }
+        .menu-link:hover { background: var(--bg); }
+        .menu-link i { width: 25px; color: var(--text-muted); }
+
+        /* --- 9. MODALS --- */
+        .modal {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 300;
+            display: flex; align-items: center; justify-content: center; padding: 20px;
+            opacity: 0; pointer-events: none; transition: 0.2s; backdrop-filter: blur(5px);
+        }
+        .modal.active { opacity: 1; pointer-events: auto; }
+        .modal-content {
+            background: var(--surface); width: 100%; max-width: 400px;
+            padding: 25px; border-radius: 20px; transform: translateY(20px); transition: 0.3s;
+            max-height: 80vh; overflow-y: auto;
+        }
+        .modal.active .modal-content { transform: translateY(0); }
+
+        /* --- 10. QUIZ OVERLAY (IFRAME) --- */
+        #quiz-overlay {
+            position: fixed; inset: 0; background: white; z-index: 1000;
+            display: flex; flex-direction: column;
+        }
+        .quiz-header-bar {
+            height: 50px; background: #fff; border-bottom: 1px solid #eee;
+            display: flex; align-items: center; justify-content: space-between; padding: 0 15px;
+        }
+        #quiz-frame { flex: 1; border: none; width: 100%; height: 100%; }
+
+    </style>
+</head>
+<body>
+
+    <div id="splash-screen" class="flex-center">
+        <img src="" id="splash-logo-img" class="splash-logo" onerror="this.style.display='none'">
+        <div style="font-size:2rem; font-weight:700; color:var(--primary);">Quizzy</div>
+        <p style="color:var(--text-muted); margin-top:10px;">Master your skills...</p>
+    </div>
+
+    <div id="auth-container" class="hidden">
+        <div class="auth-card">
+            <div class="text-center" style="margin-bottom:20px;">
+                <img src="" id="auth-logo-img" class="auth-logo" onerror="this.src='https://via.placeholder.com/50'">
+                <h2 id="auth-title">Sign In</h2>
+                <p style="color:var(--text-muted); font-size:0.9rem;">Welcome back to Quizzy</p>
+            </div>
+            
+            <form id="auth-form">
+                <div id="name-field" class="hidden">
+                    <input type="text" id="user-name" class="input-field" placeholder="Full Name">
+                </div>
+                <input type="email" id="user-email" class="input-field" placeholder="Email Address" required>
+                <input type="password" id="user-pass" class="input-field" placeholder="Password" required>
+                
+                <button type="submit" class="btn btn-primary" id="auth-btn">Sign In</button>
+            </form>
+
+            <div class="text-center" style="margin-top:20px;">
+                <p style="color:var(--text-muted); font-size:0.9rem; cursor:pointer;" onclick="toggleAuth()">
+                    <span id="auth-toggle-text">Don't have an account? <b>Sign Up</b></span>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <header id="app-header" class="hidden">
+        <div class="app-brand">
+            <img src="" id="header-logo-img" class="header-logo-img" onerror="this.style.display='none'">
+            <span id="app-name-display">Quizzy</span>
+        </div>
+        <i class="fas fa-bars hamburger" onclick="toggleSidebar()"></i>
+    </header>
+
+    <main id="main-content" class="hidden">
+        <div class="search-box">
+            <input type="text" id="search-input" class="search-input" placeholder="Search subjects, chapters...">
+            <i class="fas fa-search search-icon"></i>
+        </div>
+
+        <div id="welcome-section" style="margin-bottom:20px;">
+            <h2 style="font-weight:600;">Hello, <span id="display-user-name" style="color:var(--primary);">User</span> 👋</h2>
+            <p style="color:var(--text-muted); font-size:0.9rem;">What would you like to learn today?</p>
+        </div>
+
+        <div id="breadcrumbs" class="breadcrumbs hidden">
+            <span onclick="renderSubjects()"><i class="fas fa-home"></i> Home</span>
+            <i class="fas fa-chevron-right" style="font-size:0.7rem;"></i>
+            <span id="bc-current" class="bc-active">Physics</span>
+        </div>
+
+        <div id="content-area">
+            <div class="text-center" style="margin-top:50px; color:var(--text-muted);">
+                <i class="fas fa-spinner fa-spin fa-2x"></i>
+            </div>
+        </div>
+    </main>
+
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="user-avatar" id="sidebar-avatar">U</div>
+            <div>
+                <h4 id="sidebar-name">User Name</h4>
+                <p id="sidebar-email" style="font-size:0.8rem; color:var(--text-muted);">email@example.com</p>
+            </div>
+        </div>
+        <div class="menu-items">
+            <div class="menu-link" onclick="toggleDarkMode()">
+                <i class="fas fa-moon"></i> <span>Dark Mode</span>
+            </div>
+            <div class="menu-link" onclick="showHistory()">
+                <i class="fas fa-history"></i> <span>History</span>
+            </div>
+            <div class="menu-link" onclick="shareApp()">
+                <i class="fas fa-share-alt"></i> <span>Share it</span>
+            </div>
+            <div class="menu-link" onclick="openFollowLinks()">
+                <i class="fas fa-hashtag"></i> <span>Follow Me</span>
+            </div>
+            <div class="menu-link" onclick="showPrivacy()">
+                <i class="fas fa-user-shield"></i> <span>Privacy Policy</span>
+            </div>
+            <div class="menu-link" onclick="showHelp()">
+                <i class="fas fa-qrcode"></i> <span>Help</span>
+            </div>
+            <div class="menu-link" onclick="openFeedbackModal()">
+                <i class="fas fa-comment-dots"></i> <span>Feedback</span>
+            </div>
+            
+            <div class="menu-link hidden" id="admin-link-item" onclick="window.location.href='admin.html'">
+                <i class="fas fa-cog" style="color:var(--primary);"></i> <span style="color:var(--primary); font-weight:700;">Admin Panel</span>
+            </div>
+
+            <div class="menu-link" onclick="handleLogout()" style="margin-top:20px; border-top:1px solid var(--border); color:#ef4444;">
+                <i class="fas fa-sign-out-alt" style="color:#ef4444;"></i> <span>Logout</span>
+            </div>
+        </div>
+    </aside>
+
+    <div id="generic-modal" class="modal">
+        <div class="modal-content">
+            <h3 id="modal-title" style="margin-bottom:15px;">Title</h3>
+            <div id="modal-body" style="color:var(--text-muted); font-size:0.95rem; line-height:1.6;">Content</div>
+            <button class="btn btn-primary" style="margin-top:20px;" onclick="closeModal()">Close</button>
+        </div>
+    </div>
+
+    <div id="feedback-modal" class="modal">
+        <div class="modal-content">
+            <h3>Send Feedback</h3>
+            <textarea id="feedback-text" class="input-field" rows="4" style="margin-top:15px; resize:none;" placeholder="Your suggestions..."></textarea>
+            <div style="display:flex; gap:10px;">
+                <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="submitFeedback()">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="quiz-overlay" class="hidden">
+        <div class="quiz-header-bar">
+            <span style="font-weight:600; color:#333;">Playing Quiz</span>
+            <button style="background:#ef4444; color:white; border:none; padding:5px 15px; border-radius:5px; cursor:pointer;" onclick="closeQuiz()">Close</button>
+        </div>
+        <iframe id="quiz-frame" src=""></iframe>
+    </div>
+
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+
+    <script>
+        // --- 1. CONFIGURATION ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyCtRO8vGZ9IgNpjqhQvzY4vrYHeEB6c6ps",
+            authDomain: "quizzy-akash.firebaseapp.com",
+            databaseURL: "https://quizzy-akash-default-rtdb.firebaseio.com",
+            projectId: "quizzy-akash",
+            storageBucket: "quizzy-akash.firebasestorage.app",
+            messagingSenderId: "694150825596",
+            appId: "1:694150825596:web:dd92b011111ef7817debf9"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.database();
+
+        // --- 2. STATE ---
+        let state = {
+            user: null,
+            config: {},
+            subjects: [],
+            activeSubject: null,
+            activeChapter: null,
+            view: 'subjects' // subjects, chapters, quizzes
+        };
+
+        const els = {
+            splash: document.getElementById('splash-screen'),
+            auth: document.getElementById('auth-container'),
+            header: document.getElementById('app-header'),
+            main: document.getElementById('main-content'),
+            content: document.getElementById('content-area'),
+            sidebar: document.getElementById('sidebar'),
+            overlay: document.querySelector('.sidebar-overlay'),
+            breadcrumbs: document.getElementById('breadcrumbs')
+        };
+
+        // --- 3. INITIALIZATION ---
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                state.user = user;
+                initApp();
+            } else {
+                setTimeout(() => {
+                    els.splash.classList.add('hidden');
+                    els.auth.classList.remove('hidden');
+                }, 1500);
+            }
+        });
+
+        function initApp() {
+            // Load Config (Logo, Name, Share Text)
+            db.ref('config').on('value', snap => {
+                const conf = snap.val() || {};
+                state.config = conf;
+                updateUI(conf);
+            });
+
+            // Check Admin
+            db.ref(`admins/${state.user.uid}`).once('value', snap => {
+                if(snap.val() === true) document.getElementById('admin-link-item').classList.remove('hidden');
+            });
+
+            // Set User Details
+            document.getElementById('display-user-name').innerText = state.user.displayName || 'Learner';
+            document.getElementById('sidebar-name').innerText = state.user.displayName || 'Learner';
+            document.getElementById('sidebar-email').innerText = state.user.email;
+            document.getElementById('sidebar-avatar').innerText = (state.user.displayName || 'U')[0].toUpperCase();
+
+            // Check Dark Mode
+            if(localStorage.getItem('quizzy_dark') === 'true') document.body.classList.add('dark-mode');
+
+            // Hide Splash & Auth, Show App
+            els.splash.classList.add('hidden');
+            els.auth.classList.add('hidden');
+            els.header.classList.remove('hidden');
+            els.main.classList.remove('hidden');
+
+            renderSubjects();
+        }
+
+        // Fix 1: Live Logo & UI Updates
+        function updateUI(conf) {
+            if(conf.appName) document.getElementById('app-name-display').innerText = conf.appName;
+            
+            // Explicitly set src for all logo instances
+            const logo = conf.logoUrl || ''; 
+            if(logo) {
+                document.getElementById('splash-logo-img').src = logo;
+                document.getElementById('auth-logo-img').src = logo;
+                document.getElementById('header-logo-img').src = logo;
+                document.getElementById('header-logo-img').style.display = 'block';
+            }
+        }
+
+        // --- 4. NAVIGATION & RENDERING ---
+        function renderSubjects() {
+            state.view = 'subjects';
+            els.breadcrumbs.classList.add('hidden');
+            els.content.innerHTML = '<div class="text-center"><i class="fas fa-spinner fa-spin"></i> Loading...</div>';
+
+            db.ref('subjects').once('value', snap => {
+                state.subjects = [];
+                els.content.innerHTML = '';
+                
+                if(!snap.exists()) {
+                    els.content.innerHTML = '<p class="text-center">No subjects added yet.</p>';
+                    return;
+                }
+
+                els.content.innerHTML = '<div class="grid-container" id="sub-grid"></div>';
+                const grid = document.getElementById('sub-grid');
+
+                snap.forEach(child => {
+                    const sub = { id: child.key, ...child.val() };
+                    state.subjects.push(sub);
+                    
+                    const div = document.createElement('div');
+                    div.className = 'card';
+                    div.onclick = () => openSubject(sub.id);
+                    div.innerHTML = `
+                        ${sub.poster ? `<img src="${sub.poster}" class="card-poster">` : `<div class="card-poster flex-center" style="font-size:2rem; color:var(--primary);"><i class="fas fa-book"></i></div>`}
+                        <div class="card-body">
+                            <div class="card-title">${sub.name}</div>
+                            <div style="font-size:0.8rem; color:var(--text-muted);">${sub.chapters ? Object.keys(sub.chapters).length : 0} Chapters</div>
+                        </div>
+                    `;
+                    grid.appendChild(div);
+                });
+            });
+        }
+
+        function openSubject(id) {
+            const sub = state.subjects.find(s => s.id === id);
+            state.activeSubject = sub;
+            state.view = 'chapters';
+
+            // Breadcrumbs
+            els.breadcrumbs.classList.remove('hidden');
+            document.getElementById('bc-current').innerText = sub.name;
+            document.getElementById('bc-current').onclick = null;
+
+            els.content.innerHTML = '<div id="list-container"></div>';
+            const container = document.getElementById('list-container');
+
+            if(!sub.chapters) {
+                container.innerHTML = '<p class="text-center">No chapters yet.</p>';
+                return;
+            }
+
+            Object.keys(sub.chapters).forEach(key => {
+                const chap = sub.chapters[key];
+                const qCount = chap.quizzes ? Object.keys(chap.quizzes).length : 0;
+                
+                // Keep reference to ID
+                chap.realId = key;
+
+                const div = document.createElement('div');
+                div.className = 'list-item';
+                div.onclick = () => openChapter(key);
+                div.innerHTML = `
+                    <div>
+                        <div style="font-weight:600;">${chap.name}</div>
+                        <div style="font-size:0.8rem; color:var(--text-muted);">${qCount} Quizzes</div>
+                    </div>
+                    <div class="icon-btn"><i class="fas fa-chevron-right"></i></div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function openChapter(chapId) {
+            const sub = state.activeSubject;
+            const chap = sub.chapters[chapId];
+            state.activeChapter = chap;
+            state.view = 'quizzes';
+
+            // Breadcrumbs update
+            document.getElementById('bc-current').innerText = sub.name;
+            document.getElementById('bc-current').onclick = () => openSubject(sub.id);
+            // Append chapter visually in Breadcrumb logic would go here if more complex
+
+            els.content.innerHTML = `<h3>${chap.name}</h3><div id="list-container" style="margin-top:15px;"></div>`;
+            const container = document.getElementById('list-container');
+
+            if(!chap.quizzes) {
+                container.innerHTML += '<p>No quizzes available.</p>';
+                return;
+            }
+
+            Object.keys(chap.quizzes).forEach(key => {
+                const quiz = chap.quizzes[key];
+                // Path Construction
+                const path = `quizzes/${encodeURIComponent(sub.name)}/${encodeURIComponent(chap.name)}/${quiz.fileName}`;
+                
+                const div = document.createElement('div');
+                div.className = 'list-item';
+                div.onclick = () => startQuiz(path, quiz.title);
+                div.innerHTML = `
+                    <div>
+                        <div style="font-weight:600;">${quiz.title}</div>
+                        <div style="font-size:0.8rem; color:var(--text-muted); font-family:monospace;">${quiz.fileName}</div>
+                    </div>
+                    <div class="icon-btn" style="background:var(--primary-light);"><i class="fas fa-play"></i></div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        // --- 5. QUIZ LOGIC & HISTORY FIX ---
+        function startQuiz(url, title) {
+            document.getElementById('quiz-overlay').classList.remove('hidden');
+            document.getElementById('quiz-frame').src = url;
+            
+            // Current Session Data for History
+            state.currentQuizSession = {
+                title: title,
+                subject: state.activeSubject.name,
+                chapter: state.activeChapter.name,
+                url: url
+            };
+        }
+
+        function closeQuiz() {
+            document.getElementById('quiz-overlay').classList.add('hidden');
+            document.getElementById('quiz-frame').src = "";
+        }
+
+        // Fix 3: Listen for Score from Iframe
+        window.addEventListener('message', (e) => {
+            if (e.data.type === 'QUIZ_COMPLETED') {
+                const score = e.data.score; // Percentage
+                // Save to DB
+                if(state.currentQuizSession) {
+                    db.ref(`usersHistory/${state.user.uid}`).push({
+                        ...state.currentQuizSession,
+                        score: score,
+                        timestamp: firebase.database.ServerValue.TIMESTAMP
+                    });
+                    toast(`Quiz Saved! Score: ${score}%`);
+                }
+            }
+        });
+
+        // --- 6. MENU ACTIONS ---
+        function toggleSidebar() {
+            els.sidebar.classList.toggle('active');
+            els.overlay.classList.toggle('active');
+        }
+
+        function showHistory() {
+            toggleSidebar();
+            openModal('My History', 'Loading...');
+            
+            db.ref(`usersHistory/${state.user.uid}`).limitToLast(20).once('value', snap => {
+                if(!snap.exists()) {
+                    document.getElementById('modal-body').innerHTML = 'No history found.';
+                    return;
+                }
+                
+                let html = '<div style="display:flex; flex-direction:column; gap:10px;">';
+                const list = [];
+                snap.forEach(c => list.push(c.val()));
+                list.reverse();
+
+                list.forEach(item => {
+                    const date = new Date(item.timestamp).toLocaleDateString();
+                    // Score display fix
+                    const scoreDisplay = item.score !== undefined 
+                        ? `<span style="font-weight:bold; color:${item.score >= 50 ? 'var(--primary)' : 'red'}">${item.score}%</span>` 
+                        : '<span style="color:gray;">Completed</span>';
+
+                    html += `
+                        <div style="padding:10px; border-bottom:1px solid var(--border);">
+                            <div style="display:flex; justify-content:space-between;">
+                                <strong>${item.title}</strong>
+                                ${scoreDisplay}
+                            </div>
+                            <div style="font-size:0.8rem; color:var(--text-muted);">
+                                ${item.subject} • ${date}
+                            </div>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+                document.getElementById('modal-body').innerHTML = html;
+            });
+        }
+
+        // Fix 2: Follow Me (Object to Array Fix)
+        function openFollowLinks() {
+            toggleSidebar();
+            const linksObj = state.config.socialLinks;
+            
+            if(!linksObj) {
+                toast("No social links added by admin.");
+                return;
+            }
+
+            // Convert Object to Array
+            const links = Object.values(linksObj);
+            
+            let html = '<div class="grid-container" style="grid-template-columns:1fr 1fr;">';
+            links.forEach(l => {
+                html += `
+                    <a href="${l.url}" target="_blank" class="btn btn-outline" style="text-decoration:none; display:flex; gap:10px; justify-content:center;">
+                        ${l.iconUrl ? `<img src="${l.iconUrl}" style="width:20px;">` : '<i class="fas fa-link"></i>'}
+                        ${l.platform}
+                    </a>
+                `;
+            });
+            html += '</div>';
+            
+            openModal('Follow Me', html);
+        }
+
+        // Fix 4: Share It Function (Only Admin Message)
+        function shareApp() {
+            // 1. Sirf Admin panel wala message uthayenge
+            const adminMessage = state.config.shareText || "Join me on Quizzy!";
+            
+            // 2. Mobile Share Logic
+            if (navigator.share) {
+                navigator.share({ 
+                    title: state.config.appName || 'Quizzy', 
+                    text: adminMessage 
+                    // Yahan humne 'url' parameter hata diya hai
+                })
+                .catch((error) => console.log('Error sharing:', error));
+            } 
+            // 3. Desktop/Fallback Logic
+            else {
+                // Clipboard me bhi sirf message copy hoga
+                navigator.clipboard.writeText(adminMessage);
+                toast("Message copied to clipboard!");
+            }
+        }
+
+        function showPrivacy() {
+            toggleSidebar();
+            openModal('Privacy Policy', state.config.privacyPolicy || "Not defined yet.");
+        }
+
+        function showHelp() {
+            toggleSidebar();
+            const qr = state.config.help?.qrImageUrl;
+            const msg = state.config.help?.message || "Scan to contact us.";
+            
+            let html = '<div class="text-center">';
+            if(qr) html += `<img src="${qr}" style="width:200px; height:200px; margin-bottom:15px; border-radius:10px;">`;
+            html += `<p>${msg}</p></div>`;
+            openModal('Help & Support', html);
+        }
+
+        // --- 7. UTILS & AUTH UI ---
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+            localStorage.setItem('quizzy_dark', document.body.classList.contains('dark-mode'));
+        }
+
+        function openModal(title, content) {
+            document.getElementById('generic-modal').classList.add('active');
+            document.getElementById('modal-title').innerHTML = title;
+            document.getElementById('modal-body').innerHTML = content;
+        }
+
+        function closeModal() {
+            document.querySelectorAll('.modal').forEach(m => m.classList.remove('active'));
+        }
+
+        function toast(msg) {
+            Toastify({ text: msg, duration: 3000, gravity: "bottom", position: "center", style: { background: "var(--primary)", borderRadius: "8px" } }).showToast();
+        }
+
+        // Auth Form Toggle
+        let isSignup = false;
+        function toggleAuth() {
+            isSignup = !isSignup;
+            document.getElementById('name-field').classList.toggle('hidden', !isSignup);
+            document.getElementById('auth-title').innerText = isSignup ? 'Create Account' : 'Sign In';
+            document.getElementById('auth-btn').innerText = isSignup ? 'Sign Up' : 'Sign In';
+            document.getElementById('auth-toggle-text').innerHTML = isSignup 
+                ? "Already have an account? <b>Sign In</b>" 
+                : "Don't have an account? <b>Sign Up</b>";
+        }
+
+        document.getElementById('auth-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('user-email').value;
+            const pass = document.getElementById('user-pass').value;
+            const name = document.getElementById('user-name').value;
+            const btn = document.getElementById('auth-btn');
+
+            btn.innerText = 'Processing...';
+            try {
+                if(isSignup) {
+                    const res = await auth.createUserWithEmailAndPassword(email, pass);
+                    await res.user.updateProfile({ displayName: name });
+                    await db.ref(`users/${res.user.uid}`).set({ name, email });
+                } else {
+                    await auth.signInWithEmailAndPassword(email, pass);
+                }
+            } catch(err) {
+                toast(err.message);
+                btn.innerText = isSignup ? 'Sign Up' : 'Sign In';
+            }
+        });
+
+        // Search Filter
+        document.getElementById('search-input').addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase();
+            if(!term) { renderSubjects(); return; }
+
+            // Simple client side filter
+            let html = '<div class="text-center" style="margin-bottom:10px;">Search Results:</div>';
+            state.subjects.forEach(sub => {
+                // Search in Subject Name
+                if(sub.name.toLowerCase().includes(term)) {
+                    html += `<div class="list-item" onclick="openSubject('${sub.id}')"><b>Subject: ${sub.name}</b> <i class="fas fa-arrow-right"></i></div>`;
+                }
+                // Search in Chapters
+                if(sub.chapters) {
+                    Object.keys(sub.chapters).forEach(cid => {
+                        const ch = sub.chapters[cid];
+                        if(ch.name.toLowerCase().includes(term)) {
+                            html += `<div class="list-item" onclick="state.activeSubject=state.subjects.find(s=>s.id=='${sub.id}'); openChapter('${cid}')">
+                                <div><b>${ch.name}</b> <span style="font-size:0.8rem">in ${sub.name}</span></div>
+                                <i class="fas fa-arrow-right"></i>
+                            </div>`;
+                        }
+                    });
+                }
+            });
+            els.content.innerHTML = html;
+            els.breadcrumbs.classList.add('hidden');
+        });
+
+        // Feedback
+        function openFeedbackModal() {
+            toggleSidebar();
+            document.getElementById('feedback-modal').classList.add('active');
+        }
+        function submitFeedback() {
+            const txt = document.getElementById('feedback-text').value;
+            if(txt) {
+                db.ref('feedback').push({
+                    email: state.user.email,
+                    message: txt,
+                    status: 'unread',
+                    timestamp: firebase.database.ServerValue.TIMESTAMP
+                }).then(() => {
+                    closeModal();
+                    document.getElementById('feedback-text').value = '';
+                    toast('Feedback Sent!');
+                });
+            }
+        }
+    </script>
+</body>
+</html>

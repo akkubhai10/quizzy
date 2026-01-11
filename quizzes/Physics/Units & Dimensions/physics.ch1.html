@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gyan Bindu Physics Quiz</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #1a2a6c;
+            --secondary: #b21f1f;
+            --accent: #fdbb2d;
+            --glass: rgba(255, 255, 255, 0.15);
+            --correct: #2ecc71;
+            --wrong: #e74c3c;
+        }
+
+        * { box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: linear-gradient(135deg, var(--primary), var(--secondary), var(--accent));
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            color: #fff;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .glass-card {
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 25px;
+            padding: 30px;
+            width: 95%;
+            max-width: 600px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+            text-align: center;
+            position: relative;
+            z-index: 10;
+        }
+
+        h1 { font-size: 1.8rem; margin-bottom: 10px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
+        .hidden { display: none !important; }
+
+        /* Inputs & Progress */
+        .settings-group { margin: 20px 0; text-align: left; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 15px; }
+        input[type="number"] {
+            padding: 8px; border-radius: 8px; border: none; width: 100%; margin-top: 5px;
+        }
+
+        .progress-bar-container {
+            width: 100%; height: 8px; background: rgba(255,255,255,0.1); border-radius: 10px; margin: 20px 0; overflow: hidden;
+        }
+        #progress-fill { height: 100%; width: 0%; background: var(--accent); transition: width 0.4s ease; }
+
+        .btn {
+            background: #fff; color: #333; border: none; padding: 15px; border-radius: 12px;
+            cursor: pointer; font-weight: 600; width: 100%; margin-top: 10px; transition: 0.2s;
+        }
+        .btn:active { transform: scale(0.98); }
+
+        .option-btn {
+            background: rgba(255, 255, 255, 0.1); color: #fff; border: 1px solid rgba(255,255,255,0.3);
+            text-align: left; font-size: 0.95rem; display: block;
+        }
+        .option-btn.correct { background: var(--correct) !important; border-color: var(--correct); font-weight: bold; }
+        .option-btn.wrong { background: var(--wrong) !important; border-color: var(--wrong); }
+
+        #timer { font-weight: 600; font-size: 1.2rem; }
+        .timer-red { color: #ff4d4d; animation: pulse 0.5s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+
+        /* Overlays */
+        #emoji-overlay {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 120px; z-index: 1000; pointer-events: none; display: none;
+        }
+        .shake { animation: shakeAnim 0.5s cubic-bezier(.36,.07,.19,.97) both; }
+        @keyframes shakeAnim { 10%, 90% { transform: translate(-52%, -50%); } 20%, 80% { transform: translate(-48%, -50%); } }
+
+        canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 999; }
+    </style>
+</head>
+<body>
+
+<canvas id="canvas"></canvas>
+<div id="emoji-overlay">😢</div>
+
+<div id="start-screen" class="glass-card">
+    <h1>ज्ञान बिन्दु एकेडमी</h1>
+    <p>Physics: Units & Dimensions (50 Qs)</p>
+    <div class="settings-group">
+        <label>Timer per Question (seconds):</label>
+        <input type="number" id="timer-val" value="15" min="0">
+        <p style="font-size: 0.7rem; color: #eee; margin-top: 5px;">* Set 0 to disable timer.</p>
+    </div>
+    <div class="settings-group">
+        <label><input type="checkbox" id="shuffle-check" checked> Shuffle Questions</label>
+    </div>
+    <button class="btn" onclick="initQuiz()">Start Quiz</button>
+</div>
+
+<div id="quiz-screen" class="glass-card hidden">
+    <div class="progress-bar-container"><div id="progress-fill"></div></div>
+    <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
+        <span id="q-count">Q 1/50</span>
+        <span id="timer">⏳ 15s</span>
+    </div>
+    <h3 id="question-text">Question content...</h3>
+    <div id="options-box"></div>
+</div>
+
+<div id="result-screen" class="glass-card hidden">
+    <h1>Quiz Completed!</h1>
+    <div id="final-score" style="font-size: 2.5rem; margin: 20px 0;">0 / 50</div>
+    <p id="feedback-msg"></p>
+    <button class="btn" onclick="location.reload()">Restart Quiz</button>
+</div>
+
+<script>
+// Data extracted from your images (50 Questions)
+const masterData = [
+    { q: "निम्न में कौन आधारी राशि (Base Quantity) नहीं है?", a: ["द्रव्यमान", "वेग", "समय", "विद्युत धारा"], c: 1 },
+    { q: "SI मात्रक में कितने आधारी (Base Unit) मात्रक हैं?", a: ["3", "4", "9", "7"], c: 3 },
+    { q: "मापन (Measurement) मुख्य रूप से एक प्रक्रिया है?", a: ["गणना की", "तुलना करने की", "अंतर स्पष्ट करने की", "बदलने की"], c: 1 },
+    { q: "डाइन सेकंड (Dyne-sec) मात्रक है-", a: ["बल का", "आवेग का", "ऊर्जा का", "शक्ति का"], c: 1 },
+    { q: "पृष्ठ तनाव (Surface Tension) का मात्रक होता है-", a: ["Nm⁻²", "Nm⁻¹", "Kgm⁻¹", "Kgm⁻²"], c: 1 },
+    { q: "1 न्यूटन (Newton) बराबर होता है-", a: ["10⁵ डाइन", "10⁷ डाइन", "1 पाउंड", "10³ डाइन"], c: 0 },
+    { q: "ऊर्जा का SI मात्रक Joule है और यह समतुल्य है-", a: ["10⁶ अर्ग", "10⁷ अर्ग", "10⁸ अर्ग", "10⁵ अर्ग"], c: 1 },
+    { q: "कोणीय वेग (Angular Velocity) का विमीय सूत्र है-", a: ["[M⁰L⁰T⁻¹]", "[MLT⁻¹]", "[M¹L⁰T⁻¹]", "[M⁰L¹T¹]"], c: 0 },
+    { q: "गुरुत्वाकर्षण नियतांक (G) की विमा है-", a: ["MLT⁻¹", "M⁻¹L³T⁻²", "M²LT⁻¹", "ML⁻¹T⁻¹"], c: 1 },
+    { q: "[ML⁻¹T⁻¹] विमीय सूत्र है-", a: ["पृष्ठ तनाव", "श्यानता गुणांक", "संवेग", "यंग-गुणांक"], c: 1 },
+    { q: "निम्नलिखित में किस भौतिक राशि युग्म की विमाएं समान हैं?", a: ["कार्य और ऊर्जा", "बल और संवेग", "बल और शक्ति", "संवेग और ऊर्जा"], c: 0 },
+    { q: "उष्मा चालकता (Thermal Conductivity) की विमा है-", a: ["[MLT⁻²K]", "[MLT⁻³K⁻¹]", "[MLT⁻²K⁻¹]", "[MLT⁻³]"], c: 1 },
+    { q: "[MLT⁻¹] निरूपित करता है-", a: ["बल", "ऊर्जा", "दाब", "संवेग"], c: 3 },
+    { q: "प्लांक नियतांक (h) का विमीय सूत्र है-", a: ["[ML²T⁻¹]", "[M²L⁻¹T⁻¹]", "[MLT⁻¹]", "[ML²T⁻²]"], c: 0 },
+    { q: "sinθ की विमाएं हैं-", a: ["L²", "M", "ML", "नहीं होती है"], c: 3 },
+    { q: "25 kg m s⁻¹ निम्नलिखित में किसे व्यक्त कर सकता है?", a: ["कोणीय संवेग", "रेखीय संवेग", "बल", "दाब"], c: 1 },
+    { q: "एक खगोलीय इकाई (Astronomical Unit) सम्बन्धित है-", a: ["सूर्य एवं पृथ्वी के बीच की दूरी", "चन्द्रमा एवं पृथ्वी के बीच की दूरी", "सूर्य एवं चन्द्रमा के बीच की दूरी", "उपर्युक्त में कोई नहीं"], c: 0 },
+    { q: "यंग प्रत्यास्थता गुणांक का SI मात्रक है-", a: ["डाइन/सेमी", "न्यूटन/मी", "न्यूटन/मी²", "मी²/से"], c: 2 },
+    { q: "पारसेक (Parsec) इकाई है-", a: ["दूरी की", "समय की", "प्रकाश की चमक", "चुम्बकीय बल"], c: 0 },
+    { q: "विद्युत मात्रक (Electric Charge) की इकाई है-", a: ["एम्पियर", "ओम", "वोल्ट", "कुलम्ब"], c: 3 },
+    { q: "कैंडेला (Candela) मात्रक है-", a: ["ज्योति फ्लक्स", "ज्योति प्रभाव", "ज्योति दाब", "ज्योति तीव्रता"], c: 3 },
+    { q: "ल्युमेन (Lumen) किसका मात्रक है?", a: ["ज्योति तीव्रता", "ज्योति फ्लक्स", "प्रकाश", "दहन"], c: 1 },
+    { q: "प्रकाश वर्ष किसकी इकाई है?", a: ["दूरी", "समय", "प्रकाश", "धारा"], c: 0 },
+    { q: "एम्पियर क्या मापने की इकाई है?", a: ["वोल्टेज", "करंट", "प्रतिरोध", "पावर"], c: 1 },
+    { q: "डेसिबल (Decibel) किसे मापने के लिए प्रयोग में लाया जाता है?", a: ["खून में हीमोग्लोबिन", "पेशाब में शक्कर", "वातावरण में ध्वनि", "वायु में कण"], c: 2 },
+    { q: "बल की SI यूनिट क्या है?", a: ["केल्विन", "न्यूटन", "पास्कल", "वोल्ट"], c: 1 },
+    { q: "SI पद्धति में लेंस की शक्ति की इकाई क्या है?", a: ["वाट", "डायोप्टर", "ऑप्टर", "मीटर"], c: 1 },
+    { q: "जूल निम्नलिखित की इकाई है-", a: ["ऊर्जा", "बल", "दाब", "तापमान"], c: 0 },
+    { q: "पास्कल इकाई है-", a: ["आर्द्रता की", "दाब की", "वर्षा की", "तापमान की"], c: 1 },
+    { q: "हर्ट्ज़ (Hz) क्या मापने की यूनिट है?", a: ["तरंगदैर्ध्य", "तरंगों की तीव्रता", "तरंगों की स्पष्टता", "तरंगों की आवृत्ति"], c: 3 },
+    { q: "विद्युत धारा की इकाई है-", a: ["एम्पियर", "ओम", "वोल्ट", "कुलम्ब"], c: 0 },
+    { q: "चुम्बकीय फ्लक्स का मात्रक है-", a: ["वेबर", "टेस्ला", "गॉस", "ओर्स्टेड"], c: 0 },
+    { q: "श्यानता की इकाई है-", a: ["प्वाइज़", "पास्कल", "प्वॉइजुली", "इनमें कोई नहीं"], c: 0 },
+    { q: "ध्वनि की तीव्रता मापने की इकाई है-", a: ["कैंडेला", "एम्पियर", "समुद्री मील", "डेसिबल"], c: 3 },
+    { q: "फैराडे किसका मात्रक है?", a: ["धारिता", "प्रेरकत्व", "प्रतिरोध", "चुम्बकीय क्षेत्र"], c: 0 },
+    { q: "त्वरण (Acceleration) का SI मात्रक है-", a: ["m/s", "m/s²", "m.s", "m²s"], c: 1 },
+    { q: "कार्य का मात्रक है-", a: ["जूल", "न्यूटन", "वाट", "डाइन"], c: 0 },
+    { q: "ल्यूमेन किसका मात्रक है-", a: ["ज्योति तीव्रता", "ज्योति फ्लक्स", "उपर्युक्त दोनों", "इनमें कोई नहीं"], c: 1 },
+    { q: "क्यूरी (Curie) किसकी इकाई का नाम है?", a: ["रेडियोएक्टिव धर्मिता", "तापक्रम", "ऊष्मा", "ऊर्जा"], c: 0 },
+    { q: "दाब का मात्रक है-", a: ["पास्कल", "डाइन", "अर्ग", "जूल"], c: 0 },
+    { q: "कैंडेला मात्रक है-", a: ["ज्योति फ्लक्स", "ज्योति प्रभाव", "ज्योति दाब", "ज्योति तीव्रता"], c: 3 },
+    { q: "अदिश राशि (Scalar Quantity) है-", a: ["ऊर्जा", "बल आघूर्ण", "संवेग", "उपर्युक्त सभी"], c: 0 },
+    { q: "निम्नलिखित में सदिश राशि है-", a: ["वेग", "द्रव्यमान", "समय", "लंबाई"], c: 0 },
+    { q: "पदार्थ के संवेग और वेग के अनुपात से कौन सी भौतिक राशि प्राप्त की जाती है?", a: ["वेग", "त्वरण", "द्रव्यमान", "बल"], c: 2 },
+    { q: "शून्य में स्वतंत्र रूप से गिरने वाली वस्तुओं की/का-", a: ["समान गति होती है", "समान वेग होता है", "समान त्वरण होता है", "समान बल होता है"], c: 2 },
+    { q: "चलती हुई बस जब अचानक ब्रेक लगाती है, तो उसमें बैठे यात्री आगे की दिशा में गिरते हैं, इसको किसके द्वारा समझाया जा सकता है?", a: ["सापेक्षता सिद्धांत", "न्यूटन का पहला नियम", "न्यूटन का दूसरा नियम", "न्यूटन का तीसरा नियम"], c: 1 },
+    { q: "रॉकेट (Rocket) किस सिद्धांत पर कार्य करता है?", a: ["ऊर्जा संरक्षण", "बर्नोली प्रमेय", "एवोगेड्रो परिकल्पना", "संवेग संरक्षण"], c: 3 },
+    { q: "अश्व (Horse) यदि एकाएक चलना प्रारम्भ कर दे तो अश्वारोही के गिरने की आशंका का कारण है-", a: ["जड़त्व आघूर्ण", "द्रव्यमान का संरक्षण", "विश्राम जड़त्व", "गति का तीसरा नियम"], c: 2 },
+    { q: "क्रिकेट का खिलाड़ी तेजी से आती हुई बॉल को क्यों अपने हाथ को पीछे खींचकर पकड़ता है?", a: ["बॉल विश्राम की स्थिति में आ सकती है", "बॉल त्वरित स्थिति में रह सकती है", "हो सकता है उसे कम बल लगाने की आवश्यकता हो", "हो सकता है उसे अधिक बल लगाने की आवश्यकता हो"], c: 0 },
+    { q: "1 किग्रा राशि का वजन है-", a: ["1 N", "10 N", "9.8 N", "9 N"], c: 2 }
+];
+
+let quizQuestions = [];
+let currentIdx = 0;
+let score = 0;
+let timerObj;
+let timeLimit = 15;
+let canAnswer = true;
+
+// Sound Engine
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+function playTone(freq, type, dur) {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + dur);
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    osc.start(); osc.stop(audioCtx.currentTime + dur);
+}
+
+function initQuiz() {
+    timeLimit = parseInt(document.getElementById('timer-val').value) || 0;
+    const shuffle = document.getElementById('shuffle-check').checked;
+    quizQuestions = shuffle ? [...masterData].sort(() => Math.random() - 0.5) : [...masterData];
+    
+    document.getElementById('start-screen').classList.add('hidden');
+    document.getElementById('quiz-screen').classList.remove('hidden');
+    loadQuestion();
+}
+
+function loadQuestion() {
+    canAnswer = true;
+    const q = quizQuestions[currentIdx];
+    document.getElementById('q-count').innerText = `Q ${currentIdx + 1}/${quizQuestions.length}`;
+    document.getElementById('question-text').innerText = q.q;
+    document.getElementById('progress-fill').style.width = `${(currentIdx / quizQuestions.length) * 100}%`;
+    
+    const box = document.getElementById('options-box');
+    box.innerHTML = '';
+    q.a.forEach((opt, i) => {
+        const b = document.createElement('button');
+        b.className = 'btn option-btn';
+        b.innerText = opt;
+        b.onclick = () => checkAnswer(i, b);
+        box.appendChild(b);
+    });
+
+    if (timeLimit > 0) startTimer();
+    else document.getElementById('timer').innerText = "⏳ Off";
+}
+
+function startTimer() {
+    let timeLeft = timeLimit;
+    const el = document.getElementById('timer');
+    el.classList.remove('timer-red');
+    el.innerText = `⏳ ${timeLeft}s`;
+    
+    clearInterval(timerObj);
+    timerObj = setInterval(() => {
+        timeLeft--;
+        el.innerText = `⏳ ${timeLeft}s`;
+        if (timeLeft <= 5) el.classList.add('timer-red');
+        if (timeLeft <= 0) {
+            clearInterval(timerObj);
+            checkAnswer(-1, null);
+        }
+    }, 1000);
+}
+
+function checkAnswer(idx, btn) {
+    if (!canAnswer) return;
+    canAnswer = false;
+    clearInterval(timerObj);
+
+    const correct = quizQuestions[currentIdx].c;
+    const btns = document.querySelectorAll('.option-btn');
+
+    if (idx === correct) {
+        score++;
+        btn.classList.add('correct');
+        playTone(800, 'sine', 0.2);
+        launchConfetti();
+    } else {
+        if (btn) btn.classList.add('wrong');
+        btns[correct].classList.add('correct');
+        playTone(200, 'sawtooth', 0.4);
+        showSadEmoji();
+    }
+
+    setTimeout(() => {
+        currentIdx++;
+        if (currentIdx < quizQuestions.length) loadQuestion();
+        else finalize();
+    }, 1500);
+}
+
+function showSadEmoji() {
+    const ov = document.getElementById('emoji-overlay');
+    ov.style.display = 'block';
+    ov.classList.add('shake');
+    setTimeout(() => { ov.style.display = 'none'; ov.classList.remove('shake'); }, 1000);
+}
+
+function finalize() {
+    document.getElementById('quiz-screen').classList.add('hidden');
+    const rs = document.getElementById('result-screen');
+    rs.classList.remove('hidden');
+    document.getElementById('final-score').innerText = `${score} / ${quizQuestions.length}`;
+    
+    const p = (score / quizQuestions.length) * 100;
+    let m = p > 80 ? "Excellent! You are a master! 🏆" : p > 50 ? "Good Job! Keep it up! 👍" : "Needs Practice! Try again. 📚";
+    document.getElementById('feedback-msg').innerText = m;
+}
+
+// Confetti Engine
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+let particles = [];
+function launchConfetti() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    for(let i=0; i<60; i++) {
+        particles.push({
+            x: Math.random() * canvas.width,
+            y: -20,
+            s: Math.random() * 8 + 4,
+            c: `hsl(${Math.random() * 360}, 80%, 60%)`,
+            v: Math.random() * 4 + 2
+        });
+    }
+}
+function draw() {
+    ctx.clearRect(0,0,canvas.width, canvas.height);
+    particles.forEach((p, i) => {
+        p.y += p.v;
+        ctx.fillStyle = p.c;
+        ctx.fillRect(p.x, p.y, p.s, p.s);
+        if(p.y > canvas.height) particles.splice(i, 1);
+    });
+    requestAnimationFrame(draw);
+}
+draw();
+window.onresize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
+</script>
+</body>
+</html>

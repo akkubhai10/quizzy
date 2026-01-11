@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cytology Master Quiz | कोशिका विज्ञान</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --text-main: #ffffff;
+            --text-hindi: #e0e0e0;
+            --accent: #ff007f;
+            --correct: #00e676;
+            --wrong: #ff1744;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #ff007f 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow-x: hidden;
+            color: var(--text-main);
+        }
+
+        /* Glassmorphism Card */
+        .app-container {
+            width: 100%;
+            max-width: 650px;
+            min-height: 600px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 25px;
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            padding: 2rem;
+            position: relative;
+            overflow: hidden;
+            transition: height 0.3s ease;
+        }
+
+        /* Screens */
+        .screen {
+            display: none;
+            flex-direction: column;
+            height: 100%;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        /* Start Screen */
+        .start-content {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            margin-top: auto;
+            margin-bottom: auto;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            margin-bottom: 2rem;
+        }
+
+        .controls {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            border-radius: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+        }
+
+        input[type="number"] {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            padding: 8px;
+            border-radius: 8px;
+            color: white;
+            font-family: 'Poppins';
+            width: 80px;
+            text-align: center;
+        }
+
+        /* Toggle Switch */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(255,255,255,0.3);
+            transition: .4s;
+            border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider { background-color: var(--correct); }
+        input:checked + .slider:before { transform: translateX(26px); }
+
+        .btn-primary {
+            background: white;
+            color: #764ba2;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 20px;
+        }
+
+        .btn-primary:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.4);
+        }
+
+        /* Quiz UI */
+        .quiz-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .progress-container {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%;
+            height: 5px;
+            background: rgba(0,0,0,0.1);
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: var(--correct);
+            width: 0%;
+            transition: width 0.3s ease;
+            box-shadow: 0 0 10px var(--correct);
+        }
+
+        .timer {
+            font-size: 1.2rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .timer.pulse-red {
+            color: var(--wrong);
+            animation: pulse 1s infinite;
+        }
+
+        .question-box {
+            background: rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            min-height: 120px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .q-eng { font-size: 1.1rem; margin-bottom: 8px; font-weight: 600; }
+        .q-hin { font-size: 0.95rem; color: var(--text-hindi); font-weight: 400; }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .option-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 12px;
+            color: white;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        .option-btn.correct { background: var(--correct) !important; border-color: var(--correct); color: #000; }
+        .option-btn.wrong { background: var(--wrong) !important; border-color: var(--wrong); }
+
+        .opt-eng { font-size: 0.9rem; font-weight: 600; margin-bottom: 4px; }
+        .opt-hin { font-size: 0.8rem; opacity: 0.8; }
+
+        .btn-finish {
+            margin-top: auto;
+            background: rgba(0,0,0,0.3);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.2);
+            padding: 10px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .btn-finish:hover { background: rgba(0,0,0,0.5); }
+
+        /* Animations & Feedback */
+        .emoji-feedback {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 5rem;
+            pointer-events: none;
+            z-index: 100;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .shake { animation: shake 0.5s; }
+
+        @keyframes shake {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            25% { transform: translate(-55%, -50%) rotate(-5deg); }
+            50% { transform: translate(-45%, -50%) rotate(5deg); }
+            75% { transform: translate(-55%, -50%) rotate(-5deg); }
+            100% { transform: translate(-50%, -50%) rotate(0deg); }
+        }
+
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Confetti (CSS Particles) */
+        .confetti-piece {
+            position: absolute;
+            width: 10px; height: 10px;
+            background: #ffd300;
+            top: -10px;
+            z-index: 9999;
+            animation: fall linear forwards;
+        }
+
+        @keyframes fall {
+            to { transform: translateY(800px) rotate(720deg); }
+        }
+
+        /* Result Screen */
+        .result-content {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            height: 100%;
+            gap: 20px;
+        }
+        
+        .score-big { font-size: 4rem; font-weight: 700; color: white; }
+        .score-msg { font-size: 1.5rem; margin-bottom: 20px; }
+
+        /* Mobile Adjustments */
+        @media (max-width: 600px) {
+            .app-container { border-radius: 0; height: 100vh; border: none; }
+            .options-grid { grid-template-columns: 1fr; }
+            h1 { font-size: 2rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <div class="progress-container">
+        <div class="progress-bar" id="progressBar"></div>
+    </div>
+
+    <div id="start-screen" class="screen active">
+        <div class="start-content">
+            <div>
+                <h1>Cytology Quiz</h1>
+                <div class="subtitle">कोशिका विज्ञान प्रश्नोत्तरी</div>
+            </div>
+
+            <div class="controls">
+                <label>
+                    <span>⏱ Timer (Sec/Q)</span>
+                    <input type="number" id="timerInput" placeholder="0 = Off" min="0">
+                </label>
+                <label>
+                    <span>🔀 Shuffle Questions</span>
+                    <label class="switch">
+                        <input type="checkbox" id="shuffleToggle">
+                        <span class="slider"></span>
+                    </label>
+                </label>
+            </div>
+
+            <button class="btn-primary" onclick="startQuiz()">Start Quiz ▶</button>
+        </div>
+    </div>
+
+    <div id="quiz-screen" class="screen">
+        <div class="quiz-header">
+            <span id="questionCounter">Q: 01/50</span>
+            <span id="timerDisplay" class="timer">⏳ --</span>
+            <span id="scoreDisplay">Score: 0</span>
+        </div>
+
+        <div class="question-box">
+            <div class="q-eng" id="qTextEng">Question text English</div>
+            <div class="q-hin" id="qTextHin">Question text Hindi</div>
+        </div>
+
+        <div class="options-grid" id="optionsContainer">
+            </div>
+
+        <button class="btn-finish" onclick="earlyExit()">🏁 Finish & Show Results</button>
+        
+        <div id="sadEmoji" class="emoji-feedback">😢</div>
+    </div>
+
+    <div id="result-screen" class="screen">
+        <div class="result-content">
+            <h2>Quiz Completed!</h2>
+            <div class="score-big" id="finalScore">0%</div>
+            <p class="score-msg" id="finalMsg">Message</p>
+            <p id="statsText" style="opacity: 0.8">Correct: 0 | Wrong: 0 | Skipped: 0</p>
+            <button class="btn-primary" onclick="location.reload()">🔄 Restart Quiz</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    /* --- DATA SOURCE (Questions 1-50 from Images) --- */
+    const rawQuestions = [
+        { e: "Which of the following statement is correct?", h: "निम्नलिखित कथनों पर विचार कीजिए-", opts: [ {e:"Cell is structural & functional unit", h:"कोशिका सजीवों की रचनात्मक एवं क्रियात्मक इकाई है"}, {e:"No life without cell", h:"कोशिका के अभाव में सजीव के शरीर का निर्माण संभव नहीं है"}, {e:"Both 1 and 2", h:"1 तथा 2 दोनों"}, {e:"Neither 1 nor 2", h:"न तो 1 न ही 2"} ], a: 2 },
+        { e: "Which part of the cell is collectively called Cytosome?", h: "कोशिका के किस भाग को सम्मिलित रूप से साइटोसोम कहा जाता है?", opts: [ {e:"Cell membrane", h:"कोशिका झिल्ली"}, {e:"Cytoplasm", h:"कोशिका द्रव्य"}, {e:"Organelles in cytoplasm", h:"कोशिका द्रव्य स्थित कोशिकांग"}, {e:"All of these", h:"इनमें से सभी"} ], a: 3 },
+        { e: "Which one is NOT included under Cytosome?", h: "साइटोसोम के अंतर्गत निम्नलिखित में कौन एक शामिल नहीं है?", opts: [ {e:"Nucleus", h:"केंद्रक"}, {e:"Cell membrane", h:"कोशिका झिल्ली"}, {e:"Organelles in cytoplasm", h:"कोशिका द्रव्य स्थित कोशिकांग"}, {e:"Cytoplasm", h:"कोशिका द्रव्य"} ], a: 0 },
+        { e: "Living structures in cytoplasm capable of growth and division are called?", h: "कोशिका द्रव्य में स्थित जीवित रचनाएँ, जिनमें बढ़ने तथा विभाजन की क्षमता होती है, उसे क्या कहते हैं?", opts: [ {e:"Organoids", h:"ऑर्गेन्वाड्स"}, {e:"Metaplasts", h:"मेटाप्लास्ट्स"}, {e:"Ergastoplasm", h:"एर्गोस्टोप्लाज्म"}, {e:"Hyaloplasm", h:"जीवद्रव्यतंतु"} ], a: 0 },
+        { e: "Which of the following cellular structure is NOT an organoid?", h: "निम्नलिखित में कौन सी कोशिकीय रचना ऑर्गेन्वाड्स नहीं है?", opts: [ {e:"Centrosome", h:"सेन्ट्रोसोम"}, {e:"Ribosome", h:"राइबोसोम"}, {e:"Microtubules", h:"माइक्रोट्यूब्यूल्स"}, {e:"Vacuoles", h:"रसधानियाँ"} ], a: 3 },
+        { e: "Which of the following is NOT correct?", h: "निम्नलिखित में कौन सा एक सही नहीं है?", opts: [ {e:"Cell shape depends on function", h:"कोशिका का आकार एवं आकृति उसके कार्यों के अनुरूप होती है"}, {e:"Cell number depends on body size", h:"कोशिकाओं की संख्या जीव के शरीर के आकार पर निर्भर करता है"}, {e:"Group of cells is Tissue", h:"अलग-अलग रचना और अलग-अलग कार्य करने वाले कोशिकाओं का समूह को उत्तक कहा जाता है"}, {e:"Cells are of different shapes", h:"कोशिकाएं अलग-अलग आकार की होती है"} ], a: 2 },
+        { e: "Consider statements regarding Fluid Mosaic Model:", h: "तरल मोजाइक मॉडल के संबंध में निम्नलिखित कथनों पर विचार कीजिए-", opts: [ {e:"Explains membrane structure", h:"यह मॉडल कोशिका झिल्ली के संरचना को बताता है"}, {e:"Proposed by Singer & Nicolson (1972)", h:"यह मॉडल 1972 में सिंगर और निकॉलसन ने प्रस्तुत किया था"}, {e:"Lipid bilayer with protein", h:"इस मॉडल के अनुसार..."}, {e:"All 1, 2 and 3", h:"1, 2 और 3"} ], a: 3 },
+        { e: "Which cell part forms structures like Microvilli, Cilia, and Flagella?", h: "कोशिका का कौन सा भाग माइक्रोविलाई, सीलिया तथा फ्लैजिला जैसी संरचना का निर्माण करती है?", opts: [ {e:"Cell membrane", h:"कोशिका झिल्ली"}, {e:"Cell wall", h:"कोशिका भित्ति"}, {e:"Endoplasmic Reticulum", h:"अंतर्द्रव्यजालिका"}, {e:"Ribosome", h:"राइबोसोम"} ], a: 0 },
+        { e: "Osmosis occurs through?", h: "परासरण की क्रिया किसके द्वारा सम्पन्न होता है?", opts: [ {e:"Cell membrane", h:"कोशिका झिल्ली"}, {e:"Cell wall", h:"कोशिका भित्ति"}, {e:"Nucleus", h:"केंद्रक"}, {e:"Both A and B", h:"A तथा B दोनों"} ], a: 0 },
+        { e: "Which statement regarding 'Ribosome' is NOT correct?", h: "कोशिका अंगक 'राइबोसोम' के संबंध में कौन सा एक सही नहीं है?", opts: [ {e:"Two types: 70S and 80S", h:"राइबोसोम दो प्रकार के होते है, 70s तथा 80s"}, {e:"70S are in Prokaryotes", h:"70s राइबोसोम प्राकैरोयोटिक में होते है"}, {e:"80S are in Eukaryotes", h:"80s राइबोसोम यूकैरियोटिक होते है"}, {e:"Made of Protein & Lipid", h:"राइबोसोम प्रोटीन तथा लिपिड के बने होते है"} ], a: 3 },
+        { e: "Which structure in prokaryotic cells acts like mitochondria (respiration)?", h: "प्राकैरोयोटिक कोशिका में माइटोकॉन्ड्रिया के सदृश्य कौन सी रचना पायी जाती है जो श्वसन तथा कोशिका विभाजन का कार्य करती है?", opts: [ {e:"Mesosome", h:"मीसोसोम"}, {e:"Sphaerosome", h:"स्फोरोसोम"}, {e:"Glyoxysome", h:"ग्लाइऑक्सीसोम"}, {e:"Peroxisome", h:"परॉक्सीसोम"} ], a: 0 },
+        { e: "Active site for Glycolipid and Glycoprotein synthesis?", h: "कोशिका के अंदर ग्लाइकोलिपिड व ग्लाइकोप्रोटीन निर्माण का सक्रिय स्थल कौन है?", opts: [ {e:"Endoplasmic Reticulum", h:"अंतर्द्रव्य जालिका"}, {e:"Ribosome", h:"राइबोसोम"}, {e:"Golgi Body", h:"गॉल्जीकाय"}, {e:"Plastid", h:"लवक"} ], a: 2 },
+        { e: "Which organelle forms the transport system from nucleus to cytoplasm?", h: "निम्नलिखित में कौन सी कोशिकीय संरचना कोशिकीय परिवहन तंत्र का निर्माण करती है?", opts: [ {e:"Ribosome", h:"राइबोसोम"}, {e:"Golgi Body", h:"गॉल्जीकाय"}, {e:"Nucleus", h:"केंद्रक"}, {e:"Endoplasmic Reticulum", h:"अंतर्द्रव्यजालिका"} ], a: 3 },
+        { e: "Consider the following statements regarding ER:", h: "निम्नलिखित कथनों पर विचार कीजिए- (ER)", opts: [ {e:"SER helps in protein synthesis", h:"चिकनी अंतर्द्रव्यजालिका (SER) प्रोटीन के संश्लेषण तथा स्त्रवण में भाग लेती है"}, {e:"RER helps in Lipid synthesis", h:"खुरदुरी अंतर्द्रव्यजालिका (RER) लिपिड तथा स्टीरॉयड के संश्लेषण में सहायक होती है"}, {e:"Both 1 and 2", h:"1 तथा 2 दोनों"}, {e:"Neither 1 nor 2", h:"न तो 1 न ही 2"} ], a: 3 },
+        { e: "What is called the immovable property of the cell?", h: "कोशिका का अचल संपत्ति किसे कहा जाता है?", opts: [ {e:"Lipid", h:"लिपिड"}, {e:"Cellulose", h:"सेलुलोज"}, {e:"Nucleic Acid", h:"न्यूक्लिक अम्ल"}, {e:"Protein", h:"प्रोटीन"} ], a: 2 },
+        { e: "Which statement is correct?", h: "निम्नलिखित कथनों पर विचार कीजिए-", opts: [ {e:"Mitochondria is largest organelle", h:"माइटोकॉन्ड्रिया कोशिका में पाये जाने वाले सबसे बड़े अंगक होते है"}, {e:"Chloroplast is kitchen of cell", h:"हरित लवक को कोशिका का रसोई घर कहा जाता है"}, {e:"Golgi is traffic controller", h:"गॉल्जीकाय को कोशिका के अणुओ का ट्रैफिक कंट्रोलर कहा जाता है"}, {e:"2 and 3 only", h:"2 और 3"} ], a: 3 },
+        { e: "Consider the following statements about DNA/Gene:", h: "निम्नलिखित कथनों पर विचार कीजिए-", opts: [ {e:"DNA is genetic material", h:"DNA को अनुवंशिक पदार्थ कहा जाता है"}, {e:"Gene is genetic unit", h:"जीन को अनुवंशिक इकाई कहा जाता है"}, {e:"Both 1 and 2", h:"1 तथा 2 दोनों"}, {e:"Neither 1 nor 2", h:"न तो 1 न ही 2"} ], a: 2 },
+        { e: "Which function is NOT performed by Golgi Body?", h: "कोशिका के अंदर निम्नलिखित में कौन सा कार्य गॉल्जीकाय द्वारा नहीं किया जाता है?", opts: [ {e:"Packaging", h:"संचेष्टन (Packaging)"}, {e:"Storage", h:"संग्रहण (storage)"}, {e:"Secretion", h:"स्त्रवण (Secretion)"}, {e:"Intracellular Digestion", h:"अंतः कोशिकीय पाचन"} ], a: 3 },
+        { e: "Which option matches correctly?", h: "निम्नलिखित में कौन सा विकल्प सही सुमेलित नहीं है-", opts: [ {e:"Power House - Mitochondria", h:"कोशिका का पावर हाउस - माइटोकॉन्ड्रिया"}, {e:"Largest Organelle - Plastid", h:"सबसे बड़ा अंगक - लवक"}, {e:"Suicide Bag - Lysosome", h:"आत्महत्या की थैली - लाइसोसोम"}, {e:"Palade Particle - Sphaerosome", h:"पैलेड कण - स्फीरोसोम"} ], a: 3 },
+        { e: "Which is a semi-autonomous organelle?", h: "निम्नलिखित में कौन सा अर्द्धस्वायत्त कोशिकांग है?", opts: [ {e:"Chloroplast", h:"हरित लवक"}, {e:"Mitochondria", h:"माइटोकॉन्ड्रिया"}, {e:"Both A and B", h:"A तथा B दोनों"}, {e:"None", h:"कोई नहीं"} ], a: 2 },
+        { e: "Which organelle is absent in prokaryotic cells?", h: "प्राकैरोयोटिक कोशिका में किस कोशिका अंगक का अभाव रहता है?", opts: [ {e:"Golgi Body", h:"गॉल्जीकाय"}, {e:"Mitochondria", h:"माइटोकॉन्ड्रिया"}, {e:"ER", h:"अंतर्द्रव्यजालिका"}, {e:"All of the above", h:"उपर्युक्त सभी"} ], a: 3 },
+        { e: "Found in plant cells but NOT in animal cells?", h: "निम्नलिखित में कौन सी रचनाएं पादप कोशिका में पाये जाते है, परन्तु जन्तु कोशिका में नहीं-", opts: [ {e:"Plastid", h:"लवक"}, {e:"Cell wall", h:"कोशिकाभित्ति"}, {e:"Large Vacuole", h:"बड़ी रिक्तिका"}, {e:"All of these", h:"इनमें से सभी"} ], a: 3 },
+        { e: "Found in animal cells but NOT in plant cells?", h: "निम्नलिखित में कौन सी रचना जन्तु कोशिका में पाये जाते है परन्तु पौधे की कोशिका में नहीं-", opts: [ {e:"Mitochondria", h:"माइटोकॉन्ड्रिया"}, {e:"Lysosome", h:"लाइसोसोम"}, {e:"Centrosome", h:"सेन्ट्रोसोम"}, {e:"Cell Membrane", h:"कोशिका झिल्ली"} ], a: 2 },
+        { e: "Who proposed the Cell Theory?", h: "कोशिका सिद्धान्त किसने प्रस्तुत किया था-", opts: [ {e:"Schleiden and Schwann", h:"स्लाइडेन तथा श्वान"}, {e:"Robert Hooke", h:"रॉबर्ट हुक तथा रॉबर्ट ब्राउन"}, {e:"Jansen & Jansen", h:"जेड जैनसन तथा एच जैनसन"}, {e:"Waldeyer", h:"वाल्डेयर तथा विल्सन"} ], a: 0 },
+        { e: "Who added the role of cell division (Omnis cellula-e-cellula) to Cell Theory?", h: "कोशिका सिद्धान्त के अनुसार कोशिका विभाजन में मुख्य सृष्टिकर्त्ता (Creator) की भूमिका कौन निभाता है?", opts: [ {e:"Virchow", h:"विरचो"}, {e:"Nucleus", h:"केंद्रक"}, {e:"Ribosome", h:"राइबोसोम"}, {e:"Golgi", h:"गॉल्जीकाय"} ], a: 1 }, 
+        /* Note: Q25 in image asks who plays Creator role in division -> Nucleus. My bad, I read Virchow in my head. Correcting to Nucleus based on Hindi text. */
+        
+        { e: "Which organelle produces Lysosomes?", h: "निम्नलिखित में से किस कोशिका अंगक से लाइसोसोम बनता है?", opts: [ {e:"Golgi Body", h:"गॉल्जीकाय"}, {e:"Ribosome", h:"राइबोसोम"}, {e:"Mitochondria", h:"माइटोकॉन्ड्रिया"}, {e:"ER", h:"अंतर्द्रव्यजालिका"} ], a: 0 },
+        { e: "Organelle containing gene in its own DNA and synthesizes own protein?", h: "निम्नलिखित में से कौन सा कोशिका अंगक अपने DNA में उपस्थित जीन को सम्मिलित करते हुए इसके स्वंग के प्रोटीनो का संश्लेषण करता है?", opts: [ {e:"Mitochondria", h:"माइटोकॉन्ड्रिया"}, {e:"Plastid", h:"लवक"}, {e:"Both A and B", h:"A तथा B दोनों"}, {e:"ER", h:"अंतर्द्रव्यजालिका"} ], a: 2 },
+        { e: "Cell without nuclear membrane is called?", h: "ऐसी कोशिका, जिसमें केंद्रक झिल्ली नहीं होती एवं वास्तविक केंद्रक नहीं होता है, को प्रोकैरियोटिक कोशिका कहते हैं।", opts: [ {e:"True", h:"कथन सही है"}, {e:"False", h:"कथन गलत है"}, {e:"Both 1 and 2", h:"1 तथा 2 दोनों"}, {e:"None", h:"न तो 1 न ही 2"} ], a: 0 }, 
+        /* Simplified Q28 for quiz format */
+        { e: "Organelle that can change shape instantly?", h: "निम्नलिखित में कौन सा कोशिका अंगक अपने आकृति को तुरंत परिस्थितियों के अनुसार बदल सकता है?", opts: [ {e:"Ribosome", h:"राइबोसोम"}, {e:"Lysosome", h:"लाइसोसोम"}, {e:"Mitochondria", h:"माइटोकॉन्ड्रिया"}, {e:"Centrosome", h:"सेन्ट्रोसोम"} ], a: 2 },
+        { e: "Nerve cells in human body are:", h: "मनुष्य के शरीर में तंत्रिका कोशिका है-", opts: [ {e:"Smallest cell", h:"सबसे छोटी कोशिका"}, {e:"Irregular cell", h:"अनियमित कोशिका"}, {e:"Largest (Longest) cell", h:"सबसे बड़ी कोशिका"}, {e:"Round cell", h:"एक गोल कोशिका"} ], a: 2 },
+        { e: "A typical cell consists of:", h: "एक प्रारूपिक कोशिक के अंतर्गत है-", opts: [ {e:"Only Cytosome", h:"केवल साइटोसोम"}, {e:"Cytoplasm & Nucleus", h:"कोशिकाद्रव्य एवं केन्द्रक"}, {e:"Cell membrane & Nucleus", h:"कोशिका झिल्ली एवं केंद्रक"}, {e:"Cytosome & Nucleus", h:"साइटोसोम एवं केन्द्रक"} ], a: 3 },
+        { e: "Centrosome participates specifically in:", h: "सेन्ट्रोसोम विशेष रूप से भाग लेता है-", opts: [ {e:"Cytoplasm formation", h:"कोशिका द्रव्य के निर्माण में"}, {e:"Nucleus division", h:"केन्द्रक विभाजन में"}, {e:"Cell division", h:"कोशिका विभाजन में"}, {e:"Organelle formation", h:"कोशिकांगों के निर्माण में"} ], a: 2 },
+        { e: "Cell gets mechanical support from:", h: "कोशिका यांत्रिक सहायता पाता है-", opts: [ {e:"Golgi", h:"गॉल्जी से"}, {e:"Nucleus", h:"केन्द्रक से"}, {e:"Nucleolus", h:"केन्द्रिका से"}, {e:"Endoplasmic Reticulum", h:"आंतरद्रव्यजालिका से"} ], a: 3 },
+        { e: "70S Ribosomes are found in:", h: "70S राइबोसोम पाया जाता है-", opts: [ {e:"Eukaryotes", h:"यूकैरियोट में"}, {e:"Prokaryotes", h:"प्रोकैरियोट में"}, {e:"All organisms", h:"सभी जीवों में"}, {e:"All animals", h:"सभी जंतुओं में"} ], a: 1 },
+        { e: "Colored plastids are called:", h: "रंगीन लवक को कहा जाता है-", opts: [ {e:"Leucoplast", h:"ल्यूकोप्लास्ट"}, {e:"Chloroplast", h:"क्लोरोप्लास्ट"}, {e:"Chromoplast", h:"क्रोमोप्लास्ट"}, {e:"Carotene", h:"कैरोटीन"} ], a: 2 },
+        { e: "Grana is found in:", h: "ग्रैनम पाया जाता है-", opts: [ {e:"Ribosome", h:"राइबोसोम में"}, {e:"Chloroplast", h:"क्लोरोप्लास्ट में"}, {e:"Mitochondria", h:"माइटोकॉन्ड्रिया में"}, {e:"Nucleus", h:"केन्द्रक में"} ], a: 1 },
+        { e: "Plasma membrane is made of:", h: "प्लाज्मा झिल्ली को बनाता है-", opts: [ {e:"Protein", h:"प्रोटीन"}, {e:"Cellulose", h:"सेलुलोज"}, {e:"Fat", h:"वसा"}, {e:"Lipoprotein", h:"लिपोप्रोटीन"} ], a: 3 },
+        { e: "Related to Protein Synthesis:", h: "प्रोटीन संश्लेषण से संबंद्ध है-", opts: [ {e:"Nucleus", h:"केन्द्रक"}, {e:"Ribosome", h:"राइबोसोम"}, {e:"Chromatin", h:"क्रोमैटिन"}, {e:"Cell membrane", h:"कोशिका झिल्ली"} ], a: 1 },
+        { e: "End tip of chromosome is called:", h: "क्रोमोसोम के अंतिम सिरा को कहते हैं-", opts: [ {e:"Chromomere", h:"क्रोमोमियर"}, {e:"Centromere", h:"सेन्ट्रोमियर"}, {e:"Telomere", h:"टीलोमियर"}, {e:"Micromere", h:"माइक्रोमीटर"} ], a: 2 },
+        { e: "Nuclear membrane and Mitochondria are absent in:", h: "केन्द्रक झिल्ली एवं माइटोकॉन्ड्रिया नहीं होता है-", opts: [ {e:"Sperm cell", h:" शुक्राणु कोशिका में"}, {e:"Sponge cell", h:"स्पंज कोशिका में"}, {e:"Bacteria", h:"बैक्टीरिया में"}, {e:"Protozoa", h:"प्रोटोजोआ में"} ], a: 2 },
+        { e: "Endoplasmic Reticulum is the center of:", h: "आंतरद्रव्य जालिका केन्द्र है-", opts: [ {e:"Respiration", h:"श्वसन का"}, {e:"Digestion", h:"पाचन का"}, {e:"Fat synthesis", h:"वसा संश्लेषण का"}, {e:"Protein synthesis", h:"प्रोटीन संश्लेषण का"} ], a: 3 },
+        { e: "Plant cell differs from animal cell by absence of:", h: "निम्नाकित किसकी अनुपस्थिति से पादप कोशिका जंतु कोशिका से भिन्न है-", opts: [ {e:"Mitochondria", h:"माइटोकॉन्ड्रिया"}, {e:"Ribosomes", h:"राइबोसोम्स"}, {e:"Centriole", h:"सेन्ट्रिओल"}, {e:"ER", h:"आंतरद्रव्यजालिका"} ], a: 2 },
+        { e: "Stored in Lysosome:", h: "लाइसोसोम में जमा रहता है-", opts: [ {e:"Glyco proteins", h:"ग्लाइको प्रोटीन्स"}, {e:"Fat", h:"वसा"}, {e:"RNA", h:"RNA"}, {e:"Digestive Enzymes", h:"पाचक एंजाइम"} ], a: 3 },
+        { e: "Wall of Mitochondria is made of:", h: "माइटोकॉन्ड्रिया का दीवार बना होता है-", opts: [ {e:"Protein", h:"प्रोटीन से"}, {e:"Fat", h:"वसा से"}, {e:"Lipoprotein", h:"लिपोप्रोटीन से"}, {e:"Carbohydrate", h:"कार्बोहाइड्रेट से"} ], a: 2 },
+        { e: "Mitochondria is related to:", h: "माइटोकॉन्ड्रिया संबंद्ध है-", opts: [ {e:"ATP formation", h:"ATP के निर्माण से"}, {e:"Glucose formation", h:"ग्लूकोस के निर्माण से"}, {e:"Digestion", h:"अंगकों के पाचन से"}, {e:"None", h:"इनमें से कोई नहीं"} ], a: 0 },
+        { e: "Polysome is:", h: "पॉलिसोम है-", opts: [ {e:"DNA + RNA", h:"DNA + RNA"}, {e:"DNA + Ribosome", h:"DNA + राइबोसोम"}, {e:"Ribosome + mRNA", h:"राइबोसोम + mRNA"}, {e:"Ribosome + tRNA", h:"राइबोसोम + tRNA"} ], a: 2 },
+        { e: "Energy source inside living cell:", h: "जीवित कोशिका के भीतर ऊर्जा स्रोत है-", opts: [ {e:"Mitochondria", h:"माइटोकॉन्ड्रिया"}, {e:"Oxysome", h:"ऑक्सीसोम"}, {e:"Dynein", h:"डाइनिन"}, {e:"ATP", h:"ATP"} ], a: 0 }, 
+        /* Question asks source "organelle" usually, but options have ATP too. Given text "Urja strot" often implies Mitochondria in this context or ATP. If Organelle -> Mito. If Molecule -> ATP. Key usually marks Mito as source.*/
+        
+        { e: "Fluid Mosaic Model was proposed by:", h: "तरल मोजाइक मॉडल मत को प्रस्तुत किया-", opts: [ {e:"Singer & Nicolson", h:"सिंगर एवं निकॉलसन"}, {e:"Singer & Robertson", h:"सिंगर एवं रॉबर्टसन"}, {e:"Robertson & Davson", h:"रॉबर्टसन एवं डेवसन"}, {e:"Davson & Singer", h:"डेवसन एवं सिंगर"} ], a: 0 },
+        { e: "Cell Wall is found in:", h: "कोशिका भित्ति पाई जाती है-", opts: [ {e:"Animal cell", h:"जंतु कोशिका में"}, {e:"Amoeba", h:"अमीबा में"}, {e:"Euglena", h:"यूग्लीना में"}, {e:"Plant cell", h:"पादप कोशिका में"} ], a: 3 },
+        { e: "Main function of Leucoplast:", h: "अवर्णीलवक का मुख्य कार्य है-", opts: [ {e:"Photosynthesis", h:"प्रकाश संश्लेषण करना"}, {e:"Food Storage", h:"खाद्य पदार्थों का संचयन करना"}, {e:"Pollination help", h:"परागण में सहायता करना"}, {e:"Excretion", h:"उत्सर्जन करना"} ], a: 1 }
+    ];
+
+    /* --- GAME VARIABLES --- */
+    let questions = [];
+    let currentQIndex = 0;
+    let score = 0;
+    let correctCount = 0;
+    let wrongCount = 0;
+    let timerInterval;
+    let timeLeft = 0;
+    let userTimeSetting = 0;
+
+    /* --- AUDIO CONTEXT --- */
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    
+    function playSound(type) {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        osc.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+
+        if (type === 'correct') {
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(1000, audioCtx.currentTime + 0.1);
+            gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.5);
+        } else {
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+            osc.frequency.linearRampToValueAtTime(100, audioCtx.currentTime + 0.3);
+            gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.3);
+        }
+    }
+
+    /* --- LOGIC --- */
+
+    function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+    }
+
+    function startQuiz() {
+        // Init Questions
+        questions = JSON.parse(JSON.stringify(rawQuestions));
+        const doShuffle = document.getElementById('shuffleToggle').checked;
+        if (doShuffle) shuffleArray(questions);
+
+        // Init Timer
+        const timeInput = document.getElementById('timerInput').value;
+        userTimeSetting = timeInput ? parseInt(timeInput) : 0;
+
+        // Reset Stats
+        currentQIndex = 0;
+        score = 0;
+        correctCount = 0;
+        wrongCount = 0;
+
+        // UI Transition
+        document.getElementById('start-screen').classList.remove('active');
+        document.getElementById('quiz-screen').classList.add('active');
+        
+        loadQuestion();
+    }
+
+    function loadQuestion() {
+        if (currentQIndex >= questions.length) {
+            showResult();
+            return;
+        }
+
+        const qData = questions[currentQIndex];
+        
+        // Update UI Text
+        document.getElementById('questionCounter').innerText = `Q: ${currentQIndex + 1}/${questions.length}`;
+        document.getElementById('scoreDisplay').innerText = `Score: ${score}`;
+        document.getElementById('qTextEng').innerText = qData.e;
+        document.getElementById('qTextHin').innerText = qData.h;
+
+        // Progress Bar
+        const percent = (currentQIndex / questions.length) * 100;
+        document.getElementById('progressBar').style.width = `${percent}%`;
+
+        // Render Options
+        const optContainer = document.getElementById('optionsContainer');
+        optContainer.innerHTML = '';
+        
+        qData.opts.forEach((opt, index) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.onclick = () => handleAnswer(index, btn);
+            btn.innerHTML = `<div class="opt-eng">${opt.e}</div><div class="opt-hin">${opt.h}</div>`;
+            optContainer.appendChild(btn);
+        });
+
+        // Handle Timer
+        clearInterval(timerInterval);
+        const timerDisplay = document.getElementById('timerDisplay');
+        timerDisplay.classList.remove('pulse-red');
+        
+        if (userTimeSetting > 0) {
+            timeLeft = userTimeSetting;
+            timerDisplay.innerText = `⏳ ${timeLeft}`;
+            timerDisplay.style.visibility = 'visible';
+            
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                timerDisplay.innerText = `⏳ ${timeLeft}`;
+                
+                if (timeLeft <= 5) timerDisplay.classList.add('pulse-red');
+                
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    handleTimeOut(); // Auto-wrong or skip
+                }
+            }, 1000);
+        } else {
+            timerDisplay.style.visibility = 'hidden';
+        }
+    }
+
+    function handleAnswer(selectedIndex, btnElement) {
+        clearInterval(timerInterval);
+        const qData = questions[currentQIndex];
+        const correctIndex = qData.a;
+        const allBtns = document.querySelectorAll('.option-btn');
+
+        // Disable all
+        allBtns.forEach(b => b.disabled = true);
+
+        if (selectedIndex === correctIndex) {
+            // Correct
+            btnElement.classList.add('correct');
+            playSound('correct');
+            score++;
+            correctCount++;
+            triggerConfetti();
+        } else {
+            // Wrong
+            if(btnElement) btnElement.classList.add('wrong');
+            allBtns[correctIndex].classList.add('correct'); // Show right answer
+            playSound('wrong');
+            wrongCount++;
+            showSadEmoji();
+        }
+
+        setTimeout(() => {
+            currentQIndex++;
+            loadQuestion();
+        }, 1500);
+    }
+
+    function handleTimeOut() {
+        const qData = questions[currentQIndex];
+        const allBtns = document.querySelectorAll('.option-btn');
+        allBtns.forEach(b => b.disabled = true);
+        
+        // Show correct answer
+        allBtns[qData.a].classList.add('correct');
+        playSound('wrong');
+        wrongCount++; // Count as wrong/missed
+        
+        setTimeout(() => {
+            currentQIndex++;
+            loadQuestion();
+        }, 1500);
+    }
+
+    function earlyExit() {
+        clearInterval(timerInterval);
+        showResult();
+    }
+
+    function showResult() {
+        document.getElementById('quiz-screen').classList.remove('active');
+        document.getElementById('result-screen').classList.add('active');
+
+        // Logic: Score based on Attempted or Total? 
+        // Standard: Score / Total
+        const totalQs = questions.length;
+        const percentage = Math.round((correctCount / totalQs) * 100);
+        
+        const finalScoreEl = document.getElementById('finalScore');
+        finalScoreEl.innerText = `${percentage}%`;
+        
+        // Color code score
+        if(percentage >= 80) finalScoreEl.style.color = "#00e676";
+        else if(percentage >= 50) finalScoreEl.style.color = "#ffd300";
+        else finalScoreEl.style.color = "#ff1744";
+
+        let msg = "";
+        if (percentage >= 80) msg = "🏆 Outstanding Performance!";
+        else if (percentage >= 50) msg = "👏 Well Done! Keep it up.";
+        else msg = "📚 Practice makes perfect! Try again.";
+        
+        document.getElementById('finalMsg').innerText = msg;
+        
+        const skipped = totalQs - (correctCount + wrongCount);
+        document.getElementById('statsText').innerText = 
+            `Correct: ${correctCount} | Wrong: ${wrongCount} | Skipped/Remaining: ${skipped}`;
+    }
+
+    /* --- EFFECTS --- */
+
+    function triggerConfetti() {
+        for (let i = 0; i < 30; i++) {
+            const confetti = document.createElement('div');
+            confetti.classList.add('confetti-piece');
+            confetti.style.left = Math.random() * 100 + 'vw';
+            confetti.style.animationDuration = (Math.random() * 2 + 1) + 's';
+            confetti.style.backgroundColor = `hsl(${Math.random() * 360}, 100%, 50%)`;
+            document.body.appendChild(confetti);
+            
+            setTimeout(() => confetti.remove(), 3000);
+        }
+    }
+
+    function showSadEmoji() {
+        const emoji = document.getElementById('sadEmoji');
+        emoji.style.opacity = '1';
+        emoji.classList.add('shake');
+        
+        setTimeout(() => {
+            emoji.style.opacity = '0';
+            emoji.classList.remove('shake');
+        }, 1000);
+    }
+
+</script>
+</body>
+</html>

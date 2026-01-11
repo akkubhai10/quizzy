@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cytology Quiz (Part 3) | कोशिका विज्ञान</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Mesh Gradient Colors */
+            --bg-gradient: radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
+                           radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%), 
+                           radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 50%);
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.15);
+            --text-main: #ffffff;
+            --text-hindi: #cccccc;
+            --accent: #ff007f;
+            --correct: #00e676;
+            --wrong: #ff1744;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #1a1a2e;
+            background-image: var(--bg-gradient);
+            background-size: 200% 200%;
+            animation: gradientBG 15s ease infinite;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--text-main);
+            overflow-x: hidden;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Glassmorphism Card */
+        .app-container {
+            width: 100%;
+            max-width: 650px;
+            min-height: 650px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border-radius: 25px;
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            padding: 2rem;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Screens */
+        .screen {
+            display: none;
+            flex-direction: column;
+            height: 100%;
+            flex-grow: 1;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        /* Start Screen */
+        .start-content {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            margin: auto;
+            width: 100%;
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            margin-bottom: 0.2rem;
+            background: linear-gradient(to right, #fff, #b3e5fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.8;
+            margin-bottom: 2rem;
+            color: var(--text-hindi);
+        }
+
+        .controls {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            border-radius: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+
+        input[type="number"] {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            padding: 10px;
+            border-radius: 12px;
+            color: white;
+            font-family: 'Poppins';
+            width: 80px;
+            text-align: center;
+            font-size: 1rem;
+        }
+
+        input[type="number"]:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        /* Toggle Switch */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 26px;
+        }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(255,255,255,0.2);
+            transition: .4s;
+            border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider { background-color: var(--accent); }
+        input:checked + .slider:before { transform: translateX(24px); }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 18px 30px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
+        .btn-primary:hover {
+            transform: scale(1.02);
+            box-shadow: 0 0 25px rgba(118, 75, 162, 0.6);
+        }
+
+        /* Quiz UI */
+        .quiz-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            padding: 0 5px;
+        }
+
+        .progress-container {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%;
+            height: 4px;
+            background: rgba(255,255,255,0.05);
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: #00e676;
+            width: 0%;
+            transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 0 12px #00e676;
+        }
+
+        .timer-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(0,0,0,0.3);
+            padding: 5px 12px;
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .timer-badge.pulse-red {
+            color: var(--wrong);
+            border-color: var(--wrong);
+            animation: pulse 1s infinite;
+        }
+
+        .question-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 25px;
+            border-radius: 20px;
+            margin-bottom: 25px;
+            border: 1px solid rgba(255,255,255,0.05);
+            min-height: 140px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .q-eng { font-size: 1.15rem; margin-bottom: 10px; font-weight: 600; line-height: 1.4; }
+        .q-hin { font-size: 1rem; color: var(--text-hindi); font-weight: 400; line-height: 1.5; }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .option-btn {
+            background: rgba(255, 255, 255, 0.07);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 15px;
+            color: white;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255,255,255,0.3);
+        }
+
+        .option-btn:disabled { cursor: default; opacity: 0.9; }
+
+        .option-btn.correct { 
+            background: rgba(0, 230, 118, 0.2) !important; 
+            border-color: var(--correct); 
+            box-shadow: 0 0 15px rgba(0, 230, 118, 0.2);
+        }
+        
+        .option-btn.wrong { 
+            background: rgba(255, 23, 68, 0.2) !important; 
+            border-color: var(--wrong); 
+        }
+
+        .opt-eng { font-size: 0.95rem; font-weight: 600; margin-bottom: 4px; }
+        .opt-hin { font-size: 0.85rem; color: var(--text-hindi); }
+
+        .btn-finish {
+            margin-top: auto;
+            background: transparent;
+            color: rgba(255,255,255,0.6);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 12px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            width: 100%;
+            margin-top: 20px;
+            transition: all 0.3s;
+        }
+
+        .btn-finish:hover { 
+            background: rgba(255,23,68,0.1); 
+            color: var(--wrong);
+            border-color: var(--wrong);
+        }
+
+        /* Feedback Overlay */
+        .emoji-feedback {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 6rem;
+            pointer-events: none;
+            z-index: 100;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .shake { animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both; }
+
+        /* Result Screen */
+        .result-content {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            height: 100%;
+            gap: 15px;
+        }
+        
+        .score-circle {
+            width: 180px; height: 180px;
+            border-radius: 50%;
+            border: 8px solid rgba(255,255,255,0.1);
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3.5rem;
+            font-weight: 700;
+            background: rgba(0,0,0,0.2);
+            box-shadow: 0 0 30px rgba(0,0,0,0.2);
+        }
+
+        .score-msg { font-size: 1.4rem; margin-bottom: 10px; font-weight: 600; }
+        .stats-box {
+            background: rgba(0,0,0,0.2);
+            padding: 15px;
+            border-radius: 15px;
+            display: flex;
+            justify-content: space-around;
+            margin: 10px 0;
+        }
+        .stat-item span { display: block; font-size: 1.2rem; font-weight: 700; }
+        .stat-item small { font-size: 0.8rem; opacity: 0.7; }
+
+        /* Animations */
+        @keyframes shake {
+            10%, 90% { transform: translate(-50%, -50%) translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate(-50%, -50%) translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate(-50%, -50%) translate3d(-4px, 0, 0); }
+            40%, 60% { transform: translate(-50%, -50%) translate3d(4px, 0, 0); }
+        }
+
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Confetti */
+        .confetti-piece {
+            position: absolute;
+            width: 8px; height: 16px;
+            background: #ffd300;
+            top: -20px;
+            z-index: 9999;
+            opacity: 0;
+        }
+
+        @media (max-width: 600px) {
+            .app-container { border-radius: 0; height: 100vh; max-height: 100vh; border: none; padding: 1.5rem; }
+            .options-grid { grid-template-columns: 1fr; gap: 10px; }
+            h1 { font-size: 1.8rem; }
+            .score-circle { width: 140px; height: 140px; font-size: 2.5rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <div class="progress-container">
+        <div class="progress-bar" id="progressBar"></div>
+    </div>
+
+    <div id="start-screen" class="screen active">
+        <div class="start-content">
+            <h1>Cytology Quiz <br><span style="font-size: 1.5rem; color: #b3e5fc;">Part 2 (Q101-137)</span></h1>
+            <div class="subtitle">कोशिका विज्ञान प्रश्नोत्तरी</div>
+
+            <div class="controls">
+                <label>
+                    <span>⏱ Timer (Sec/Q)</span>
+                    <input type="number" id="timerInput" placeholder="Off" min="5">
+                </label>
+                <label>
+                    <span>🔀 Randomize Order</span>
+                    <label class="switch">
+                        <input type="checkbox" id="shuffleToggle">
+                        <span class="slider"></span>
+                    </label>
+                </label>
+            </div>
+
+            <button class="btn-primary" onclick="startQuiz()">Start Challenge</button>
+        </div>
+    </div>
+
+    <div id="quiz-screen" class="screen">
+        <div class="quiz-header">
+            <span id="questionCounter">Q: 01/37</span>
+            <div class="timer-badge" id="timerDisplay">⏳ --</div>
+            <span id="scoreDisplay">Score: 0</span>
+        </div>
+
+        <div class="question-card">
+            <div class="q-eng" id="qTextEng">Loading...</div>
+            <div class="q-hin" id="qTextHin">Loading...</div>
+        </div>
+
+        <div class="options-grid" id="optionsContainer">
+            </div>
+
+        <button class="btn-finish" onclick="earlyExit()">🏁 Finish & Show Results</button>
+        
+        <div id="sadEmoji" class="emoji-feedback">😢</div>
+    </div>
+
+    <div id="result-screen" class="screen">
+        <div class="result-content">
+            <h2>Quiz Completed!</h2>
+            <div class="score-circle" id="finalScore">0%</div>
+            <p class="score-msg" id="finalMsg">Message</p>
+            
+            <div class="stats-box">
+                <div class="stat-item">
+                    <span id="statCorrect" style="color: #00e676;">0</span>
+                    <small>Correct</small>
+                </div>
+                <div class="stat-item">
+                    <span id="statWrong" style="color: #ff1744;">0</span>
+                    <small>Wrong</small>
+                </div>
+                <div class="stat-item">
+                    <span id="statSkipped" style="color: #bdbdbd;">0</span>
+                    <small>Skipped</small>
+                </div>
+            </div>
+
+            <button class="btn-primary" onclick="location.reload()">🔄 Restart Quiz</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    /* --- DATA SOURCE (Questions 101-137 extracted from images) --- */
+    const rawQuestions = [
+        { e: "Who proposed the Double Helix model of DNA for the first time?", h: "डी.एन.ए. द्विहेलिक्स प्रारूप को पहली बार किसने प्रस्तावित किया था?", opts: [ {e:"Watson and Crick", h:"वाटसन तथा क्रिक ने"}, {e:"Fisher and Haldane", h:"फिशर तथा हालहानी ने"}, {e:"Lamarck and Darwin", h:"लामार्क तथा डार्विन ने"}, {e:"Hugo de Vries", h:"ह्यूगो डी व्रीज ने"} ], a: 0 },
+        { e: "'Protoplasm is the physical basis of life' - Who stated this?", h: "'जीवद्रव्य जीवन का भौतिक आधार है' यह किसका कथन है?", opts: [ {e:"Henry", h:"हेनरी"}, {e:"Lamarck", h:"लामार्क"}, {e:"Huxley", h:"हक्सले"}, {e:"Treviranus", h:"ट्रेविरेनस"} ], a: 2 },
+        { e: "Who first used the word 'Protoplasm'?", h: "जीवद्रव्य (Protoplasm) शब्द का प्रयोग सर्वप्रथम किसने किया था?", opts: [ {e:"Darwin", h:"डार्विन"}, {e:"Purkinje", h:"पुरकिंजे"}, {e:"John Ray", h:"जॉन रे"}, {e:"Hutchinson", h:"हैचिसन"} ], a: 1 },
+        { e: "Mitochondria is absent in?", h: "माइटोकॉन्ड्रिया किसमें अनुपस्थित होता है?", opts: [ {e:"Yeast", h:"यीस्ट"}, {e:"Fungi", h:"कवक"}, {e:"Bacteria", h:"जीवाणु"}, {e:"Algae", h:"शैवाल"} ], a: 2 },
+        { e: "The inner fold of Mitochondria is called?", h: "माइटोकॉन्ड्रिया का भीतरी वलन कहलाता है-", opts: [ {e:"Cristae", h:"क्रिस्टी"}, {e:"Oxysomes", h:"ऑक्सीसोम्स"}, {e:"Matrix", h:"मैट्रिक्स"}, {e:"Microsomes", h:"माइक्रोसोम्स"} ], a: 0 },
+        { e: "Cell Wall is:", h: "कोशिका भित्ति (Cell wall) होती है-", opts: [ {e:"Permeable", h:"पारगम्य"}, {e:"Semi-permeable", h:"अर्द्धपारगम्य"}, {e:"Selectively permeable", h:"चयनात्मक पारगम्य"}, {e:"Impermeable", h:"अपारगम्य"} ], a: 0 },
+        { e: "Lysosomes function in:", h: "लाइसोसोम्स कार्य करते हैं-", opts: [ {e:"Protein synthesis", h:"प्रोटीन संश्लेषण में"}, {e:"Processing and Packaging", h:"प्रोसेसिंग तथा पैकेजिंग में"}, {e:"Intracellular digestion", h:"अन्तः कोशिकीय पाचन में"}, {e:"Fat synthesis", h:"वसा संश्लेषण में"} ], a: 2 },
+        { e: "Which organelle is usually NOT present in animal cells?", h: "कौन-सा अंगक प्रायः जन्तु कोशिका में उपस्थित नहीं होता है?", opts: [ {e:"Plastid", h:"लवक"}, {e:"Golgi Body", h:"गॉल्जीकाय"}, {e:"Mitochondria", h:"माइटोकॉन्ड्रिया"}, {e:"Endoplasmic Reticulum", h:"अन्तःप्रद्रव्य जालक"} ], a: 0 },
+        { e: "Cellular and molecular control of 'Programmed Cell Death' is called?", h: "'प्रोग्राम्ड सेल डेथ' का कोशिकीय एवं आणविक नियंत्रण क्या कहलाता है?", opts: [ {e:"Apoptosis", h:"एपोप्टोसिस"}, {e:"Aging", h:"एजिंग"}, {e:"Degeneration", h:"डिजेनरेशन"}, {e:"Necrosis", h:"निक्रोसिस"} ], a: 0 },
+        { e: "Which organelle plays a major role in protein synthesis?", h: "कौन-सा कोशिकांग प्रोटीन संश्लेषण में प्रमुख भूमिका निभाता है?", opts: [ {e:"Lysosome & Centrosome", h:"लाइसोसोम एवं सेन्ट्रोसोम"}, {e:"ER & Ribosome", h:"एण्डोप्लाज्मिक रेटिकुलम एवं राइबोसोम"}, {e:"Golgi & Mitochondria", h:"गॉल्जी उपकरण एवं माइटोकॉन्ड्रिया"}, {e:"Lysosome & Mitochondria", h:"लाइसोसोम एवं माइटोकॉन्ड्रिया"} ], a: 1 },
+        { e: "Which of the following organelles contains DNA?", h: "निम्नलिखित में से कौन-सा कोशिकांग DNA रखता है?", opts: [ {e:"Mitochondria", h:"माइटोकॉन्ड्रिया"}, {e:"Golgi Body", h:"गॉल्जीकाय"}, {e:"Lysosome", h:"लाइसोसोम"}, {e:"Centriole", h:"सेन्ट्रिओल"} ], a: 0 },
+        { e: "Main function of Golgi Body is:", h: "गॉल्जीकाय का प्रमुख कार्य है-", opts: [ {e:"Respiration", h:"श्वसन"}, {e:"Start cell division", h:"कोशिका विभाजन शुरू करना"}, {e:"Produce digestive juice", h:"पाचक रस उत्पन्न करना"}, {e:"Secretion", h:"स्राव (Secretion)"} ], a: 3 },
+        { e: "Difference between plant cell and animal cell is found due to the presence of:", h: "किसकी उपस्थिति के कारण किसी पादप कोशिका और पशु कोशिका में अंतर पाया जाता है?", opts: [ {e:"Chloroplast", h:"क्लोरोप्लास्ट"}, {e:"Cell wall", h:"कोशिका भित्ति"}, {e:"Cell membrane", h:"कोशिका कला"}, {e:"Nucleus", h:"केन्द्रक"} ], a: 1 },
+        { e: "Who presented the basic concept that all organisms are made of cells?", h: "किसने यह मूल अवधारणा प्रस्तुत की थी कि सभी जीव कोशिकाओं के बने हुए हैं? (2. Schleiden, 4. Schwann)", opts: [ {e:"Only 2", h:"केवल 2"}, {e:"1 and 2", h:"1 एवं 2"}, {e:"2 and 3", h:"2 एवं 3"}, {e:"2 and 4", h:"2 एवं 4"} ], a: 3 },
+        { e: "Substance found in more than 80% of cell is:", h: "80% से अधिक सेल (कोशिका) में पाया जाने वाला पदार्थ है-", opts: [ {e:"Protein", h:"प्रोटीन"}, {e:"Water", h:"जल"}, {e:"Minerals", h:"खनिज"}, {e:"Hydrolytic Enzyme", h:"हाइड्रोलाइटिक एन्जाइम"} ], a: 1 },
+        { e: "Definition of Osmosis is:", h: "परासरण की परिभाषा है-", opts: [ {e:"Flow of solute through semipermeable membrane", h:"एक अर्द्धपारगम्य कला में होकर विलेय का प्रवाह"}, {e:"Flow of water without membrane", h:"कला के बगैर जल का प्रवाह"}, {e:"Flow of solvent from lower to higher concentration", h:"अर्द्धपारगम्य कला में होकर कम से अधिक सांद्रता की ओर विलायक (जल) का प्रवाह"}, {e:"None of these", h:"उपर्युक्त में कोई नहीं"} ], a: 2 },
+        { e: "A cell placed in high salt solution shrinks because:", h: "अधिक लवण वाले विलयन में एक कोशिका को रखने पर वह सिकुड़ जाती है, क्योंकि-", opts: [ {e:"Salt enters cell", h:"लवणशील जल कोशिका में प्रवेश करता है"}, {e:"Water leaves by exosmosis", h:"जल बाह्य परासरण द्वारा बाहर निकलता है"}, {e:"Cytoplasm decomposes", h:"कोशिका द्रव्य विघटित हो जाता है"}, {e:"Mineral breaks cell wall", h:"खनिज लवण कोशिका भित्ति को तोड़ देता है"} ], a: 1 },
+        { e: "If a cell size is reduced, it was placed in which solution?", h: "यदि एक कोशिका आकार में न्यूनीकृत होती है, तब यह एक विलयन में रख दी जाती है। ऐसा विलयन होता है-", opts: [ {e:"Hypotonic", h:"हाइपोटोनिक"}, {e:"Hypertonic", h:"हाइपरटोनिक"}, {e:"Isotonic", h:"आइसोटोनिक"}, {e:"Saturated", h:"संतृप्त"} ], a: 1 },
+        { e: "A cell increases in volume when placed in:", h: "एक कोशिका आयतन में बढ़ती है, जब यह रखी जाती है-", opts: [ {e:"Isotonic solution", h:"एक समपरासरी विलयन में"}, {e:"Hypertonic solution", h:"एक अतिपरासरी विलयन में"}, {e:"Hypotonic solution", h:"एक अल्पपरासरी विलयन में"}, {e:"None of these", h:"इनमें से कोई नहीं"} ], a: 2 },
+        { e: "Seeds swell when placed in water due to:", h: "बीज फूलते हैं, जब जल में रखे जाते हैं-", opts: [ {e:"Osmosis", h:"परासरण के कारण"}, {e:"Imbibition", h:"अंतःशोषण के कारण"}, {e:"Hydrolysis", h:"जलीय अपघटन के कारण"}, {e:"Plasmolysis", h:"जीवद्रव्यकुंचन के कारण"} ], a: 1 },
+        { e: "Wooden doors swell in rainy season due to:", h: "लकड़ी के बने दरवाजों का वर्षा ऋतु में फूलना होता है-", opts: [ {e:"Endosmosis", h:"अंतः परासरण के कारण"}, {e:"Imbibition", h:"अंतःशोषण के कारण"}, {e:"Capillarity", h:"केशिकत्व के कारण"}, {e:"Deplasmolysis", h:"जीवद्रव्यविकुंचन के कारण"} ], a: 1 },
+        { e: "Excess use of fertilizers causes death of plants due to:", h: "उर्वरकों का अतिरिक्त मात्रा में प्रयोग पौधों की मृत्यु का कारण बनता है-", opts: [ {e:"Endosmosis", h:"अन्तः परासरण के कारण"}, {e:"Exosmosis", h:"बाह्य परासरण के कारण"}, {e:"Imbibition", h:"अंतः शोषण के कारण"}, {e:"Turgidity", h:"स्फीति के कारण"} ], a: 1 },
+        { e: "Division of Nucleus is called:", h: "केंद्रक के विभाजन को क्या कहते हैं?", opts: [ {e:"Cytokinesis", h:"साइटोकिनेसिस"}, {e:"Crossing over", h:"क्रॉसिंग ओवर"}, {e:"Karyokinesis", h:"कैरीयोकिनेसिस"}, {e:"Pachytene", h:"पैकीटीन"} ], a: 2 },
+        { e: "Which cell division is responsible for growth and repair?", h: "शरीर के वृद्धि एवं मरम्मत हेतु कौन सा कोशिका विभाजन उत्तरदायी है?", opts: [ {e:"Meiosis", h:"अर्द्धसूत्री"}, {e:"Mitosis", h:"समसूत्री"}, {e:"Amitosis", h:"असूत्री"}, {e:"None", h:"इनमें से कोई नहीं"} ], a: 1 },
+        { e: "Sperm formation in testes of vertebrates occurs by:", h: "कशेरुकी (Vertebrates) के वृषण (Testes) में शुक्राणु (Sperm) का निर्माण होता है-", opts: [ {e:"Only Meiosis", h:"केवल मियोसिस द्वारा"}, {e:"Only Amitosis & Mitosis", h:"केवल एमाइटोसिस तथा माइटोसिस द्वारा"}, {e:"Only Meiosis", h:"केवल मीओसिस द्वारा"}, {e:"Meiosis & Mitosis", h:"मीओसिस तथा माइटोसिस द्वारा"} ], a: 2 },
+        { e: "Which is the longest stage in Mitosis?", h: "माइटोसिस में सबसे ज्यादा समय में पूर्ण होने वाली अवस्था कौन है?", opts: [ {e:"Prophase", h:"प्रोफेज"}, {e:"Metaphase", h:"मेटाफेज"}, {e:"Anaphase", h:"ऐनाफेज"}, {e:"Telophase", h:"टेलोफेज"} ], a: 0 },
+        { e: "Cytokinesis in plant cell happens with the help of?", h: "पादप कोशिका में साइटोकिनेसिस किसकी सहायता से होता है?", opts: [ {e:"Cell plate", h:"कोशिका पट्टिका"}, {e:"Microfilament", h:"माइक्रोफिलामेन्ट"}, {e:"Centrosome", h:"सेन्ट्रोसोम"}, {e:"ER", h:"अंतर्द्रव्यजालिका"} ], a: 0 },
+        { e: "Which is the shortest stage in Mitosis?", h: "माइटोसिस के सबसे कम समय में पूर्ण होने वाली अवस्था कौन है?", opts: [ {e:"Prophase", h:"प्रोफेज"}, {e:"Metaphase", h:"मेटाफेज"}, {e:"Anaphase", h:"ऐनाफेज"}, {e:"Telophase", h:"टेलोफेज"} ], a: 2 },
+        { e: "How many divisions required for 1 cell to make 256 cells?", h: "एक कोशिका के माइटोसिस द्वारा कितने बार विभाजन से 256 कोशिकाएँ बनेगी?", opts: [ {e:"8", h:"8"}, {e:"32", h:"32"}, {e:"64", h:"64"}, {e:"225", h:"225"} ], a: 0 },
+        { e: "Crossing Over occurs in which cell division?", h: "क्रॉसिंग ओवर (crossing over) की घटना किस कोशिका विभाजन में होता है?", opts: [ {e:"Amitosis", h:"असूत्री"}, {e:"Mitosis", h:"समसूत्री"}, {e:"Meiosis", h:"अर्धसूत्री"}, {e:"All of these", h:"इनमें से सभी"} ], a: 2 },
+        { e: "Crossing Over occurs in which stage?", h: "पारगति (Crossing Over) किस अवस्था में होता है?", opts: [ {e:"Leptotene", h:"लेप्टोटीन"}, {e:"Zygotene", h:"जाइगोटीन"}, {e:"Pachytene", h:"पैकीटीन"}, {e:"Diplotene", h:"डिप्लोटीन"} ], a: 2 },
+        { e: "How many meiotic divisions required to form 200 sperms?", h: "200 शुक्राणु (Sperm) बनने के लिये कितनी बार मिऑसिस द्वारा कोशिका विभाजन होगा।", opts: [ {e:"25", h:"25"}, {e:"50", h:"50"}, {e:"100", h:"100"}, {e:"200", h:"200"} ], a: 1 },
+        { e: "Which is the opposite stage of Telophase?", h: "टेलोफेज की विपरीत अवस्था कौन है-", opts: [ {e:"Prophase", h:"प्रोफेज"}, {e:"Metaphase", h:"मेटाफेज"}, {e:"Anaphase", h:"ऐनाफेज"}, {e:"Interphase", h:"अंतरावस्था"} ], a: 0 },
+        { e: "In Mitosis, Centromere divides in which stage?", h: "माइटोसिस में सेन्ट्रोमियर किस अवस्था में विभाजित होता है?", opts: [ {e:"Prophase", h:"प्रोफेज"}, {e:"Metaphase", h:"मेटाफेज"}, {e:"Anaphase", h:"ऐनाफेज"}, {e:"Telophase", h:"टेलोफेज"} ], a: 2 },
+        { e: "Consider statements: 1. Mitosis: Cell divides once. 2. Meiosis: Cell divides twice, Chromosome twice.", h: "1. समसूत्री विभाजन में कोशिका केवल एक बार विभाजित होती है... 2. अर्धसूत्री विभाजन में कोशिका दो बार विभाजित होती है एवं क्रोमोसोम भी दो बार...", opts: [ {e:"Only 1", h:"केवल 1"}, {e:"Only 2", h:"केवल 2"}, {e:"Both 1 and 2", h:"1 तथा 2 दोनों"}, {e:"Neither 1 nor 2", h:"न तो 1 न ही 2"} ], a: 0 },
+        { e: "Which cellular structure was discovered by Fontana?", h: "निम्नलिखित में किस कोशिकीय संरचना की खोज फोंटाना के द्वारा किया गया है?", opts: [ {e:"Nucleolus", h:"केन्द्रिका"}, {e:"RNA", h:"RNA"}, {e:"Chromosome", h:"क्रोमोसोम"}, {e:"Cell Skeleton", h:"कोशिकीय पंजर"} ], a: 0 },
+        { e: "Function of Mitosis in life history of organism:", h: "प्राणी के जीवन इतिहास में समसूत्री विभाजन का कार्य निम्न है-", opts: [ {e:"Reproduction in unicellular", h:"एककोशिकीय जीवों में प्रजनन"}, {e:"Growth in multicellular", h:"बहुकोशिकीय जीवों में वृद्धि"}, {e:"Repair of damaged tissues", h:"क्षतिग्रस्त उत्तकों की मरम्मत"}, {e:"All of the above", h:"उपरोक्त सभी"} ], a: 3 }
+    ];
+
+    /* --- GAME ENGINE --- */
+    let questions = [];
+    let currentQIndex = 0;
+    let score = 0;
+    let correctCount = 0;
+    let wrongCount = 0;
+    let timerInterval;
+    let timeLeft = 0;
+    let userTimeSetting = 0;
+
+    // Web Audio API
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    
+    function playSound(type) {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        osc.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+
+        if (type === 'correct') {
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(550, audioCtx.currentTime);
+            osc.frequency.linearRampToValueAtTime(880, audioCtx.currentTime + 0.1);
+            gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gainNode.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.3);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.3);
+        } else {
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(100, audioCtx.currentTime);
+            osc.frequency.linearRampToValueAtTime(50, audioCtx.currentTime + 0.2);
+            gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gainNode.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.2);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.2);
+        }
+    }
+
+    function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+    }
+
+    function startQuiz() {
+        questions = JSON.parse(JSON.stringify(rawQuestions));
+        if (document.getElementById('shuffleToggle').checked) {
+            shuffleArray(questions);
+        }
+
+        const tVal = document.getElementById('timerInput').value;
+        userTimeSetting = (tVal && parseInt(tVal) > 0) ? parseInt(tVal) : 0;
+
+        currentQIndex = 0;
+        score = 0;
+        correctCount = 0;
+        wrongCount = 0;
+
+        document.getElementById('start-screen').classList.remove('active');
+        document.getElementById('quiz-screen').classList.add('active');
+        loadQuestion();
+    }
+
+    function loadQuestion() {
+        if (currentQIndex >= questions.length) {
+            showResult();
+            return;
+        }
+
+        const q = questions[currentQIndex];
+        
+        document.getElementById('questionCounter').innerText = `Q: ${currentQIndex + 1}/${questions.length}`;
+        document.getElementById('scoreDisplay').innerText = `Score: ${score}`;
+        document.getElementById('qTextEng').innerText = q.e;
+        document.getElementById('qTextHin').innerText = q.h;
+
+        const percent = ((currentQIndex) / questions.length) * 100;
+        document.getElementById('progressBar').style.width = `${percent}%`;
+
+        const container = document.getElementById('optionsContainer');
+        container.innerHTML = '';
+
+        q.opts.forEach((opt, idx) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerHTML = `<div class="opt-eng">${opt.e}</div><div class="opt-hin">${opt.h}</div>`;
+            btn.onclick = () => handleAnswer(idx, btn);
+            container.appendChild(btn);
+        });
+
+        // Timer Logic
+        clearInterval(timerInterval);
+        const tDisplay = document.getElementById('timerDisplay');
+        tDisplay.classList.remove('pulse-red');
+
+        if (userTimeSetting > 0) {
+            timeLeft = userTimeSetting;
+            tDisplay.style.visibility = 'visible';
+            tDisplay.innerText = `⏳ ${timeLeft}s`;
+            
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                tDisplay.innerText = `⏳ ${timeLeft}s`;
+                
+                if (timeLeft <= 5) tDisplay.classList.add('pulse-red');
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    handleTimeOut();
+                }
+            }, 1000);
+        } else {
+            tDisplay.style.visibility = 'hidden';
+        }
+    }
+
+    function handleAnswer(selectedIdx, btn) {
+        clearInterval(timerInterval);
+        const btns = document.querySelectorAll('.option-btn');
+        btns.forEach(b => b.disabled = true);
+
+        const correctIdx = questions[currentQIndex].a;
+
+        if (selectedIdx === correctIdx) {
+            btn.classList.add('correct');
+            playSound('correct');
+            score++;
+            correctCount++;
+            triggerConfetti();
+        } else {
+            if(btn) btn.classList.add('wrong');
+            btns[correctIdx].classList.add('correct');
+            playSound('wrong');
+            wrongCount++;
+            showSadEmoji();
+        }
+
+        setTimeout(() => {
+            currentQIndex++;
+            loadQuestion();
+        }, 1500);
+    }
+
+    function handleTimeOut() {
+        const btns = document.querySelectorAll('.option-btn');
+        btns.forEach(b => b.disabled = true);
+        const correctIdx = questions[currentQIndex].a;
+        btns[correctIdx].classList.add('correct');
+        playSound('wrong');
+        wrongCount++;
+        showSadEmoji();
+        setTimeout(() => {
+            currentQIndex++;
+            loadQuestion();
+        }, 1500);
+    }
+
+    function earlyExit() {
+        clearInterval(timerInterval);
+        showResult();
+    }
+
+    function showResult() {
+        document.getElementById('quiz-screen').classList.remove('active');
+        document.getElementById('result-screen').classList.add('active');
+
+        // Stats
+        const totalQs = questions.length;
+        // Percentage based on Total Questions to be fair
+        const percentage = Math.round((correctCount / totalQs) * 100);
+        const skipped = totalQs - (correctCount + wrongCount);
+
+        const scoreEl = document.getElementById('finalScore');
+        scoreEl.innerText = `${percentage}%`;
+        
+        let msg = "", color = "";
+        if (percentage >= 80) { msg = "🏆 Outstanding!"; color = "#00e676"; }
+        else if (percentage >= 50) { msg = "👏 Well Done!"; color = "#ffd300"; }
+        else { msg = "📚 Keep Practicing!"; color = "#ff1744"; }
+        
+        scoreEl.style.color = color;
+        scoreEl.style.borderColor = color;
+        document.getElementById('finalMsg').innerText = msg;
+        
+        document.getElementById('statCorrect').innerText = correctCount;
+        document.getElementById('statWrong').innerText = wrongCount;
+        document.getElementById('statSkipped').innerText = skipped;
+    }
+
+    /* --- ANIMATION FX --- */
+    function triggerConfetti() {
+        for(let i=0; i<40; i++) {
+            const c = document.createElement('div');
+            c.className = 'confetti-piece';
+            c.style.left = Math.random() * 100 + '%';
+            c.style.backgroundColor = `hsl(${Math.random() * 360}, 100%, 50%)`;
+            c.style.animation = `fall ${Math.random() * 2 + 1}s linear forwards`;
+            document.body.appendChild(c);
+            setTimeout(() => c.remove(), 3000);
+        }
+        
+        const style = document.createElement('style');
+        style.innerHTML = `@keyframes fall { to { transform: translateY(100vh) rotate(720deg); opacity: 1; } }`;
+        document.head.appendChild(style);
+    }
+
+    function showSadEmoji() {
+        const el = document.getElementById('sadEmoji');
+        el.style.opacity = '1';
+        el.classList.add('shake');
+        setTimeout(() => {
+            el.style.opacity = '0';
+            el.classList.remove('shake');
+        }, 1000);
+    }
+</script>
+</body>
+</html>

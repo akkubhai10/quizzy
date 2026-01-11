@@ -345,7 +345,6 @@
 
     <script>
         // --- 1. FIREBASE CONFIGURATION ---
-        // (Ensure these match your index.html exactly)
         const firebaseConfig = {
             apiKey: "AIzaSyCtRO8vGZ9IgNpjqhQvzY4vrYHeEB6c6ps",
             authDomain: "quizzy-akash.firebaseapp.com",
@@ -467,7 +466,7 @@
                 title.innerText = 'All Subjects';
                 breadcrumbs.style.display = 'none';
                 document.getElementById('add-btn').onclick = openAddSubjectModal;
-                thead.innerHTML = '<tr><th width="80">Poster</th><th>Subject Name</th><th>Chapters</th><th width="150">Actions</th></tr>';
+                thead.innerHTML = '<tr><th width="80">Poster</th><th>Subject Name</th><th>Chapters</th><th width="180">Actions</th></tr>';
 
                 const keys = Object.keys(appState.subjectsData);
                 if(keys.length === 0) return empty.classList.remove('hidden');
@@ -482,6 +481,7 @@
                             <td style="font-weight:600; color:var(--text);">${sub.name}</td>
                             <td><span style="background:var(--primary-light); color:var(--primary); padding:2px 8px; border-radius:4px; font-size:0.8rem; font-weight:600;">${chCount}</span></td>
                             <td>
+                                <button class="btn btn-primary" style="padding:6px 10px; margin-right:5px;" onclick="openEditSubjectModal('${key}')"><i class="fas fa-edit"></i></button>
                                 <button class="btn btn-outline" style="padding:6px 12px;" onclick="openChapters('${key}')">Open</button>
                                 <button class="btn btn-danger" style="padding:6px 10px;" onclick="deleteNode('subjects/${key}')"><i class="fas fa-trash"></i></button>
                             </td>
@@ -501,7 +501,7 @@
                 document.getElementById('bc-text').innerText = subject.name;
                 
                 document.getElementById('add-btn').onclick = openAddChapterModal;
-                thead.innerHTML = '<tr><th>Chapter Name</th><th>Quizzes</th><th width="150">Actions</th></tr>';
+                thead.innerHTML = '<tr><th>Chapter Name</th><th>Quizzes</th><th width="180">Actions</th></tr>';
 
                 const chapters = subject.chapters || {};
                 const keys = Object.keys(chapters);
@@ -516,6 +516,7 @@
                             <td style="font-weight:600;">${chap.name}</td>
                             <td><span style="background:var(--primary-light); color:var(--primary); padding:2px 8px; border-radius:4px; font-size:0.8rem; font-weight:600;">${qCount}</span></td>
                             <td>
+                                <button class="btn btn-primary" style="padding:6px 10px; margin-right:5px;" onclick="openEditChapterModal('${key}')"><i class="fas fa-edit"></i></button>
                                 <button class="btn btn-outline" style="padding:6px 12px;" onclick="openQuizzes('${key}')">Quizzes</button>
                                 <button class="btn btn-danger" style="padding:6px 10px;" onclick="deleteNode('subjects/${appState.activeSubjectId}/chapters/${key}')"><i class="fas fa-trash"></i></button>
                             </td>
@@ -540,7 +541,7 @@
                 document.getElementById('bc-text').innerHTML = `${subject.name} <i class="fas fa-chevron-right" style="font-size:0.7rem; margin:0 5px;"></i> ${chapter.name}`;
                 
                 document.getElementById('add-btn').onclick = openAddQuizModal;
-                thead.innerHTML = '<tr><th>Quiz Title</th><th>Filename</th><th>Preview</th><th width="100">Action</th></tr>';
+                thead.innerHTML = '<tr><th>Quiz Title</th><th>Filename</th><th>Preview</th><th width="140">Action</th></tr>';
 
                 const quizzes = chapter.quizzes || {};
                 const keys = Object.keys(quizzes);
@@ -556,6 +557,7 @@
                             <td style="font-family:monospace; color:var(--primary); font-size:0.9rem;">${quiz.fileName}</td>
                             <td><a href="${url}" target="_blank" style="color:var(--primary); font-size:0.9rem; text-decoration:none;"><i class="fas fa-external-link-alt"></i> Test Link</a></td>
                             <td>
+                                <button class="btn btn-primary" style="padding:6px 10px; margin-right:5px;" onclick="openEditQuizModal('${key}')"><i class="fas fa-edit"></i></button>
                                 <button class="btn btn-danger" style="padding:6px 10px;" onclick="deleteNode('subjects/${appState.activeSubjectId}/chapters/${appState.activeChapterId}/quizzes/${key}')"><i class="fas fa-trash"></i></button>
                             </td>
                         </tr>
@@ -586,9 +588,9 @@
                 document.getElementById('conf-logo').value = c.logoUrl || '';
                 document.getElementById('conf-share').value = c.shareText || '';
                 
-                // Help & Privacy (FIXED: Added Help Message)
+                // Help & Privacy
                 document.getElementById('conf-qr').value = (c.help && c.help.qrImageUrl) || '';
-                document.getElementById('conf-help-msg').value = (c.help && c.help.message) || ''; // <--- Loading Help Msg
+                document.getElementById('conf-help-msg').value = (c.help && c.help.message) || ''; 
                 document.getElementById('conf-privacy').value = c.privacyPolicy || '';
 
                 // Socials
@@ -601,7 +603,7 @@
                 privacyPolicy: document.getElementById('conf-privacy').value,
                 help: {
                     qrImageUrl: document.getElementById('conf-qr').value,
-                    message: document.getElementById('conf-help-msg').value // <--- Saving Help Msg
+                    message: document.getElementById('conf-help-msg').value 
                 }
             }).then(() => toast("Policy & Help Info Saved"));
         }
@@ -692,6 +694,8 @@
         }
 
         // --- 8. UTILITIES & MODALS ---
+        
+        // MODIFIED: Supports default values for Editing
         function openModal(title, fields, saveCb) {
             document.getElementById('modal-title').innerText = title;
             const container = document.getElementById('modal-fields');
@@ -700,14 +704,22 @@
                 container.innerHTML += `
                     <div class="input-group">
                         <label>${f.label}</label>
-                        <input type="text" id="${f.id}" class="input-field" placeholder="${f.placeholder || ''}">
+                        <input type="text" id="${f.id}" class="input-field" 
+                            value="${f.value || ''}" 
+                            placeholder="${f.placeholder || ''}">
                     </div>`;
             });
-            document.getElementById('modal-save-btn').onclick = saveCb;
+            
+            // Clean up old event listeners by cloning the button
+            const oldBtn = document.getElementById('modal-save-btn');
+            const newBtn = oldBtn.cloneNode(true);
+            oldBtn.parentNode.replaceChild(newBtn, oldBtn);
+            
+            newBtn.onclick = saveCb;
             document.getElementById('generic-modal').classList.add('active');
         }
 
-        // Specific Add Modals
+        // --- ADD Functions ---
         function openAddSubjectModal() {
             openModal('New Subject', [{id:'m-name', label:'Subject Name'}, {id:'m-poster', label:'Poster Image URL'}], () => {
                 const n = document.getElementById('m-name').value;
@@ -728,6 +740,51 @@
                 const t = document.getElementById('m-t').value;
                 const f = document.getElementById('m-f').value;
                 if(t && f) db.ref(`subjects/${appState.activeSubjectId}/chapters/${appState.activeChapterId}/quizzes`).push({title:t, fileName:f}).then(() => { closeModal(); toast("Quiz Added"); });
+            });
+        }
+
+        // --- EDIT Functions (NEW) ---
+        function openEditSubjectModal(key) {
+            const sub = appState.subjectsData[key];
+            openModal('Edit Subject', [
+                {id:'e-name', label:'Subject Name', value: sub.name}, 
+                {id:'e-poster', label:'Poster Image URL', value: sub.poster}
+            ], () => {
+                const n = document.getElementById('e-name').value;
+                const p = document.getElementById('e-poster').value;
+                if(n) {
+                    db.ref('subjects/' + key).update({name:n, poster:p})
+                      .then(() => { closeModal(); toast("Subject Updated"); });
+                }
+            });
+        }
+
+        function openEditChapterModal(key) {
+            const chap = appState.subjectsData[appState.activeSubjectId].chapters[key];
+            openModal('Edit Chapter', [
+                {id:'e-name', label:'Chapter Name', value: chap.name}
+            ], () => {
+                const n = document.getElementById('e-name').value;
+                if(n) {
+                    db.ref(`subjects/${appState.activeSubjectId}/chapters/${key}`).update({name:n})
+                      .then(() => { closeModal(); toast("Chapter Updated"); });
+                }
+            });
+        }
+
+        function openEditQuizModal(key) {
+            const quiz = appState.subjectsData[appState.activeSubjectId].chapters[appState.activeChapterId].quizzes[key];
+            openModal('Edit Quiz', [
+                {id:'e-title', label:'Quiz Title', value: quiz.title},
+                {id:'e-file', label:'Filename', value: quiz.fileName}
+            ], () => {
+                const t = document.getElementById('e-title').value;
+                const f = document.getElementById('e-file').value;
+                if(t && f) {
+                    db.ref(`subjects/${appState.activeSubjectId}/chapters/${appState.activeChapterId}/quizzes/${key}`)
+                      .update({title:t, fileName:f})
+                      .then(() => { closeModal(); toast("Quiz Updated"); });
+                }
             });
         }
 

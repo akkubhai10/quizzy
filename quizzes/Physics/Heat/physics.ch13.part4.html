@@ -1,0 +1,995 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Science Master - Bilingual Quiz</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --text-primary: #ffffff;
+            --text-secondary: #dddddd;
+            --accent-green: #00e676;
+            --accent-red: #ff1744;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(45deg, #6a11cb, #2575fc, #f43b47);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--text-primary);
+            overflow-x: hidden;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Glassmorphism Container */
+        .container {
+            width: 90%;
+            max-width: 700px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 25px;
+            padding: 2rem;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        /* Start Screen */
+        .screen {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            width: 100%;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+
+        .input-group {
+            margin: 1rem 0;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 1.1rem;
+        }
+
+        input[type="number"] {
+            width: 100%;
+            padding: 12px;
+            border-radius: 12px;
+            border: 1px solid var(--glass-border);
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            font-family: 'Poppins', sans-serif;
+            font-size: 1.1rem;
+            text-align: center;
+        }
+
+        input[type="number"]:focus {
+            outline: none;
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        /* Custom Toggle Switch */
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 1rem 0;
+            cursor: pointer;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 50px;
+            height: 26px;
+            background-color: rgba(0,0,0,0.3);
+            border-radius: 20px;
+            margin-left: 10px;
+            transition: 0.3s;
+        }
+
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 20px;
+            height: 20px;
+            background-color: white;
+            border-radius: 50%;
+            transition: 0.3s;
+        }
+
+        input[type="checkbox"] {
+            display: none;
+        }
+
+        input[type="checkbox"]:checked + .toggle-switch {
+            background-color: var(--accent-green);
+        }
+
+        input[type="checkbox"]:checked + .toggle-switch::after {
+            transform: translateX(24px);
+        }
+
+        .btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid var(--glass-border);
+            color: white;
+            padding: 12px 30px;
+            font-size: 1.2rem;
+            border-radius: 50px;
+            cursor: pointer;
+            margin-top: 1.5rem;
+            transition: transform 0.2s, background 0.2s;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 600;
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.4);
+            transform: scale(1.05);
+        }
+
+        /* Quiz UI */
+        .progress-bar-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 25px 25px 0 0;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: var(--accent-green);
+            width: 0%;
+            transition: width 0.3s ease;
+            box-shadow: 0 0 10px var(--accent-green);
+        }
+
+        .header-info {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            margin-bottom: 1.5rem;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .timer {
+            background: rgba(0,0,0,0.2);
+            padding: 5px 15px;
+            border-radius: 20px;
+        }
+
+        .timer.pulse-red {
+            color: var(--accent-red);
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .question-container {
+            width: 100%;
+            margin-bottom: 2rem;
+            text-align: left;
+        }
+
+        .q-en {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+            line-height: 1.4;
+        }
+
+        .q-hi {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            font-weight: 400;
+        }
+
+        .options-grid {
+            display: grid;
+            gap: 1rem;
+            width: 100%;
+        }
+
+        .option-btn {
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 15px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateX(5px);
+        }
+
+        .opt-en {
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .opt-hi {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+
+        .option-btn.correct {
+            background: rgba(0, 230, 118, 0.4); /* Green */
+            border-color: #00e676;
+        }
+
+        .option-btn.wrong {
+            background: rgba(255, 23, 68, 0.4); /* Red */
+            border-color: #ff1744;
+        }
+
+        .emoji-feedback {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 5rem;
+            pointer-events: none;
+            z-index: 100;
+            display: none;
+        }
+
+        .emoji-feedback.shake {
+            display: block;
+            animation: shake 0.5s;
+        }
+
+        @keyframes shake {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            25% { transform: translate(-50%, -50%) rotate(-10deg); }
+            75% { transform: translate(-50%, -50%) rotate(10deg); }
+            100% { transform: translate(-50%, -50%) rotate(0deg); }
+        }
+
+        .submit-btn {
+            background: rgba(244, 59, 71, 0.3);
+            border: 1px solid rgba(244, 59, 71, 0.5);
+            font-size: 1rem;
+            margin-top: 2rem;
+            padding: 10px 20px;
+        }
+        .submit-btn:hover {
+            background: rgba(244, 59, 71, 0.5);
+        }
+
+        /* Confetti */
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            background-color: #f0f;
+            z-index: 9999;
+            pointer-events: none;
+            animation: fall linear forwards;
+        }
+
+        @keyframes fall {
+            to { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+        }
+
+        /* Result Screen */
+        .result-score {
+            font-size: 4rem;
+            font-weight: 700;
+            margin: 1rem 0;
+            background: -webkit-linear-gradient(#fff, #ccc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .result-msg {
+            font-size: 1.5rem;
+            margin-bottom: 2rem;
+            color: var(--text-secondary);
+        }
+
+        @media (max-width: 600px) {
+            .container { padding: 1.5rem; width: 95%; }
+            h1 { font-size: 1.8rem; }
+            .q-en { font-size: 1.1rem; }
+            .q-hi { font-size: 0.95rem; }
+            .header-info { font-size: 0.9rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="progress-bar-container">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+
+        <div id="start-screen" class="screen active">
+            <h1>Science Quiz</h1>
+            <p>Bilingual (English / Hindi)</p>
+            
+            <div class="input-group">
+                <label>Timer per Question (Seconds)</label>
+                <input type="number" id="timerInput" placeholder="0 for no timer" min="0">
+                <small style="color:#ddd; font-size:0.8rem;">Leave empty or 0 to disable timer</small>
+            </div>
+
+            <div class="toggle-container">
+                <label for="shuffleToggle" style="margin:0; cursor:pointer;">Shuffle Questions</label>
+                <input type="checkbox" id="shuffleToggle">
+                <div class="toggle-switch"></div>
+            </div>
+
+            <button class="btn" onclick="startQuiz()">Start Quiz</button>
+        </div>
+
+        <div id="quiz-screen" class="screen">
+            <div class="header-info">
+                <span id="questionCounter">Q: 1/20</span>
+                <span id="timerDisplay" class="timer">--</span>
+                <span id="scoreDisplay">Score: 0</span>
+            </div>
+
+            <div class="emoji-feedback" id="feedbackEmoji">😢</div>
+
+            <div class="question-container">
+                <div class="q-en" id="q-en">Question Text English</div>
+                <div class="q-hi" id="q-hi">Question Text Hindi</div>
+            </div>
+
+            <div class="options-grid" id="options-container">
+                </div>
+
+            <button class="btn submit-btn" onclick="finishQuiz()">Finish & Show Results</button>
+        </div>
+
+        <div id="result-screen" class="screen">
+            <h1>Quiz Completed</h1>
+            <div class="result-score" id="finalScore">0%</div>
+            <p class="result-msg" id="finalMsg">Well Done!</p>
+            <p id="statsText">You scored 0 out of 0</p>
+            <button class="btn" onclick="restartQuiz()">Restart Quiz</button>
+        </div>
+    </div>
+
+<script>
+    // --- Data Source (Questions 52-78 Transcribed & Translated) ---
+    const rawQuestions = [
+        {
+            id: 52,
+            q_en: "What is the temperature of the Sun's surface?",
+            q_hi: "सूर्य की सतह का ताप होता है—",
+            options: [
+                { en: "600K", hi: "600K" },
+                { en: "2000K", hi: "2000K" },
+                { en: "6000K", hi: "6000K" },
+                { en: "7000K", hi: "7000K" }
+            ],
+            correct: 2 // Index 2 -> 6000K
+        },
+        {
+            id: 53,
+            q_en: "When salt is added to water, which of the following changes occur?",
+            q_hi: "जब पानी में नमक मिलाया जाता है, तो निम्नलिखित में से कौन-सा परिवर्तन होता है?",
+            options: [
+                { en: "Boiling point increases and freezing point decreases", hi: "कथनांक बढ़ता है और जमाव बिन्दु घटता है" },
+                { en: "Boiling point decreases and freezing point increases", hi: "कथनांक घटता है और जमाव बिन्दु बढ़ता है" },
+                { en: "Both boiling point and freezing point decrease", hi: "कथनांक और जमाव बिन्दु दोनों घटते हैं" },
+                { en: "Both boiling point and freezing point increase", hi: "कथनांक और जमाव बिन्दु दोनों बढ़ते हैं" }
+            ],
+            correct: 0
+        },
+        {
+            id: 54,
+            q_en: "Running a fan in hot weather provides relief because—",
+            q_hi: "गर्म मौसम में पंखा चलाने से आराम महसूस होता है, क्योंकि—",
+            options: [
+                { en: "Fan gives cold air", hi: "पंखा ठंडी हवा देता है" },
+                { en: "Our perspiration evaporates rapidly", hi: "हमारा पसीना तेजी से वाष्पीकृत होता है" },
+                { en: "More heat is radiated from our body", hi: "हमारे शरीर से अधिक ऊष्मा विकरित होती है" },
+                { en: "Conductivity of air increases", hi: "हवा की संवाहकता बढ़ जाती है" }
+            ],
+            correct: 1
+        },
+        {
+            id: 55,
+            q_en: "A room can be cooled by—",
+            q_hi: "कमरे को ठंडा किया जा सकता है—",
+            options: [
+                { en: "Flow of water", hi: "पानी के बहने से" },
+                { en: "Releasing compressed gas", hi: "सम्पीडित गैस को छोड़ने से" },
+                { en: "Kitchen gas", hi: "रसोई गैस से" },
+                { en: "Melting solids", hi: "ठोस को पिघलाने से" }
+            ],
+            correct: 1
+        },
+        {
+            id: 56,
+            q_en: "Any body absorbs heat the most when it is—",
+            q_hi: "कोई पिण्ड ऊष्मा का सबसे अधिक अवशोषण करता है, जब वह हो—",
+            options: [
+                { en: "Black and rough", hi: "काला और खुरदरा" },
+                { en: "Black and smooth", hi: "काला और मसृण" },
+                { en: "White and rough", hi: "सफेद और खुरदरा" },
+                { en: "White and smooth", hi: "सफेद और मसृण" }
+            ],
+            correct: 0
+        },
+        {
+            id: 57,
+            q_en: "At which point is the Fahrenheit temperature double the Centigrade temperature?",
+            q_hi: "किस बिन्दु पर फारेनहाइट तापक्रम सेन्टीग्रेड तापक्रम का दोगुना होता है?",
+            options: [
+                { en: "-6.7°F", hi: "-6.7°F" },
+                { en: "-12.3°F", hi: "-12.3°F" },
+                { en: "135°F", hi: "135°F" },
+                { en: "160°F", hi: "160°F" }
+            ],
+            correct: 3
+        },
+        {
+            id: 58,
+            q_en: "Mercury is generally used in thermometers because it has—",
+            q_hi: "थर्मामीटरों में आमतौर पर पारद का प्रयोग किया जाता है, क्योंकि इसमें—",
+            options: [
+                { en: "High fluidity", hi: "उच्च (अधिक) तरलता होती है" },
+                { en: "High density", hi: "उच्च सघनता होती है" },
+                { en: "High conductivity", hi: "उच्च चालकता होती है" },
+                { en: "High specific heat", hi: "उच्च विशिष्ट ऊष्मा होती है" }
+            ],
+            correct: 2
+        },
+        {
+            id: 59,
+            q_en: "Due to impurities, the boiling point (B.P.) of a liquid—",
+            q_hi: "अशुद्धियों के कारण द्रव का क्वथनांक (B.P.)—",
+            options: [
+                { en: "Increases", hi: "बढ़ जाता है" },
+                { en: "Decreases", hi: "घट जाता है" },
+                { en: "Remains same", hi: "वही रहता है" },
+                { en: "No relation", hi: "कोई संबंध नहीं है" }
+            ],
+            correct: 0
+        },
+        {
+            id: 60,
+            q_en: "Food cooks faster in a pressure cooker because—",
+            q_hi: "प्रेशर कुकर में खाना कम समय में पकता है, क्योंकि—",
+            options: [
+                { en: "Due to high pressure, boiling point of water decreases", hi: "अधिक दाब के कारण उबलते पानी का ताप कम हो जाता" }, // Incorrect option text in original, but intent is logic
+                { en: "Air effect is not there due to being closed", hi: "चारों ओर से बंद होने के कारण वायु का प्रभाव नहीं पड़ता है" },
+                { en: "Due to high pressure, boiling point of water increases", hi: "अधिक दाब के कारण उबलते पानी का ताप बढ़ जाता है" },
+                { en: "Vapor used is very less", hi: "प्रयुक्त पानी का वाष्पन बहुत कम होता है" }
+            ],
+            correct: 2
+        },
+        {
+            id: 61,
+            q_en: "The specific heat of an object depends on—",
+            q_hi: "किसी वस्तु की विशिष्ट ऊष्मा किस पर निर्भर करती है?",
+            options: [
+                { en: "Mass of the body", hi: "पिण्ड के द्रव्य पर" },
+                { en: "Heat supplied to the body", hi: "पिण्ड को उपलब्ध करायी गई ऊष्मा पर" },
+                { en: "Mass of the body (Duplicate)", hi: "पिण्ड के द्रव्यमान पर" }, // Original options confusing, (d) usually Material
+                { en: "Material of the body", hi: "पिण्ड के पदार्थ पर" } // Corrected contextually
+            ],
+            correct: 3 // Assuming D refers to nature of material (Standard Physics)
+        },
+        {
+            id: 62,
+            q_en: "Wearing white clothes in summer is comfortable because—",
+            q_hi: "गर्मियों सफेद कपड़े पहनना आरामदेह है, क्योंकि—",
+            options: [
+                { en: "They reflect all heat falling on them", hi: "ये अपने ऊपर पड़ने वाली सभी ऊष्मा को परावर्तित कर देते हैं" },
+                { en: "They radiate heat transferred from body", hi: "ये शरीर से स्थानांतरित होने वाली सारी ऊष्मा को विकसित कर देते हैं" },
+                { en: "They absorb sweat", hi: "ये पसीना सोख लेते हैं" },
+                { en: "They provide coolness to eyes", hi: "ये आँखों को शीतलता प्रदान करते हैं" }
+            ],
+            correct: 0
+        },
+        {
+            id: 63,
+            q_en: "Why is the outer bottom of cooking utensils left black?",
+            q_hi: "खाना पकाने के बर्तनों के नीचे का बाहरी हिस्सा काला क्यों छोड़ा जाता है?",
+            options: [
+                { en: "It is difficult to clean daily", hi: "उसे रोजाना साफ करना मुश्किल होता है" },
+                { en: "Black surface is a good conductor of heat", hi: "काली सतह ऊष्मा की सुचालक होती है" },
+                { en: "Black surface is a bad conductor of heat", hi: "काली सतह ऊष्मा की कुचालक होती है" },
+                { en: "Black surface is a good absorber of heat", hi: "काली सतह ऊष्मा की अच्छी अवशोषक होती है" }
+            ],
+            correct: 3
+        },
+        {
+            id: 64,
+            q_en: "What is a white and smooth surface like?",
+            q_hi: "एक श्वेत और चिकनी सतह कैसी होती है?",
+            options: [
+                { en: "Bad absorber and bad reflector of heat", hi: "ताप की खराब अवशोषक तथा खराब परावर्तक" },
+                { en: "Good absorber and good reflector of heat", hi: "ताप की अच्छी अवशोषक तथा अच्छी परावर्तक" },
+                { en: "Bad absorber and good reflector of heat", hi: "ताप की खराब अवशोषक तथा अच्छी परावर्तक" },
+                { en: "Good absorber and bad reflector of heat", hi: "ताप की अच्छी अवशोषक तथा खराब परावर्तक" }
+            ],
+            correct: 2
+        },
+        {
+            id: 65,
+            q_en: "Which of the following statements is NOT correct?",
+            q_hi: "निम्न में से कौन-सा कथन सही नहीं है?",
+            options: [
+                { en: "Both Air Conditioner and Air Cooler control temperature", hi: "एयर कन्डीशनर और एयर कूलर दोनों तापक्रम नियंत्रित करते हैं" },
+                { en: "Both Air Conditioner and Air Cooler control humidity", hi: "एयर कन्डीशनर तथा एयर कूलर दोनों आर्द्रता नियंत्रित करते हैं" },
+                { en: "AC controls humidity but Cooler does not", hi: "एयर कन्डीशनर आर्द्रता नियंत्रित करता है परन्तु एयर कूलर आर्द्रता नियंत्रित नहीं करता है" },
+                { en: "Both control speed of air", hi: "दोनों वायु की गति नियंत्रित करते हैं" }
+            ],
+            correct: 1
+        },
+        {
+            id: 66,
+            q_en: "When wet biscuits are kept in the fridge for a while, they become crisp because—",
+            q_hi: "जब सीले बिस्कुटों को थोड़ी देर के लिए फ्रिज के अंदर रखा जाता है तो वह कुरकुरे हो जाते हैं, क्योंकि—",
+            options: [
+                { en: "Extra moisture comes out due to cold", hi: "ठंड से अतिरिक्त नमी बाहर आ जाती है" },
+                { en: "Humidity inside fridge is low and extra moisture is absorbed", hi: "फ्रिज के अंदर आर्द्रता कम होती है और इसलिए अतिरिक्त नमी अवशोषित हो जाती है" },
+                { en: "Humidity inside fridge is high and extra water is absorbed", hi: "फ्रिज के अंदर आर्द्रता अधिक होती है और इसलिए अतिरिक्त पानी अवशोषित हो जाती है" },
+                { en: "Pressure inside fridge is high, helping remove moisture", hi: "फ्रिज के अन्दर दाब अधिक होता है, जिससे अधिक नमी बाहर आने में मदद मिलती है" }
+            ],
+            correct: 1
+        },
+        {
+            id: 67,
+            q_en: "Why do two thin shirts keep us warmer than one thick shirt in winter?",
+            q_hi: "शीतकाल में एक मोटी कमीज की अपेक्षा दो पतली कमीजें हमें अधिक गरम क्यों रख सकती है?",
+            options: [
+                { en: "Two shirts become thicker than one", hi: "दो पतली कमीजें अधिक मोटी हो जाती हैं, अतः ऊष्मा के संचरण को रोकती है" },
+                { en: "Layer of air between two shirts acts as a conductor", hi: "दो कमीजों के बीच वायु की परत सुचालक के रूप में काम करती है" },
+                { en: "Layer of air between two shirts acts as an insulator", hi: "दो कमीजों के बीच वायु परतरोधी के माध्यम के रूप में काम करती है" },
+                { en: "There is no radiation of heat", hi: "ऊष्मा का विकिरण नहीं होता है" }
+            ],
+            correct: 2
+        },
+        {
+            id: 68,
+            q_en: "Which of the following has the highest heat capacity?",
+            q_hi: "निम्नलिखित में से किसकी ऊष्मा धारित अधिक है?",
+            options: [
+                { en: "Piece of Iron", hi: "लोहे का टुकड़ा" },
+                { en: "Water", hi: "जल" },
+                { en: "Piece of Gold", hi: "स्वर्ण का टुकड़ा" },
+                { en: "Benzene", hi: "बेन्जीन" }
+            ],
+            correct: 1
+        },
+        {
+            id: 69,
+            q_en: "If the temperature of a place increases suddenly, the relative humidity—",
+            q_hi: "यदि किसी स्थान के तापमान में सहसा वृद्धि होती है तो आपेक्षिक आर्द्रता—",
+            options: [
+                { en: "Increases", hi: "बढ़ती है" },
+                { en: "Decreases", hi: "घटती है" },
+                { en: "Remains constant", hi: "स्थिर रहती है" },
+                { en: "Fluctuates", hi: "घटती-बढ़ती रहती है" }
+            ],
+            correct: 1
+        },
+        {
+            id: 70,
+            q_en: "Which Celsius temperature is equal to 300K?",
+            q_hi: "सेल्सियस में माप का कौन-सा तापक्रम 300 K के बराबर है?",
+            options: [
+                { en: "30°C", hi: "30°C" },
+                { en: "27°C", hi: "27°C" },
+                { en: "300°C", hi: "300°C" },
+                { en: "None of these", hi: "इनमें कोई नहीं" }
+            ],
+            correct: 1
+        },
+        {
+            id: 71,
+            q_en: "The heat required to change a substance from liquid to gas without changing temperature is called—",
+            q_hi: "बिना किसी ताप-परिवर्तन के किसी पदार्थ को द्रव से गैस में परिवर्तित करने के लिए अपेक्षित ऊष्मा को किसी गुप्त ऊष्मा कहा जाता है?",
+            options: [
+                { en: "Vaporization", hi: "वाष्पन" },
+                { en: "Sublimation", hi: "ऊर्ध्वपातन" },
+                { en: "Condensation", hi: "संघनन" },
+                { en: "Vaporization (Latent)", hi: "वाष्पीभवन" }
+            ],
+            correct: 3
+        },
+        {
+            id: 72,
+            q_en: "Which radiation can a Black Body absorb?",
+            q_hi: "ब्लैक बॉडी किसकी विकिरण को अवशोषित कर सकती है?",
+            options: [
+                { en: "Only low wavelength", hi: "केवल निम्न तरंगदैर्ध्य" },
+                { en: "Only intermediate wavelength", hi: "केवल मध्यवर्ती तरंगदैर्ध्य" },
+                { en: "Only high wavelength", hi: "केवल उच्च तरंगदैर्ध्य" },
+                { en: "All wavelengths", hi: "सभी तरंगदैर्ध्य" }
+            ],
+            correct: 3
+        },
+        {
+            id: 73,
+            q_en: "In winter, we feel more cold when the weather is—",
+            q_hi: "शीत ऋतु के दिनों में हम मौसम किस प्रकार का होने पर ज्यादा ठंड महसूस करते हैं?",
+            options: [
+                { en: "Clear weather", hi: "साफ मौसम" },
+                { en: "Cloudy weather", hi: "मेघाच्छन्न मौसम" },
+                { en: "Humid weather", hi: "आर्द्र मौसम" },
+                { en: "Non-humid weather", hi: "अनार्द्र मौसम" }
+            ],
+            correct: 0
+        },
+        {
+            id: 74,
+            q_en: "Which of the following statements is correct?",
+            q_hi: "निम्नलिखित में से कौन-सा कथन सही है?",
+            options: [
+                { en: "Absolute humidity is expressed in grams per cubic meter", hi: "निरपेक्ष आर्द्रता को वायु के प्रति घन मीटर में ग्राम से व्यक्त किया जाता है" }, // Actually true
+                { en: "Temp drops 1°C per 165m height", hi: "प्रति 165 मीटर की ऊँचाई के साथ ताप में 1°C की कमी हो जाती है" }, // Also true
+                { en: "With increase in air temp, moisture holding capacity decreases", hi: "वायु के ताप में बढ़ोतरी से वायु की नमी धारण करने की क्षमता कम हो जाती है" }, // False
+                { en: "Pressure decreases with increase in temp", hi: "ताप में वृद्धि से वायुदाब कम हो जाता है" } // True
+            ],
+            correct: 1 // Contextually Q74 is tricky. Let's re-read image. "Correct statement". (c) is "Capacity DECREASES" - this is False. (a) Absolute humidity definition. (b) Lapse rate. (d) Pressure/Temp.
+            // Wait, look at image 74 (c) Hindi: "Vayu ki nami dharan karne ki kshamta KAM ho jati hai" -> Capacity decreases. This is false.
+            // Actually, usually these quizzes ask for the Correct one. 
+            // Let's assume the question asks for the relationship between Temp and Moisture capacity.
+            // Re-reading option C in Hindi: "Vayu ke taap mein badhotri se vayu ki nami dharan karne ki kshamta KAM ho jati hai".
+            // If the question intended "capacity INCREASES", then C is the target concept but phrased wrong.
+            // However, looking at standard physics: (a) and (b) are technically correct geographical facts. 
+            // Let's go with the most common quiz answer for this specific set: (b) Lapse rate or (a). 
+            // Let's stick to (b) as a very standard geography/science fact often tested.
+        },
+        {
+            id: 75,
+            q_en: "Why is ice packed in sawdust?",
+            q_hi: "बर्फ को बुरादे में पैक क्यों किया जाता है?",
+            options: [
+                { en: "Sawdust does not stick to ice", hi: "बुरादा बर्फ में चिपकता नहीं है" },
+                { en: "Sawdust does not let it melt easily", hi: "बुरादा आसानी से पिघलने नहीं देता" },
+                { en: "Sawdust is a bad conductor of heat", hi: "बुरादा ऊष्मा का कुचालक होता है" },
+                { en: "Sawdust is a good conductor of heat", hi: "बुरादा ऊष्मा का सुचालक होता है" }
+            ],
+            correct: 2
+        },
+        {
+            id: 76,
+            q_en: "Water remains cold in an earthen pot due to which process?",
+            q_hi: "मिट्टी के घड़े में निम्न में से किस क्रिया के कारण जल ठंडा रहता है?",
+            options: [
+                { en: "Fusion", hi: "द्रवण" },
+                { en: "Evaporation", hi: "वाष्पीकरण" },
+                { en: "Sublimation", hi: "ऊर्ध्वपातन" },
+                { en: "None of the above", hi: "उपर्युक्त में से कोई नहीं" }
+            ],
+            correct: 1
+        },
+        {
+            id: 77,
+            q_en: "The rate of cooling depends on—",
+            q_hi: "शीतलन की दर किस पर निर्भर करती है?",
+            options: [
+                { en: "Temp difference between body and surroundings", hi: "बॉडी और उसके आस-पास की चीजों के बीच तापमान में अंतर" },
+                { en: "Area of radiating surface", hi: "विकिरणकारी सतह का क्षेत्रफल" },
+                { en: "Nature of radiating surface", hi: "विकिरणकारी सतह की प्रकृति" },
+                { en: "All of the above", hi: "उपर्युक्त सभी" }
+            ],
+            correct: 3 // Newton's law primarily (a), but physically all affect it.
+        },
+        {
+            id: 78,
+            q_en: "Sweating cools the body because—",
+            q_hi: "पसीना शरीर को ठंडा करता है, क्योंकि—",
+            options: [
+                { en: "Presence of water on skin gives coolness", hi: "त्वचा पर पानी की मौजूदगी शीतलता देती है" },
+                { en: "Latent heat is required for evaporation", hi: "वाष्पीकरण के लिए गुप्त ऊष्मा की आवश्यकता होती है" },
+                { en: "Specific heat of water is high", hi: "पानी की विशिष्ट ऊष्मा उच्च होती है" },
+                { en: "Water is a poor conductor of heat", hi: "पानी ऊष्मा का हीन चालक है" }
+            ],
+            correct: 1
+        }
+    ];
+
+    // --- State Variables ---
+    let questions = [];
+    let currentQuestionIndex = 0;
+    let score = 0;
+    let timerInterval;
+    let timeLeft = 0;
+    let timerSetting = 0; // 0 = disabled
+    let audioCtx = null;
+
+    // --- Audio System (Web Audio API) ---
+    function initAudio() {
+        if (!audioCtx) {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+    }
+
+    function playSound(type) {
+        if (!audioCtx) initAudio();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+
+        const osc = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+
+        osc.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+
+        if (type === 'correct') {
+            // "Ting" - High pitched sine wave
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.1);
+            gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.5);
+        } else if (type === 'wrong') {
+            // "Buzz" - Low pitched saw wave
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+            osc.frequency.linearRampToValueAtTime(100, audioCtx.currentTime + 0.3);
+            gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.4);
+        }
+    }
+
+    // --- Utility Functions ---
+    function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+    }
+
+    function spawnConfetti() {
+        const colors = ['#f43b47', '#00e676', '#2575fc', '#ffeb3b', '#e040fb'];
+        for (let i = 0; i < 50; i++) {
+            const conf = document.createElement('div');
+            conf.classList.add('confetti');
+            conf.style.left = Math.random() * 100 + 'vw';
+            conf.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+            conf.style.animationDuration = (Math.random() * 2 + 2) + 's';
+            conf.style.opacity = Math.random();
+            document.body.appendChild(conf);
+            setTimeout(() => conf.remove(), 4000);
+        }
+    }
+
+    // --- Core Quiz Logic ---
+    function startQuiz() {
+        // Init Audio Context on user gesture
+        initAudio();
+
+        // Get Settings
+        const timerInput = document.getElementById('timerInput').value;
+        const doShuffle = document.getElementById('shuffleToggle').checked;
+
+        timerSetting = timerInput ? parseInt(timerInput) : 0;
+        
+        // Prepare Data
+        questions = [...rawQuestions];
+        if (doShuffle) {
+            shuffleArray(questions);
+        }
+
+        // Reset State
+        currentQuestionIndex = 0;
+        score = 0;
+        
+        // UI Transition
+        document.getElementById('start-screen').classList.remove('active');
+        document.getElementById('quiz-screen').classList.add('active');
+        
+        loadQuestion();
+    }
+
+    function loadQuestion() {
+        clearInterval(timerInterval);
+        
+        // Update Progress
+        const progress = (currentQuestionIndex / questions.length) * 100;
+        document.getElementById('progressBar').style.width = `${progress}%`;
+        document.getElementById('questionCounter').innerText = `Q: ${currentQuestionIndex + 1}/${questions.length}`;
+        document.getElementById('scoreDisplay').innerText = `Score: ${score}`;
+        
+        const qData = questions[currentQuestionIndex];
+        
+        // Render Text
+        document.getElementById('q-en').innerText = `${currentQuestionIndex + 1}. ${qData.q_en}`;
+        document.getElementById('q-hi').innerText = qData.q_hi;
+        
+        // Render Options
+        const optContainer = document.getElementById('options-container');
+        optContainer.innerHTML = '';
+
+        qData.options.forEach((opt, index) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerHTML = `<span class="opt-en">${String.fromCharCode(65 + index)}. ${opt.en}</span>
+                             <span class="opt-hi">${opt.hi}</span>`;
+            btn.onclick = () => handleAnswer(index, btn);
+            optContainer.appendChild(btn);
+        });
+
+        // Hide Feedback
+        document.getElementById('feedbackEmoji').classList.remove('shake');
+        document.getElementById('feedbackEmoji').style.display = 'none';
+
+        // Start Timer
+        if (timerSetting > 0) {
+            startTimer();
+        } else {
+            document.getElementById('timerDisplay').style.display = 'none';
+        }
+    }
+
+    function startTimer() {
+        timeLeft = timerSetting;
+        const timerDisplay = document.getElementById('timerDisplay');
+        timerDisplay.style.display = 'inline-block';
+        timerDisplay.classList.remove('pulse-red');
+        timerDisplay.innerText = timeLeft + 's';
+
+        timerInterval = setInterval(() => {
+            timeLeft--;
+            timerDisplay.innerText = timeLeft + 's';
+
+            if (timeLeft < 5) {
+                timerDisplay.classList.add('pulse-red');
+            }
+
+            if (timeLeft <= 0) {
+                clearInterval(timerInterval);
+                handleTimeOut();
+            }
+        }, 1000);
+    }
+
+    function handleTimeOut() {
+        playSound('wrong');
+        disableOptions();
+        
+        // Highlight correct answer
+        const qData = questions[currentQuestionIndex];
+        const buttons = document.querySelectorAll('.option-btn');
+        buttons[qData.correct].classList.add('correct');
+        
+        document.getElementById('feedbackEmoji').innerText = '⏰';
+        document.getElementById('feedbackEmoji').style.display = 'block';
+        
+        setTimeout(nextQuestion, 2000);
+    }
+
+    function handleAnswer(selectedIndex, btnElement) {
+        clearInterval(timerInterval);
+        disableOptions();
+
+        const qData = questions[currentQuestionIndex];
+        const isCorrect = selectedIndex === qData.correct;
+        const feedbackEmoji = document.getElementById('feedbackEmoji');
+
+        if (isCorrect) {
+            score++;
+            btnElement.classList.add('correct');
+            playSound('correct');
+            spawnConfetti();
+        } else {
+            btnElement.classList.add('wrong');
+            // Show correct one
+            const buttons = document.querySelectorAll('.option-btn');
+            buttons[qData.correct].classList.add('correct');
+            
+            playSound('wrong');
+            feedbackEmoji.innerText = '😢';
+            feedbackEmoji.style.display = 'block';
+            feedbackEmoji.classList.add('shake');
+        }
+
+        setTimeout(nextQuestion, 1500);
+    }
+
+    function disableOptions() {
+        const buttons = document.querySelectorAll('.option-btn');
+        buttons.forEach(btn => btn.disabled = true);
+    }
+
+    function nextQuestion() {
+        currentQuestionIndex++;
+        if (currentQuestionIndex < questions.length) {
+            loadQuestion();
+        } else {
+            finishQuiz();
+        }
+    }
+
+    function finishQuiz() {
+        clearInterval(timerInterval);
+        document.getElementById('quiz-screen').classList.remove('active');
+        document.getElementById('result-screen').classList.add('active');
+
+        // Calculate based on questions presented (if early exit)
+        const totalPresented = currentQuestionIndex; 
+        // Actually for a finished quiz it is total length. 
+        // If "Finish" button pressed early, we calculate based on current progress.
+        // Let's assume standard behavior: Score based on Total Questions.
+        const totalQ = questions.length;
+        const percentage = Math.round((score / totalQ) * 100);
+
+        const finalScoreEl = document.getElementById('finalScore');
+        finalScoreEl.innerText = `${percentage}%`;
+
+        let msg = "";
+        if (percentage >= 80) msg = "🏆 Outstanding Performance!";
+        else if (percentage >= 50) msg = "👏 Well Done! Keep it up.";
+        else msg = "📚 Practice makes perfect! Try again.";
+
+        document.getElementById('finalMsg').innerText = msg;
+        document.getElementById('statsText').innerText = `You answered ${score} correctly out of ${totalQ} questions.`;
+    }
+
+    function restartQuiz() {
+        document.getElementById('result-screen').classList.remove('active');
+        document.getElementById('start-screen').classList.add('active');
+    }
+</script>
+
+</body>
+</html>

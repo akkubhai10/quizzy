@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Economics Master Quiz - Akash Kumar</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --success: #48bb78;
+            --error: #f56565;
+            --text-en: #ffffff;
+            --text-hi: #ddd;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(-45deg, #667eea, #764ba2, #ff00cc, #3333ff);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            padding: 20px;
+        }
+
+        @keyframes gradientBG { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+
+        .container {
+            width: 100%;
+            max-width: 700px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 25px;
+            padding: 30px;
+            color: white;
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .progress-container {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 6px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 25px 25px 0 0;
+            overflow: hidden;
+        }
+        #progress-bar { height: 100%; width: 0%; background: #00f2fe; transition: 0.3s; }
+
+        .quiz-header { display: flex; justify-content: space-between; margin-bottom: 20px; font-weight: 600; font-size: 0.9rem; }
+        #timer.pulse-red { color: #ff4d4d; animation: pulse 0.5s infinite alternate; }
+        @keyframes pulse { from { opacity: 1; } to { opacity: 0.5; } }
+
+        .screen { display: none; }
+        .screen.active { display: block; }
+
+        .setup-group { margin-bottom: 15px; }
+        input[type="number"] { width: 100%; padding: 12px; border-radius: 10px; border: none; background: rgba(255,255,255,0.2); color: white; margin-top: 5px; }
+
+        .btn {
+            width: 100%; padding: 15px; border: none; border-radius: 15px;
+            background: rgba(255,255,255,0.2); color: white;
+            font-weight: 600; cursor: pointer; transition: 0.3s; margin-top: 10px;
+        }
+        .btn:hover { transform: scale(1.02); background: rgba(255,255,255,0.3); }
+
+        .option-btn { text-align: left; padding: 12px 20px; border: 1px solid rgba(255,255,255,0.1); margin-bottom: 10px; }
+        .option-btn .en { display: block; font-weight: 600; }
+        .option-btn .hi { display: block; font-size: 0.85rem; color: var(--text-hi); margin-top: 2px; }
+
+        .correct { background: var(--success) !important; }
+        .wrong { background: var(--error) !important; }
+
+        #sad-emoji { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 100px; display: none; z-index: 9999; }
+        .shake { animation: shake 0.5s; }
+        @keyframes shake { 0%, 100% { transform: translate(-50%, -50%) rotate(0deg); } 25% { transform: translate(-55%, -50%) rotate(-5deg); } 75% { transform: translate(-45%, -50%) rotate(5deg); } }
+
+        .confetti { position: fixed; width: 8px; height: 8px; z-index: 9998; animation: fall linear forwards; }
+        @keyframes fall { to { transform: translateY(100vh) rotate(360deg); } }
+
+        .finish-btn { background: rgba(255, 50, 50, 0.3); font-size: 0.8rem; border: 1px solid rgba(255,255,255,0.2); }
+    </style>
+</head>
+<body>
+
+    <div id="sad-emoji">😢</div>
+
+    <div class="container">
+        <div class="progress-container"><div id="progress-bar"></div></div>
+
+        <div id="start-screen" class="screen active">
+            <h1 style="text-align: center; margin-bottom: 20px;">Economy Quiz Pro</h1>
+            <div class="setup-group">
+                <label>Timer (Seconds per question):</label>
+                <input type="number" id="timer-input" value="15">
+            </div>
+            <div class="setup-group">
+                <label><input type="checkbox" id="shuffle-input" checked> Shuffle Questions</label>
+            </div>
+            <button class="btn" onclick="startQuiz()">Start Quiz</button>
+        </div>
+
+        <div id="quiz-screen" class="screen">
+            <div class="quiz-header">
+                <span id="q-counter">Q: 1/60</span>
+                <span id="timer">15s</span>
+                <span id="score-display">Score: 0</span>
+            </div>
+            <h3 id="q-en">English Question</h3>
+            <p id="q-hi" style="margin-bottom: 20px; color: #ccc;">Hindi Question</p>
+            <div id="options-container"></div>
+            <button class="btn finish-btn" onclick="showResults()">Finish & Show Results</button>
+        </div>
+
+        <div id="result-screen" class="screen">
+            <h1 id="result-message" style="text-align: center;">Result</h1>
+            <p id="final-score" style="text-align: center; font-size: 1.5rem; margin: 20px 0;"></p>
+            <button class="btn" onclick="location.reload()">Restart Quiz</button>
+        </div>
+    </div>
+
+    <script>
+        const quizData = [
+            { en: "The Indian economy is a...", hi: "भारतीय अर्थव्यवस्था है-", options: [{en:"Developed", hi:"विकसित"}, {en:"Developing", hi:"विकासशील"}, {en:"Backward", hi:"पिछड़ी"}, {en:"Mixed", hi:"मिश्रित"}], correct: 1 },
+            { en: "Distribution of income and wealth in India is...", hi: "भारत में आय और धन का वितरण है-", options: [{en:"Equal", hi:"समान"}, {en:"Unequal", hi:"असमान"}, {en:"Proportional", hi:"अनुपातिक"}, {en:"Socialist", hi:"समाजवादी"}], correct: 1 },
+            { en: "India's per capita income is...", hi: "भारत की प्रतिव्यक्ति आय है-", options: [{en:"Very High", hi:"बहुत ऊँची"}, {en:"Medium", hi:"मध्यम"}, {en:"Low", hi:"निम्न"}, {en:"None", hi:"कोई नहीं"}], correct: 2 },
+            { en: "Which country has the highest per capita income?", hi: "निम्नलिखित देशों में सबसे अधिक प्रतिव्यक्ति आय कहाँ है?", options: [{en:"India", hi:"भारत"}, {en:"Japan", hi:"जापान"}, {en:"China", hi:"चीन"}, {en:"Switzerland", hi:"स्विट्जरलैंड"}], correct: 3 },
+            { en: "What percentage of workforce is in agriculture in India?", hi: "भारत में कृषि में श्रमशक्ति का कितना हिस्सा लगा है?", options: [{en:"20%", hi:"20%"}, {en:"48%", hi:"48%"}, {en:"58%", hi:"58%"}, {en:"80%", hi:"80%"}], correct: 1 },
+            { en: "The main economic problem of India is...", hi: "भारत की प्रमुख आर्थिक समस्या है-", options: [{en:"Illiteracy", hi:"अशिक्षा"}, {en:"Lack of Irrigation", hi:"सिंचाई का अभाव"}, {en:"Corruption", hi:"भ्रष्टाचार"}, {en:"Poverty & Unemployment", hi:"गरीबी एवं बेरोजगारी"}], correct: 3 },
+            { en: "Who dominates the Indian economy?", hi: "भारत की अर्थव्यवस्था में किसकी प्रधानता है?", options: [{en:"Capital", hi:"पूँजी"}, {en:"Population", hi:"जनसंख्या"}, {en:"Agriculture", hi:"कृषि"}, {en:"None", hi:"इनमें से कोई नहीं"}], correct: 2 },
+            { en: "The word synonym to 'Underdeveloped' is...", hi: "अर्द्धविकसित का पर्यायवाची शब्द है?", options: [{en:"Poor", hi:"गरीब"}, {en:"Backward", hi:"पिछड़ा"}, {en:"Developing", hi:"विकासशील"}, {en:"None", hi:"इनमें से कोई नहीं"}], correct: 2 },
+            { en: "Creation of an economy happens by...", hi: "एक अर्थव्यवस्था का सृजन होता है-", options: [{en:"Natural Resources", hi:"प्राकृतिक संसाधनों से"}, {en:"Physical Resources", hi:"भौतिक संसाधनों से"}, {en:"Human Resources", hi:"मानवीय संसाधनों से"}, {en:"All of these", hi:"इनमें सभी"}], correct: 3 },
+            { en: "Main types of economy are...", hi: "अर्थव्यवस्था के प्रमुख प्रकार हैं-", options: [{en:"Two", hi:"दो"}, {en:"Three", hi:"तीन"}, {en:"Four", hi:"चार"}, {en:"Many", hi:"अनेक"}], correct: 1 },
+            { en: "In which economy do individuals own resources?", hi: "किस अर्थव्यवस्था में उत्पादन के साधनों पर निजी स्वामित्व रहता है?", options: [{en:"Capitalist", hi:"पूंजीवादी"}, {en:"Socialist", hi:"समाजवादी"}, {en:"Mixed", hi:"मिश्रित"}, {en:"None", hi:"कोई नहीं"}], correct: 0 },
+            { en: "Which economy emphasizes social welfare?", hi: "एक समाजवादी अर्थव्यवस्था में सर्वाधिक बल दिया जाता है-", options: [{en:"Profit", hi:"लाभ"}, {en:"Production", hi:"उत्पादन"}, {en:"Social Welfare", hi:"लोक कल्याण"}, {en:"Freedom", hi:"स्वतंत्रता"}], correct: 2 },
+            { en: "Feature of a Mixed Economy is...", hi: "मिश्रित अर्थव्यवस्था की विशेषता है-", options: [{en:"Private Sector", hi:"निजी क्षेत्र"}, {en:"Public Sector", hi:"सार्वजनिक क्षेत्र"}, {en:"Both A & B", hi:"दोनों"}, {en:"None", hi:"कोई नहीं"}], correct: 2 },
+            { en: "Main economic goal after independence was...", hi: "स्वतंत्रता प्राप्ति के बाद मुख्य आर्थिक उद्देश्य था-", options: [{en:"Economic Growth", hi:"आर्थिक विकास"}, {en:"Employment", hi:"रोजगार"}, {en:"Poverty Removal", hi:"निर्धनता निवारण"}, {en:"All of these", hi:"इनमें सभी"}], correct: 3 },
+            { en: "Best indicator of economic growth is...", hi: "आर्थिक विकास का सबसे उपयुक्त सूचकांक है-", options: [{en:"National Income", hi:"राष्ट्रीय आय"}, {en:"Per Capita Income", hi:"प्रतिव्यक्ति आय"}, {en:"Stability", hi:"स्थिरता"}, {en:"None", hi:"कोई नहीं"}], correct: 1 },
+            { en: "Which country has a Mixed Economy?", hi: "निम्न में किस देश में मिश्रित अर्थव्यवस्था है?", options: [{en:"China", hi:"चीन"}, {en:"USA", hi:"अमेरिका"}, {en:"India", hi:"भारत"}, {en:"None", hi:"कोई नहीं"}], correct: 2 },
+            { en: "Which is a developed country?", hi: "निम्न में कौन सा देश विकसित अर्थव्यवस्था का उदाहरण है?", options: [{en:"Indonesia", hi:"इंडोनेशिया"}, {en:"India", hi:"भारत"}, {en:"USA", hi:"अमेरिका"}, {en:"Sri Lanka", hi:"श्रीलंका"}], correct: 2 },
+            { en: "Working population in underdeveloped countries is in...", hi: "अर्द्धविकसित देशों की जनसंख्या संलग्न रहती है-", options: [{en:"Primary Sector", hi:"प्राथमिक क्षेत्र"}, {en:"Industrial", hi:"औद्योगिक"}, {en:"Service", hi:"सेवा"}, {en:"All", hi:"सभी"}], correct: 0 },
+            { en: "Which is called the Primary Sector?", hi: "किसे प्राथमिक क्षेत्र कहा जाता है?", options: [{en:"Industrial", hi:"औद्योगिक"}, {en:"Agriculture", hi:"कृषि"}, {en:"Service", hi:"सेवा"}, {en:"None", hi:"कोई नहीं"}], correct: 1 },
+            { en: "Main part of economic structure is...", hi: "आर्थिक संरचना का मुख्य अंग है-", options: [{en:"Education", hi:"शिक्षा"}, {en:"Health", hi:"स्वास्थ्य"}, {en:"Transport", hi:"यातायात"}, {en:"None", hi:"कोई नहीं"}], correct: 2 },
+            { en: "Animal husbandry belongs to...", hi: "पशुपालन किस क्षेत्र का अंग है?", options: [{en:"Primary", hi:"प्राथमिक"}, {en:"Secondary", hi:"द्वितीयक"}, {en:"Tertiary", hi:"तृतीयक"}, {en:"None", hi:"कोई नहीं"}], correct: 0 },
+            { en: "Part of social infrastructure is...", hi: "निम्न में कौन सामाजिक संरचना का अंग है?", options: [{en:"Education", hi:"शिक्षा"}, {en:"Health", hi:"स्वास्थ्य"}, {en:"Housing", hi:"आवास"}, {en:"All", hi:"सभी"}], correct: 3 },
+            { en: "Country with high National Income is called...", hi: "जिस देश की राष्ट्रीय आय अधिक होती है उसे कहते हैं-", options: [{en:"Undeveloped", hi:"अविकसित"}, {en:"Developed", hi:"विकसित"}, {en:"Developing", hi:"विकासशील"}, {en:"None", hi:"कोई नहीं"}], correct: 1 },
+            { en: "Which state is called a 'Backward State'?", hi: "किस राज्य को पिछड़ा राज्य कहा जाता है?", options: [{en:"Punjab", hi:"पंजाब"}, {en:"Haryana", hi:"हरियाणा"}, {en:"Bihar", hi:"बिहार"}, {en:"Gujarat", hi:"गुजरात"}], correct: 2 },
+            { en: "Bihar's rank in fish production is...", hi: "मछली उत्पादन में बिहार का स्थान है-", options: [{en:"First", hi:"पहला"}, {en:"Second", hi:"दूसरा"}, {en:"Third", hi:"तीसरा"}, {en:"Fourth", hi:"चौथा"}], correct: 3 },
+            { en: "Indicator of Quality of Life is...", hi: "जीवन की भौतिक गुणवत्ता का सूचक है-", options: [{en:"Life Expectancy", hi:"जीवन प्रत्याशा"}, {en:"Infant Mortality", hi:"शिशु मृत्यु दर"}, {en:"Literacy", hi:"साक्षरता"}, {en:"All", hi:"इनमें सभी"}], correct: 3 },
+            { en: "World Commission on Environment was set up in...", hi: "विश्व पर्यावरण एवं विकास आयोग की स्थापना हुई-", options: [{en:"1980", hi:"1980"}, {en:"1983", hi:"1983"}, {en:"1985", hi:"1985"}, {en:"1990", hi:"1990"}], correct: 1 },
+            { en: "What is a Closed Economy?", hi: "बंद अर्थव्यवस्था वह है जिसमें-", options: [{en:"Only Export", hi:"केवल निर्यात"}, {en:"Deficit Finance", hi:"घाटे की वित्त व्यवस्था"}, {en:"Only Import", hi:"केवल आयात"}, {en:"No Export/Import", hi:"न निर्यात न आयात"}], correct: 3 },
+            { en: "Indian economy can be classified as...", hi: "भारतीय अर्थव्यवस्था को वर्णित किया जा सकता है-", options: [{en:"Backward", hi:"पिछड़ी"}, {en:"Developing", hi:"विकासशील"}, {en:"Developed", hi:"विकसित"}, {en:"Underdeveloped", hi:"अर्द्धविकसित"}], correct: 1 },
+            { en: "Feature of Indian economy is...", hi: "भारतीय अर्थव्यवस्था की विशेषता है-", options: [{en:"Agri Dominance", hi:"कृषि की प्रधानता"}, {en:"Low Per Capita Income", hi:"निम्न प्रतिव्यक्ति आय"}, {en:"Unemployment", hi:"बेरोजगारी"}, {en:"All", hi:"उपयुक्त सभी"}], correct: 3 },
+            { en: "Which is NOT a feature of Indian economy?", hi: "कौन सी भारतीय अर्थव्यवस्था की विशेषता नहीं है?", options: [{en:"Low Productivity", hi:"निम्न कार्यकुशलता"}, {en:"Low Per Capita Income", hi:"प्रतिव्यक्ति कम आय"}, {en:"Capital Deficit", hi:"पूँजी निर्माण की दर"}, {en:"Abundant Resources", hi:"प्राकृतिक संसाधनों की कमी"}], correct: 3 },
+            { en: "Meaning of Mixed Economy is...", hi: "मिश्रित अर्थव्यवस्था का अर्थ है?", options: [{en:"Both Agri and Industry", hi:"कृषि और उद्योग दोनों"}, {en:"Public and Private Sector", hi:"सार्वजनिक और निजी क्षेत्र"}, {en:"Global and Local", hi:"भूमण्डलीकरण और स्वदेशी"}, {en:"None", hi:"कोई नहीं"}], correct: 1 },
+            { en: "In which economy govt doesn't interfere?", hi: "किस अर्थव्यवस्था में सरकार हस्तक्षेप नहीं करती?", options: [{en:"Market Economy", hi:"बाजार अर्थव्यवस्था"}, {en:"Central Planned", hi:"केंद्रीय नियोजित"}, {en:"Mixed", hi:"मिश्रित"}, {en:"All", hi:"सभी"}], correct: 0 },
+            { en: "Unemployment in India is studied at...", hi: "बेरोजगारी का अध्ययन किया जाता है-", options: [{en:"Micro Level", hi:"व्यष्टि स्तर पर"}, {en:"Macro Level", hi:"समष्टि स्तर पर"}, {en:"Both", hi:"दोनों"}, {en:"None", hi:"कोई नहीं"}], correct: 1 },
+            { en: "Economic factor for growth is...", hi: "आर्थिक विकास का आर्थिक तत्व है-", options: [{en:"Social", hi:"सामाजिक"}, {en:"Natural Resources", hi:"प्राकृतिक संसाधन"}, {en:"Human Capital", hi:"पूँजी संसाधन"}, {en:"All", hi:"सभी"}], correct: 2 },
+            { en: "Who controls centrally planned economy?", hi: "केंद्रीय नियोजित अर्थव्यवस्था में नियंत्रण किसका होता है?", options: [{en:"Industry", hi:"उद्योगपति"}, {en:"Private Firm", hi:"निजी फर्म"}, {en:"Government", hi:"सरकार"}, {en:"Consumer", hi:"उपभोक्ता"}], correct: 2 },
+            { en: "Economic growth in Country X is certain if...", hi: "देश X में विकास निश्चित है यदि-", options: [{en:"Tech progress", hi:"तकनीकी प्रगति"}, {en:"Pop growth", hi:"जनसंख्या वृद्धि"}, {en:"Capital formation", hi:"पूँजी निर्माण"}, {en:"World trade", hi:"विश्व व्यापार"}], correct: 2 },
+            { en: "Planned economy in India is based on...", hi: "भारत में नियोजित अर्थव्यवस्था आधारित है-", options: [{en:"Gandhian", hi:"गांधीवादी"}, {en:"Socialist", hi:"समाजवादी"}, {en:"Capitalist", hi:"पूंजीवादी"}, {en:"Mixed", hi:"मिश्रित"}], correct: 3 },
+            { en: "Decisions based on price mechanism are in...", hi: "कीमत तंत्र के आधार पर निर्णय किसमें लिये जाते हैं?", options: [{en:"Socialist", hi:"समाजवादी"}, {en:"Capitalist", hi:"पूंजीवादी"}, {en:"Mixed", hi:"मिश्रित"}, {en:"None", hi:"कोई नहीं"}], correct: 1 },
+            { en: "Who said Economics is the Science of Human Welfare?", hi: "किसके अनुसार अर्थशास्त्र मानव कल्याण का विज्ञान है?", options: [{en:"Marshall", hi:"मार्शल"}, {en:"Samuelson", hi:"सैम्यूअलसन"}, {en:"J.S. Mill", hi:"जे. एस. मिल"}, {en:"Adam Smith", hi:"एडम स्मिथ"}], correct: 0 },
+            { en: "Factor of resource price determination is...", hi: "साधन कीमत निर्धारण के घटक हैं-", options: [{en:"Rent", hi:"लगान"}, {en:"Wage", hi:"मजदूरी"}, {en:"Interest", hi:"ब्याज"}, {en:"All", hi:"सभी"}], correct: 3 },
+            { en: "Microeconomics includes...", hi: "व्यष्टि अर्थशास्त्र में सम्मिलित होती है-", options: [{en:"Individual units", hi:"व्यक्तिगत इकाई"}, {en:"Small units", hi:"छोटी-छोटी इकाई"}, {en:"Price determination", hi:"व्यक्तिगत मूल्य निर्धारण"}, {en:"All", hi:"सभी"}], correct: 3 },
+            { en: "Who said Economics is Science of Wealth?", hi: "किसने कहा 'अर्थशास्त्र धन का विज्ञान है'?", options: [{en:"Marshall", hi:"मार्शल"}, {en:"Robbins", hi:"रॉबिन्स"}, {en:"Adam Smith", hi:"एडम स्मिथ"}, {en:"J.K. Mehta", hi:"जे. के. मेहता"}], correct: 2 },
+            { en: "Which is studied in Macroeconomics?", hi: "समष्टि अर्थशास्त्र का अध्ययन है-", options: [{en:"National Income", hi:"राष्ट्रीय आय"}, {en:"Full Employment", hi:"पूर्ण रोजगार"}, {en:"Total Production", hi:"कुल उत्पादन"}, {en:"All", hi:"सभी"}], correct: 3 },
+            { en: "International trade is studied in...", hi: "अंतर्राष्ट्रीय व्यापार का अध्ययन किसमें होता है?", options: [{en:"Micro", hi:"व्यष्टि"}, {en:"Macro", hi:"समष्टि"}, {en:"Public Finance", hi:"लोक अर्थशास्त्र"}, {en:"None", hi:"कोई नहीं"}], correct: 1 },
+            { en: "Which is a macro variable?", hi: "समष्टि चर कौन सा है?", options: [{en:"Demand of a good", hi:"एक वस्तु की माँग"}, {en:"Price of a good", hi:"एक वस्तु की कीमत"}, {en:"Aggregate Demand", hi:"कुल माँग"}, {en:"National Income", hi:"राष्ट्रीय आय"}], correct: 3 },
+            { en: "Microeconomics study includes...", hi: "व्यष्टि अर्थशास्त्र का अध्ययन है-", options: [{en:"National Income", hi:"राष्ट्रीय आय"}, {en:"Price Determination", hi:"वस्तु की कीमत निर्धारण"}, {en:"Agriculture", hi:"कृषि"}, {en:"General price", hi:"सामान्य कीमत"}], correct: 1 },
+            { en: "Which statement is correct?", hi: "कौन-सा कथन सही है?", options: [{en:"Resources are scarce", hi:"साधन सीमित हैं"}, {en:"Wants are unlimited", hi:"आवश्यकताएं अनंत हैं"}, {en:"Scarcity creates choice", hi:"चयन की समस्या जन्म लेती है"}, {en:"All", hi:"उपर्युक्त सभी"}], correct: 3 },
+            { en: "Scarcity is a...", hi: "कमी (Scarcity) एक...", options: [{en:"Micro problem", hi:"व्यष्टि समस्या"}, {en:"Macro problem", hi:"समष्टि समस्या"}, {en:"Both", hi:"दोनों"}, {en:"Universal problem", hi:"सार्वभौमिक समस्या"}], correct: 3 },
+            { en: "Not a problem of choice?", hi: "चयन की समस्या से संबंधित नहीं है?", options: [{en:"Limited resources", hi:"सीमित साधन"}, {en:"Alternative use", hi:"वैकल्पिक उपयोग"}, {en:"Unlimited resources", hi:"असीमित साधन"}, {en:"Unlimited wants", hi:"असीमित आवश्यकताएं"}], correct: 2 },
+            { en: "When was 'Wealth of Nations' published?", hi: "Wealth of Nations कब प्रकाशित हुई?", options: [{en:"1776", hi:"1776"}, {en:"1778", hi:"1778"}, {en:"1890", hi:"1890"}, {en:"1932", hi:"1932"}], correct: 0 },
+            { en: "Microeconomics is NOT useful for...", hi: "व्यष्टि अर्थशास्त्र किसके लिये उपयोगी नहीं है?", options: [{en:"Prediction", hi:"भविष्यवाणी"}, {en:"Economic Policy", hi:"आर्थिक नीतियां"}, {en:"Public Welfare", hi:"लोक कल्याण"}, {en:"Full Employment", hi:"पूर्ण रोजगार"}], correct: 3 },
+            { en: "Another name for Price Theory is...", hi: "कीमत सिद्धांत का दूसरा नाम है-", options: [{en:"Macro", hi:"समष्टि"}, {en:"Micro", hi:"व्यष्टि"}, {en:"Public Finance", hi:"लोक वित्त"}, {en:"None", hi:"कोई नहीं"}], correct: 1 },
+            { en: "Who gave Scarcity definition?", hi: "दुर्लभता संबंधी परिभाषा किसने दी?", options: [{en:"Adam Smith", hi:"एडम स्मिथ"}, {en:"Marshall", hi:"मार्शल"}, {en:"Robbins", hi:"रॉबिन्स"}, {en:"Keynes", hi:"कीन्स"}], correct: 2 },
+            { en: "Who is known as Father of Economics?", hi: "अर्थशास्त्र के पिता किसे माना जाता है?", options: [{en:"Adam Smith", hi:"एडम स्मिथ"}, {en:"Malthus", hi:"मालथस"}, {en:"Ricardo", hi:"रिकार्डो"}, {en:"Marshall", hi:"मार्शल"}], correct: 0 },
+            { en: "How sectors are divided into Public/Private?", hi: "क्षेत्रों को किस आधार पर विभाजित किया जाता है?", options: [{en:"Labor", hi:"श्रम"}, {en:"Nature of activity", hi:"गतिविधि"}, {en:"Ownership", hi:"स्वामित्व"}, {en:"Employment conditions", hi:"रोजगार की शर्तें"}], correct: 2 },
+            { en: "An economy with no global ties is...", hi: "विश्व से कोई संबंध न रखने वाली अर्थव्यवस्था है-", options: [{en:"Socialist", hi:"समाजवादी"}, {en:"Closed", hi:"बंद"}, {en:"Open", hi:"खुली"}, {en:"Mixed", hi:"मिश्रित"}], correct: 1 },
+            { en: "Economic development depends on...", hi: "आर्थिक विकास किस पर निर्भर करता है?", options: [{en:"Resources", hi:"संसाधन"}, {en:"Capital", hi:"पूँजी"}, {en:"Market size", hi:"बाजार का आकार"}, {en:"All", hi:"सभी"}], correct: 3 },
+            { en: "India should be defined as a...", hi: "भारत को परिभाषित किया जाना चाहिए-", options: [{en:"Food deficit economy", hi:"खाद्य कमी वाली"}, {en:"Labor surplus economy", hi:"श्रम आधिक्य वाली"}, {en:"Trade surplus", hi:"व्यापार आधिक्य"}, {en:"Capital surplus", hi:"पूँजी आधिक्य"}], correct: 1 },
+            { en: "Which sector contributes most to GDP?", hi: "अर्थव्यवस्था का कौन सा क्षेत्र GDP में सबसे अधिक योगदान देता है?", options: [{en:"Primary", hi:"प्राथमिक"}, {en:"Secondary", hi:"द्वितीयक"}, {en:"Tertiary", hi:"तृतीयक"}, {en:"Public", hi:"सार्वजनिक"}], correct: 2 }
+        ];
+
+        let currentQuestions = [];
+        let currentIdx = 0;
+        let score = 0;
+        let timeLeft = 0;
+        let timerInterval;
+        let timerDuration = 0;
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playSound(type) {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            if (type === 'correct') {
+                osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+            } else {
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+            }
+            osc.start(); osc.stop(audioCtx.currentTime + 0.3);
+        }
+
+        function createConfetti() {
+            for (let i = 0; i < 40; i++) {
+                const c = document.createElement('div');
+                c.className = 'confetti';
+                c.style.left = Math.random() * 100 + 'vw';
+                c.style.backgroundColor = `hsl(${Math.random() * 360}, 100%, 50%)`;
+                c.style.animationDuration = (Math.random() * 2 + 1) + 's';
+                c.style.top = '-10px';
+                document.body.appendChild(c);
+                setTimeout(() => c.remove(), 2000);
+            }
+        }
+
+        function startQuiz() {
+            timerDuration = parseInt(document.getElementById('timer-input').value) || 0;
+            const shuffle = document.getElementById('shuffle-input').checked;
+            currentQuestions = [...quizData];
+            if (shuffle) currentQuestions.sort(() => Math.random() - 0.5);
+            document.getElementById('start-screen').classList.remove('active');
+            document.getElementById('quiz-screen').classList.add('active');
+            showQuestion();
+        }
+
+        function showQuestion() {
+            if (currentIdx >= currentQuestions.length) return showResults();
+            const q = currentQuestions[currentIdx];
+            document.getElementById('q-counter').innerText = `Q: ${currentIdx + 1}/${currentQuestions.length}`;
+            document.getElementById('q-en').innerText = q.en;
+            document.getElementById('q-hi').innerText = q.hi;
+            const container = document.getElementById('options-container');
+            container.innerHTML = '';
+            q.options.forEach((opt, i) => {
+                const btn = document.createElement('button');
+                btn.className = 'btn option-btn';
+                btn.innerHTML = `<span class="en">${opt.en}</span><span class="hi">${opt.hi}</span>`;
+                btn.onclick = () => handleAnswer(i, btn);
+                container.appendChild(btn);
+            });
+            document.getElementById('progress-bar').style.width = `${(currentIdx / currentQuestions.length) * 100}%`;
+            resetTimer();
+        }
+
+        function resetTimer() {
+            clearInterval(timerInterval);
+            if (timerDuration <= 0) { document.getElementById('timer').style.display = 'none'; return; }
+            timeLeft = timerDuration;
+            const tEl = document.getElementById('timer');
+            tEl.innerText = `${timeLeft}s`;
+            tEl.classList.remove('pulse-red');
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                tEl.innerText = `${timeLeft}s`;
+                if (timeLeft < 5) tEl.classList.add('pulse-red');
+                if (timeLeft <= 0) handleAnswer(-1);
+            }, 1000);
+        }
+
+        function handleAnswer(idx, btn) {
+            clearInterval(timerInterval);
+            const q = currentQuestions[currentIdx];
+            const btns = document.querySelectorAll('.option-btn');
+            btns.forEach(b => b.style.pointerEvents = 'none');
+
+            if (idx === q.correct) {
+                score++;
+                btn.classList.add('correct');
+                playSound('correct');
+                createConfetti();
+            } else {
+                if (btn) btn.classList.add('wrong');
+                btns[q.correct].classList.add('correct');
+                playSound('wrong');
+                const sad = document.getElementById('sad-emoji');
+                sad.style.display = 'block'; sad.classList.add('shake');
+                setTimeout(() => { sad.style.display = 'none'; sad.classList.remove('shake'); }, 1000);
+            }
+            document.getElementById('score-display').innerText = `Score: ${score}`;
+            setTimeout(() => { currentIdx++; showQuestion(); }, 1500);
+        }
+
+        function showResults() {
+            clearInterval(timerInterval);
+            document.getElementById('quiz-screen').classList.remove('active');
+            document.getElementById('result-screen').classList.add('active');
+            const p = (score / currentQuestions.length) * 100;
+            document.getElementById('result-message').innerText = p >= 80 ? "🏆 Outstanding!" : p >= 50 ? "👏 Well Done!" : "📚 Keep Practicing!";
+            document.getElementById('final-score').innerText = `You scored ${score} out of ${currentQuestions.length}`;
+            document.getElementById('progress-bar').style.width = '100%';
+        }
+    </script>
+</body>
+</html>

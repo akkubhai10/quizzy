@@ -65,13 +65,13 @@
         #splash-screen {
             position: fixed; inset: 0; background: var(--surface); z-index: 9999;
             flex-direction: column;
-            transition: opacity 0.5s ease-out; /* Smooth fade out */
+            transition: opacity 0.5s ease-out;
         }
         .splash-logo {
             width: 80px; height: 80px; border-radius: 20px; object-fit: cover;
             box-shadow: 0 10px 25px rgba(79, 70, 229, 0.4);
             animation: pulse 2s infinite; margin-bottom: 20px;
-            background: var(--primary-light); /* Fallback color */
+            background: var(--primary-light);
         }
         @keyframes pulse { 0% {transform: scale(1);} 50% {transform: scale(1.05);} 100% {transform: scale(1);} }
 
@@ -84,7 +84,6 @@
             background: var(--surface); padding: 30px; border-radius: 24px;
             box-shadow: var(--shadow); border: 1px solid var(--border);
         }
-        /* Removed broken placeholder image URL */
         .auth-logo { width: 50px; height: 50px; border-radius: 12px; margin-bottom: 15px; background: var(--primary); display: flex; align-items: center; justify-content: center; color: white; font-size: 24px; }
 
         /* --- 6. MAIN APP HEADER --- */
@@ -95,7 +94,7 @@
             border-bottom: 1px solid var(--border);
         }
         .app-brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 1.2rem; color: var(--primary); }
-        .header-logo-img { width: 32px; height: 32px; border-radius: 8px; object-fit: cover; display: none; } /* Hidden by default */
+        .header-logo-img { width: 32px; height: 32px; border-radius: 8px; object-fit: cover; display: none; }
         
         .hamburger { font-size: 1.5rem; cursor: pointer; color: var(--text); padding: 5px; }
 
@@ -126,7 +125,7 @@
         .card-body { padding: 15px; }
         .card-title { font-weight: 600; font-size: 1rem; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         
-        /* Skeleton Loading Animation */
+        /* Skeleton Loading */
         .skeleton {
             background: #e1e4e8;
             background: linear-gradient(to right, #e1e4e8 0%, #f0f2f5 50%, #e1e4e8 100%);
@@ -139,7 +138,6 @@
             background: linear-gradient(to right, #374151 0%, #4b5563 50%, #374151 100%);
         }
         @keyframes shimmer { 0% {background-position: -200% 0;} 100% {background-position: 200% 0;} }
-        
         .skeleton-card { height: 160px; border-radius: 16px; }
 
         /* List Items */
@@ -262,8 +260,7 @@
             <span id="bc-current" class="bc-active">Physics</span>
         </div>
 
-        <div id="content-area">
-            </div>
+        <div id="content-area"></div>
     </main>
 
     <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
@@ -279,9 +276,7 @@
             <div class="menu-link" onclick="toggleDarkMode()">
                 <i class="fas fa-moon"></i> <span>Dark Mode</span>
             </div>
-            <div class="menu-link" onclick="showHistory()">
-                <i class="fas fa-history"></i> <span>History</span>
-            </div>
+            
             <div class="menu-link" onclick="shareApp()">
                 <i class="fas fa-share-alt"></i> <span>Share it</span>
             </div>
@@ -381,7 +376,6 @@
         auth.onAuthStateChanged(user => {
             if (user) {
                 state.user = user;
-                // Don't wait for initApp to finish before hiding splash if user is logged in
                 initApp(); 
             } else {
                 els.splash.style.opacity = '0';
@@ -393,15 +387,12 @@
         });
 
         function initApp() {
-            // Speed Improvement: Remove Splash immediately
             els.splash.style.opacity = '0';
             setTimeout(() => els.splash.classList.add('hidden'), 500);
-            
             els.auth.classList.add('hidden');
             els.header.classList.remove('hidden');
             els.main.classList.remove('hidden');
 
-            // Set User Details immediately
             document.getElementById('display-user-name').innerText = state.user.displayName || 'Learner';
             document.getElementById('sidebar-name').innerText = state.user.displayName || 'Learner';
             document.getElementById('sidebar-email').innerText = state.user.email;
@@ -409,10 +400,7 @@
 
             if(localStorage.getItem('quizzy_dark') === 'true') document.body.classList.add('dark-mode');
 
-            // Render Skeletons first
             showSkeletons();
-            
-            // Load Data
             loadContent();
             loadConfig();
             checkAdmin();
@@ -443,7 +431,6 @@
         }
 
         function showSkeletons() {
-            // Show 4 skeleton cards
             els.content.innerHTML = '<div class="grid-container">' + 
                 Array(6).fill('<div class="skeleton skeleton-card"></div>').join('') + 
                 '</div>';
@@ -451,7 +438,6 @@
 
         // --- 4. NAVIGATION & RENDERING ---
         function loadContent() {
-            // Speed Improvement: Fetch subjects
             db.ref('subjects').once('value', snap => {
                 state.subjects = [];
                 els.content.innerHTML = '';
@@ -483,12 +469,10 @@
             });
         }
         
-        // This function is for "Home" breadcrumb
         function renderSubjects() {
             state.view = 'subjects';
             els.breadcrumbs.classList.add('hidden');
             
-            // If data is already loaded in memory, use it (Instant Load)
             if(state.subjects.length > 0) {
                  els.content.innerHTML = '<div class="grid-container" id="sub-grid"></div>';
                  const grid = document.getElementById('sub-grid');
@@ -506,7 +490,7 @@
                     grid.appendChild(div);
                  });
             } else {
-                loadContent(); // Fetch again if empty
+                loadContent(); 
             }
         }
 
@@ -581,16 +565,11 @@
             });
         }
 
-        // --- 5. QUIZ LOGIC ---
+        // --- 5. QUIZ LOGIC (HISTORY REMOVED) ---
         function startQuiz(url, title) {
             document.getElementById('quiz-overlay').classList.remove('hidden');
             document.getElementById('quiz-frame').src = url;
-            state.currentQuizSession = {
-                title: title,
-                subject: state.activeSubject.name,
-                chapter: state.activeChapter.name,
-                url: url
-            };
+            // Removed state.currentQuizSession Logic
         }
 
         function closeQuiz() {
@@ -598,19 +577,7 @@
             document.getElementById('quiz-frame').src = "";
         }
 
-        window.addEventListener('message', (e) => {
-            if (e.data.type === 'QUIZ_COMPLETED') {
-                const score = e.data.score; 
-                if(state.currentQuizSession) {
-                    db.ref(`usersHistory/${state.user.uid}`).push({
-                        ...state.currentQuizSession,
-                        score: score,
-                        timestamp: firebase.database.ServerValue.TIMESTAMP
-                    });
-                    toast(`Quiz Saved! Score: ${score}%`);
-                }
-            }
-        });
+        // Removed window.addEventListener('message') for saving scores
 
         // --- 6. MENU & UTILS ---
         function toggleSidebar() {
@@ -626,33 +593,7 @@
             });
         }
 
-        function showHistory() {
-            toggleSidebar();
-            openModal('My History', 'Loading...');
-            db.ref(`usersHistory/${state.user.uid}`).limitToLast(20).once('value', snap => {
-                if(!snap.exists()) {
-                    document.getElementById('modal-body').innerHTML = 'No history found.';
-                    return;
-                }
-                let html = '<div style="display:flex; flex-direction:column; gap:10px;">';
-                const list = [];
-                snap.forEach(c => list.push(c.val()));
-                list.reverse();
-                list.forEach(item => {
-                    const date = new Date(item.timestamp).toLocaleDateString();
-                    const scoreDisplay = item.score !== undefined 
-                        ? `<span style="font-weight:bold; color:${item.score >= 50 ? 'var(--primary)' : 'red'}">${item.score}%</span>` 
-                        : '<span style="color:gray;">Completed</span>';
-                    html += `
-                        <div style="padding:10px; border-bottom:1px solid var(--border);">
-                            <div style="display:flex; justify-content:space-between;"><strong>${item.title}</strong>${scoreDisplay}</div>
-                            <div style="font-size:0.8rem; color:var(--text-muted);">${item.subject} • ${date}</div>
-                        </div>`;
-                });
-                html += '</div>';
-                document.getElementById('modal-body').innerHTML = html;
-            });
-        }
+        // REMOVED showHistory() function
 
         function shareApp() {
             const adminMessage = state.config.shareText || "Join me on Quizzy!";

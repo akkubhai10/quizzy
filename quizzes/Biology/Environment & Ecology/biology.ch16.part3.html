@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Environment & Ecology Quiz | Professional Edition</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-gradient: linear-gradient(45deg, #6a11cb, #2575fc, #ff007f);
+            --glass: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --correct: #2ecc71;
+            --wrong: #e74c3c;
+            --text-hi: #ddd;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; }
+
+        body {
+            min-height: 100vh;
+            background: var(--bg-gradient);
+            background-size: 400% 400%;
+            animation: moveBg 15s ease infinite;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        @keyframes moveBg { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
+
+        /* Glassmorphism Card */
+        .container {
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 25px;
+            width: 100%;
+            max-width: 800px;
+            padding: 40px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            color: white;
+            position: relative;
+            z-index: 5;
+        }
+
+        /* Progress Bar */
+        .progress-bar {
+            position: absolute;
+            top: 0; left: 0; height: 6px;
+            background: var(--correct);
+            box-shadow: 0 0 10px var(--correct);
+            transition: width 0.4s ease;
+            border-radius: 25px 0 0 0;
+        }
+
+        /* Screens */
+        .screen { display: none; }
+        .active { display: block; animation: fadeIn 0.5s ease; }
+        @keyframes fadeIn { from{opacity:0; transform:translateY(10px)} to{opacity:1; transform:translateY(0)} }
+
+        /* UI Elements */
+        .header { display: flex; justify-content: space-between; margin-bottom: 25px; font-weight: 600; }
+        .timer-box { font-size: 1.2rem; padding: 5px 15px; border-radius: 15px; background: rgba(0,0,0,0.2); }
+        .pulse-red { color: var(--wrong); animation: pulse 1s infinite; }
+        @keyframes pulse { 0%, 100%{opacity:1} 50%{opacity:0.5} }
+
+        .question-box { margin-bottom: 30px; }
+        .q-en { font-size: 1.4rem; font-weight: 700; line-height: 1.3; }
+        .q-hi { font-size: 1rem; color: var(--text-hi); margin-top: 5px; }
+
+        .options-grid { display: grid; gap: 15px; }
+        .option-btn {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--glass-border);
+            padding: 15px 20px;
+            border-radius: 15px;
+            cursor: pointer;
+            text-align: left;
+            transition: 0.3s;
+            color: white;
+            display: flex;
+            flex-direction: column;
+        }
+        .option-btn:hover:not(:disabled) { background: rgba(255,255,255,0.2); transform: scale(1.02); }
+        .option-btn:disabled { cursor: default; }
+        .opt-hi { font-size: 0.85rem; color: var(--text-hi); margin-top: 3px; }
+
+        .correct { background: var(--correct) !important; border-color: transparent; }
+        .wrong { background: var(--wrong) !important; border-color: transparent; }
+
+        .btn {
+            border: none; padding: 15px 30px; border-radius: 50px; 
+            font-weight: 700; cursor: pointer; transition: 0.3s;
+            text-transform: uppercase; width: 100%;
+        }
+        .btn-start { background: white; color: #2575fc; margin-top: 20px; }
+        .btn-finish { background: rgba(255,255,255,0.2); color: white; margin-top: 20px; width: auto; font-size: 0.8rem; }
+
+        input[type="number"] {
+            width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--glass-border);
+            background: rgba(0,0,0,0.2); color: white; margin-top: 10px;
+        }
+
+        /* Feedbacks */
+        #emoji {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 120px; display: none; z-index: 100;
+        }
+        .shake { animation: shake 0.5s ease-in-out; }
+        @keyframes shake { 0%,100%{left:50%} 25%{left:48%} 75%{left:52%} }
+
+        canvas#confetti { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; }
+
+        .result-screen { text-align: center; }
+        .score-text { font-size: 4rem; font-weight: 700; margin: 20px 0; }
+    </style>
+</head>
+<body>
+
+    <canvas id="confetti"></canvas>
+    <div id="emoji">😢</div>
+
+    <div class="container">
+        <div class="progress-bar" id="progress"></div>
+
+        <div id="start-screen" class="screen active">
+            <h1 style="margin-bottom:10px;">EcoMaster Quiz</h1>
+            <p style="color:var(--text-hi)">Questions 101 - 154 | Environment & Ecology</p>
+            
+            <div style="margin-top:30px;">
+                <label>Timer per question (seconds, 0 for none):</label>
+                <input type="number" id="timer-val" value="30">
+            </div>
+
+            <div style="margin-top:20px; display:flex; align-items:center; gap:10px;">
+                <input type="checkbox" id="shuffle" style="width:20px;height:20px;">
+                <label>Shuffle Questions?</label>
+            </div>
+
+            <button class="btn btn-start" onclick="quizApp.start()">Start Quiz</button>
+        </div>
+
+        <div id="quiz-screen" class="screen">
+            <div class="header">
+                <div id="q-count">Q: 0/0</div>
+                <div id="timer-display" class="timer-box">⏱️ <span id="secs">00</span></div>
+                <div id="score-box">Score: 0</div>
+            </div>
+
+            <div class="question-box">
+                <div class="q-en" id="q-en">English Question Text</div>
+                <div class="q-hi" id="q-hi">Hindi Question Text</div>
+            </div>
+
+            <div class="options-grid" id="options"></div>
+
+            <button class="btn btn-finish" onclick="quizApp.end(true)">Finish & Show Results</button>
+        </div>
+
+        <div id="result-screen" class="screen result-screen">
+            <h2>Quiz Results</h2>
+            <div class="score-text" id="final-score">0</div>
+            <p id="message" style="margin-bottom:30px; font-size:1.2rem;"></p>
+            <button class="btn btn-start" onclick="location.reload()">Restart Quiz</button>
+        </div>
+    </div>
+
+<script>
+    const questionsData = [
+        { en: "What are Epiphytes?", hi: "अधिपादप (Epiphytes) वैसे स्थानों पर पाये जाते हैं, जहाँ पर-", options: [{en: "Concentration of oxygen is high", hi: "ऑक्सीजन का सान्द्रण उच्च होता है"},{en: "Temperature is low", hi: "तापमान काफी कम होता है"},{en: "Rain occurs throughout the year", hi: "वर्षा पूरे वर्ष होती है"},{en: "Rain is seasonal", hi: "वर्षा मौसम के अनुसार होती है"}], correct: 2 },
+        { en: "What is 'Myrmecophily'?", hi: "'मिर्मेकोफिली' एक लाभदायक सहयोजन होता है, कुछ पुष्पी पादपों का-", options: [{en: "Between bacteria", hi: "जीवाणुओं के बीच"},{en: "Between viruses", hi: "विषाणुओं के बीच"},{en: "Between ants", hi: "चींटियों के बीच"},{en: "Between mycoplasma", hi: "माइकोप्लाज्मा के बीच"}], correct: 2 },
+        { en: "When we eat goat meat, we are:", hi: "जब हम बकरी का मांस खाते हैं, तब हम-", options: [{en: "Primary consumer", hi: "प्राथमिक उपभोक्ता हैं"},{en: "Secondary consumer", hi: "द्वितीयक उपभोक्ता हैं"},{en: "Tertiary consumer", hi: "तृतीयक उपभोक्ता हैं"},{en: "None of these", hi: "इनमें से कोई नहीं"}], correct: 1 },
+        { en: "Solar energy is obtained from:", hi: "सौर ऊर्जा किससे प्राप्त होती है?", options: [{en: "Moon", hi: "चन्द्रमा"},{en: "Sea", hi: "समुद्र"},{en: "Sun", hi: "सूर्य"},{en: "Air", hi: "हवा"}], correct: 2 },
+        { en: "Food chain refers to energy transfer through:", hi: "'खाद्य श्रृंखला' से अभिप्राय है, इनमें से किसके द्वारा ऊर्जा अंतरण?", options: [{en: "Earth surface to interior", hi: "भूगर्भ से धरातल की ओर"},{en: "One organism to another", hi: "एक जीव से दूसरे के"},{en: "Low latitude to high", hi: "निम्न अक्षांश से उच्च अक्षांश की ओर"},{en: "River to sea", hi: "नदी द्वारा भूमि के जीवों से सागरीय जीवों को"}], correct: 1 },
+        { en: "What is a Hydrophyte?", hi: "हाइड्रोफाइट (Hydrophyte) कहते हैं-", options: [{en: "A marine animal", hi: "एक सामुद्रिक जानवर को"},{en: "An aquatic plant", hi: "एक जलीय पौधे को"},{en: "A plant disease", hi: "एक पौधीय रोग को"},{en: "A rootless plant", hi: "एक जड़रहित पौधे को"}], correct: 1 },
+        { en: "Which plant is a Xerophyte?", hi: "निम्नलिखित में से कौन-सा पौधा मरुद्भिद है?", options: [{en: "Mustard", hi: "सरसों"},{en: "Amarbel", hi: "अमरबेल"},{en: "Karil", hi: "करील"},{en: "Neem", hi: "नीम"}], correct: 2 },
+        { en: "Example of abiotic component of environment:", hi: "पर्यावरण के अजैव अवयव का उदाहरण है-", options: [{en: "Vegetation", hi: "वनस्पति"},{en: "Animal", hi: "जानवर"},{en: "Air", hi: "वायु"},{en: "All of these", hi: "सभी"}], correct: 2 },
+        { en: "Hydroponics is related to:", hi: "'हाइड्रोपोनिक्स' (Hydroponics) सम्बन्धित है-", options: [{en: "Plant growth without soil", hi: "मिट्टी के बिना पौधे की वृद्धि से"},{en: "Plant growth without water", hi: "पानी के बिना पौधे की वृद्धि से"},{en: "Relation of sound with water", hi: "आवाज का पानी के साथ संबंध"},{en: "Water technology conservation", hi: "पानी के तकनीक का संरक्षण"}], correct: 0 },
+        { en: "Who is the biggest fixer of solar energy?", hi: "सौर ऊर्जा का सबसे बड़ा यौगिकीकरण कौन है?", options: [{en: "Bacteria", hi: "बैक्टीरिया"},{en: "Protozoa", hi: "प्रोटोजोआ"},{en: "Fungi", hi: "कवक"},{en: "Green plants", hi: "हरे पौधे"}], correct: 3 },
+        { en: "Required forest ratio for ecological balance in India:", hi: "पारिस्थितिक संतुलन बनाये रखने के लिए भारत में वन क्षेत्र कितने अनुपात में होना चाहिए?", options: [{en: "11.1%", hi: "11.1%"},{en: "22.2%", hi: "22.2%"},{en: "33.3%", hi: "33.3%"},{en: "44.4%", hi: "44.4%"}], correct: 2 },
+        { en: "Which area is famous for Mangrove cultivation?", hi: "मैनग्रोव की खेती के लिए निम्न में से कौन-सा क्षेत्र प्रसिद्ध है?", options: [{en: "Lava forest of Kalimpong", hi: "कालिम्पोंग का लाया जंगल"},{en: "Dandakaranya forest", hi: "ओडिशा का दण्डकारण्य जंगल"},{en: "Sajnekhali forest of South 24 Parganas", hi: "दक्षिणी 24 परगना का सजनेखाली जंगल"},{en: "Jim Corbett Park", hi: "उत्तराखंड का जिम कार्बेट नेशनल पार्क"}], correct: 2 },
+        { en: "Epiphytes depend on other plants for:", hi: "एपिफाइट्स (Epiphytes) बहुत अधिक विकसित होती है ऐसे पौधे होते हैं जो अन्य पौधे पर निर्भर करते हैं-", options: [{en: "Food", hi: "भोजन हेतु"},{en: "Mechanical support", hi: "यांत्रिक मदद हेतु"},{en: "Shade", hi: "छाया हेतु"},{en: "Water", hi: "जल हेतु"}], correct: 1 },
+        { en: "Phytotron is a facility for:", hi: "'पादपालय' (Phytotron) एक सुविधा है, जिससे-", options: [{en: "Growing plants in disease-free conditions", hi: "रोगरहित दशाओं में पादपों का उगना संभव हो पाता है"},{en: "Conserving endangered species", hi: "पादपों की लुप्तप्राय प्रजातियों को संरक्षित रखा जाता है"},{en: "Growing plants in controlled conditions", hi: "नियंत्रित दशाओं में पादपों का उगना संभव हो पाता है"},{en: "Influencing mutation", hi: "उत्परिवर्तन को प्रभावित किया जाता है"}], correct: 2 },
+        { en: "Which agriculture is environmentally suitable?", hi: "निम्न में से कौन-सा कृषि कार्य पर्यावरणीय दृष्टि से उपयुक्त है?", options: [{en: "Organic farming", hi: "कार्बनिक कृषि"},{en: "Shifting cultivation", hi: "स्थानान्तरित कृषि"},{en: "High yield variety production", hi: "उच्च पैदावार वाली किस्मों का उत्पादन"},{en: "Plants in glass houses", hi: "कांच के घरों में उगने वाले पौधे"}], correct: 0 },
+        { en: "Desert plants bloom at night because:", hi: "अधिकांश मरुस्थलीय पादप रात्रि के समय ही पुष्पित होते हैं, क्योंकि-", options: [{en: "Controlled by low temp", hi: "उनका पुष्पन निम्न ताप से नियंत्रित होता है"},{en: "Sensitive to moon phases", hi: "वे चन्द्रमा की कलाओं के प्रति संवेदनशील होते हैं"},{en: "Daytime insects eat them", hi: "दिन के समय मरुस्थलीय कीट पुष्पों को खा जाते हैं"},{en: "Desert insects are active at night", hi: "मरुस्थलीय कीट रात्रि के समय सक्रिय रहते हैं"}], correct: 3 },
+        { en: "Plants growing in deserts are:", hi: "रेगिस्तान में पैदा होने वाले पौधे कहलाते हैं-", options: [{en: "Hydrophytes", hi: "हाइड्रोफाइट्स"},{en: "Mesophytes", hi: "मेसोफाइट्स"},{en: "Xerophytes", hi: "जीरोफाइट्स"},{en: "Epiphytes", hi: "इपीफाइट्स"}], correct: 2 },
+        { en: "Who proposed the concept of Ecological Niche?", hi: "पारिस्थितिक निके की संकल्पना को प्रतिपादित किया था-", options: [{en: "C.C. Park", hi: "सी. सी. पार्क ने"},{en: "Grinnells", hi: "ग्रीनेल्स ने"},{en: "Darwin", hi: "डार्विन ने"},{en: "E.P. Odum", hi: "ई. पी. ओडम ने"}], correct: 1 },
+        { en: "Which is the most stable ecosystem?", hi: "निम्नलिखित में से कौन-सा सबसे अधिक स्थिर पारितंत्र है?", options: [{en: "Ocean", hi: "महासागर"},{en: "Forest", hi: "वन"},{en: "Desert", hi: "रेगिस्तान"},{en: "Mountain", hi: "पर्वत"}], correct: 0 },
+        { en: "3 Rs of environment are:", hi: "निम्नलिखित में से कौन से तीन R पर्यावरण के अनुकूल माने जाते हैं?", options: [{en: "Reduce, Reuse, Recycle", hi: "कम करना-पुनः प्रयोग करना-पुनः चक्रित करना"},{en: "Reduce, Reuse, Repeat", hi: "कम करना-पुनः प्रयोग करना-पुनरावर्तन करना"},{en: "Recollect, Reuse, Re-consume", hi: "पुनः एकत्रित करना-पुनः प्रयोग करना-पुनः उपयोग करना"},{en: "Reduce, Renovation, Re-consume", hi: "कम करना-नवीनीकरण करना-पुनः उपयोग करना"}], correct: 0 },
+        { en: "Social Forestry is:", hi: "'सामाजिक वानिकी' है-", options: [{en: "Growing various plants on private land", hi: "निजी भूमि पर विभिन्न प्रकार के पौधों को एक साथ उगाना"},{en: "Forest management by cooperatives", hi: "सहकारी समितियों द्वारा वन का प्रबन्ध"},{en: "Growing same plant on cooperative land", hi: "सहकारी स्वामित्व वाली भूमि पर एक ही प्रकार का पौधा उगाना"},{en: "Growing and managing useful plants on cooperative land", hi: "सहकारी स्वामित्व वाली भूमि पर उपयोगी पौधों को उगाना और उनकी व्यवस्था करना"}], correct: 3 },
+        { en: "Earth Summit was held in:", hi: "'पृथ्वी शिखर सम्मेलन' हुआ था-", options: [{en: "Chicago", hi: "शिकागो में"},{en: "Adelaide", hi: "एडिलेड में"},{en: "London", hi: "लंदन में"},{en: "Rio de Janeiro", hi: "रियो-डि-जनेरो में"}], correct: 3 },
+        { en: "National Botanical Garden is at:", hi: "'राष्ट्रीय वानस्पतिक उद्यान' कहाँ पर स्थित है?", options: [{en: "Shimla", hi: "शिमला"},{en: "Kolkata", hi: "कोलकाता"},{en: "Lucknow", hi: "लखनऊ"},{en: "Bengaluru", hi: "बंगलुरु"}], correct: 2 },
+        { en: "Forest Research Institute of India is at:", hi: "भारत में 'वन अनुसंधान संस्थान' कहाँ स्थित है?", options: [{en: "Delhi", hi: "दिल्ली"},{en: "Bhopal", hi: "भोपाल"},{en: "Dehradun", hi: "देहरादून"},{en: "Lucknow", hi: "लखनऊ"}], correct: 2 },
+        { en: "Which is an artificial ecosystem?", hi: "निम्नलिखित में से कौन 'कृत्रिम पारिस्थितिक तंत्र' है?", options: [{en: "Paddy field", hi: "धान का खेत"},{en: "Forest", hi: "वन"},{en: "Lake", hi: "झील"},{en: "Grassland", hi: "घास का मैदान"}], correct: 0 },
+        { en: "Main cause of ecological imbalance in India:", hi: "भारत में पारिस्थितिक असंतुलन का कौन-सा एक प्रमुख कारण है?", options: [{en: "Deforestation", hi: "वनोन्मूलन"},{en: "Rainfall variation", hi: "वर्षा की परिवर्तनता"},{en: "Floods and famine", hi: "बाढ़ एवं अकाल"},{en: "Desertification", hi: "मरुस्थलीकरण"}], correct: 0 },
+        { en: "Stability of pond ecosystem depends on:", hi: "ताल पारिस्थितिक तंत्र की स्थिरता निर्भर करती है-", options: [{en: "Microbes and fish", hi: "सूक्ष्मजीवों और मछलियों पर"},{en: "Microbes and zooplankton", hi: "सूक्ष्मजीवों और प्राणिप्लवकों पर"},{en: "Fish and reptiles", hi: "मछलियों और सरीसृपों पर"},{en: "Producers and consumers", hi: "उत्पादकों और उपभोक्ताओं पर"}], correct: 3 },
+        { en: "Main factor deciding nature's balance:", hi: "प्रकृति के संतुलन को तय करने वाला मुख्य कारक है-", options: [{en: "Human activities", hi: "मानव गतिविधियाँ"},{en: "Rabbit and habitat", hi: "रैबिट और आवास"},{en: "Environmental conditions", hi: "पर्यावरणीय परिस्थितियाँ"},{en: "Food availability", hi: "खाद्य की उपलब्धता"}], correct: 0 },
+        { en: "Forest of Global Heritage is:", hi: "निम्न में से किसे 'वैश्विक विरासत का वन' माना जाता है?", options: [{en: "Nandan Kanan, Odisha", hi: "ओडिशा में नंदन कानन"},{en: "Kaziranga, Assam", hi: "असम में काजीरंगा"},{en: "Sunderbans, West Bengal", hi: "पश्चिम बंगाल में सुंदर वन"},{en: "Botanical Garden, Shibpur", hi: "पश्चिम बंगाल में भारतीय वनस्पति उद्यान, शिवपुर"}], correct: 2 },
+        { en: "Pigment protecting plants from UV rays:", hi: "वह वर्णक जो वनस्पति को पराबैंगनी किरणों के दुष्प्रभाव से बचाता है, कौन-सा है?", options: [{en: "Chlorophyll", hi: "क्लोरोफिल"},{en: "Carotenoid", hi: "कैरोटिनाइड"},{en: "Phycocyanin", hi: "फाइकोसायानिन"},{en: "Plastid", hi: "प्लास्टिड"}], correct: 2 },
+        { en: "Cycling of elements in ecosystem is:", hi: "पारिस्थितिक तंत्र में तत्वों के चक्रण को क्या कहते हैं?", options: [{en: "Chemical cycle", hi: "रासायनिक चक्र"},{en: "Biogeochemical cycle", hi: "जैव भूरासायनिक चक्र"},{en: "Geological cycle", hi: "भूवैज्ञानिक चक्र"},{en: "Geochemical cycle", hi: "भूरासायनिक चक्र"}], correct: 1 },
+        { en: "'Ecomark' is given to Indian products that are:", hi: "'इकोमार्क' उन भारतीय उत्पादों को दिया जाता है, जो-", options: [{en: "Pure and unadulterated", hi: "शुद्ध एवं मिलावट रहित हो"},{en: "Economically viable", hi: "आर्थिक दृष्टि से व्यवहार्य हो"},{en: "Environmentally friendly", hi: "पर्यावरण के प्रति मैत्रीपूर्ण हो"},{en: "Protein rich", hi: "प्रोटीन समृद्ध हो"}], correct: 2 },
+        { en: "Fastest growing aquatic plant in the world:", hi: "विश्व का सबसे अधिक तेजी से बढ़ने वाला जल पादप है-", options: [{en: "Water Chestnut", hi: "वाटर चेस्टनट"},{en: "Amazonian Water Lily", hi: "अमेजनी जलनलनी"},{en: "Water Hyacinth", hi: "जल हायासिन्थ"},{en: "Utricularia", hi: "यूट्रिकुलरैया"}], correct: 2 },
+        { en: "Which activity disturbs ecological balance?", hi: "निम्नलिखित में से किस कार्य से पारिस्थितिक संतुलन बिगड़ता है?", options: [{en: "Cutting wood", hi: "लकड़ी काटना"},{en: "Social forestry", hi: "सामाजिक वानिकी"},{en: "Van Mahotsav", hi: "वन-महोत्सव"},{en: "Afforestation", hi: "वनरोपण"}], correct: 0 },
+        { en: "If all plants die, animals will die due to lack of:", hi: "यदि विश्व के सभी पादप मर जाते हैं, तो सभी पशु भी इनकी कमी के कारण मर जायेंगे-", options: [{en: "Shelter", hi: "आश्रय स्थान"},{en: "Cool air", hi: "शीतल वायु"},{en: "Food", hi: "भोजन"},{en: "Oxygen", hi: "ऑक्सीजन"}], correct: 3 },
+        { en: "Most dangerous effect of excessive deforestation:", hi: "अत्यधिक वनोन्मूलन का सबसे अधिक खतरनाक प्रभाव है-", options: [{en: "Loss of habitat of wild animals", hi: "जंगली जानवरों के निवास स्थलों का नाश"},{en: "Soil erosion", hi: "मृदा अपरदन"},{en: "Loss of forest wealth", hi: "वन सम्पत्ति की क्षति"},{en: "Loss of valuable plants", hi: "अनेक मूल्यवान पादपों की क्षति"}], correct: 1 },
+        { en: "Organisms at base of grazing food chain:", hi: "चारण आहार श्रृंखला के आधार तल में जीव होते हैं-", options: [{en: "Producer", hi: "उत्पादक"},{en: "Herbivore", hi: "शाकाहारी"},{en: "Carnivore", hi: "मांसाहारी"},{en: "Decomposer", hi: "अपघटक"}], correct: 0 },
+        { en: "Organization related to environmental planning:", hi: "पर्यावरणीय आयोजन के साथ मूलतः सम्बन्धित संगठन है-", options: [{en: "CSIR", hi: "CSIR"},{en: "NEERI", hi: "NEERI"},{en: "CIFRI", hi: "CIFRI"},{en: "ICAR", hi: "ICAR"}], correct: 1 },
+        { en: "Best electricity source for sustainable development in India:", hi: "भारत में धारणीय विकास के दृष्टिकोण से विद्युत उत्पाद का सबसे अच्छा स्रोत कौन-सा है?", options: [{en: "Coal", hi: "कोयला"},{en: "Oil and Gas", hi: "खनिज-तेल एवं गैस"},{en: "Hydropower", hi: "जल-विद्युत"},{en: "Nuclear energy", hi: "परमाणु ऊर्जा"}], correct: 2 },
+        { en: "Issue of inter-generational sensitivity in sustainable development:", hi: "धारणीय विकास जिनके उपयोग के संदर्भ में अंतर-पीढ़ीगत संवेदनशीलता का विषय है-", options: [{en: "Natural resources", hi: "प्राकृतिक संसाधन"},{en: "Social resources", hi: "सामाजिक संसाधन"},{en: "Industrial resources", hi: "औद्योगिक संसाधन"},{en: "Physical resources", hi: "भौतिक संसाधन"}], correct: 0 },
+        { en: "Zone of transition between two different communities:", hi: "दो भिन्न समुदायों के बीच का संक्रान्ति क्षेत्र कहलाता है-", options: [{en: "Ecotype", hi: "इकोटाइप"},{en: "Ecade", hi: "इकेड"},{en: "Ecosphere", hi: "इकोस्फीयर"},{en: "Ecotone", hi: "इकोटोन"}], correct: 3 },
+        { en: "Minimum land required to sustain a human life:", hi: "एक मनुष्य के जीवन को पूर्णरूप से धारणीय करने के लिए आवश्यक न्यूनतम भूमि को क्या कहते हैं?", options: [{en: "Biota", hi: "जीवजात"},{en: "Ecological Footprint", hi: "पारिस्थितिकीय पदछाप"},{en: "Biome", hi: "जीवोम"},{en: "Niche", hi: "निकेत"}], correct: 1 },
+        { en: "True statement about Ecosystem:", hi: "'इकोसिस्टम' (Ecosystem) के सम्बन्ध में निम्नलिखित में से क्या सत्य है?", options: [{en: "Primary consumer depends least on producer", hi: "प्राथमिक उपभोक्ता उत्पादक पर न्यूनतम रूप से आश्रित होते हैं"},{en: "Primary consumers outnumber producers", hi: "प्राथमिक उपभोक्ता उत्पादकों से संख्या में अधिक होते हैं"},{en: "Producers are more than primary consumers", hi: "उत्पादक प्राथमिक उपभोक्ता से अधिक है"},{en: "Secondary consumers are most powerful", hi: "द्वितीयक उपभोक्ता अधिकतम होने के साथ-साथ बहुत ही शक्तिशाली हैं"}], correct: 2 },
+        { en: "Food Chain is:", hi: "'खाद्य श्रृंखला' है-", options: [{en: "Relation between autotrophs", hi: "स्वपोषित जीवों के बीच सम्बन्ध"},{en: "Exchange of genetic material", hi: "दो जीवों के बीच आनुवंशिक पदार्थ का विनिमय"},{en: "Passing of food/energy from one to another", hi: "एक जीव से दूसरे जीव का खाद्य (और इस प्रकार ऊर्जा) का पारण"},{en: "Modern business center", hi: "खाद्य बिक्री केंद्र उपलब्ध कराने वाला आधुनिक उद्यमी प्रतिष्ठान"}], correct: 2 },
+        { en: "True statement among these:", hi: "निम्नलिखित में से कौन-सा कथन सही है?", options: [{en: "Energy flow in biosphere is unidirectional", hi: "जैवमण्डलीय पारिस्थितिक तंत्र में ऊर्जा का प्रवाह एकदिशीय होता है"},{en: "Energy flow in biosphere is cyclic", hi: "जैवमण्डलीय पारिस्थितिक तंत्र में ऊर्जा का प्रवाह चक्रीय होता है"},{en: "Relative loss of energy decreases with trophic levels", hi: "प्राकृतिक पारिस्थितिक तंत्र में बढ़ते पोषण स्तर के साथ ऊर्जा का सापेक्षिक क्षय घटता जाता है"},{en: "Species at higher levels use energy more efficiently", hi: "प्रगामी बढ़ते पोषण स्तरों के साथ प्रजातियाँ सुलभ ऊर्जा का उपभोग करने में कम दक्ष होती है"}], correct: 0 },
+        { en: "False statement about Ecosystem:", hi: "निम्नलिखित में से कौन पारिस्थितिक तंत्र के विषय में सही नहीं है?", options: [{en: "Has abiotic and biotic components", hi: "यह अजैविक एवं जैविक दोनों संघटकों से युक्त होता है"},{en: "Has its own productivity", hi: "इसकी अपनी स्वयं की उत्पादकता होती है"},{en: "It is a closed system", hi: "यह एक बन्द तंत्र होता है"},{en: "It is a natural resource system", hi: "यह प्राकृतिक संसाधन तंत्र होता है"}], correct: 2 },
+        { en: "Man in a food chain is:", hi: "खाद्य-श्रृंखला (फूड चेन) में मानव है-", options: [{en: "A producer", hi: "एक निर्माता"},{en: "Only primary consumer", hi: "केवल प्राथमिक उपभोक्ता"},{en: "Only secondary consumer", hi: "केवल द्वितीयक उपभोक्ता"},{en: "Primary and secondary consumer", hi: "प्राथमिक तथा द्वितीयक उपभोक्ता"}], correct: 3 },
+        { en: "Ecological Science Center is at:", hi: "'पारिस्थितिकी विज्ञान केंद्र' कहाँ स्थित है?", options: [{en: "New Delhi", hi: "नई दिल्ली"},{en: "Allahabad", hi: "इलाहाबाद"},{en: "Karnal", hi: "करनाल"},{en: "Bengaluru", hi: "बेंगलुरु"}], correct: 3 },
+        { en: "World Environment Day is on:", hi: "'विश्व पर्यावरण दिवस' किस दिन मनाया जाता है?", options: [{en: "7 April", hi: "7 अप्रैल"},{en: "6 August", hi: "6 अगस्त"},{en: "5 June", hi: "5 जून"},{en: "16 June", hi: "16 जून"}], correct: 2 },
+        { en: "First World Environment Day was in:", hi: "प्रथम विश्व पर्यावरण दिवस किस वर्ष मनाया गया था?", options: [{en: "1973", hi: "1973 ई."},{en: "1972", hi: "1972 ई."},{en: "1980", hi: "1980 ई."},{en: "1974", hi: "1974 ई."}], correct: 0 },
+        { en: "Energy pyramid in any ecosystem is:", hi: "किसी भी पारिस्थितिकी तंत्र में ऊर्जा का पिरामिड होता है-", options: [{en: "Always upright", hi: "हमेशा सीधा"},{en: "Upright and inverted", hi: "हमेशा सीधा और उल्टा"},{en: "Always inverted", hi: "हमेशा उल्टा"},{en: "None of these", hi: "इनमें से कोई नहीं"}], correct: 0 },
+        { en: "Driving force of ecosystem is:", hi: "पारिस्थितिकी तंत्र का प्रेरक बल होता है-", options: [{en: "Carbohydrate", hi: "कार्बोहाइड्रेट"},{en: "Biomass", hi: "बायोमास"},{en: "Carbon", hi: "कार्बन"},{en: "Solar Energy", hi: "सौर ऊर्जा"}], correct: 3 },
+        { en: "Who first used 'Ecological Transition'?", hi: "'पारिस्थितिकी संक्रमण' अवधारणा का सर्वप्रथम प्रयोग किया गया-", options: [{en: "Elton", hi: "एल्टन द्वारा"},{en: "Bennett", hi: "बेनेट द्वारा"},{en: "Berkeley", hi: "बर्कले द्वारा"},{en: "Ratzel", hi: "रैटजेल द्वारा"}], correct: 1 },
+        { en: "Passing of nutrients through ecosystem components is:", hi: "एक पारिस्थितिकी तंत्र के विभिन्न घटकों से होकर पोषक तत्वों का गुजरना कहलाता है-", options: [{en: "Biogeochemical cycle", hi: "जैव-भू-रसायन चक्र"},{en: "Bio-geological cycle", hi: "जैव-भूगर्भिक चक्र"},{en: "Ecological succession", hi: "पारिस्थितिकी अनुक्रम"},{en: "Biological cycle", hi: "जैवीय चक्र"}], correct: 0 },
+        { en: "Effect of Global Warming:", hi: "निम्नलिखित में से कौन-सा वैश्विक ताप वृद्धि का प्रभाव है?", options: [{en: "Sea level rise", hi: "1. समुद्र जल तल का बढ़ान"},{en: "Glacial melting", hi: "2. हिमनदी का पिघलना"},{en: "Disease spread", hi: "3. बीमारियों का फैलना"},{en: "All 1, 2, 3, 4", hi: "1, 2, 3 और 4"}], correct: 3 }
+    ];
+
+    const quizApp = {
+        questions: [],
+        current: 0,
+        score: 0,
+        timer: null,
+        audioCtx: new (window.AudioContext || window.webkitAudioContext)(),
+
+        start() {
+            const shuffle = document.getElementById('shuffle').checked;
+            this.questions = shuffle ? [...questionsData].sort(() => Math.random() - 0.5) : [...questionsData];
+            this.current = 0;
+            this.score = 0;
+            
+            document.getElementById('start-screen').classList.remove('active');
+            document.getElementById('quiz-screen').classList.add('active');
+            this.loadQuestion();
+        },
+
+        loadQuestion() {
+            clearInterval(this.timer);
+            const q = this.questions[this.current];
+            document.getElementById('q-en').innerText = q.en;
+            document.getElementById('q-hi').innerText = q.hi;
+            document.getElementById('q-count').innerText = `Question: ${this.current + 1}/${this.questions.length}`;
+            document.getElementById('score-box').innerText = `Score: ${this.score}`;
+            document.getElementById('progress').style.width = `${((this.current + 1) / this.questions.length) * 100}%`;
+
+            const optBox = document.getElementById('options');
+            optBox.innerHTML = '';
+            q.options.forEach((opt, i) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerHTML = `<span>${opt.en}</span><span class="opt-hi">${opt.hi}</span>`;
+                btn.onclick = () => this.check(i);
+                optBox.appendChild(btn);
+            });
+
+            this.runTimer();
+        },
+
+        runTimer() {
+            let time = parseInt(document.getElementById('timer-val').value);
+            if(time <= 0) {
+                document.getElementById('timer-display').style.display = 'none';
+                return;
+            }
+            document.getElementById('timer-display').style.display = 'block';
+            const secs = document.getElementById('secs');
+            const box = document.getElementById('timer-display');
+            
+            secs.innerText = time;
+            box.classList.remove('pulse-red');
+
+            this.timer = setInterval(() => {
+                time--;
+                secs.innerText = time < 10 ? '0'+time : time;
+                if(time < 5) box.classList.add('pulse-red');
+                if(time <= 0) {
+                    clearInterval(this.timer);
+                    this.check(-1);
+                }
+            }, 1000);
+        },
+
+        check(idx) {
+            clearInterval(this.timer);
+            const q = this.questions[this.current];
+            const btns = document.querySelectorAll('.option-btn');
+            btns.forEach(b => b.disabled = true);
+
+            if(idx === q.correct) {
+                this.score++;
+                btns[idx].classList.add('correct');
+                this.sound('correct');
+                this.confetti();
+            } else {
+                if(idx !== -1) btns[idx].classList.add('wrong');
+                btns[q.correct].classList.add('correct');
+                this.sound('wrong');
+                this.shake();
+            }
+
+            setTimeout(() => {
+                this.current++;
+                if(this.current < this.questions.length) this.loadQuestion();
+                else this.end();
+            }, 1500);
+        },
+
+        sound(type) {
+            const osc = this.audioCtx.createOscillator();
+            const gain = this.audioCtx.createGain();
+            osc.connect(gain); gain.connect(this.audioCtx.destination);
+            
+            if(type === 'correct') {
+                osc.frequency.setValueAtTime(800, this.audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(1200, this.audioCtx.currentTime + 0.1);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.audioCtx.currentTime + 0.3);
+            } else {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(150, this.audioCtx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.01, this.audioCtx.currentTime + 0.3);
+            }
+            osc.start(); osc.stop(this.audioCtx.currentTime + 0.3);
+        },
+
+        confetti() {
+            const canvas = document.getElementById('confetti');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            let particles = Array.from({length:100}, () => ({
+                x: Math.random()*canvas.width, y: -20, 
+                c: `hsl(${Math.random()*360},70%,50%)`,
+                v: Math.random()*5+2
+            }));
+            function frame() {
+                ctx.clearRect(0,0,canvas.width,canvas.height);
+                particles.forEach(p => {
+                    ctx.fillStyle = p.c;
+                    ctx.fillRect(p.x, p.y, 10, 10);
+                    p.y += p.v;
+                });
+                if(particles[0].y < canvas.height) requestAnimationFrame(frame);
+            }
+            frame();
+        },
+
+        shake() {
+            const em = document.getElementById('emoji');
+            em.style.display = 'block';
+            em.classList.add('shake');
+            setTimeout(() => { em.style.display = 'none'; em.classList.remove('shake'); }, 800);
+        },
+
+        end(early = false) {
+            clearInterval(this.timer);
+            document.getElementById('quiz-screen').classList.remove('active');
+            document.getElementById('result-screen').classList.add('active');
+            
+            const total = early ? this.current : this.questions.length;
+            document.getElementById('final-score').innerText = `${this.score} / ${total}`;
+            
+            const pct = (this.score / total) * 100;
+            let msg = "";
+            if(pct >= 80) msg = "🏆 Outstanding Performance!";
+            else if(pct >= 50) msg = "👏 Well Done! Keep it up.";
+            else msg = "📚 Practice makes perfect! Try again.";
+            document.getElementById('message').innerText = msg;
+        }
+    };
+</script>
+</body>
+</html>

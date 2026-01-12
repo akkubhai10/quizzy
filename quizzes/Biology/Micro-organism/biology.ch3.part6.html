@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Micro-Biology Quiz (251-302)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-gradient: linear-gradient(45deg, #6a11cb 0%, #2575fc 50%, #ff00ea 100%);
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --correct: #2ecc71;
+            --wrong: #e74c3c;
+            --hindi-color: #ddd;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+
+        body {
+            background: var(--bg-gradient);
+            background-attachment: fixed;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            overflow-x: hidden;
+        }
+
+        .quiz-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 25px;
+            width: 90%;
+            max-width: 700px;
+            padding: 30px;
+            position: relative;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        }
+
+        #progress-bar {
+            position: absolute; top: 0; left: 0; height: 6px;
+            background: linear-gradient(to right, #00f2fe, #4facfe);
+            width: 0%; border-radius: 25px 0 0 0;
+            transition: width 0.3s ease; box-shadow: 0 0 10px #4facfe;
+        }
+
+        .screen { display: none; flex-direction: column; align-items: center; text-align: center; }
+        .active { display: flex; }
+
+        h1 { font-weight: 700; margin-bottom: 20px; }
+        .setup-group { width: 100%; margin: 15px 0; text-align: left; }
+        label { display: block; margin-bottom: 5px; font-size: 0.9rem; }
+        input[type="number"] {
+            width: 100%; padding: 12px; border-radius: 12px; border: none;
+            background: rgba(255,255,255,0.2); color: white; outline: none;
+        }
+
+        .primary-btn {
+            background: white; color: #2575fc; border: none;
+            padding: 15px 40px; border-radius: 50px; font-weight: 700;
+            cursor: pointer; transition: transform 0.2s ease; margin-top: 20px;
+        }
+        .primary-btn:hover { transform: scale(1.05); }
+
+        .quiz-header { width: 100%; display: flex; justify-content: space-between; margin-bottom: 20px; font-weight: 600; }
+        .timer { font-size: 1.2rem; }
+        .pulse-red { color: #ff3e3e; animation: pulse 0.5s infinite alternate; }
+        @keyframes pulse { from { opacity: 1; } to { opacity: 0.5; } }
+
+        .question-box { width: 100%; text-align: left; margin-bottom: 25px; }
+        .q-en { font-weight: 700; font-size: 1.2rem; display: block; }
+        .q-hi { color: var(--hindi-color); font-size: 0.95rem; display: block; margin-top: 5px; }
+
+        .options-grid { width: 100%; display: grid; gap: 12px; }
+        .option {
+            background: rgba(255,255,255,0.08); border: 1px solid var(--glass-border);
+            padding: 15px; border-radius: 15px; cursor: pointer; text-align: left;
+            transition: all 0.2s; display: flex; flex-direction: column;
+        }
+        .option:hover { background: rgba(255,255,255,0.15); }
+        .opt-hi { font-size: 0.85rem; color: var(--hindi-color); margin-top: 3px; }
+
+        .correct { background: var(--correct) !important; border-color: #fff; }
+        .wrong { background: var(--wrong) !important; border-color: #fff; }
+        .disabled { pointer-events: none; opacity: 0.7; }
+
+        #emoji-feedback {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 100px; display: none; z-index: 1000;
+        }
+        .shake { animation: shake 0.5s; }
+        @keyframes shake {
+            0%, 100% { transform: translate(-50%, -50%); }
+            25% { transform: translate(-55%, -50%); }
+            75% { transform: translate(-45%, -50%); }
+        }
+
+        #confetti-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; }
+        .finish-btn { background: transparent; color: white; border: 1px solid var(--glass-border); padding: 8px 15px; border-radius: 10px; margin-top: 20px; cursor: pointer; font-size: 0.8rem; }
+    </style>
+</head>
+<body>
+
+<canvas id="confetti-canvas"></canvas>
+<div id="emoji-feedback">😢</div>
+
+<div class="quiz-card">
+    <div id="progress-bar"></div>
+
+    <div id="start-screen" class="screen active">
+        <h1>Micro-Biology Quiz</h1>
+        <p>Final Module: Questions 251 - 302</p>
+        <div class="setup-group">
+            <label>Timer per Question (Seconds):</label>
+            <input type="number" id="timer-input" placeholder="0 = No Timer">
+        </div>
+        <div class="setup-group">
+            <label style="cursor: pointer;"><input type="checkbox" id="shuffle-input"> Shuffle Questions</label>
+        </div>
+        <button class="primary-btn" onclick="startQuiz()">Start Quiz</button>
+    </div>
+
+    <div id="quiz-screen" class="screen">
+        <div class="quiz-header">
+            <div id="q-counter">Q 00/00</div>
+            <div id="timer-display" class="timer"></div>
+            <div id="score-display">Score: 0</div>
+        </div>
+        <div class="question-box">
+            <span class="q-en" id="q-en"></span>
+            <span class="q-hi" id="q-hi"></span>
+        </div>
+        <div class="options-grid" id="options-grid"></div>
+        <button class="finish-btn" onclick="endQuiz()">Finish & Show Results</button>
+    </div>
+
+    <div id="result-screen" class="screen">
+        <h1>Results</h1>
+        <div id="final-percent" style="font-size: 4rem; font-weight: 700; margin: 20px 0;">0%</div>
+        <p id="result-msg" style="font-size: 1.2rem; margin-bottom: 30px;"></p>
+        <button class="primary-btn" onclick="location.reload()">Restart Quiz</button>
+    </div>
+</div>
+
+<script>
+    const questions = [
+        {en: "What is Penicillium?", hi: "पेनीसिलियम क्या है-", opts: [{en: "Virus", hi: "विषाणु"}, {en: "Bacteria", hi: "जीवाणु"}, {en: "Fungi", hi: "कवक"}, {en: "Algae", hi: "एल्गी"}], ans: 2},
+        {en: "Which fungus is used in the manufacture of bread?", hi: "डबल रोटी (पाव रोटी) के निर्माण में काम आने वाला कवक है-", opts: [{en: "Rhizopus stolonifer", hi: "राइजोपस स्टोलनीफर"}, {en: "Zygosaccharomyces", hi: "जाइगो सैकरोमाइसीज"}, {en: "Saccharomyces ludwigii", hi: "सैकरोमाइकोडिस लुडिकजाई"}, {en: "Saccharomyces cerevisiae", hi: "सैकरोमाइसीज सेरेविसी"}], ans: 3},
+        {en: "Why does bread become soft and porous when yeast is added to dough?", hi: "जब गेहूँ के गुंथे हुए आटे में यीस्ट कोशिकाएँ मिलायी जाती है, तो डबल रोटी कोमल और छिद्रयुक्त हो जाती है, क्योंकि-", opts: [{en: "Yeast produces benzoic acid", hi: "यीस्ट बेंजोइक अम्ल पैदा करता है"}, {en: "CO2 production makes bread spongy", hi: "CO2 का उत्पादन कर रोटी को स्पंजी बना देता है"}, {en: "Yeast produces acetic acid and alcohol", hi: "यीस्ट एसीटिक अम्ल तथा ऐल्कोहॉल पैदा करता है"}, {en: "Yeast makes flour soft", hi: "यीस्ट कोमल होता है और आटा भी कोमल हो जाता है"}], ans: 1},
+        {en: "Vegetative reproduction in yeast occurs through?", hi: "यीस्ट में कायिक जनन किसके द्वारा होता है?", opts: [{en: "Budding", hi: "मुकुलन द्वारा"}, {en: "Akinetes", hi: "एकाइनीट्स द्वारा"}, {en: "Aplanospores", hi: "एप्लानोस्पोर्स द्वारा"}, {en: "Ascospores", hi: "एस्कोस्पोर्स द्वारा"}], ans: 0},
+        {en: "Who discovered Penicillin?", hi: "पेनिसिलीन की खोज किसने की थी?", opts: [{en: "Charles Darwin", hi: "चार्ल्स डार्विन"}, {en: "Michael Faraday", hi: "माइकल फैराडे"}, {en: "William Harvey", hi: "विलियम हार्वे"}, {en: "Alexander Fleming", hi: "एलेक्जेंडर फ्लेमिंग"}], ans: 3},
+        {en: "From which fungus is Penicillin obtained on an industrial scale?", hi: "औद्योगिक स्तर पर पेनीसिलीन किस कवक से प्राप्त किया जाता है?", opts: [{en: "P. expansum", hi: "पेनीसीलियम एक्सपैन्सम से"}, {en: "P. chrysogenum", hi: "पेनीसीलियम क्राइसोजीनम से"}, {en: "P. notatum", hi: "पेनीसीलियम नोटेटम से"}, {en: "P. claviforme", hi: "पेनीसीलियम क्लैवीफोर्मे से"}], ans: 1},
+        {en: "Alexander Fleming obtained the first antibiotic Penicillin from?", hi: "अलेक्जेंडर फ्लेमिंग ने प्रथम प्रति जैविक पेनीसिलिन किससे प्राप्त किया जाता है?", opts: [{en: "P. expansum", hi: "पेनीसीलियम एक्सपैन्सम से"}, {en: "P. chrysogenum", hi: "पेनीसीलियम क्राइसोजीनम से"}, {en: "P. notatum", hi: "पेनीसीलियम नोटेटम से"}, {en: "P. claviforme", hi: "पेनीसीलियम क्लैवीफोर्मे से"}], ans: 2},
+        {en: "Which was the first antibiotic discovered?", hi: "प्रथम खोजा गया एण्टीबायोटिक कौन-सा था?", opts: [{en: "Terramycin", hi: "टेरामायसीन"}, {en: "Neomycin", hi: "निओमायसीन"}, {en: "Streptomycin", hi: "स्ट्रेप्टोमाइसीन"}, {en: "Penicillin", hi: "पेनीसिलीन"}], ans: 3},
+        {en: "From what are broad spectrum antibiotics produced?", hi: "विस्तृत स्पेक्ट्रम प्रतिजैविक किससे उत्पन्न होता है?", opts: [{en: "Streptomyces", hi: "स्ट्रेप्टोमासिज से"}, {en: "Aspergillus", hi: "एस्परजिलस से"}, {en: "Penicillium", hi: "पेनीसिलियम से"}, {en: "Bacillus", hi: "बैसीलस से"}], ans: 0},
+        {en: "Who isolated the antibiotic Streptomycin?", hi: "स्ट्रेप्टोमाइसीन प्रतिजैविक को किसने पृथक किया था?", opts: [{en: "Leeuwenhoek", hi: "ल्यूवेनहॉक"}, {en: "Burkholder", hi: "बर्कहोल्डर"}, {en: "A. Fleming", hi: "ए. फ्लेमिंग"}, {en: "Waksman", hi: "वाक्समैन"}], ans: 3},
+        {en: "Which statement is NOT true about fungi?", hi: "कवक के बारे में निम्नलिखित में कौन सा कथन सत्य नहीं है?", opts: [{en: "Fungi are eukaryotic", hi: "कवक यूकैरियोटिक जीव है"}, {en: "Reproduction is by spores", hi: "इनमें जनन बीजाणुओं द्वारा होता है"}, {en: "Body is made of hyphae", hi: "इनका शरीर हाइफी का बना होता है"}, {en: "Wall is made of pectocellulose", hi: "कवक की भित्ति पेक्टोसेल्यूलोज की बनी होती है"}], ans: 3},
+        {en: "In which of these is chlorophyll NOT found?", hi: "निम्नलिखित में किसमें क्लोरोफिल नहीं पाया जाता है?", opts: [{en: "Algae", hi: "शैवाल"}, {en: "Fungi", hi: "कवक"}, {en: "Bryophytes", hi: "ब्रायोफाइट्स"}, {en: "Pteridophytes", hi: "टैरिडोफाइट्स"}], ans: 1},
+        {en: "What are fungi growing on tree bark called?", hi: "वृक्षों के छाल पर उगने वाले कवक को क्या कहते हैं?", opts: [{en: "Corticoles", hi: "कोर्टीकोल्स"}, {en: "Jufilas", hi: "जुफिलस"}, {en: "Saxicolous", hi: "साक्सीकोल्स"}, {en: "Coprophilous", hi: "कोप्रोफिलस"}], ans: 0},
+        {en: "What are fungi growing on dung called?", hi: "गोबर पर उगने वाले कवक को क्या कहते है?", opts: [{en: "Saxicolous", hi: "साक्सीकोल्स"}, {en: "Corticoles", hi: "कोर्टीकोल्स"}, {en: "Terricolous", hi: "टेरीकोल्स"}, {en: "Coprophilous", hi: "कोप्रोफिलस"}], ans: 3},
+        {en: "From where is Ergot obtained?", hi: "अर्गोट (Ergot) किससे प्राप्त होता है?", opts: [{en: "Rhizobium", hi: "राइजोबियम"}, {en: "Claviceps", hi: "क्लेवीसेप्स"}, {en: "Phytomonas", hi: "फाइटोमोनास"}, {en: "Albugo", hi: "एलव्यूगो"}], ans: 1},
+        {en: "From what is LSD obtained?", hi: "एल.एस.डी. (LSD) किससे प्राप्त होता है?", opts: [{en: "Fungi", hi: "कवक"}, {en: "Bacteria", hi: "जीवाणु"}, {en: "2,4-D", hi: "2, 4-D"}, {en: "Alcohol", hi: "ऐल्कोहॉल"}], ans: 0},
+        {en: "What produces Aflatoxin?", hi: "एफ्ला विष किससे बनता है?", opts: [{en: "Bacteria", hi: "जीवाणु"}, {en: "Fungi", hi: "कवक"}, {en: "Virus", hi: "विषाणु"}, {en: "Algae", hi: "शैवाल"}], ans: 1},
+        {en: "Which of the following is an edible fungus?", hi: "निम्नलिखित में कौन खाने योग्य कवक है?", opts: [{en: "Mucor", hi: "म्यूकर"}, {en: "Penicillium", hi: "पेनीसीलियम"}, {en: "Agaricus", hi: "एगैरिकस"}, {en: "Rhizopus", hi: "राइजोपस"}], ans: 2},
+        {en: "What is a mushroom?", hi: "मशरुम क्या है?", opts: [{en: "Fungi", hi: "कवक"}, {en: "Plant", hi: "पौधा"}, {en: "Animal", hi: "पशु"}, {en: "Bacteria", hi: "जीवाणु"}], ans: 0},
+        {en: "What is a common 'edible fungus' (Toadstool)?", hi: "सामान्य 'खाद्य छत्रक' क्या होता है?", opts: [{en: "Mass of fungal spores", hi: "कवकीय बीजाणुओं के पुंज"}, {en: "Type of hyphae", hi: "कवक तन्तु (हाइफा) के प्रकार"}, {en: "Tightly packed fungal mycelium", hi: "कस कर ठसाठस भरे कवक जाल"}, {en: "Asexual spore structure", hi: "अलैंगिक बीजाणु पैदा करने के लिये प्रयुक्त संरचना"}], ans: 2},
+        {en: "Which represents a useful relationship between a fungus and roots of a higher plant?", hi: "निम्नलिखित में कौन-सा एक कवक एवं उच्च पादप की जड़ों के बीच उपयोगी कार्यात्मक सम्बन्ध को दर्शाता है?", opts: [{en: "Biofertilizer", hi: "जैव उर्वरक"}, {en: "Coralloid roots", hi: "कोरोलॉइड जड़"}, {en: "Lichen", hi: "लाइकेन"}, {en: "Mycorrhiza", hi: "माइकोराइजा"}], ans: 3},
+        {en: "Aspergillus fungus is used to make?", hi: "एस्परजिलस कवक का उपयोग किसके बनाने में होता है?", opts: [{en: "Cheese", hi: "पनीर"}, {en: "Vitamin C", hi: "विटामिन C"}, {en: "Bread", hi: "डबल रोटी"}, {en: "Alcohol", hi: "ऐल्कोहॉल"}], ans: 0},
+        {en: "What is NOT present in fungi?", hi: "कवक में क्या नहीं होता है?", opts: [{en: "Glycogen", hi: "ग्लाइकोजेन"}, {en: "Plastid", hi: "प्लास्टिड"}, {en: "Hyphae", hi: "हाइफी"}, {en: "Nucleus", hi: "केंद्रक"}], ans: 1},
+        {en: "From what is the bioactive molecule Cyclosporine A made?", hi: "जैव सक्रिय अणु साइक्लोस्पोरीन A किससे बनाया जाता है?", opts: [{en: "Fungi", hi: "कवक से"}, {en: "Yeast", hi: "यीस्ट से"}, {en: "Bacteria", hi: "जीवाणु से"}, {en: "Virus", hi: "विषाणु से"}], ans: 0},
+        {en: "From what is Statin, used to lower blood cholesterol, prepared?", hi: "मानव रूधिर में कोलेस्ट्रॉल के स्तर को घटाने में सहायक स्टेटिन किससे तैयार किया जाता है?", opts: [{en: "Bacteria", hi: "जीवाणु"}, {en: "Fungi", hi: "कवक"}, {en: "Yeast", hi: "यीस्ट"}, {en: "Algae", hi: "शैवाल"}], ans: 2},
+        {en: "Which is called 'Club Fungi'?", hi: "निम्नलिखित में किसे गदाकार कवक (Club Fungi) कहा जाता है?", opts: [{en: "Basidiomycetes", hi: "बेसिडियोमाइसिटीज"}, {en: "Phycomycetes", hi: "फाइकोमाइसिटीज"}, {en: "Ascomycetes", hi: "एस्कोमाइसिटीज"}, {en: "Deuteromycetes", hi: "ड्यूटेरोमाइसिटीज"}], ans: 0},
+        {en: "In which disease is Bioform used?", hi: "बायोफॉर्म का इस्तेमाल किस बीमारी में किया जाता है?", opts: [{en: "Cholera", hi: "कॉलैरा में"}, {en: "Malaria", hi: "मलेरिया में"}, {en: "AIDS", hi: "एड्स में"}, {en: "Dysentery", hi: "पेचिश में"}], ans: 3},
+        {en: "What type of disease is Ringworm?", hi: "दाद की बीमारी निम्नलिखित में किस प्रकार की होती है?", opts: [{en: "Bacterial", hi: "जीवाणुजनित"}, {en: "Viral", hi: "विषाणुजनित"}, {en: "Fungal", hi: "कवकीय"}, {en: "Protozoan", hi: "प्रोटोजोआ जनित"}], ans: 2},
+        {en: "Late blight of potato is caused by which fungus?", hi: "आलू में लेट ब्लाइट रोग किस कवक के कारण होता है?", opts: [{en: "Albugo candida", hi: "एल्ब्यूगो कैंडिडा"}, {en: "Fusarium moniliforme", hi: "फ्यूजैरियम मोनिलीफोर्म"}, {en: "Phytophthora infestans", hi: "फाइटोफ्थोरा इन्फेस्टेन्स"}, {en: "Alternaria solani", hi: "आल्टर्नेरिया सोलेनाई"}], ans: 2},
+        {en: "What causes Red rot of sugarcane?", hi: "गन्ने में लाल सड़न रोग किसके कारण होता है?", opts: [{en: "Fungi", hi: "कवक"}, {en: "Bacteria", hi: "जीवाणु"}, {en: "Virus", hi: "विषाणु"}, {en: "Protozoa", hi: "प्रोटोजोआ"}], ans: 0},
+        {en: "What causes Tikka disease of groundnut?", hi: "मूँगफली का टिक्का रोग का कारण है-", opts: [{en: "Fungi", hi: "कवक"}, {en: "Virus", hi: "विषाणु"}, {en: "Bacteria", hi: "जीवाणु"}, {en: "Protozoa", hi: "प्रोटोजोआ"}], ans: 0},
+        {en: "Which fungus is responsible for Tikka disease in groundnut?", hi: "मूँगफली में होने वाले टिक्का रोग के लिये उत्तरदायी कवक है-", opts: [{en: "Colletotrichum falcatum", hi: "कोलेटोट्राइकम फैल्केटम"}, {en: "Cercospora personata", hi: "सकोस्पोरा पसोनेटा"}, {en: "Claviceps purpurea", hi: "क्लेवीसेप्स परपूरिया"}, {en: "Puccinia graminis", hi: "पक्सीनिया ग्रेमिनिस"}], ans: 1},
+        {en: "Which fungus is responsible for Red rot in sugarcane?", hi: "गन्ने के लाल सड़न हेतु उत्तरदायी कवक हैं-", opts: [{en: "Pythium debaryanum", hi: "पिथियम डिबैरिएनम"}, {en: "Phytophthora infestans", hi: "फाइटोफ्थोरा इन्फेस्टेन्स"}, {en: "Alternaria alternata", hi: "आल्टर्नेरिया आल्टर्नेट"}, {en: "Colletotrichum falcatum", hi: "कोलेटोट्राइकम फैल्केटम"}], ans: 3},
+        {en: "What is the most common cause of diseases in plants?", hi: "पादप में होने वाले रोगों का सबसे उत्तरदायी कारण क्या है?", opts: [{en: "Fungi", hi: "फफूंद"}, {en: "Virus", hi: "विषाणु"}, {en: "Bacteria", hi: "जीवाणु"}, {en: "Protozoa", hi: "प्रोटोजोआ"}], ans: 0},
+        {en: "What causes 'Damping off' disease in plants?", hi: "पौधे का आर्द्र पतन रोग किसके कारण होता है?", opts: [{en: "Pythium debaryanum", hi: "पिथियम डिबैरिएनम"}, {en: "Peronospora parasitica", hi: "पेरेनोस्पोरा पैरासाइटिका"}, {en: "Albugo candida", hi: "एल्बुगो पसोनेटा"}, {en: "Phytophthora infestans", hi: "फाइटोफ्थोरा इन्फेस्टेन्स"}], ans: 0},
+        {en: "The word Cancer is derived from the Greek 'Carcinos', which means?", hi: "कैंसर शब्द ग्रीक के कार्किनोस (Carcinos) शब्द से व्युत्पन्न हुआ है, जिसका अर्थ होता है-", opts: [{en: "Poisonous", hi: "जहरीला"}, {en: "Decay", hi: "क्षय"}, {en: "Crab", hi: "केकड़ा"}, {en: "Incurable", hi: "अचिकित्सकीय"}], ans: 2},
+        {en: "What are cancer causing agents called?", hi: "कैंसर रोग कारकों को क्या कहते हैं?", opts: [{en: "Interferon", hi: "इन्टरफेरॉन"}, {en: "Tumor", hi: "ट्यूमर"}, {en: "Mutagens", hi: "म्यूटाजेन्स"}, {en: "Carcinogens", hi: "कार्सिनोजेन्स"}], ans: 3},
+        {en: "Which test is used to examine cancer tissues?", hi: "कैंसर के ऊतकों की जाँच के लिये कौन-सी परीक्षण की जाती है?", opts: [{en: "Biopsy", hi: "बायोप्सी"}, {en: "Bioscopy", hi: "बायोस्कोपी"}, {en: "Cholera-logy", hi: "कोलेडोलॉजी"}, {en: "Radiography", hi: "रेडियोग्राफी"}], ans: 0},
+        {en: "What is blood cancer commonly known as?", hi: "ब्लड कैंसर को आमतौर पर किस नाम से जाना जाता है?", opts: [{en: "Leucoderma", hi: "ल्यूकोडर्मा"}, {en: "Leukemia", hi: "ल्यूकेमिया"}, {en: "Leukemia", hi: "ल्यूकेमिया"}, {en: "Sickle-cell anemia", hi: "सिकल-सेल एनीमिया"}], ans: 1},
+        {en: "What is the most common cancer in humans?", hi: "मनुष्य में सबसे अधिक होने वाला कैंसर है-", opts: [{en: "Melanoma", hi: "मिलेनोमा"}, {en: "Lymphoma", hi: "लिम्फोमा"}, {en: "Sarcoma", hi: "सार्कोमा"}, {en: "Carcinoma", hi: "कार्सिनोमा"}], ans: 3},
+        {en: "What causes cancer?", hi: "कैंसर किस कारण से होता है-", opts: [{en: "Bacteria", hi: "जीवाणु द्वारा"}, {en: "Oncogenes", hi: "ऑन्कोजीन्स द्वारा"}, {en: "Both A and B", hi: "A तथा B दोनों"}, {en: "None", hi: "इनमें से कोई नहीं"}], ans: 1},
+        {en: "Which method is NOT commonly used for cancer treatment?", hi: "कैंसर के इलाज के लिये निम्नलिखित में से कौन एक विधि प्रचलित नहीं है?", opts: [{en: "Chemotherapy", hi: "कीमोथेरेपी"}, {en: "Radiation therapy", hi: "रेडिएशन थेरेपी"}, {en: "Surgery", hi: "सर्जरी"}, {en: "Physiotherapy", hi: "फिजियोथेरेपी"}], ans: 3},
+        {en: "Which class of antibodies causes allergic reactions?", hi: "किस समूह के एण्टीबॉडी से एलर्जिक प्रतिक्रिया होती है?", opts: [{en: "IgG", hi: "IgG"}, {en: "IgE", hi: "IgE"}, {en: "IgM", hi: "IgM"}, {en: "IgA", hi: "IgA"}], ans: 1},
+        {en: "Antibodies formed during allergy are?", hi: "एलर्जी के दौरान बनने वाले प्रतिरक्षियाँ (Antibody) है-", opts: [{en: "IgE", hi: "IgE"}, {en: "IgG", hi: "IgG"}, {en: "IgM", hi: "IgM"}, {en: "IgA", hi: "IgA"}], ans: 0},
+        {en: "Which immunoglobulin is present in tears, saliva, and mother's milk?", hi: "आँसू, लार, माँ के दूध में कौन-सा इम्युनोग्लोबिन उपस्थित रहते हैं?", opts: [{en: "IgA", hi: "IgA"}, {en: "IgD", hi: "IgD"}, {en: "IgE", hi: "IgE"}, {en: "IgG", hi: "IgG"}], ans: 0},
+        {en: "Which is the largest sized immunoglobulin?", hi: "सबसे बड़े आकार का इम्युनो-ग्लोबिन कौन है?", opts: [{en: "IgA", hi: "IgA"}, {en: "IgD", hi: "IgD"}, {en: "IgE", hi: "IgE"}, {en: "IgM", hi: "IgM"}], ans: 3},
+        {en: "Which works to destroy external cells?", hi: "बाहरी कोशिका को नष्ट करने का कार्य करता है-", opts: [{en: "IgD and IgE", hi: "IgD और IgE"}, {en: "IgM and IgG", hi: "IgM और IgG"}, {en: "Only IgM", hi: "केवल IgM"}, {en: "Only IgA", hi: "केवल IgA"}], ans: 1},
+        {en: "Allergens?", hi: "एलर्जेन्स-", opts: [{en: "Are infectious and increase IgE secretion", hi: "संक्रामक होते है और IgE के स्रवण को बढ़ाते है"}, {en: "Non-infectious and increase IgE secretion", hi: "असंक्रामक होते है और IgE के स्रवण को बढ़ाते है"}, {en: "Infectious and increase IgG secretion", hi: "संक्रामक होते है और IgG के स्रवण को बढ़ाते है"}, {en: "Non-infectious and increase IgM secretion", hi: "असंक्रामक होते है और IgM के स्रवण को बढ़ाते है"}], ans: 1},
+        {en: "Where are T-lymphocytes produced?", hi: "T-लिम्फोसाइट उत्पन्न होता है-", opts: [{en: "Thymus", hi: "थाइमस में"}, {en: "Stomach", hi: "पेट में"}, {en: "Bone marrow", hi: "अस्थिमज्जा से"}, {en: "Liver", hi: "यकृत में"}], ans: 2},
+        {en: "Where are B-lymphocytes formed?", hi: "B-लिम्फोसाइट का निर्माण कहाँ होता है?", opts: [{en: "Thymus", hi: "थाइमस में"}, {en: "Bone marrow", hi: "अस्थिमज्जा में"}, {en: "Blood", hi: "रूधिर में"}, {en: "Lymph", hi: "लिम्फ में"}], ans: 1},
+        {en: "Which is the largest bacterium?", hi: "सबसे बड़ा जीवाणु है-", opts: [{en: "Spirillum volutans", hi: "स्पाइरिलम वॉल्युटेन्स"}, {en: "Diplococcus pneumoniae", hi: "डिप्लोकोकस न्यूमोनी"}, {en: "Dialister pneumosintes", hi: "डायलस्टर न्यूमोसिन्ट्स"}, {en: "Thiomargarita namibiensis", hi: "थियोमार्गोरिटा नेमीविएनसिस"}], ans: 3},
+        {en: "Who gave the word Protozoa?", hi: "प्रोटोजोआ शब्द किसने दिया था-", opts: [{en: "Antonie van Leeuwenhoek", hi: "एण्टोनी वॉन ल्यूवेनहॉक"}, {en: "Goldfuss", hi: "गोल्डफस"}, {en: "Hinsworth", hi: "आइन्सवर्थ"}, {en: "Lister", hi: "लिस्टर"}], ans: 1}
+    ];
+
+    let currentQues = [];
+    let currentIdx = 0;
+    let score = 0;
+    let timerId = null;
+    let audioCtx = null;
+
+    function initAudio() {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+
+    function playSound(type) {
+        if (!audioCtx) return;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        if (type === 'correct') {
+            osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.1);
+        } else {
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+        }
+        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.2);
+    }
+
+    function fireConfetti() {
+        const canvas = document.getElementById('confetti-canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+        let particles = Array.from({length: 80}, () => ({
+            x: Math.random() * canvas.width, y: -20, r: Math.random() * 5 + 2,
+            v: Math.random() * 4 + 2, color: `hsl(${Math.random()*360}, 100%, 50%)`
+        }));
+        function animate() {
+            ctx.clearRect(0,0, canvas.width, canvas.height);
+            particles.forEach(p => {
+                p.y += p.v; ctx.fillStyle = p.color;
+                ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); ctx.fill();
+            });
+            if (particles.some(p => p.y < canvas.height)) requestAnimationFrame(animate);
+        }
+        animate();
+    }
+
+    function startQuiz() {
+        initAudio();
+        const shuffle = document.getElementById('shuffle-input').checked;
+        currentQues = [...questions];
+        if (shuffle) currentQues.sort(() => Math.random() - 0.5);
+        document.getElementById('start-screen').classList.remove('active');
+        document.getElementById('quiz-screen').classList.add('active');
+        loadQuestion();
+    }
+
+    function loadQuestion() {
+        if (currentIdx >= currentQues.length) return endQuiz();
+        const q = currentQues[currentIdx];
+        document.getElementById('q-en').innerText = q.en;
+        document.getElementById('q-hi').innerText = q.hi;
+        document.getElementById('q-counter').innerText = `Q ${currentIdx+1}/${currentQues.length}`;
+        document.getElementById('progress-bar').style.width = `${(currentIdx / currentQues.length) * 100}%`;
+        
+        const grid = document.getElementById('options-grid');
+        grid.innerHTML = '';
+        q.opts.forEach((opt, i) => {
+            const btn = document.createElement('div');
+            btn.className = 'option';
+            btn.innerHTML = `<span>${opt.en}</span><span class="opt-hi">${opt.hi}</span>`;
+            btn.onclick = () => selectOption(i, btn);
+            grid.appendChild(btn);
+        });
+        startTimer();
+    }
+
+    function startTimer() {
+        clearInterval(timerId);
+        const limit = parseInt(document.getElementById('timer-input').value) || 0;
+        if (limit <= 0) { document.getElementById('timer-display').innerText = ''; return; }
+        let time = limit;
+        const disp = document.getElementById('timer-display');
+        disp.innerText = `⏱ ${time}s`; disp.classList.remove('pulse-red');
+        timerId = setInterval(() => {
+            time--; disp.innerText = `⏱ ${time}s`;
+            if (time < 5) disp.classList.add('pulse-red');
+            if (time <= 0) { clearInterval(timerId); selectOption(-1); }
+        }, 1000);
+    }
+
+    function selectOption(idx, el) {
+        clearInterval(timerId);
+        const correct = currentQues[currentIdx].ans;
+        const opts = document.querySelectorAll('.option');
+        opts.forEach(o => o.classList.add('disabled'));
+
+        if (idx === correct) {
+            score++; el.classList.add('correct'); playSound('correct'); fireConfetti();
+        } else {
+            if (el) el.classList.add('wrong');
+            opts[correct].classList.add('correct'); playSound('wrong');
+            const fb = document.getElementById('emoji-feedback');
+            fb.style.display = 'block'; fb.classList.add('shake');
+            setTimeout(() => { fb.style.display = 'none'; fb.classList.remove('shake'); }, 1000);
+        }
+        document.getElementById('score-display').innerText = `Score: ${score}`;
+        setTimeout(() => { currentIdx++; loadQuestion(); }, 1500);
+    }
+
+    function endQuiz() {
+        clearInterval(timerId);
+        document.getElementById('quiz-screen').classList.remove('active');
+        document.getElementById('result-screen').classList.add('active');
+        document.getElementById('progress-bar').style.width = '100%';
+        const pc = Math.round((score / currentQues.length) * 100);
+        document.getElementById('final-percent').innerText = pc + "%";
+        let msg = pc >= 80 ? "🏆 Outstanding Performance!" : (pc >= 50 ? "👏 Well Done! Keep it up." : "📚 Practice makes perfect! Try again.");
+        document.getElementById('result-msg').innerText = msg;
+    }
+</script>
+</body>
+</html>

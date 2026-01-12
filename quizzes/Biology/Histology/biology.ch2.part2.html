@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Histology Mastery Quiz | Part 2</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --primary-text: #ffffff;
+            --hindi-text: #dddddd;
+            --correct: #2ecc71;
+            --wrong: #e74c3c;
+            --accent: #f1c40f;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(45deg, #6610f2, #007bff, #e83e8c);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Glassmorphism Card */
+        .quiz-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 25px;
+            width: 100%;
+            max-width: 800px;
+            padding: 40px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            position: relative;
+            z-index: 10;
+        }
+
+        /* Progress Bar */
+        .progress-bar-container {
+            position: absolute;
+            top: 0; left: 0; width: 100%;
+            height: 6px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 25px 25px 0 0;
+            overflow: hidden;
+        }
+        #progress-fill {
+            height: 100%;
+            width: 0%;
+            background: var(--correct);
+            box-shadow: 0 0 10px var(--correct);
+            transition: width 0.4s ease;
+        }
+
+        /* Header Info */
+        .quiz-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            font-weight: 600;
+            color: var(--primary-text);
+        }
+
+        #timer.pulse-red {
+            color: var(--wrong);
+            animation: pulse 0.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        /* Typography */
+        .q-text-en { font-size: 1.3rem; font-weight: 700; margin-bottom: 5px; color: var(--primary-text); }
+        .q-text-hi { font-size: 1rem; color: var(--hindi-text); font-weight: 400; margin-bottom: 25px; }
+
+        /* Options */
+        .options-container { display: grid; gap: 15px; }
+        .option-btn {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 15px 20px;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.2s ease;
+            color: var(--primary-text);
+        }
+        .option-btn:hover:not(:disabled) { background: rgba(255,255,255,0.15); transform: scale(1.02); }
+        .option-btn.correct { background: var(--correct) !important; border-color: var(--correct); }
+        .option-btn.wrong { background: var(--wrong) !important; border-color: var(--wrong); }
+        .opt-hi { display: block; font-size: 0.85rem; color: #ddd; margin-top: 4px; }
+
+        /* Controls */
+        .start-screen, .result-screen { text-align: center; }
+        input[type="number"] {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid var(--glass-border);
+            padding: 10px; border-radius: 8px; color: white; width: 100px; text-align: center; margin: 20px 0;
+        }
+        .btn-main {
+            background: white; color: #333; border: none; padding: 15px 40px;
+            border-radius: 50px; font-weight: 700; cursor: pointer; transition: transform 0.2s;
+            margin-top: 20px;
+        }
+        .btn-main:hover { transform: scale(1.1); box-shadow: 0 0 20px rgba(255,255,255,0.4); }
+        .finish-btn { background: transparent; border: 1px solid white; color: white; margin-top: 30px; width: 100%; opacity: 0.7; }
+        .finish-btn:hover { opacity: 1; background: rgba(255,255,255,0.1); }
+
+        /* Animations */
+        #sad-emoji {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 10rem; display: none; z-index: 10000;
+        }
+        .shake { animation: shakeAnim 0.5s; }
+        @keyframes shakeAnim {
+            0%, 100% { transform: translate(-50%, -50%); }
+            20%, 60% { transform: translate(-55%, -50%); }
+            40%, 80% { transform: translate(-45%, -50%); }
+        }
+
+        #confetti-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; }
+        .hidden { display: none !important; }
+
+        @media (max-width: 600px) {
+            .quiz-card { padding: 20px; }
+            .q-text-en { font-size: 1.1rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="confetti-canvas"></canvas>
+    <div id="sad-emoji">😢</div>
+
+    <div class="quiz-card">
+        <div class="progress-bar-container"><div id="progress-fill"></div></div>
+
+        <div id="start-screen" class="start-screen">
+            <h1 style="color: white; margin-bottom: 10px;">Histology Quiz Part 2</h1>
+            <p style="color: #ddd;">Questions 51 - 100 | Tissue Study</p>
+            
+            <div style="margin: 30px 0;">
+                <label style="color: white; display: block;">Timer per Question (seconds):</label>
+                <input type="number" id="timer-input" value="15" min="0">
+                <br>
+                <label style="color: white; cursor: pointer;">
+                    <input type="checkbox" id="shuffle-toggle"> Shuffle Questions
+                </label>
+            </div>
+            
+            <button class="btn-main" onclick="initQuiz()">Start Quiz</button>
+        </div>
+
+        <div id="quiz-screen" class="hidden">
+            <div class="quiz-header">
+                <div id="q-counter">Question: 1/50</div>
+                <div id="timer-box">⏱️ <span id="timer">--</span>s</div>
+                <div id="score-counter">Score: 0</div>
+            </div>
+
+            <div id="question-area">
+                <div class="q-text-en" id="en-q"></div>
+                <div class="q-text-hi" id="hi-q"></div>
+                <div class="options-container" id="options"></div>
+            </div>
+
+            <button class="btn-main finish-btn" onclick="showResults(true)">Finish & Show Results</button>
+        </div>
+
+        <div id="result-screen" class="hidden result-screen">
+            <h1 id="result-title" style="color: white; font-size: 3rem;">0%</h1>
+            <h2 id="result-msg" style="color: white; margin: 20px 0;"></h2>
+            <p id="score-summary" style="color: #ddd; margin-bottom: 30px;"></p>
+            <button class="btn-main" onclick="location.reload()">Restart Quiz</button>
+        </div>
+    </div>
+
+    <script>
+        // DATA SET: QUESTIONS 51-100
+        const questionsData = [
+            { en: "The main function of the ground tissue system in plants is -", hi: "पौधे के भरण उत्तकतंत्र के मुख्य कार्य है-", options: [
+                { en: "Protecting from parasites", hi: "पौधों को परजीवी कवक से बचाना", correct: false },
+                { en: "Manufacturing and storage of food", hi: "भोज्य पदार्थ का निर्माण तथा उसका संग्रह करना", correct: true },
+                { en: "Transporting water from root to leaf", hi: "पानी और भोज्य पदार्थ को जड़ से पत्ती तक पहुँचाना", correct: false },
+                { en: "All of the above", hi: "इनमें से सभी", correct: false }
+            ]},
+            { en: "Which tissue stores ergastic substances (non-living products)?", hi: "निम्नलिखित कौन अजैव पदार्थ (ergastic substance) का संचयन करता है ?", options: [
+                { en: "Chloroplast", hi: "क्लोरोप्लास्ट", correct: false },
+                { en: "Idioblast", hi: "इडियोब्लास्ट", correct: true },
+                { en: "Phragmoplast", hi: "फ्रेग्मोप्लास्ट", correct: false },
+                { en: "All of these", hi: "इनमें से सभी", correct: false }
+            ]},
+            { en: "Vascular bundles where phloem is found on both sides of xylem are called -", hi: "वह संवहन बंडल जिनमें जाइलम के दोनों ओर फ्लोएम पाया जाता है, को क्या कहते हैं ?", options: [
+                { en: "Radial", hi: "अरीय (Radial)", correct: false },
+                { en: "Collateral", hi: "Collateral", correct: false },
+                { en: "Bicollateral", hi: "Bicollateral", correct: true },
+                { en: "Amphicribral", hi: "Amphicribral", correct: false }
+            ]},
+            { en: "Where are Radial Vascular Bundles found?", hi: "अरीय संवहन बंडल (Radial Vascular bundle) कहाँ पाये जाते हैं ?", options: [
+                { en: "In roots of monocot plants", hi: "एकबीज पत्री पौधों के जड़ों में", correct: true },
+                { en: "In stems of dicot plants", hi: "द्विबीजपत्री के तनों में", correct: false },
+                { en: "In stems of monocot plants", hi: "एकबीज पत्री पौधों के तने में", correct: false },
+                { en: "None of these", hi: "इनमें से कोई नहीं", correct: false }
+            ]},
+            { en: "What layers are included in the Stele of a plant?", hi: "पौधे के स्टील (Stele) परत में शामिल होते हैं-", options: [
+                { en: "Only Pericycle", hi: "केवल परिरंभ (Pericycle)", correct: false },
+                { en: "Pericycle and Vascular Bundle", hi: "परिरंभ तथा संवहन मूल (Vascular Bundle)", correct: true },
+                { en: "Pericycle, Vascular Bundle, and Pith", hi: "परिरंभ, संवहन पूल तथा मज्जा (Pith)", correct: false },
+                { en: "None of these", hi: "इनमें से कोई नहीं", correct: false }
+            ]},
+            { en: "How can the age of a tree be determined?", hi: "एक वृक्ष की आयु का पता किसके द्वारा लगाया जा सकता है ?", options: [
+                { en: "Measuring its height", hi: "इसकी ऊँचाई को माप कर", correct: false },
+                { en: "Counting the annual rings", hi: "वार्षिक वलय की गिनती करके", correct: true },
+                { en: "Counting branches", hi: "शाखाओं की संख्या को गिन कर", correct: false },
+                { en: "No method exists", hi: "आयु मापने की कोई तरीका", correct: false }
+            ]},
+            { en: "Annual rings or Growth rings include -", hi: "वार्षिक वलय या वृद्धि वलय में शामिल होते हैं-", options: [
+                { en: "Only Spring wood", hi: "केवल वसंत काष्ठ (Spring wood)", correct: false },
+                { en: "Only Autumn wood", hi: "केवल शरद काष्ठ (Autumn wood)", correct: false },
+                { en: "Both Spring and Autumn wood", hi: "वसंत काष्ठ तथा शरद काष्ठ दोनों", correct: true },
+                { en: "None of these", hi: "इनमें से कोई नहीं", correct: false }
+            ]},
+            { en: "Growth rings are formed due to the activity of -", hi: "निम्नलिखित में किसकी सक्रियता के कारण वृद्धि वलय बनती है ?", options: [
+                { en: "Intrastelar cambium", hi: "अन्तः रम्भीय एधा की", correct: true },
+                { en: "Interfascicular cambium", hi: "अन्तः विष्ट एधा की", correct: false },
+                { en: "Extrastelar cambium", hi: "बाह्य रम्भीय एधा की", correct: false },
+                { en: "Primary cambium", hi: "प्राथमिक एधा की", correct: false }
+            ]},
+            { en: "If 50 annual rings are found in a stem cross-section, the age of the tree is -", hi: "एक वृक्ष के पुराने तने की अनुप्रस्थकाट में 50 वार्षिक वलय मिलते हैं। वृक्ष की आयु होगी ?", options: [
+                { en: "25 Years", hi: "25 वर्ष", correct: false },
+                { en: "49 Years", hi: "49 वर्ष", correct: false },
+                { en: "50 Years", hi: "50 वर्ष", correct: true },
+                { en: "100 Years", hi: "100 वर्ष", correct: false }
+            ]},
+            { en: "Trees growing near the sea do not have distinct annual rings because -", hi: "समुद्र के किनारे उगने वाले वृक्षों में वार्षिक वलय नहीं होते हैं, क्योंकि -", options: [
+                { en: "Lack of climatic variation", hi: "जलवायुवीय विभिन्नता होती है", correct: false },
+                { en: "Soil is sandy", hi: "भूमि बलुई होती है", correct: false },
+                { en: "High humidity in air", hi: "वायुमण्डल में प्रचुर नमी होती है", correct: false },
+                { en: "There is no distinct climatic variation", hi: "स्पष्ट जलवायुवीय विभिन्नता नहीं होती है", correct: true }
+            ]},
+            { en: "The central dark, tough part of an old tree is called -", hi: "पुराने पेड़ को जब काटा जाता है तो, बीच का केंद्रीय भाग जो मजबूत, घना तथा गहरे कत्थई रंग का होता है, उसे क्या कहते हैं ?", options: [
+                { en: "Heart Wood", hi: "हृदय काष्ठ (Heart Wood)", correct: true },
+                { en: "Duramen", hi: "ड्युरामेन", correct: false },
+                { en: "Saril", hi: "सारिल", correct: false },
+                { en: "All of these", hi: "इनमें से सभी", correct: false }
+            ]},
+            { en: "Consider the statements: 1. Heart wood cells are dead. 2. Sap wood has some living and some dead cells.", hi: "कथनों पर विचार करें: 1. हृदय काष्ठ की सभी कोशिकाएँ मृत होती हैं। 2. रस काष्ठ के कुछ कोशिकाएँ जीवित तथा कुछ मृत होती हैं।", options: [
+                { en: "Only 1", hi: "केवल 1", correct: false },
+                { en: "Only 2", hi: "केवल 2", correct: false },
+                { en: "Both 1 and 2", hi: "1 तथा 2 दोनों", correct: true },
+                { en: "Neither 1 nor 2", hi: "न तो 1 न ही 2", correct: false }
+            ]},
+            { en: "If a nail is driven into a tree 7 feet high in 2000, and growth is 5 inches/year, how high is the nail in 2021?", hi: "यदि सन 2000 में एक वृक्ष में एक साइन बोर्ड की कील भूमि से 7 फीट की ऊँचाई पर लगायी गयी। सन 2021 में यह कील कितनी ऊँची होगी?", options: [
+                { en: "5 Feet", hi: "5 फीट", correct: false },
+                { en: "7 Feet", hi: "7 फीट", correct: true },
+                { en: "9 Feet", hi: "9 फीट", correct: false },
+                { en: "147 Feet", hi: "147 फीट", correct: false }
+            ]},
+            { en: "Complex Tissue is made of -", hi: "जटिल उत्तक (Complex Tissue) बना होता है-", options: [
+                { en: "Parenchyma", hi: "मृदु उत्तक से", correct: false },
+                { en: "Collenchyma", hi: "स्थूलकोण उत्तक से", correct: false },
+                { en: "Different types of cells performing same function", hi: "भिन्न-भिन्न कार्य करने वाली विभिन्न प्रकार की कोशिकाओं का", correct: true },
+                { en: "Same types of cells", hi: "समान कार्य करने वाली एक ही प्रकार की कोशिका का", correct: false }
+            ]},
+            { en: "Sieve tubes and Companion cells are found in -", hi: "चालनी नालिका तथा सह कोशिका पायी जाती हैं ?", options: [
+                { en: "Phloem", hi: "फ्लोएम में", correct: true },
+                { en: "Xylem", hi: "जाइलम में", correct: false },
+                { en: "Parenchyma", hi: "मृदु उत्तक में", correct: false },
+                { en: "Sclerenchyma", hi: "दृढ़ उत्तक में", correct: false }
+            ]},
+            { en: "Xylem and Phloem are made of how many elements?", hi: "जाइलम एवं फ्लोएम का निर्माण कितने तत्वों से होता है ?", options: [
+                { en: "Two", hi: "दो", correct: false },
+                { en: "Three", hi: "तीन", correct: false },
+                { en: "Four", hi: "चार", correct: true },
+                { en: "Five", hi: "पाँच", correct: false }
+            ]},
+            { en: "Vascular tissue is formed from -", hi: "संवहन उत्तक का निर्माण किससे होता है-", options: [
+                { en: "Apical meristem", hi: "शीर्षस्थ विभज्योतिकी से", correct: false },
+                { en: "Lateral meristem", hi: "पार्श्व विभज्योतिकी से", correct: true },
+                { en: "Intercalary meristem", hi: "अंतर्वेशी विभज्योतिकी से", correct: false },
+                { en: "All of these", hi: "इनमें से सभी", correct: false }
+            ]},
+            { en: "Which of these is NOT a xylem element?", hi: "इनमें कौन जाइलम तत्व नहीं है-", options: [
+                { en: "Tracheids", hi: "Tracheids", correct: false },
+                { en: "Vessels", hi: "Vessels", correct: false },
+                { en: "Sieve Tube", hi: "Sieve Tube", correct: true },
+                { en: "Wood Fibres", hi: "Wood Fibres", correct: false }
+            ]},
+            { en: "A mature Sieve tube differs from a Vessel by lacking -", hi: "फ्लोएम का एक परिपक्व चालनी नलिका, वाहिका से भिन्न होती है-", options: [
+                { en: "Cytoplasm", hi: "कोशिका द्रव्य के अभाव में", correct: false },
+                { en: "Being dead", hi: "मृत होने के कारण", correct: false },
+                { en: "Lack of functional nucleus", hi: "क्रियात्मक केंद्रक के अभाव में", correct: true },
+                { en: "Lignin thickening", hi: "लिग्निन युक्त भित्ति स्थूलन की उपस्थिति के कारण", correct: false }
+            ]},
+            { en: "Which xylem element mainly transports water and minerals?", hi: "जाइलम का कौन सा तत्व मुख्य रूप से जल तथा खनिज लवण के परिवहन का कार्य करती है ?", options: [
+                { en: "Tracheids", hi: "वाहिनिकाएं", correct: false },
+                { en: "Vessels", hi: "वाहिकाएँ", correct: false },
+                { en: "Both A and B", hi: "A तथा B दोनों", correct: true },
+                { en: "Xylem fibers", hi: "जाइलम तंतु", correct: false }
+            ]},
+            { en: "Which xylem element is made of living cells?", hi: "जाइलम का कौन सा तत्व जीवित कोशिकाओं का बना होता है ?", options: [
+                { en: "Tracheids", hi: "वाहिनिकाएँ", correct: false },
+                { en: "Vessels", hi: "वाहिकाएँ", correct: false },
+                { en: "Xylem parenchyma", hi: "जाइलम मृदूतक", correct: true },
+                { en: "Xylem fibers", hi: "तंतु", correct: false }
+            ]},
+            { en: "Which phloem element is made of dead cells?", hi: "फ्लोएम का कौन सा तत्व मृत कोशिकाओं का बना होता है ?", options: [
+                { en: "Sieve tube", hi: "चालनी नलिका", correct: false },
+                { en: "Companion cells", hi: "सहकोशिका", correct: false },
+                { en: "Phloem fibers (Bast fibers)", hi: "बास्ट तंतु", correct: true },
+                { en: "Phloem parenchyma", hi: "फ्लोएम पैरेनकाइमा", correct: false }
+            ]},
+            { en: "Which phloem element mainly transports food substances?", hi: "फ्लोएम का कौन सा तत्व मुख्यत: भोज्य पदार्थ के संवहन में भाग लेता है ?", options: [
+                { en: "Sieve tube", hi: "चालनी नलिका", correct: true },
+                { en: "Companion cells", hi: "सहकोशिका", correct: false },
+                { en: "Bast fibers", hi: "बास्ट तंतु", correct: false },
+                { en: "Phloem parenchyma", hi: "फ्लोएम पैरेनकाइमा", correct: false }
+            ]},
+            { en: "What helps in transport of food in sieve tubes?", hi: "चालनी नलिकाओं में भोज्य पदार्थ के संवहन में मदद करता है ?", options: [
+                { en: "Companion cells", hi: "सहकोशिका", correct: true },
+                { en: "Phloem fibers", hi: "फ्लोएम तंतु", correct: false },
+                { en: "Phloem parenchyma", hi: "फ्लोएम मृदूतक", correct: false },
+                { en: "Vessels", hi: "वाहिकाएँ", correct: false }
+            ]},
+            { en: "Which phloem element provides mechanical support to the phloem?", hi: "फ्लोएम का कौन सा तत्व फ्लोएम उत्तक को यांत्रिक सहायता प्रदान करता है ?", options: [
+                { en: "Sieve tube", hi: "चालनी नलिका", correct: false },
+                { en: "Phloem fibers", hi: "फ्लोएम तंतु", correct: true },
+                { en: "Phloem parenchyma", hi: "फ्लोएम मृदूतक", correct: false },
+                { en: "Companion cells", hi: "सहकोशिका", correct: false }
+            ]},
+            { en: "Sieve plates are found in phloem tissue between -", hi: "फ्लोएम उत्तक में चालनी पट्टी पायी जाती है ?", options: [
+                { en: "Two companion cells", hi: "दो सहकोशिका के बीच", correct: false },
+                { en: "Two sieve tubes", hi: "दो चालनी नलिका के बीच", correct: true },
+                { en: "Two bast fibers", hi: "दो बास्ट तंतु के बीच", correct: false },
+                { en: "None of these", hi: "इनमें से कोई नहीं", correct: false }
+            ]},
+            { en: "Phloem in plants is mainly responsible for -", hi: "पौधों में फ्लोएम मुख्यतः उत्तरदायी हैं ?", options: [
+                { en: "Food transport", hi: "आहार वहन के लिये", correct: true },
+                { en: "Amino acid transport", hi: "अमीनो एसिड वहन के लिये", correct: false },
+                { en: "Water transport", hi: "जल वहन के लिये", correct: false },
+                { en: "Oxygen transport", hi: "ऑक्सीजन वहन के लिये", correct: false }
+            ]},
+            { en: "Xylem in plants is mainly responsible for -", hi: "पौधों में जाइलम मुख्यत: जिम्मेदार है ?", options: [
+                { en: "Oxygen transport", hi: "ऑक्सीजन वहन के लिये", correct: false },
+                { en: "Amino acid transport", hi: "अमीनो एसिड के लिये", correct: false },
+                { en: "Food transport", hi: "आहार वहन के लिये", correct: false },
+                { en: "Water transport", hi: "जल वहन के लिये", correct: true }
+            ]},
+            { en: "Why do leaves fall from branches?", hi: "शाखाओं से पत्तियां किन कारणों से झड़ जाती हैं ?", options: [
+                { en: "Drop in temperature", hi: "वायुमण्डलीय तापमान में गिरावट से", correct: false },
+                { en: "Completion of lifespan", hi: "अपना जीवन काल पूर्ण करने से", correct: false },
+                { en: "Formation of abscission layer (cork)", hi: "कॉर्क के बाहर विलगन परत बन जाने से", correct: true },
+                { en: "Daylight ending", hi: "दैनिक काल के छोट होने से", correct: false }
+            ]},
+            { en: "Which Indian scientist proposed the theory of long-distance water transport in plants?", hi: "किस एक भारतीय वैज्ञानिक ने पादपों में जल की लम्बी दूरी के अभिगमन का सिद्धांत प्रस्तुत किया ?", options: [
+                { en: "P. Maheshwari", hi: "पी. माहेश्वरी ने", correct: false },
+                { en: "J.C. Bose", hi: "जे. सी. बोस ने", correct: true },
+                { en: "Birbal Sahni", hi: "बीरबल साहनी ने", correct: false },
+                { en: "N.S. Parihar", hi: "एन. एस. परिहार ने", correct: false }
+            ]},
+            { en: "Which type of tissue acts as a protective shield for the body?", hi: "किस प्रकार के उत्तक शरीर की सुरक्षा कवच का कार्य करते हैं ?", options: [
+                { en: "Epithelial", hi: "उपकला (Epithelial)", correct: true },
+                { en: "Connective", hi: "संयोजी (Connective)", correct: false },
+                { en: "Muscular", hi: "पेशी (Muscular)", correct: false },
+                { en: "Nervous", hi: "तंत्रिका (Nervous)", correct: false }
+            ]},
+            { en: "Which tissue helps in wound healing?", hi: "निम्नलिखित में कौन सा उत्तक घाव भरने में सहायक होता है ?", options: [
+                { en: "Nervous", hi: "तंत्रिका उत्तक", correct: false },
+                { en: "Muscular", hi: "पेशी उत्तक", correct: false },
+                { en: "Connective", hi: "संयोजी उत्तक", correct: false },
+                { en: "Epithelial", hi: "उपकला उत्तक", correct: true }
+            ]},
+            { en: "Which tissue is found in Salivary and Sweat glands?", hi: "निम्नलिखित में कौन सा उत्तक लार ग्रंथि तथा स्वेद ग्रंथि में पायी जाती है ?", options: [
+                { en: "Squamous Epithelium", hi: "शल्की एपिथीलियम", correct: false },
+                { en: "Ciliated Epithelium", hi: "पक्ष्मन एपिथीलियम", correct: false },
+                { en: "Cuboidal Epithelium", hi: "क्यूबोइडल एपिथीलियम", correct: true },
+                { en: "Areolar Tissue", hi: "एरिओलर उत्तक", correct: false }
+            ]},
+            { en: "Tissue that helps in Diffusion, Secretion, and Absorption is -", hi: "अंगो को विसरण (Diffusion), स्रवण (Secretion) तथा अवशोषण (Absorption) में मदद करने वाला उत्तक है-", options: [
+                { en: "Connective", hi: "संयोजी", correct: false },
+                { en: "Epithelial", hi: "एपिथीलियम", correct: true },
+                { en: "Nervous", hi: "तंत्रिका", correct: false },
+                { en: "Muscular", hi: "पेशी", correct: false }
+            ]},
+            { en: "The outer surface of skin is made of -", hi: "त्वचा की बाहरी सतह निर्मित होती है-", options: [
+                { en: "Squamous Epithelium", hi: "शल्की एपिथीलियम से", correct: false },
+                { en: "Stratified Squamous Epithelium", hi: "स्तरित शल्की एपिथीलियम से", correct: true },
+                { en: "Columnar Epithelium", hi: "स्तंभाकार एपिथीलियम से", correct: false },
+                { en: "Cuboidal Epithelium", hi: "क्यूबोइडल एपिथीलियम से", correct: false }
+            ]},
+            { en: "In which epithelial tissue cells are Microvilli and Cilia found?", hi: "निम्नलिखित में किस एपिथीलियम उत्तको की कोशिकाओ में रसांकुर (Microvilli) तथा सिलिया (Cilia) पाये जाते हैं ?", options: [
+                { en: "Squamous", hi: "शल्की", correct: false },
+                { en: "Columnar", hi: "स्तंभाकार", correct: true },
+                { en: "Cuboidal", hi: "क्यूबोइडल", correct: false },
+                { en: "Ciliated", hi: "पक्ष्मन", correct: false }
+            ]},
+            { en: "Consider: 1. Epithelial tissue has fewer cells and more matrix. 2. Connective tissue has no matrix, cells are tightly packed.", hi: "कथनों पर विचार करें: 1. एपिथीलियम उत्तक में कोशिकाओ की संख्या कम होती है। 2. संयोजी उत्तक में अंतराकोशिकीय पदार्थ नहीं पाये जाते हैं।", options: [
+                { en: "Only 1", hi: "केवल 1", correct: false },
+                { en: "Only 2", hi: "केवल 2", correct: false },
+                { en: "Both 1 and 2", hi: "1 तथा 2 दोनों", correct: false },
+                { en: "Neither 1 nor 2", hi: "न तो 1 न ही 2", correct: true }
+            ]},
+            { en: "What is the main function of Squamous Epithelium?", hi: "शल्की एपिथीलियम उत्तक का प्रमुख कार्य क्या है ?", options: [
+                { en: "Help in Excretion", hi: "उत्सर्जन में मदद करना", correct: false },
+                { en: "Help in Reproduction", hi: "जनन में मदद करना", correct: false },
+                { en: "Protection", hi: "सुरक्षा करना", correct: true },
+                { en: "None of these", hi: "इनमें से कोई नहीं", correct: false }
+            ]},
+            { en: "Ciliated Epithelium is found in -", hi: "पक्ष्माभी एपिथीलियम उत्तक पाये जाते हैं-", options: [
+                { en: "Spleen", hi: "प्लीहा में", correct: false },
+                { en: "Skin surface", hi: "त्वचा की सतह पर", correct: false },
+                { en: "Liver", hi: "यकृत में", correct: false },
+                { en: "Trachea and Uterus", hi: "ट्रेकिया तथा गर्भाशय में", correct: true }
+            ]},
+            { en: "Which tissue connects skin to muscles or two muscles?", hi: "निम्नलिखित में कौन उत्तक त्वचा एवं मांसपेशियों अथवा दो मांसपेशियों को जोड़ने का कार्य करता है ?", options: [
+                { en: "Areolar", hi: "एरिओलर", correct: true },
+                { en: "Nervous", hi: "तंत्रिका उत्तक", correct: false },
+                { en: "Muscular", hi: "पेशी उत्तक", correct: false },
+                { en: "Skeletal", hi: "कंकाल उत्तक", correct: false }
+            ]},
+            { en: "Obesity is caused by excess of -", hi: "मोटापा निम्न में किसकी अधिकता के कारण होता है ?", options: [
+                { en: "Sugar", hi: "शर्करा", correct: false },
+                { en: "Adipose Tissue", hi: "वसा उत्तक", correct: true },
+                { en: "Glucose", hi: "ग्लूकोज", correct: false },
+                { en: "Sucrose", hi: "सुक्रोज", correct: false }
+            ]},
+            { en: "Which one is responsible for keeping the body warm?", hi: "निम्नलिखित में से कौन एक शरीर को गर्म रखने हेतु उत्तरदायी है ?", options: [
+                { en: "Hair", hi: "रोम", correct: false },
+                { en: "Connective tissue", hi: "संयोजी उत्तक", correct: false },
+                { en: "Adipose tissue", hi: "वसामय उत्तक", correct: true },
+                { en: "Sweat gland", hi: "स्वेद ग्रंथि", correct: false }
+            ]},
+            { en: "What tissue makes up a Camel's hump?", hi: "ऊँट का कूबड़ किस उत्तक का बना होता है ?", options: [
+                { en: "Cartilage", hi: "उपास्थि उत्तक का", correct: false },
+                { en: "Muscular", hi: "पेशीय उत्तक का", correct: false },
+                { en: "Skeletal", hi: "कंकालीय उत्तक का", correct: false },
+                { en: "Adipose tissue", hi: "वसामय उत्तक का", correct: true }
+            ]},
+            { en: "Which tissue cells are filled with fat droplets?", hi: "निम्नलिखित में किस उत्तक की कोशिकाओं में वसा की बूँदें भरी रहती हैं ?", options: [
+                { en: "White fiber", hi: "श्वेत तंतु", correct: false },
+                { en: "Plasma cells", hi: "प्लाज्मा कोशिकाएँ", correct: false },
+                { en: "Yellow fiber", hi: "पीला तंतु", correct: false },
+                { en: "Adipose Tissue", hi: "वसा संयोजी उत्तक (Adipose Tissue)", correct: true }
+            ]},
+            { en: "Which of the following is a tissue?", hi: "निम्नलिखित में उत्तक कौन है ?", options: [
+                { en: "Stomach", hi: "अमाशय", correct: false },
+                { en: "Liver", hi: "यकृत", correct: false },
+                { en: "Blood", hi: "रूधिर", correct: true },
+                { en: "Kidney", hi: "वृक्क", correct: false }
+            ]},
+            { en: "Which of these is an example of tissue?", hi: "निम्नलिखित में कौन उत्तक का उदाहरण है ?", options: [
+                { en: "Brain", hi: "मस्तिष्क", correct: false },
+                { en: "Lymph", hi: "लासीका", correct: true },
+                { en: "Liver", hi: "यकृत", correct: false },
+                { en: "Stomach", hi: "अमाशय", correct: false }
+            ]},
+            { en: "Which of these is a connective tissue?", hi: "निम्नलिखित में कौन संयोजी उत्तक है ?", options: [
+                { en: "Bone", hi: "अस्थि", correct: false },
+                { en: "Cartilage", hi: "उपास्थि", correct: false },
+                { en: "Ligament", hi: "लिगामेंट", correct: false },
+                { en: "All of these", hi: "इनमें से सभी", correct: true }
+            ]},
+            { en: "Which of the following keeps the body warm?", hi: "निम्नलिखित में से कौन एक शरीर को गर्म रखने हेतु उत्तरदायी है ?", options: [
+                { en: "Sweat gland", hi: "स्वेद ग्रंथि", correct: false },
+                { en: "Connective tissue", hi: "संयोजी उत्तक", correct: false },
+                { en: "Adipose tissue", hi: "वसामय उत्तक", correct: true },
+                { en: "Hair", hi: "रोम", correct: false }
+            ]},
+            { en: "White fiber and Yellow fiber are found in -", hi: "श्वेत (White fibre) तथा पीला तंतु (yellow fibre) पाये जाते हैं ?", options: [
+                { en: "Epithelial tissue", hi: "उपकला उत्तक में", correct: false },
+                { en: "Areolar tissue", hi: "एरिओलर उत्तक में", correct: true },
+                { en: "Liquid tissue", hi: "तरल उत्तक में", correct: false },
+                { en: "Muscular tissue", hi: "पेशी उत्तक में", correct: false }
+            ]},
+            { en: "Where is Chondrin protein found?", hi: "कोंड्रिन नामक प्रोटीन कहाँ पायी जाती है-", options: [
+                { en: "Bone", hi: "अस्थि में", correct: false },
+                { en: "Cartilage", hi: "उपास्थि में", correct: true },
+                { en: "Epithelium", hi: "उपकला में", correct: false },
+                { en: "Blood", hi: "रूधिर में", correct: false }
+            ]}
+        ];
+
+        // LOGIC & INTERACTION
+        let currentQuestions = [];
+        let currentIndex = 0;
+        let score = 0;
+        let timer;
+        let timeLeft = 0;
+        let totalTimeAllowed = 15;
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playSound(freq, type) {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.2);
+        }
+
+        function initQuiz() {
+            totalTimeAllowed = parseInt(document.getElementById('timer-input').value) || 0;
+            const shuffle = document.getElementById('shuffle-toggle').checked;
+            currentQuestions = shuffle ? [...questionsData].sort(() => Math.random() - 0.5) : [...questionsData];
+            
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('quiz-screen').classList.remove('hidden');
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            if (currentIndex >= currentQuestions.length) return showResults();
+            
+            const q = currentQuestions[currentIndex];
+            document.getElementById('en-q').innerText = q.en;
+            document.getElementById('hi-q').innerText = q.hi;
+            document.getElementById('q-counter').innerText = `Question: ${currentIndex + 1}/${currentQuestions.length}`;
+            document.getElementById('progress-fill').style.width = `${((currentIndex) / currentQuestions.length) * 100}%`;
+
+            const optionsDiv = document.getElementById('options');
+            optionsDiv.innerHTML = '';
+            q.options.forEach((opt, i) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerHTML = `${opt.en} <span class="opt-hi">${opt.hi}</span>`;
+                btn.onclick = () => handleAnswer(i, btn);
+                optionsDiv.appendChild(btn);
+            });
+
+            if (totalTimeAllowed > 0) startTimer();
+            else document.getElementById('timer-box').classList.add('hidden');
+        }
+
+        function startTimer() {
+            clearInterval(timer);
+            timeLeft = totalTimeAllowed;
+            const timerEl = document.getElementById('timer');
+            timerEl.innerText = timeLeft;
+            timerEl.classList.remove('pulse-red');
+
+            timer = setInterval(() => {
+                timeLeft--;
+                timerEl.innerText = timeLeft;
+                if (timeLeft <= 5) timerEl.classList.add('pulse-red');
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    handleAnswer(-1, null);
+                }
+            }, 1000);
+        }
+
+        function handleAnswer(index, btn) {
+            clearInterval(timer);
+            const q = currentQuestions[currentIndex];
+            const buttons = document.querySelectorAll('.option-btn');
+            buttons.forEach(b => b.disabled = true);
+
+            if (index !== -1 && q.options[index].correct) {
+                btn.classList.add('correct');
+                score++;
+                playSound(800, 'sine');
+                startConfetti();
+            } else {
+                if (btn) btn.classList.add('wrong');
+                buttons.forEach((b, i) => { if (q.options[i].correct) b.classList.add('correct'); });
+                playSound(200, 'sawtooth');
+                showSadEmoji();
+            }
+
+            document.getElementById('score-counter').innerText = `Score: ${score}`;
+            setTimeout(() => {
+                currentIndex++;
+                loadQuestion();
+            }, 1500);
+        }
+
+        function showSadEmoji() {
+            const emoji = document.getElementById('sad-emoji');
+            emoji.style.display = 'block';
+            emoji.classList.add('shake');
+            setTimeout(() => {
+                emoji.style.display = 'none';
+                emoji.classList.remove('shake');
+            }, 1000);
+        }
+
+        function showResults(early = false) {
+            clearInterval(timer);
+            const total = early ? currentIndex : currentQuestions.length;
+            const percent = total === 0 ? 0 : Math.round((score / total) * 100);
+            
+            document.getElementById('quiz-screen').classList.add('hidden');
+            const screen = document.getElementById('result-screen');
+            screen.classList.remove('hidden');
+
+            document.getElementById('result-title').innerText = `${percent}%`;
+            document.getElementById('score-summary').innerText = `You got ${score} out of ${total} correct!`;
+
+            let msg = "📚 Practice makes perfect! Try again.";
+            if (percent >= 80) msg = "🏆 Outstanding Performance!";
+            else if (percent >= 50) msg = "👏 Well Done! Keep it up.";
+            document.getElementById('result-msg').innerText = msg;
+        }
+
+        // CONFETTI LOGIC
+        const canvas = document.getElementById('confetti-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+
+        function startConfetti() {
+            particles = [];
+            for (let i = 0; i < 100; i++) {
+                particles.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    r: Math.random() * 6 + 2,
+                    d: Math.random() * 10,
+                    color: `hsl(${Math.random() * 360}, 70%, 50%)`,
+                    tilt: Math.random() * 10 - 10
+                });
+            }
+            requestAnimationFrame(drawConfetti);
+        }
+
+        function drawConfetti() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach((p, i) => {
+                ctx.beginPath();
+                ctx.lineWidth = p.r;
+                ctx.strokeStyle = p.color;
+                ctx.moveTo(p.x + p.tilt + p.r / 2, p.y);
+                ctx.lineTo(p.x + p.tilt, p.y + p.tilt + p.r / 2);
+                ctx.stroke();
+                p.y += (Math.cos(p.d) + 1 + p.r / 2) / 2;
+                p.x += Math.sin(p.d);
+                if (p.y > canvas.height) particles.splice(i, 1);
+            });
+            if (particles.length > 0) requestAnimationFrame(drawConfetti);
+        }
+
+        window.onresize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
+        window.onresize();
+    </script>
+</body>
+</html>

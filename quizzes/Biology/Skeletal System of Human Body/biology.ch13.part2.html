@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gyan Bindu GS Academy - Professional Quiz</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6a11cb;
+            --secondary: #2575fc;
+            --accent: #ff0080;
+            --glass: rgba(255, 255, 255, 0.1);
+            --correct: #2ecc71;
+            --wrong: #e74c3c;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            min-height: 100vh;
+            background: linear-gradient(45deg, #0f0c29, #302b63, #24243e);
+            background-attachment: fixed;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            overflow-x: hidden;
+        }
+
+        /* Mesh Gradient Background */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at 20% 30%, rgba(106, 17, 203, 0.4), transparent 40%),
+                        radial-gradient(circle at 80% 70%, rgba(255, 0, 128, 0.3), transparent 40%);
+            z-index: -1;
+        }
+
+        .container {
+            width: 95%;
+            max-width: 700px;
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 25px;
+            padding: 30px;
+            position: relative;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+        }
+
+        /* Progress Bar */
+        .progress-container {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 6px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 25px 25px 0 0;
+            overflow: hidden;
+        }
+        #progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--accent), var(--secondary));
+            box-shadow: 0 0 10px var(--accent);
+            transition: width 0.4s ease;
+        }
+
+        .header { display: flex; justify-content: space-between; margin-bottom: 20px; font-weight: 600; font-size: 0.9rem; }
+
+        /* Typography Styles */
+        .q-english { display: block; font-size: 1.2rem; font-weight: 700; margin-bottom: 8px; }
+        .q-hindi { display: block; font-size: 1rem; color: #ddd; margin-bottom: 25px; line-height: 1.4; }
+
+        .options-grid { display: grid; gap: 12px; }
+
+        .btn-opt {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 16px;
+            border-radius: 15px;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.2s ease;
+            color: white;
+            outline: none;
+        }
+
+        .btn-opt:hover:not(:disabled) { background: rgba(255, 255, 255, 0.15); transform: scale(1.02); }
+
+        .opt-en { display: block; font-weight: 600; font-size: 0.95rem; }
+        .opt-hi { display: block; font-size: 0.85rem; color: #ccc; margin-top: 2px; }
+
+        /* Status Classes */
+        .correct { background: var(--correct) !important; border-color: #fff; }
+        .wrong { background: var(--wrong) !important; animation: shake 0.4s; }
+
+        /* Timer UI */
+        #timer { font-size: 1.2rem; font-weight: 700; }
+        .pulse-red { color: #ff3e3e; animation: pulse 1s infinite; }
+
+        /* Animations */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.7; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .start-screen, .result-screen { text-align: center; }
+        
+        input[type="number"] {
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.2);
+            padding: 12px;
+            border-radius: 10px;
+            color: white;
+            margin: 10px 0;
+            width: 80%;
+        }
+
+        .btn-action {
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            border: none;
+            padding: 15px 35px;
+            border-radius: 30px;
+            color: white;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: 0.3s;
+        }
+        .btn-action:hover { transform: scale(1.1); box-shadow: 0 0 20px rgba(37, 117, 252, 0.5); }
+
+        .emoji-overlay {
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 10rem;
+            z-index: 1000;
+            display: none;
+            pointer-events: none;
+        }
+
+        .confetti {
+            position: fixed;
+            width: 10px; height: 10px;
+            background: var(--accent);
+            z-index: 9999;
+            pointer-events: none;
+        }
+
+        @media (max-width: 600px) {
+            .container { padding: 20px; border-radius: 0; width: 100%; min-height: 100vh; }
+            .q-english { font-size: 1rem; }
+            .q-hindi { font-size: 0.9rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="emoji-overlay" id="sad-emoji">😢</div>
+
+<div class="container">
+    <div class="progress-container"><div id="progress-bar"></div></div>
+    
+    <div id="screen-start" class="start-screen">
+        <h1 style="margin-bottom: 10px;">Plant & Bone Quiz</h1>
+        <p style="font-size: 0.9rem; opacity: 0.8;">Questions 51 - 90 (Bilingual)</p>
+        <div style="margin: 30px 0;">
+            <label>Timer (Seconds per question, 0 for off):</label><br>
+            <input type="number" id="input-timer" value="15" min="0">
+            <div style="margin-top: 15px;">
+                <input type="checkbox" id="check-shuffle"> Shuffle Questions
+            </div>
+        </div>
+        <button class="btn-action" onclick="Quiz.start()">START QUIZ</button>
+    </div>
+
+    <div id="screen-quiz" style="display: none;">
+        <div class="header">
+            <div id="q-counter">Question 00/40</div>
+            <div id="timer">00</div>
+            <div id="score-display">Score: 0</div>
+        </div>
+        <div id="question-area">
+            <span class="q-english" id="text-en"></span>
+            <span class="q-hindi" id="text-hi"></span>
+        </div>
+        <div class="options-grid" id="options-box"></div>
+        <button class="btn-action" style="width: 100%; margin-top: 30px; font-size: 0.8rem; background: #444;" onclick="Quiz.end()">Finish & Show Results</button>
+    </div>
+
+    <div id="screen-result" class="result-screen" style="display: none;">
+        <h2 id="result-title">Result</h2>
+        <div style="font-size: 4rem; font-weight: 800; margin: 20px 0;" id="final-percentage">0%</div>
+        <p id="result-msg" style="margin-bottom: 30px;"></p>
+        <button class="btn-action" onclick="location.reload()">RESTART QUIZ</button>
+    </div>
+</div>
+
+<script>
+    const questions = [
+        { en: "What is the study of the external shape or form of plants called?", hi: "पेड़-पौधे के बाहरी आकार या रूप का अध्ययन क्या कहलाता है?", opts: [{en:"Morphology", hi:"मॉर्फोलॉजी"}, {en:"Anatomy", hi:"एनाटॉमी"}, {en:"Histology", hi:"हिस्टोलॉजी"}, {en:"Floriculture", hi:"फ्लोरीकल्चर"}], ans: 0 },
+        { en: "The part of the plant that remains inside the ground is called root system and above the ground is shoot system. Which is correct?", hi: "पौधे का वह भाग जो जमीन के अंदर रहता है उसे जड़ तंत्र कहते हैं और जमीन के ऊपर वाले भाग को प्ररोह तंत्र कहते हैं। कौन सा सही है?", opts: [{en:"Only 1", hi:"केवल 1"}, {en:"Only 2", hi:"केवल 2"}, {en:"Both 1 and 2", hi:"1 तथा 2 दोनों"}, {en:"Neither 1 nor 2", hi:"न तो 1 न ही 2"}], ans: 2 },
+        { en: "The root/mul (Root) develops from:", hi: "जड़ या मूल (Root) का विकास होता है -", opts: [{en:"Radicle", hi:"मूलांकुर से"}, {en:"Plumule", hi:"प्रांकुर से"}, {en:"Both radicle and plumule", hi:"मूलांकुर अथवा प्रांकुर से"}, {en:"Stem", hi:"तना से"}], ans: 0 },
+        { en: "The root developing from the radicle is called:", hi: "मूलांकुर (Radicle) से विकसित होने वाले जड़ को क्या कहते हैं?", opts: [{en:"Tap root", hi:"मूसला जड़"}, {en:"Adventitious root", hi:"अपस्थानिक जड़"}, {en:"Fibrous root", hi:"रेशेदार जड़"}, {en:"Leaf root", hi:"पर्ण-मूल"}], ans: 0 },
+        { en: "Roots developing from parts of the plant other than the radicle are called:", hi: "मूलांकुर के अतिरिक्त पौधे के अन्य भाग से विकसित होने वाले जड़ को क्या कहते हैं?", opts: [{en:"Tap root", hi:"मूसला जड़"}, {en:"Adventitious root", hi:"अपस्थानिक जड़"}, {en:"Fibrous root", hi:"रेशेदार जड़"}, {en:"None of these", hi:"इनमें से कोई नहीं"}], ans: 1 },
+        { en: "In monocot plants, the primary root is short-lived and replaced by a cluster of thin roots. What are these called?", hi: "एकबीजपत्री पौधों में प्राथमिक जड़ शीघ्र नष्ट हो जाती है और उसके स्थान पर पतली जड़ों का गुच्छा तने के निचले भाग से निकलता है, इसे क्या कहते हैं?", opts: [{en:"Tap root", hi:"मूसला जड़"}, {en:"Adventitious root", hi:"अपस्थानिक जड़"}, {en:"Fibrous root", hi:"रेशेदार जड़"}, {en:"None of these", hi:"इनमें से कोई नहीं"}], ans: 2 },
+        { en: "In which part of the root does maximum growth occur?", hi: "जड़ के किस भाग में सर्वाधिक वृद्धि होती है?", opts: [{en:"Root cap", hi:"मूल शीर्ष में"}, {en:"Just behind root cap", hi:"मूल शीर्ष के ठीक पीछे"}, {en:"In light", hi:"प्रकाश में"}, {en:"In darkness", hi:"अंधकार में"}], ans: 1 },
+        { en: "From which part of the root do lateral roots emerge?", hi: "जड़ के किस भाग से पार्श्व जड़ें निकलती हैं?", opts: [{en:"Cell division region", hi:"कोशिका-विभाजन प्रदेश"}, {en:"Elongation region", hi:"दैर्घ्यवृद्धि प्रदेश"}, {en:"Root hair region", hi:"मूल रोम प्रदेश"}, {en:"Maturation region", hi:"परिपक्व प्रदेश"}], ans: 3 },
+        { en: "What are the roots emerging from the branches of the Banyan tree called?", hi: "बरगद के शाखाओं से निकलने वाले जड़ों को क्या कहते हैं?", opts: [{en:"Prop root", hi:"स्तंभ मूल"}, {en:"Stilt root", hi:"अवस्तंभ मूल"}, {en:"Leaf root", hi:"पर्ण-मूल"}, {en:"Climbing root", hi:"आरोही मूल"}], ans: 0 },
+        { en: "In which of the following is the Stilt root found?", hi: "अवस्तंभ मूल (Stilt root) पायी जाती है -", opts: [{en:"Pandanus", hi:"केवड़ा में"}, {en:"Maize", hi:"मक्का में"}, {en:"Sugarcane", hi:"गन्ना में"}, {en:"All of these", hi:"इनमें से सभी में"}], ans: 3 },
+        { en: "In which is the Leaf root found?", hi: "पर्ण मूल (Leaf root) किसमें पाया जाता है -", opts: [{en:"Bryophyllum", hi:"ब्रायोफिलम"}, {en:"Maize", hi:"मक्का"}, {en:"Betel", hi:"पान"}, {en:"Banyan", hi:"बरगद"}], ans: 0 },
+        { en: "Roots that emerge in plants of marshy areas (e.g. Rhizophora) for respiration are called:", hi: "दलदली क्षेत्रों में पाये जाने वाले पौधे, जैसे- राइजोफोरा में श्वसन की सहायता के लिए विशेष प्रकार की जड़ निकलती है, उसे क्या कहते हैं?", opts: [{en:"Fibrous root", hi:"रेशेदार जड़"}, {en:"Velamen", hi:"विलामेन"}, {en:"Pneumatophore", hi:"न्यूमेटाफोर"}, {en:"Stilt root", hi:"स्तंभ मूल"}], ans: 2 },
+        { en: "In which of the following is the Butters root found?", hi: "निम्नलिखित में किसमें वप्र मूल (Butters root) पाया जाता है?", opts: [{en:"Maize", hi:"मक्का"}, {en:"Silk Cotton", hi:"सेमल"}, {en:"Betel", hi:"पान"}, {en:"Sugarcane", hi:"गन्ना"}], ans: 1 },
+        { en: "Pneumatophores (respiratory roots) are usually found in:", hi: "न्यूमेटाफोर्स (श्वसन मूल) प्राय: पाया जाता है -", opts: [{en:"Hydrophytes", hi:"जलोद्भिद पौधों में"}, {en:"Mangrove plants", hi:"मैग्रोव पौधों में"}, {en:"Xerophytes", hi:"शुष्कोद्भिद पौधों में"}, {en:"Mesophytes", hi:"स्थलीय पौधों में"}], ans: 1 },
+        { en: "Epiphytic roots are found in:", hi: "उपरिरोही मूल पायी जाती है -", opts: [{en:"Cuscuta", hi:"अमरबेल में"}, {en:"Tinospora", hi:"टिनोस्पोरा में"}, {en:"Indian Rubber", hi:"भारतीय रबड़ में"}, {en:"Orchids", hi:"आर्किड में"}], ans: 3 },
+        { en: "Roots of Dahila are:", hi: "डहेलिया की जड़ें होती है -", opts: [{en:"Fasciculated and tuberous", hi:"कन्दिल तथा पुलकित"}, {en:"Napiform", hi:"कुम्भीरूपी"}, {en:"Assimilatory", hi:"स्वांगीकारी"}, {en:"Fibrous", hi:"रेशेदार"}], ans: 0 },
+        { en: "Respiratory roots are found in:", hi: "श्वसन मूल पाया जाता है -", opts: [{en:"Maize", hi:"मक्का में"}, {en:"Jussiaea", hi:"जूसिया में"}, {en:"Banyan", hi:"बरगद में"}, {en:"Maize", hi:"मक्का में"}], ans: 1 },
+        { en: "Which of the following is incorrectly matched?", hi: "निम्नलिखित में कौन-सा युग्म सही सुमेलित नहीं है?", opts: [{en:"Fusiform: Radish", hi:"तर्करूपी : मूली"}, {en:"Napiform: Turnip", hi:"कुम्भीरूपी : शलजम"}, {en:"Conical: Beetroot", hi:"शंकुरूपी : चुकंदर"}, {en:"Tuberous: Sweet Potato", hi:"गाँठदार : शकरकंद"}], ans: 2 },
+        { en: "Carrot is a:", hi: "गाजर है -", opts: [{en:"Stem", hi:"तना"}, {en:"Conical root", hi:"शंकुरूपी जड़"}, {en:"Tap root", hi:"मूसला जड़"}, {en:"Napiform root", hi:"कुम्भीरूपी जड़"}], ans: 1 },
+        { en: "The function of the root is:", hi: "जड़ (Root) का कार्य है -", opts: [{en:"Absorption of water and minerals", hi:"भूमि में जल एवं खनिज लवणों का अवशोषण"}, {en:"Anchoring the plant", hi:"पौधों को भूमि पर स्थिर रखना"}, {en:"Storing food (starch)", hi:"भोजन (starch) को संचित करना"}, {en:"All of these", hi:"इनमें से सभी"}], ans: 3 },
+        { en: "Which of the following is NOT a root?", hi: "निम्नलिखित में कौन-सा एक जड़ नहीं है?", opts: [{en:"Potato", hi:"आलू"}, {en:"Carrot", hi:"गाजर"}, {en:"Radish", hi:"मूली"}, {en:"Sweet Potato", hi:"शकरकंद"}], ans: 0 },
+        { en: "Internodes and nodes are found in:", hi: "पर्व (Internode) तथा पर्वसंधि (node) पाये जाते हैं -", opts: [{en:"Root", hi:"जड़ में"}, {en:"Stem", hi:"तना में"}, {en:"Flower", hi:"पुष्प में"}, {en:"Fruit", hi:"फल में"}], ans: 1 },
+        { en: "Stem develops from:", hi: "तने का विकास होता है -", opts: [{en:"Radicle", hi:"मूलांकुर (Radicle) से"}, {en:"Plumule", hi:"प्रांकुर (Plumule) से"}, {en:"Both", hi:"मूलांकुर अथवा प्रांकुर से"}, {en:"Branches", hi:"शाखाओं से"}], ans: 1 },
+        { en: "Which of the following is NOT true regarding underground stems?", hi: "भूमिगत तने के संबंध में निम्न में कौन-सा एक सही नहीं है?", opts: [{en:"They are always thick/fleshy", hi:"यह तना हमेशा मोटे तथा गूदेदार होते हैं"}, {en:"Nodes and internodes are absent", hi:"इसमें पर्व तथा पर्वसंधियाँ नहीं पाये जाते हैं"}, {en:"They can do vegetative reproduction", hi:"इन तनों में वर्धीजनन की क्षमता होती है"}, {en:"They store food", hi:"यह भोज्य पदार्थ को संचित रखता है"}], ans: 1 },
+        { en: "Which of the following is a stem?", hi: "निम्नलिखित में कौन एक तना है?", opts: [{en:"Sweet Potato", hi:"शकरकंद"}, {en:"Radish", hi:"मूली"}, {en:"Potato", hi:"आलू"}, {en:"Carrot", hi:"गाजर"}], ans: 2 },
+        { en: "Which of the following is NOT a stem?", hi: "निम्नलिखित में कौन-सा एक तना नहीं है?", opts: [{en:"Potato", hi:"आलू"}, {en:"Carrot", hi:"गाजर"}, {en:"Ginger", hi:"अदरक"}, {en:"Yam", hi:"जमीकंद"}], ans: 1 },
+        { en: "Potato is an underground modified stem called:", hi: "आलू भूमिगत रूपांतरित तना है, जिसे कहा जाता है -", opts: [{en:"Bulb", hi:"शल्ककन्द"}, {en:"Corm", hi:"घनकन्द"}, {en:"Tuber", hi:"कन्द"}, {en:"Rhizome", hi:"प्रकन्द"}], ans: 2 },
+        { en: "When the stem is very short and leaves become fleshy underground, it is called:", hi: "जब तना बहुत छोटा हो जाता है और पत्तियाँ मांसल होकर भूमि में रहती हैं, उसे कहते हैं -", opts: [{en:"Rhizome", hi:"राइजोम"}, {en:"Bulb", hi:"बल्ब"}, {en:"Phylloclade", hi:"पर्णाभस्तंभ"}, {en:"Stolon", hi:"स्ट्रोलन"}], ans: 1 },
+        { en: "Which pair is incorrectly matched?", hi: "निम्नलिखित में कौन-सा युग्म सही सुमेलित नहीं है?", opts: [{en:"Potato: Tuber", hi:"आलू : कंद"}, {en:"Ginger: Rhizome", hi:"अदरक : प्रकंद"}, {en:"Onion: Bulb", hi:"प्याज : बल्ब"}, {en:"Yam: Rhizome", hi:"ओल : प्रकंद"}], ans: 3 },
+        { en: "A stem with long internodes that crawls on the ground is called:", hi: "तना जिसमें पर्व लंबा होता है और वह जमीन पर रेंग कर चलता है, उसे कहते हैं -", opts: [{en:"Sucker", hi:"सकर"}, {en:"Runner", hi:"रनर"}, {en:"Tuber", hi:"ट्यूबर"}, {en:"Rhizome", hi:"राइजोम"}], ans: 1 },
+        { en: "Thorns found in wood-apple and lemon are:", hi: "बेल तथा नींबू में पाये जाने वाले काँटे हैं -", opts: [{en:"Modified root", hi:"रूपांतरित जड़"}, {en:"Modified stem", hi:"रूपांतरित तना"}, {en:"Modified leaf", hi:"रूपांतरित पत्ती"}, {en:"None of these", hi:"इनमें से कोई नहीं"}], ans: 1 },
+        { en: "Xerophytic stems that become green and flat/round to perform photosynthesis are:", hi: "मेरुदभिद पौधे के तने हरे, चपटे या गोल आकृति में रूपांतरित होकर पत्तियों की तरह प्रकाशसंश्लेषण करते हैं, ऐसे तने को कहते हैं -", opts: [{en:"Phylloclade", hi:"पर्णाभस्तंभ"}, {en:"Cladode", hi:"पर्णाभ पर्व"}, {en:"Bulbil", hi:"पत्रकन्द"}, {en:"Stem tendril", hi:"स्तम्भ प्रतान"}], ans: 0 },
+        { en: "Spines in Cactus (Nagphani) are a modification of:", hi: "कैक्टस (नागफनी) में शूल (Spines) किसका रूपांतरण है?", opts: [{en:"Stem", hi:"तना"}, {en:"Leaf", hi:"पत्ती"}, {en:"Buds", hi:"कलियाँ"}, {en:"Flower", hi:"पुष्प"}], ans: 1 },
+        { en: "The adventitious root formed in the Betel vine is:", hi: "पान का लता में बनने वाली अपस्थानिक जड़ है -", opts: [{en:"Climbing root", hi:"आरोही मूल"}, {en:"Stilt root", hi:"स्तंभ मूल"}, {en:"Runner", hi:"रनर"}, {en:"Sucker", hi:"सकर"}], ans: 0 },
+        { en: "In pitcher plants (Phtherplant), which part is modified into a pitcher?", hi: "घटपर्णी (Phtherplant) के निम्नलिखित भागों में कौन-सा एक घट में रूपान्तरित होता है?", opts: [{en:"Stem", hi:"स्तम्भ"}, {en:"Petiole", hi:"पर्णवृन्त"}, {en:"Leaf", hi:"पत्ता"}, {en:"Flower", hi:"पुष्प"}], ans: 2 },
+        { en: "The pitcher of insectivorous plant Nepenthes is a modification of:", hi: "कीटभक्षी पौधे कलशपादप (Nepenthes) का कलश तथा ब्लाडर किसका रूपांतरण है?", opts: [{en:"Leaf", hi:"पत्ती"}, {en:"Stem", hi:"तना"}, {en:"Flower", hi:"पुष्प"}, {en:"Fruit", hi:"फल"}], ans: 0 },
+        { en: "What is a stem called that has leaves on nodes above and roots below (like Water Hyacinth)?", hi: "जलकुम्भी के तने के पर्व संधियों पर ऊपर में पत्तियों का समूह है तथा नीचे जड़ों का गुच्छा, ऐसे तने को क्या कहते हैं?", opts: [{en:"Stolon", hi:"भुस्तारी"}, {en:"Sucker", hi:"अन्तःभुस्तारी"}, {en:"Runner", hi:"उपरिभुस्तारी"}, {en:"Offset", hi:"भू-प्रसारिका"}], ans: 3 },
+        { en: "Which part of the plant performs food storage?", hi: "पौधों में भोजन संग्रह का कार्य करता है -", opts: [{en:"Leaf", hi:"पत्ती"}, {en:"Stem", hi:"तना"}, {en:"Root", hi:"जड़"}, {en:"All of these", hi:"इनमें से सभी"}], ans: 3 },
+        { en: "What type of adventitious roots are found in parasites like Cuscuta and Sandalwood?", hi: "अमरबेल तथा चन्दन जैसे परजीवी पौधे में किस प्रकार के अपस्थानिक जड़ें पायी जाती हैं?", opts: [{en:"Sucking root", hi:"चूषणमूल"}, {en:"Respiratory root", hi:"श्वसनी मूल"}, {en:"Epiphytic root", hi:"आधिपादप मूल"}, {en:"Assimilatory root", hi:"स्वांगीकारक मूल"}], ans: 0 },
+        { en: "How many total muscles are in the human body?", hi: "मानव शरीर में कुल कितनी पेशियाँ होती हैं?", opts: [{en:"556", hi:"556"}, {en:"665", hi:"665"}, {en:"565", hi:"565"}, {en:"639", hi:"639"}], ans: 3 }
+    ];
+
+    const Quiz = {
+        currentIdx: 0,
+        score: 0,
+        timer: null,
+        timePerQ: 0,
+        audio: new (window.AudioContext || window.webkitAudioContext)(),
+
+        start() {
+            this.timePerQ = parseInt(document.getElementById('input-timer').value);
+            if(document.getElementById('check-shuffle').checked) {
+                questions.sort(() => Math.random() - 0.5);
+            }
+            document.getElementById('screen-start').style.display = 'none';
+            document.getElementById('screen-quiz').style.display = 'block';
+            this.loadQuestion();
+        },
+
+        loadQuestion() {
+            const q = questions[this.currentIdx];
+            document.getElementById('text-en').innerText = q.en;
+            document.getElementById('text-hi').innerText = q.hi;
+            document.getElementById('q-counter').innerText = `Question ${this.currentIdx + 1}/${questions.length}`;
+            document.getElementById('progress-bar').style.width = `${((this.currentIdx + 1) / questions.length) * 100}%`;
+            
+            const box = document.getElementById('options-box');
+            box.innerHTML = '';
+            q.opts.forEach((opt, i) => {
+                const btn = document.createElement('button');
+                btn.className = 'btn-opt';
+                btn.innerHTML = `<span class="opt-en">${opt.en}</span><span class="opt-hi">${opt.hi}</span>`;
+                btn.onclick = () => this.handleAnswer(i, btn);
+                box.appendChild(btn);
+            });
+
+            this.startTimer();
+        },
+
+        startTimer() {
+            clearInterval(this.timer);
+            if(this.timePerQ <= 0) {
+                document.getElementById('timer').style.display = 'none';
+                return;
+            }
+            let timeLeft = this.timePerQ;
+            const display = document.getElementById('timer');
+            display.innerText = timeLeft;
+            display.classList.remove('pulse-red');
+
+            this.timer = setInterval(() => {
+                timeLeft--;
+                display.innerText = timeLeft;
+                if(timeLeft <= 5) display.classList.add('pulse-red');
+                if(timeLeft <= 0) {
+                    clearInterval(this.timer);
+                    this.handleAnswer(-1);
+                }
+            }, 1000);
+        },
+
+        handleAnswer(idx, btn) {
+            clearInterval(this.timer);
+            const q = questions[this.currentIdx];
+            const buttons = document.querySelectorAll('.btn-opt');
+            buttons.forEach(b => b.disabled = true);
+
+            if(idx === q.ans) {
+                btn.classList.add('correct');
+                this.score++;
+                this.playSound(880, 0.1, 'sine'); // Ting
+                this.createConfetti();
+            } else {
+                if(btn) btn.classList.add('wrong');
+                buttons[q.ans].classList.add('correct');
+                this.playSound(110, 0.4, 'sawtooth'); // Buzz
+                this.showSadEmoji();
+            }
+
+            document.getElementById('score-display').innerText = `Score: ${this.score}`;
+
+            setTimeout(() => {
+                this.currentIdx++;
+                if(this.currentIdx < questions.length) this.loadQuestion();
+                else this.end();
+            }, 1500);
+        },
+
+        playSound(freq, duration, type) {
+            const osc = this.audio.createOscillator();
+            const gain = this.audio.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, this.audio.currentTime);
+            gain.gain.setValueAtTime(0.1, this.audio.currentTime);
+            osc.connect(gain);
+            gain.connect(this.audio.destination);
+            osc.start();
+            osc.stop(this.audio.currentTime + duration);
+        },
+
+        createConfetti() {
+            for(let i=0; i<30; i++) {
+                const c = document.createElement('div');
+                c.className = 'confetti';
+                c.style.left = Math.random() * 100 + 'vw';
+                c.style.top = '-10px';
+                c.style.background = `hsl(${Math.random()*360}, 70%, 60%)`;
+                document.body.appendChild(c);
+                const anim = c.animate([
+                    { transform: 'translateY(0) rotate(0deg)', opacity: 1 },
+                    { transform: `translateY(100vh) rotate(${Math.random()*360}deg)`, opacity: 0 }
+                ], { duration: 2000 + Math.random()*1000 });
+                anim.onfinish = () => c.remove();
+            }
+        },
+
+        showSadEmoji() {
+            const el = document.getElementById('sad-emoji');
+            el.style.display = 'block';
+            el.animate([
+                { transform: 'translate(-50%, -50%) scale(0.5)', opacity: 0 },
+                { transform: 'translate(-50%, -50%) scale(1.2)', opacity: 1 },
+                { transform: 'translate(-50%, -50%) scale(1)', opacity: 1 }
+            ], { duration: 500 });
+            setTimeout(() => el.style.display = 'none', 1000);
+        },
+
+        end() {
+            clearInterval(this.timer);
+            document.getElementById('screen-quiz').style.display = 'none';
+            document.getElementById('screen-result').style.display = 'block';
+            
+            const totalAsked = Math.min(this.currentIdx + 1, questions.length);
+            const percent = Math.round((this.score / questions.length) * 100);
+            document.getElementById('final-percentage').innerText = percent + "%";
+            
+            let msg = "";
+            if(percent >= 80) msg = "🏆 Outstanding Performance!";
+            else if(percent >= 50) msg = "👏 Well Done! Keep it up.";
+            else msg = "📚 Practice makes perfect! Try again.";
+            
+            document.getElementById('result-msg').innerText = msg;
+        }
+    };
+</script>
+</body>
+</html>

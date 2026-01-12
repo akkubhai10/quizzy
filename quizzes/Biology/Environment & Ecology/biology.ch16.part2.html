@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Environment & Ecology Quiz | Professional Edition</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-bg: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #ff6b6b 100%);
+            --glass-white: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --correct-green: #2ecc71;
+            --wrong-red: #e74c3c;
+            --text-white: #ffffff;
+            --text-hindi: #dddddd;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            background: var(--primary-bg);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Glassmorphism Container */
+        .quiz-container {
+            background: var(--glass-white);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 25px;
+            width: 100%;
+            max-width: 700px;
+            padding: 40px;
+            position: relative;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            color: var(--text-white);
+            z-index: 10;
+        }
+
+        /* Progress Bar */
+        .progress-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 6px;
+            background: rgba(255,255,255,0.1);
+            border-top-left-radius: 25px;
+            border-top-right-radius: 25px;
+        }
+
+        #progress-bar {
+            width: 0%;
+            height: 100%;
+            background: var(--correct-green);
+            box-shadow: 0 0 10px var(--correct-green);
+            transition: width 0.4s ease;
+            border-top-left-radius: 25px;
+        }
+
+        /* Headers */
+        .quiz-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            font-weight: 600;
+        }
+
+        .timer-box {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 5px 15px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 20px;
+        }
+
+        .pulse-red {
+            color: var(--wrong-red);
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        /* Questions */
+        .question-section {
+            margin-bottom: 30px;
+        }
+
+        .question-text-en {
+            font-size: 1.3rem;
+            font-weight: 700;
+            line-height: 1.4;
+            margin-bottom: 5px;
+        }
+
+        .question-text-hi {
+            font-size: 1rem;
+            color: var(--text-hindi);
+            font-weight: 400;
+        }
+
+        /* Options */
+        .options-grid {
+            display: grid;
+            gap: 15px;
+        }
+
+        .option-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            padding: 15px 20px;
+            border-radius: 12px;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.2s ease;
+            color: white;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .option-btn:disabled {
+            cursor: default;
+        }
+
+        .opt-en { font-weight: 600; font-size: 1rem; }
+        .opt-hi { font-size: 0.85rem; color: var(--text-hindi); }
+
+        .correct { background: var(--correct-green) !important; border-color: transparent !important; }
+        .wrong { background: var(--wrong-red) !important; border-color: transparent !important; }
+
+        /* Buttons */
+        .btn {
+            border: none;
+            padding: 12px 25px;
+            border-radius: 50px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn:hover { transform: scale(1.05); }
+
+        .btn-start { background: var(--text-white); color: #764ba2; width: 100%; margin-top: 20px; }
+        .btn-finish { background: rgba(255,255,255,0.2); color: white; margin-top: 25px; font-size: 0.8rem; }
+
+        /* Screens */
+        .screen { display: none; }
+        .active { display: block; animation: fadeIn 0.5s ease; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Settings */
+        .settings-item { margin-bottom: 20px; }
+        .settings-item label { display: block; margin-bottom: 8px; font-size: 0.9rem; }
+        input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid var(--glass-border);
+            background: rgba(255,255,255,0.1);
+            color: white;
+            outline: none;
+        }
+
+        /* Feedback Elements */
+        #emoji-overlay {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 100px;
+            z-index: 10000;
+            display: none;
+            pointer-events: none;
+        }
+
+        .shake { animation: shakeAnim 0.5s ease; }
+        @keyframes shakeAnim {
+            0%, 100% { transform: translate(-50%, -50%) rotate(0deg); }
+            25% { transform: translate(-55%, -50%) rotate(-5deg); }
+            75% { transform: translate(-45%, -50%) rotate(5deg); }
+        }
+
+        #confetti {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        /* Result Screen */
+        .result-screen { text-align: center; }
+        .score-circle {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin: 20px 0;
+        }
+        .message { font-size: 1.2rem; margin-bottom: 30px; }
+
+        @media (max-width: 480px) {
+            .quiz-container { padding: 25px; }
+            .question-text-en { font-size: 1.1rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="confetti"></canvas>
+    <div id="emoji-overlay">😢</div>
+
+    <div class="quiz-container">
+        <div class="progress-container"><div id="progress-bar"></div></div>
+
+        <div id="start-screen" class="screen active">
+            <h1 style="margin-bottom: 10px;">EcoMaster Quiz</h1>
+            <p style="margin-bottom: 30px; color: var(--text-hindi);">Environment & Ecology | पर्यावरण एवं पारिस्थितिकी</p>
+            
+            <div class="settings-item">
+                <label>Timer per question (Seconds, 0 = no timer):</label>
+                <input type="number" id="timer-input" value="30" min="0">
+            </div>
+
+            <div class="settings-item" style="display: flex; align-items: center; gap: 10px;">
+                <input type="checkbox" id="shuffle-check" style="width: 20px; height: 20px;">
+                <label style="margin: 0;">Shuffle Questions?</label>
+            </div>
+
+            <button class="btn btn-start" onclick="quizApp.init()">Start Quiz</button>
+        </div>
+
+        <div id="quiz-screen" class="screen">
+            <div class="quiz-header">
+                <div id="q-counter">Question: 01/50</div>
+                <div id="timer-display" class="timer-box">
+                    <span>⏱️</span>
+                    <span id="timer-secs">30</span>
+                </div>
+                <div id="score-display">Score: 0</div>
+            </div>
+
+            <div class="question-section">
+                <div class="question-text-en" id="q-en">Loading...</div>
+                <div class="question-text-hi" id="q-hi">Loading...</div>
+            </div>
+
+            <div class="options-grid" id="options-box">
+                </div>
+
+            <button class="btn btn-finish" onclick="quizApp.showResults(true)">Finish & Show Results</button>
+        </div>
+
+        <div id="result-screen" class="screen result-screen">
+            <h2>Quiz Results</h2>
+            <div class="score-circle" id="final-score">0/50</div>
+            <p class="message" id="final-msg"></p>
+            <button class="btn btn-start" onclick="location.reload()">Restart Quiz</button>
+        </div>
+    </div>
+
+    <script>
+        // QUESTION DATA (51-100)
+        const quizData = [
+            { id: 51, en: "What is the most distinct unit of the biological system?", hi: "जैव व्यवस्था के सबसे सुस्पष्ट इकाई को क्या कहते हैं?", options: [ {en: "Cell", hi: "कोशिका"}, {en: "Tissue", hi: "ऊतक"}, {en: "Organ", hi: "अंग"}, {en: "Organism", hi: "जीव"} ], correct: 3 },
+            { id: 52, en: "What is abundant in the surface water of a lake?", hi: "झील के सतही जल में किसकी अधिकता होती है?", options: [ {en: "Inorganic matter", hi: "अकार्बनिक पदार्थ"}, {en: "Organic matter", hi: "कार्बनिक पदार्थ"}, {en: "Pollutants", hi: "प्रदूषक"}, {en: "Minerals", hi: "खनिज"} ], correct: 1 },
+            { id: 53, en: "In cold regions, mammals generally have ears and legs that are:", hi: "ठंडे प्रदेशों में पाये जाने वाले स्तनधारी में कान और पैर सामान्यतः होते हैं-", options: [ {en: "Small", hi: "छोटे"}, {en: "Large", hi: "बड़े"}, {en: "Small or Large", hi: "छोटे या बड़े"}, {en: "None", hi: "कान नहीं होते हैं"} ], correct: 0 },
+            { id: 54, en: "Small fish stick to the bottom of sharks for nutrition. What is this relationship?", hi: "छोटी मछली शार्क के निचले तल के पास चिपक जाती है और पोषण प्राप्त करती है, इस संबंध को क्या कहते हैं?", options: [ {en: "Commensalism", hi: "सहभोजिता"}, {en: "Predation", hi: "परभक्षण"}, {en: "Symbiosis", hi: "सहजीविता"}, {en: "Parasitism", hi: "परजीविता"} ], correct: 0 },
+            { id: 55, en: "When two species are beneficial to each other, it is called:", hi: "दो जातियाँ जिनमें दोनों साथी एक-दूसरे के लाभकारी होते हैं, तब इसे कहा जाता है?", options: [ {en: "Commensalism", hi: "सहभोजिता"}, {en: "Predation", hi: "परभक्षण"}, {en: "Mutualism/Symbiosis", hi: "सहजीविता"}, {en: "Parasitism", hi: "परजीविता"} ], correct: 2 },
+            { id: 56, en: "Micro-organisms in an aquatic environment are collectively called:", hi: "एक जलीय वातावरण में सूक्ष्मजीव सम्मिलित रूप से कहलाते हैं?", options: [ {en: "Carnivores", hi: "मांसाहारी"}, {en: "Herbivores", hi: "शाकाहारी"}, {en: "Plankton", hi: "प्लवक"}, {en: "Flora/Fauna", hi: "फ्लोना एवं फ्लोरा"} ], correct: 2 },
+            { id: 57, en: "Which of these is an example of Protocooperation?", hi: "सहकारिता का उदाहरण निम्न में कौन है-", options: [ {en: "Lichen", hi: "लाइकेन"}, {en: "Mycorrhizae", hi: "माइकोराइजी"}, {en: "Both a & b", hi: "a तथा b दोनों"}, {en: "None", hi: "इनमें से कोई नहीं"} ], correct: 2 },
+            { id: 58, en: "What is the likely benefit of grazing animals to the environment?", hi: "चरने वाले जन्तु से संभवतः क्या लाभ हैं?", options: [ {en: "Removing wild plants", hi: "वन्य पौधों को हटाना"}, {en: "Mixing excretion into soil", hi: "उनके उत्सर्गी पदार्थ का मृदा से मिलना"}, {en: "Removing wild animals", hi: "वन्य जीवधारियों को हटाना"}, {en: "Destroying weeds", hi: "खरपतवारों को नाश करना"} ], correct: 1 },
+            { id: 59, en: "Who receives energy first in any ecosystem?", hi: "किसी पारिस्थितिकी तंत्र में ऊर्जा को ग्रहण कौन करता है?", options: [ {en: "Producer", hi: "उत्पादक"}, {en: "Consumer", hi: "उपभोक्ता"}, {en: "Decomposer", hi: "अपघटनकर्ता"}, {en: "Microbe", hi: "सूक्ष्मजीव"} ], correct: 0 },
+            { id: 60, en: "Who is the tertiary consumer in a meadow ecosystem?", hi: "मैदानी पारिस्थितिकी तंत्र का तृतीयक उपभोक्ता कौन है?", options: [ {en: "Green Plant", hi: "हरा पौधा"}, {en: "Frog", hi: "मेढ़क"}, {en: "Grasshopper", hi: "ग्रासहॉपर"}, {en: "Snake", hi: "सर्प"} ], correct: 3 },
+            { id: 61, en: "Which of the following forms a food chain?", hi: "निम्नलिखित में से कौन-सा एक आहार-श्रृंखला का निर्माण करता है?", options: [ {en: "Grass, Wheat, Mango", hi: "घास, गेहूँ तथा आम"}, {en: "Grass, Goat, Human", hi: "घास, बकरी तथा मनुष्य"}, {en: "Goat, Cow, Human", hi: "बकरी, गाय तथा मनुष्य"}, {en: "Grass, Fish, Goat", hi: "घास, मछली तथा बकरी"} ], correct: 1 },
+            { id: 62, en: "Which of the following is a producer?", hi: "निम्नलिखित में कौन उत्पादक है?", options: [ {en: "Snake", hi: "सर्प"}, {en: "Frog", hi: "मेढ़क"}, {en: "Grasshopper", hi: "ग्रासहॉपर"}, {en: "Grass", hi: "घास"} ], correct: 3 },
+            { id: 63, en: "What is a Deer in a forest ecosystem?", hi: "वन पारिस्थितिकी तंत्र में हिरण कौन है?", options: [ {en: "Producer", hi: "उत्पादक"}, {en: "Primary Consumer", hi: "प्राथमिक उपभोक्ता"}, {en: "Secondary Consumer", hi: "द्वितीयक उपभोक्ता"}, {en: "Tertiary Consumer", hi: "तृतीयक उपभोक्ता"} ], correct: 1 },
+            { id: 64, en: "What is included in Environment?", hi: "पर्यावरण के अंतर्गत कौन शामिल हैं?", options: [ {en: "Hydrosphere", hi: "जलमंडल"}, {en: "Lithosphere", hi: "स्थलमंडल"}, {en: "Atmosphere", hi: "वायुमंडल"}, {en: "All of these", hi: "इनमें से सभी"} ], correct: 3 },
+            { id: 65, en: "Various components of the biosphere exchange energy and matter to form:", hi: "जीवमंडल के विभिन्न घटक तथा उसके बीच ऊर्जा और पदार्थ का आदान प्रदान सभी एक साथ मिलकर किसका निर्माण करते हैं?", options: [ {en: "Ecosystem", hi: "पारिस्थितिकी तंत्र का"}, {en: "Atmosphere", hi: "वायुमंडल का"}, {en: "Lithosphere", hi: "स्थलमंडल का"}, {en: "Hydrosphere", hi: "जलमंडल का"} ], correct: 0 },
+            { id: 66, en: "What percentage of energy is transferred to the next trophic level?", hi: "आहार श्रृंखला के प्रत्येक पोषी स्तर पर कुल ऊर्जा का कितना प्रतिशत अगले पोषी स्तर को स्थानांतरित होता है?", options: [ {en: "1%", hi: "1%"}, {en: "25%", hi: "25%"}, {en: "50%", hi: "50%"}, {en: "10%", hi: "10%"} ], correct: 3 },
+            { id: 67, en: "What part of solar energy reaching Earth is used by green plants for photosynthesis?", hi: "पृथ्वी पर पहुँचनेवाली सौर ऊर्जा का कितना हिस्सा हरे पौधे द्वारा प्रकाशसंश्लेषण के लिए उपयोग में लाया जाता है?", options: [ {en: "About 1%", hi: "लगभग 1%"}, {en: "About 10%", hi: "लगभग 10%"}, {en: "Exactly Half", hi: "आधा पूरा"}, {en: "About Half", hi: "लगभग आधा"} ], correct: 0 },
+            { id: 68, en: "How many trophic levels are in a forest ecosystem?", hi: "वन पारिस्थितिकी तंत्र में कितने पोषी स्तर होते हैं?", options: [ {en: "1", hi: "1"}, {en: "2", hi: "2"}, {en: "3", hi: "3"}, {en: "4", hi: "4"} ], correct: 3 },
+            { id: 69, en: "What is each level of a food chain called?", hi: "आहार श्रृंखला का प्रत्येक स्तर को क्या कहा जाता है?", options: [ {en: "Producer", hi: "उत्पादक"}, {en: "Trophic level", hi: "पोषी स्तर"}, {en: "Consumer", hi: "उपभोक्ता"}, {en: "Decomposer", hi: "अपघटक"} ], correct: 1 },
+            { id: 70, en: "Which of these is an example of a micro-consumer?", hi: "सूक्ष्म उपभोक्ता का उदाहरण कौन है-", options: [ {en: "Algae", hi: "शैवाल"}, {en: "Bacteria", hi: "जीवाणु"}, {en: "Fungi", hi: "कवक"}, {en: "b and c both", hi: "b तथा c दोनों"} ], correct: 3 },
+            { id: 71, en: "In an ecosystem, organisms linked in a chain form:", hi: "किसी पारिस्थितिकी तंत्र में श्रृंखलाबद्ध तरीके से जुड़े जीवों से बनता है-", options: [ {en: "Trophic Level", hi: "पोषी स्तर"}, {en: "Pyramid", hi: "पिरामिड"}, {en: "Food Web", hi: "आहार जाल"}, {en: "Food Chain", hi: "आहार श्रृंखला"} ], correct: 3 },
+            { id: 72, en: "Carnivores in an ecosystem are:", hi: "मांसाहारी जीव पारिस्थितिकी तंत्र में होते हैं-", options: [ {en: "Primary Consumers", hi: "प्राथमिक उपभोक्ता"}, {en: "Secondary Consumers", hi: "द्वितीयक उपभोक्ता"}, {en: "Tertiary Consumers", hi: "तृतीयक उपभोक्ता"}, {en: "b and c both", hi: "b तथा c दोनों"} ], correct: 3 },
+            { id: 73, en: "Which of these is a natural ecosystem?", hi: "निम्नलिखित में कौन प्राकृतिक पारिस्थितिकी तंत्र है?", options: [ {en: "Park", hi: "पार्क"}, {en: "Garden", hi: "फुलवारी"}, {en: "Ocean", hi: "समुद्र"}, {en: "Cropland", hi: "कृषि भूमि"} ], correct: 2 },
+            { id: 74, en: "The self-sustaining functional unit of the biosphere is called:", hi: "जीवमंडल की स्वपोषित संरचनात्मक एवं कार्यात्मक इकाई को क्या कहा जाता है?", options: [ {en: "Hydrosphere", hi: "जलमंडल"}, {en: "Lithosphere", hi: "स्थलमंडल"}, {en: "Ecosystem", hi: "पारिस्थितिकी तंत्र"}, {en: "Atmosphere", hi: "वायुमंडल"} ], correct: 2 },
+            { id: 75, en: "Who proposed the '10 Percent Rule' of energy flow in ecosystems?", hi: "पारिस्थितिकी तंत्र में '10 प्रतिशत का ऊर्जा प्रवाह नियम' का प्रतिपादन किसके द्वारा किया गया है?", options: [ {en: "Lindeman", hi: "लिंडेमैन"}, {en: "H. Reiter", hi: "एच. रेटर"}, {en: "Joseph Grinnell", hi: "जोसेफ ग्रीनेल"}, {en: "A.G. Tansley", hi: "ए. जी. टॉन्सले"} ], correct: 0 },
+            { id: 76, en: "How do plants adapt in deserts and dry places?", hi: "रेगिस्तानों एवं शुष्क स्थानों में पाए जाने वाले पौधों में किस तरह का अनुकूलन पाया जाता है?", options: [ {en: "Deep roots", hi: "जड़ें बहुत लम्बी"}, {en: "Water storing stems", hi: "तने जल संचय करते हैं"}, {en: "Waxy stems to prevent water loss", hi: "वाष्पोत्सर्जन को रोकने के लिए तना क्युटिकलयुक्त"}, {en: "All of these", hi: "इनमें से सभी"} ], correct: 3 },
+            { id: 77, en: "Which of these is a Xerophyte?", hi: "निम्नलिखित में मरुदभिद पौधा (Xerophytes) है-", options: [ {en: "Euphorbia", hi: "यूफोर्बिया"}, {en: "Argemone", hi: "आर्जामोन"}, {en: "Acacia", hi: "एकेसिया"}, {en: "All of these", hi: "इनमें से सभी"} ], correct: 3 },
+            { id: 78, en: "An Orchid plant growing on a Mango branch is what type of interaction?", hi: "ऑर्किड का पौधा, आम के पेड़ के शाखा पर उग रहा है, यह किस तरह के अन्योन्य क्रिया संबंध है?", options: [ {en: "Parasitism", hi: "परजीविता"}, {en: "Commensalism", hi: "सहभोजिता"}, {en: "Mutualism", hi: "सहकारिता"}, {en: "Predation", hi: "परभक्षण"} ], correct: 1 },
+            { id: 79, en: "Which statement best explains Parasitism?", hi: "निम्नलिखित कथनों में परजीविता को कौन-सा सबसे अच्छी तरह स्पष्ट करता है-", options: [ {en: "One benefits", hi: "एक जीव को लाभ होता है"}, {en: "Both benefit", hi: "दोनों जीव को लाभ होता है"}, {en: "One benefits, the other is not affected", hi: "एक को लाभ होता है दूसरा प्रभावित नहीं होता"}, {en: "One benefits, the other is harmed", hi: "एक जीव को लाभ होता है, दूसरा प्रभावित होता है"} ], correct: 3 },
+            { id: 80, en: "Which of these is NOT correctly matched?", hi: "निम्नलिखित में कौन-सा विकल्प सही सुमेलित नहीं है?", options: [ {en: "Heliophyte - Sunflower", hi: "हेलियोफाइट - सूर्यमुखी"}, {en: "Sciophyte - Funaria", hi: "स्कियोफाइट - फ्यूनेरिया"}, {en: "Viviparous - Rhizophora", hi: "विविपेरस - राइजोफोरा"}, {en: "Endothermic - Lizard", hi: "ऐडोथर्मिक - जीवाणु (Lizard implied)"} ], correct: 3 },
+            { id: 81, en: "Who has no place in the Ecological Pyramid?", hi: "पारिस्थितिकी पिरामिड में किसे कोई स्थान प्राप्त नहीं है?", options: [ {en: "Producer", hi: "उत्पादक"}, {en: "Consumer", hi: "उपभोक्ता"}, {en: "Decomposer", hi: "अपघटक"}, {en: "All of these", hi: "इनमें से सभी"} ], correct: 2 },
+            { id: 82, en: "Which change is seen during Ecological Succession?", hi: "पारिस्थितिकी अनुक्रम के दौरान निम्नलिखित में कौन-सा परिवर्तन देखने को मिलता है?", options: [ {en: "Change in plants/animals types", hi: "पौधों एवं जंतुओं के प्रकारों में बदलाव"}, {en: "Increase in biodiversity", hi: "जैव विविधता में वृद्धि"}, {en: "Increase in organic matter", hi: "कार्बनिक पदार्थों में वृद्धि"}, {en: "All of these", hi: "इनमें से सभी"} ], correct: 3 },
+            { id: 83, en: "Who is credited with first proposing the word 'Ecology'?", hi: "'पारिस्थितिकी' शब्द को सर्वप्रथम प्रतिपादित करने का श्रेय किसको जाता है?", options: [ {en: "Brown", hi: "ब्राउन को"}, {en: "Aristotle", hi: "अरस्तू को"}, {en: "Khurana", hi: "खुराना को"}, {en: "Reiter", hi: "रीटर को"} ], correct: 3 },
+            { id: 84, en: "Ecology is the study of interaction between:", hi: "'पारिस्थितिकी' निम्नलिखित के बीच पारस्परिक सम्बन्धों का अध्ययन है-", options: [ {en: "Organism and Environment", hi: "जीव और वातावरण"}, {en: "Man and Forest", hi: "मनुष्य और वन"}, {en: "Soil and Water", hi: "मृदा और जल"}, {en: "Husband and Wife", hi: "पति और पत्नी"} ], correct: 0 },
+            { id: 85, en: "Autecology means:", hi: "'स्व-पारिस्थितिकी' (Autecology) का अभिप्राय है-", options: [ {en: "Soil effect on vegetation", hi: "वनस्पति पर मृदा का प्रभाव"}, {en: "Ecological study of individual organisms", hi: "व्यक्तिगत जीवधारी का पारिस्थितिक अध्ययन"}, {en: "Transpiration effect", hi: "वनस्पति पर उत्स्वेदन का प्रभाव"}, {en: "Temperature effect", hi: "वनस्पति पर तापमान का प्रभाव"} ], correct: 1 },
+            { id: 86, en: "Who introduced the term 'Ecosystem'?", hi: "'पारिस्थितिकी तंत्र' (Ecosystem) शब्दावली किसने प्रस्तुत की थी?", options: [ {en: "Forbes", hi: "फोर्ब्स"}, {en: "Vernadsky", hi: "वर्नाड्सकी"}, {en: "Thienemann", hi: "थिनेमान"}, {en: "Tansley", hi: "टॉन्सले"} ], correct: 3 },
+            { id: 87, en: "Which is the best description of 'Ecosystem'?", hi: "निम्नलिखित में से कौन-सा एक, 'पारितंत्र' शब्द का सर्वोत्कृष्ट वर्णन है?", options: [ {en: "Community of organisms interacting", hi: "एक-दूसरे से अन्योन्यक्रिया करने वाले जीवों का समुदाय"}, {en: "Part of Earth inhabited by organisms", hi: "पृथ्वी का वह भाग जो सजीव जीवों द्वारा आवासित है"}, {en: "Organism community + environment", hi: "जीवों का समुदाय और साथ ही वह पर्यावरण जिसमें वे रहते हैं"}, {en: "Flora/Fauna of a geographical area", hi: "किसी भौगोलिक क्षेत्र के वनस्पतिजात और प्राणिजात"} ], correct: 2 },
+            { id: 88, en: "What are the two components of an Ecosystem?", hi: "पारिस्थितिकी तंत्र के दो घटक कौन-से हैं?", options: [ {en: "Weeds and Microbes", hi: "खरपतवार और सूक्ष्मजीव"}, {en: "Biotic and Abiotic", hi: "जैविक और अजैविक"}, {en: "Plants and Light", hi: "पौधे और प्रकाश"}, {en: "Plants and Animals", hi: "पौधे और जीव"} ], correct: 1 },
+            { id: 89, en: "Which of these is an Abiotic component?", hi: "निम्न में से कौन पारितंत्र का अजैवीय घटक है?", options: [ {en: "Bacteria", hi: "जीवाणु"}, {en: "Chlorella", hi: "क्लोरेला"}, {en: "Water", hi: "जल"}, {en: "Man", hi: "मानव"} ], correct: 2 },
+            { id: 90, en: "Which sequence of energy flow is correct?", hi: "किसी पारिस्थितिकी तंत्र में ऊर्जा का प्रवाह के बारे में कौन-सी श्रृंखला सही है?", options: [ {en: "Producer - Decomposer - Consumer", hi: "उत्पादक - अपघटक - उपभोक्ता"}, {en: "Decomposer - Consumer - Producer", hi: "अपघटक - उपभोक्ता - उत्पादक"}, {en: "Producer - Consumer - Decomposer", hi: "उत्पादक - उपभोक्ता - अपघटक"}, {en: "Consumer - Producer - Decomposer", hi: "उपभोक्ता - उत्पादक - अपघटक"} ], correct: 2 },
+            { id: 91, en: "Food Chain is made of:", hi: "'खाद्य श्रृंखला' (Food chain) बनती है-", options: [ {en: "Producers, Consumers, Decomposers", hi: "उत्पादकों, उपभोक्ताओं एवं अपघटकों से"}, {en: "Producers, Carnivores, Decomposers", hi: "उत्पादकों, मांसाहारियों एवं अपघटकों से"}, {en: "Producers, Primary Consumers", hi: "उत्पादकों एवं प्राथमिक उपभोक्ताओं से"}, {en: "Producers, Herbivores, Carnivores", hi: "उत्पादकों, शाकाहारियों एवं मांसाहारियों से"} ], correct: 0 },
+            { id: 92, en: "Primary consumers in any chain are:", hi: "किसी श्रृंखला में प्राथमिक उपभोक्ता होते हैं-", options: [ {en: "Producers", hi: "उत्पादक"}, {en: "Herbivores", hi: "शाकाहारी"}, {en: "Carnivores", hi: "मांसाहारी"}, {en: "Decomposers", hi: "अपघटक"} ], correct: 1 },
+            { id: 93, en: "The role of producers in an ecosystem is:", hi: "किसी पारितंत्र में उत्पादकों का कार्य होता है-", options: [ {en: "Convert organic to inorganic", hi: "कार्बनिक यौगिकों को अकार्बनिक यौगिकों में बदलना"}, {en: "Trap solar energy and convert to chemical", hi: "सौर ऊर्जा को पकड़ना एवं इसे रासायनिक ऊर्जा में बदलना"}, {en: "Use chemical energy", hi: "रासायनिक ऊर्जा को काम में लाना"}, {en: "Release energy", hi: "ऊर्जा को मुक्त करना"} ], correct: 1 },
+            { id: 94, en: "The primary source of energy in an ecosystem is:", hi: "पारितंत्र में ऊर्जा का प्राथमिक या मुख्य स्रोत होता है-", options: [ {en: "Sunlight", hi: "सूर्य का प्रकाश"}, {en: "Sugar in plants", hi: "पौधों में संचित शर्करा"}, {en: "Fermentation heat", hi: "किण्वन में मुक्त ऊष्मा"}, {en: "Respiration heat", hi: "श्वसन के दौरान मुक्त ऊष्मा"} ], correct: 0 },
+            { id: 95, en: "Who has the largest population in an ecosystem?", hi: "किसी पारितंत्र में सबसे बड़ी संख्या होती है-", options: [ {en: "Primary Producers", hi: "प्राथमिक उत्पादकों की"}, {en: "Primary Consumers", hi: "प्राथमिक उपभोक्ताओं की"}, {en: "Secondary Consumers", hi: "द्वितीयक उपभोक्ताओं की"}, {en: "Decomposers", hi: "अपघटनकर्ताओं की"} ], correct: 0 },
+            { id: 96, en: "Vegetation at the edge of the sea is called:", hi: "समुद्र के किनारे की वनस्पति कहलाती है-", options: [ {en: "Halophytes", hi: "लवणोद्भिद वनस्पति"}, {en: "Mesophytes", hi: "समोद्भिद वनस्पति"}, {en: "Hydrophytes", hi: "जलोद्भिद वनस्पति"}, {en: "Xerophytes", hi: "मरुद्भिद वनस्पति"} ], correct: 0 },
+            { id: 97, en: "Reduced leaves and sunken stomata are features of:", hi: "न्यूनीकृत पत्तियाँ और धंसे हुए रन्ध्र किसके प्रमुख लक्षण हैं?", options: [ {en: "Epiphytes", hi: "अधिपादप"}, {en: "Hydrophytes", hi: "जलोद्भिद"}, {en: "Mesophytes", hi: "समोद्भिद"}, {en: "Xerophytes", hi: "शुष्कोद्भिद (मरुद्भिद)"} ], correct: 3 },
+            { id: 98, en: "Why do Xerophytes have long root systems?", hi: "मरुद्भिदों में लम्बा मूल तंत्र होता है, क्योंकि-", options: [ {en: "Mechanical strength", hi: "यंत्र शक्ति प्रदान करते हैं"}, {en: "Roots go deep for water", hi: "जड़ें गहराई में पानी अवशोषित करने जाती हैं"}, {en: "Soil temp promotes growth", hi: "मृदा का उच्च तापमान मूल वृद्धि को प्रोत्साहित करता है"}, {en: "Night temp promotes growth", hi: "रात्रि का कम तापमान मूल वृद्धि को प्रोत्साहित करता है"} ], correct: 1 },
+            { id: 99, en: "If all plants die, animals will die due to lack of:", hi: "यदि संसार के सभी पौधे मर जाएं, तो किसकी कमी के कारण सभी जन्तु मर जायेंगे?", options: [ {en: "Oxygen", hi: "ऑक्सीजन"}, {en: "Wood", hi: "काष्ठ"}, {en: "Cold air", hi: "ठण्डी वायु"}, {en: "Food", hi: "भोजन"} ], correct: 3 },
+            { id: 100, en: "Epiphytes are found in places where:", hi: "अधिपादप (Epiphytes) वैसे स्थानों पर पाये जाते हैं, जहाँ पर-", options: [ {en: "High Oxygen", hi: "ऑक्सीजन का सान्द्रण उच्च होता है"}, {en: "Low Temp", hi: "तापमान काफी कम होता है"}, {en: "Rainfall throughout year", hi: "वर्षा पूरे वर्ष होती है"}, {en: "Rainfall is seasonal", hi: "वर्षा मौसम के अनुसार होती है"} ], correct: 2 }
+        ];
+
+        // QUIZ APP LOGIC
+        const quizApp = {
+            currentIdx: 0,
+            score: 0,
+            timer: null,
+            timeLimit: 30,
+            shuffledData: [],
+            audioCtx: new (window.AudioContext || window.webkitAudioContext)(),
+
+            // Synthesize Sounds
+            playSound(type) {
+                const osc = this.audioCtx.createOscillator();
+                const gain = this.audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(this.audioCtx.destination);
+
+                if (type === 'ting') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(880, this.audioCtx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(440, this.audioCtx.currentTime + 0.1);
+                    gain.gain.setValueAtTime(0.1, this.audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, this.audioCtx.currentTime + 0.2);
+                    osc.start();
+                    osc.stop(this.audioCtx.currentTime + 0.2);
+                } else {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(150, this.audioCtx.currentTime);
+                    osc.frequency.linearRampToValueAtTime(50, this.audioCtx.currentTime + 0.3);
+                    gain.gain.setValueAtTime(0.1, this.audioCtx.currentTime);
+                    gain.gain.linearRampToValueAtTime(0.01, this.audioCtx.currentTime + 0.3);
+                    osc.start();
+                    osc.stop(this.audioCtx.currentTime + 0.3);
+                }
+            },
+
+            init() {
+                const limitVal = parseInt(document.getElementById('timer-input').value);
+                this.timeLimit = isNaN(limitVal) ? 0 : limitVal;
+                
+                const shuffle = document.getElementById('shuffle-check').checked;
+                this.shuffledData = shuffle ? [...quizData].sort(() => Math.random() - 0.5) : [...quizData];
+                
+                document.getElementById('start-screen').classList.remove('active');
+                document.getElementById('quiz-screen').classList.add('active');
+                this.loadQuestion();
+            },
+
+            loadQuestion() {
+                const q = this.shuffledData[this.currentIdx];
+                document.getElementById('q-counter').innerText = `Question: ${this.currentIdx + 1}/${this.shuffledData.length}`;
+                document.getElementById('q-en').innerText = q.en;
+                document.getElementById('q-hi').innerText = q.hi;
+                
+                const optionsBox = document.getElementById('options-box');
+                optionsBox.innerHTML = '';
+                
+                q.options.forEach((opt, i) => {
+                    const btn = document.createElement('button');
+                    btn.className = 'option-btn';
+                    btn.innerHTML = `<span class="opt-en">${opt.en}</span><span class="opt-hi">${opt.hi}</span>`;
+                    btn.onclick = () => this.handleAnswer(i);
+                    optionsBox.appendChild(btn);
+                });
+
+                document.getElementById('progress-bar').style.width = `${((this.currentIdx) / this.shuffledData.length) * 100}%`;
+                this.startTimer();
+            },
+
+            startTimer() {
+                clearInterval(this.timer);
+                if (this.timeLimit <= 0) {
+                    document.getElementById('timer-display').style.display = 'none';
+                    return;
+                }
+
+                let timeLeft = this.timeLimit;
+                const display = document.getElementById('timer-secs');
+                const box = document.getElementById('timer-display');
+                
+                box.style.display = 'flex';
+                display.innerText = timeLeft;
+                box.classList.remove('pulse-red');
+
+                this.timer = setInterval(() => {
+                    timeLeft--;
+                    display.innerText = timeLeft;
+                    if (timeLeft < 5) box.classList.add('pulse-red');
+                    if (timeLeft <= 0) {
+                        clearInterval(this.timer);
+                        this.handleAnswer(-1); // Timeout
+                    }
+                }, 1000);
+            },
+
+            handleAnswer(selectedIdx) {
+                clearInterval(this.timer);
+                const q = this.shuffledData[this.currentIdx];
+                const btns = document.querySelectorAll('.option-btn');
+                btns.forEach(b => b.disabled = true);
+
+                if (selectedIdx === q.correct) {
+                    this.score++;
+                    btns[selectedIdx].classList.add('correct');
+                    this.playSound('ting');
+                    this.triggerConfetti();
+                } else {
+                    if (selectedIdx !== -1) btns[selectedIdx].classList.add('wrong');
+                    btns[q.correct].classList.add('correct');
+                    this.playSound('buzz');
+                    this.triggerSadEmoji();
+                }
+
+                document.getElementById('score-display').innerText = `Score: ${this.score}`;
+                
+                setTimeout(() => {
+                    this.currentIdx++;
+                    if (this.currentIdx < this.shuffledData.length) {
+                        this.loadQuestion();
+                    } else {
+                        this.showResults();
+                    }
+                }, 1500);
+            },
+
+            triggerConfetti() {
+                const canvas = document.getElementById('confetti');
+                const ctx = canvas.getContext('2d');
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+                let pieces = [];
+                for(let i=0; i<50; i++) {
+                    pieces.push({
+                        x: Math.random() * canvas.width,
+                        y: -20,
+                        size: Math.random() * 10 + 5,
+                        color: `hsl(${Math.random()*360}, 70%, 50%)`,
+                        v: Math.random() * 3 + 2
+                    });
+                }
+                function draw() {
+                    ctx.clearRect(0,0,canvas.width, canvas.height);
+                    pieces.forEach(p => {
+                        ctx.fillStyle = p.color;
+                        ctx.fillRect(p.x, p.y, p.size, p.size);
+                        p.y += p.v;
+                    });
+                    if(pieces[0].y < canvas.height) requestAnimationFrame(draw);
+                    else ctx.clearRect(0,0,canvas.width, canvas.height);
+                }
+                draw();
+            },
+
+            triggerSadEmoji() {
+                const emoji = document.getElementById('emoji-overlay');
+                emoji.style.display = 'block';
+                emoji.classList.add('shake');
+                setTimeout(() => {
+                    emoji.style.display = 'none';
+                    emoji.classList.remove('shake');
+                }, 1000);
+            },
+
+            showResults(early = false) {
+                clearInterval(this.timer);
+                document.getElementById('quiz-screen').classList.remove('active');
+                document.getElementById('result-screen').classList.add('active');
+                
+                const total = early ? (this.currentIdx) : this.shuffledData.length;
+                document.getElementById('final-score').innerText = `${this.score}/${total}`;
+                
+                const pct = (this.score / (total || 1)) * 100;
+                let msg = "";
+                if(pct >= 80) msg = "🏆 Outstanding Performance!";
+                else if(pct >= 50) msg = "👏 Well Done! Keep it up.";
+                else msg = "📚 Practice makes perfect! Try again.";
+                
+                document.getElementById('final-msg').innerText = msg;
+                document.getElementById('progress-bar').style.width = "100%";
+            }
+        };
+    </script>
+</body>
+</html>

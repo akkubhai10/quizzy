@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gyan Bindu GS Academy - Plant Classification Quiz</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: 1px solid rgba(255, 255, 255, 0.2);
+            --correct-color: #00e676;
+            --wrong-color: #ff5252;
+            --hindi-color: #ddd;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--primary-bg);
+            overflow-x: hidden;
+            color: white;
+        }
+
+        /* Animated Mesh Gradient */
+        .mesh-bg {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -1;
+            background-color: #764ba2;
+            background-image: 
+                radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
+                radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%), 
+                radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 50%);
+        }
+
+        .container {
+            width: 95%;
+            max-width: 800px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: var(--glass-border);
+            border-radius: 25px;
+            padding: 2rem;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            position: relative;
+            margin: 20px 0;
+        }
+
+        /* Progress Bar */
+        #progress-bar {
+            position: absolute;
+            top: 0; left: 0; width: 0%; height: 6px;
+            background: var(--correct-color);
+            box-shadow: 0 0 10px var(--correct-color);
+            transition: width 0.4s ease;
+            border-top-left-radius: 25px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .timer-icon { display: flex; align-items: center; gap: 5px; }
+        .pulse-red { color: #ff5252; animation: pulse 0.8s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+
+        /* Typography */
+        .question-text { font-size: 1.3rem; font-weight: 700; margin-bottom: 5px; }
+        .hindi-text { font-size: 1rem; color: var(--hindi-color); font-weight: 400; display: block; margin-bottom: 20px; }
+
+        /* Options */
+        .options-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
+        @media (min-width: 600px) { .options-grid { grid-template-columns: 1fr 1fr; } }
+
+        .opt-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 15px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: left;
+        }
+        .opt-btn:hover:not(:disabled) { background: rgba(255, 255, 255, 0.15); transform: translateY(-2px); }
+        .opt-btn:disabled { cursor: default; }
+
+        .correct { background: var(--correct-color) !important; color: #000 !important; font-weight: bold; border: none; }
+        .wrong { background: var(--wrong-color) !important; color: white !important; border: none; }
+
+        /* Start Screen */
+        .start-screen, .result-screen { text-align: center; }
+        .input-field {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 10px;
+            border-radius: 10px;
+            color: white;
+            width: 80px;
+            text-align: center;
+            margin: 10px;
+        }
+
+        .btn-main {
+            background: white;
+            color: #764ba2;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.2s;
+            margin-top: 20px;
+        }
+        .btn-main:hover { transform: scale(1.05); }
+
+        .exit-btn {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: rgba(255, 255, 255, 0.7);
+            padding: 8px 15px;
+            border-radius: 8px;
+            margin-top: 30px;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+
+        /* Animations */
+        #sad-emoji {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 100px; display: none; z-index: 1000;
+        }
+        .shake { animation: shake 0.5s; }
+        @keyframes shake { 0%, 100% { transform: translate(-50%, -50%); } 25% { transform: translate(-55%, -50%); } 75% { transform: translate(-45%, -50%); } }
+
+        .confetti { position: fixed; width: 10px; height: 10px; z-index: 9999; }
+
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+    <div class="mesh-bg"></div>
+    <div class="container">
+        <div id="progress-bar"></div>
+
+        <div id="start-screen" class="start-screen">
+            <h1 style="margin-bottom: 10px;">Plant Classification Quiz</h1>
+            <p style="margin-bottom: 30px; opacity: 0.8;">Questions 51 - 100 | Bilingual Edition</p>
+            <div style="margin-bottom: 20px;">
+                <label>Timer (Seconds per Q): </label>
+                <input type="number" id="timer-val" class="input-field" value="15" min="0">
+            </div>
+            <div>
+                <label>Shuffle Questions: </label>
+                <input type="checkbox" id="shuffle-check" style="width: 20px; height: 20px; cursor: pointer;">
+            </div>
+            <button class="btn-main" onclick="startQuiz()">Start Quiz</button>
+        </div>
+
+        <div id="quiz-screen" class="hidden">
+            <header>
+                <div id="q-count">Question 01/50</div>
+                <div id="timer-display" class="timer-icon">
+                    <span id="timer-clock">⏱️</span>
+                    <span id="timer-text">--</span>
+                </div>
+                <div id="score-count">Score: 00</div>
+            </header>
+
+            <div class="question-box">
+                <p id="q-en" class="question-text"></p>
+                <p id="q-hi" class="hindi-text"></p>
+            </div>
+
+            <div id="options" class="options-grid"></div>
+
+            <button class="exit-btn" onclick="finishQuiz()">Finish & Show Results</button>
+        </div>
+
+        <div id="result-screen" class="result-screen hidden">
+            <h2 style="font-size: 2rem; margin-bottom: 10px;">Quiz Result</h2>
+            <div id="final-score" style="font-size: 4rem; font-weight: 800; margin: 20px 0;">0%</div>
+            <p id="result-msg" style="font-size: 1.2rem; margin-bottom: 30px;"></p>
+            <button class="btn-main" onclick="location.reload()">Restart Quiz</button>
+        </div>
+
+        <div id="sad-emoji">😢</div>
+    </div>
+
+<script>
+    // --- QUESTION DATA (51-100) ---
+    const questionsBank = [
+        { en: "Kelp is obtained from?", hi: "केल्प प्राप्त होता है ?", opt: ["Sea Algae / समुद्री शैवालो से", "Lichens / लाइकेन्स से", "Fungi / शैवालों से", "Aquatic Algae / जलीय शैवालों से"], ans: 0 },
+        { en: "Algae of which group are also called sea grass?", hi: "निम्नलिखित में किस वर्ग के शैवाल को समुद्री घास भी कहा जाता है ?", opt: ["Chlorophyceae / क्लोरोफाइसी", "Phaeophyceae / फियोफाइसी", "Rhodophyceae / रोडोफाइसी", "All of these / इनमें से सभी"], ans: 1 },
+        { en: "Sodium Laminarin Sulfate, an anti-coagulant, is obtained from which algae?", hi: "खून को जमने से रोकने में सहायक यौगिक 'सोडियम लैमिनेरिन सल्फेट' किस शैवाल से प्राप्त किया जाता है?", opt: ["Laminaria / लैमिनेरिया", "Fucus / फ्यूकस", "Macrocystis / मैक्रोसिस्टिक", "Ectocarpus / एक्टोकार्पस"], ans: 0 },
+        { en: "Which disease is less likely to occur if marine weeds are consumed?", hi: "कुछ समुद्री खरपतवार खाने से निम्नलिखित में किस रोग के होने की संभावना नहीं होगी?", opt: ["Beri-beri / बेरी-बेरी", "Goitre / गलगण्ड या घेघा", "Night blindness / रतौंधी", "Scurvy / स्कर्वी"], ans: 1 },
+        { en: "The red color of the Red Sea is due to the presence of?", hi: "लाल सागर का लाल रंग किसकी उपस्थिति के कारण होता है ?", opt: ["Moss / मॉस", "Algae / शैवाल", "Fungi / कवक", "Bacteria / जीवाणु"], ans: 1 },
+        { en: "Which of the following is Red Algae?", hi: "निम्नलिखित में कौन लाल शैवाल है-", opt: ["Porphyra / पोरफाइरा", "Gracilaria / ग्रैसीलेरिया", "Gelidium / जेलीडियम", "All of these / इनमें से सभी"], ans: 3 },
+        { en: "Agar-Agar, used in artificial growth medium, is obtained from?", hi: "कृत्रिम वृद्धि माध्यम बनाने में काम आने वाला अगर-अगर किससे प्राप्त होता है ?", opt: ["Algae / शैवाल", "Fungi / कवक", "Lichens / लाइकेन", "Protozoa / प्रोटोजोआ"], ans: 0 },
+        { en: "Agar-Agar is prepared from?", hi: "ऐगार-ऐगार (Agar-Agar) किससे तैयार होता है ?", opt: ["Red Algae / लाल शैवाल से", "Brown Algae / भूरा शैवाल से", "Green Algae / हरा शैवाल से", "All of these / इनमें से सभी"], ans: 0 },
+        { en: "Which of the following is a unicellular algae?", hi: "एक कोशिकीय शैवाल निम्न में से कौन है ?", opt: ["Chlamydomonas / क्लेमाइडोमोनस", "Chlorella / क्लोरेला", "Ulothrix / यूलोथ्रिक्स", "All of these / इनमें से सभी"], ans: 3 },
+        { en: "What is the stored food in algae?", hi: "शैवालो में संचित भोजन के रूप में क्या होता है ?", opt: ["Cellulose / सेलुलोज", "Starch / स्टार्च", "Protein / प्रोटीन", "Fat / वसा"], ans: 1 },
+        { en: "Which of the following is used as a bio-fertilizer?", hi: "निम्नलिखित में कौन जैव उर्वरक के रूप में प्रयोग होता है ?", opt: ["Rhizobium / राइजोबियम", "Blue-green algae / नील हरित शैवाल", "Azolla / एजोला", "All of the above / उपर्युक्त सभी"], ans: 3 },
+        { en: "Which plant does not belong to Thallophyta group?", hi: "निम्नलिखित में कौन सा पौधा थैलोफाइटा समूह में नहीं आता है ?", opt: ["Chara / कारा", "Spirogyra / स्पाइरोगाइरा", "Ulva / अल्वा", "Riccia / रिक्सिया"], ans: 3 },
+        { en: "Which option is correctly matched?", hi: "निम्नलिखित में कौन सा एक विकल्प सही सुमेलित है?", opt: ["Phaeophyceae - Mannitol", "Rhodophyceae - Dictyota", "Chlorophyceae - Non-motile gametes", "Rhodophyceae - Phycoerythrin"], ans: 0 },
+        { en: "Consider the following organisms: 1. Agaricus 2. Aspergillus 3. Ulothrix 4. Ulva. Which are algae?", hi: "निम्न जीवो पर विचार कीजिए- 1. एगैरिकस 2. एस्परजिलस 3. यूलोथ्रिक्स 4. अल्वा | उपरोक्त में कौन सा शैवाल है-", opt: ["1 and 2", "2 and 3", "3 and 4", "2 and 4"], ans: 2 },
+        { en: "Which substance is obtained from algae? 1. Algin 2. Ephedrine 3. Carrageenan 4. Tannin", hi: "निम्नलिखित में कौन सा पदार्थ शैवालो से प्राप्त होता है- 1. एल्जिन 2. इफीड्रीन 3. केराजीनिन 4. टेनिन", opt: ["1, 2 and 3", "1 and 2", "1 and 3", "1, 3 and 4"], ans: 2 },
+        { en: "Lichens are a symbiotic association of?", hi: "लाइकेन वास्तव में किसके सहजीवी साहचर्य है ?", opt: ["Algae and Bacteria / शैवाल और जीवाणु", "Algae and Fungi / शैवाल और कवक", "Bacteria and Fungi / जीवाणु और कवक", "Fungi and Moss / कवक और मॉस"], ans: 1 },
+        { en: "The symbiotic relationship between fungi and algae in lichen is called?", hi: "लाइकेन में कवक और शैवाल के मध्य सहजीवी सम्बन्ध कहलाता है-", opt: ["Helotism / हेलोटिज्म", "Parasitism / पैरासिटिज्म", "Saprophytism / सेप्रोफीटिज्म", "None of these / इनमें से सभी"], ans: 0 },
+        { en: "Which plant is a pollution indicator?", hi: "निम्नलिखित में कौन प्रदूषण संकेतक पौधा है ?", opt: ["Bryophyta / ब्रायोफाइटा", "Moss / मॉस", "Algae / शैवाल", "Lichen / लाइकेन"], ans: 3 },
+        { en: "What is the best indicator of SO2 pollution?", hi: "निम्नलिखित में क्या SO2 प्रदूषण के सर्वोत्तम सूचक है?", opt: ["Moss / मॉस", "Fern / फर्न", "Lichen / लाइकेन", "Algae / शैवाल"], ans: 2 },
+        { en: "Lichens growing on tree bark are called?", hi: "पेड़ो की छाल पर उगने वाले लाइकेन को क्या कहते है?", opt: ["Corticolous / कार्टिकोल्स", "Saxicolous / सेक्सीकोल्स", "Sexatilis / सेक्सटैलिस", "Parmelia / परमेलिया"], ans: 0 },
+        { en: "Lichens growing on rocky surfaces are called?", hi: "चट्टानी स्तर पर लाइकेन विकास को क्या कहते है ?", opt: ["Corticolous / कार्टिकोल्स", "Saxicolous / सेक्सीकोल्स", "Lignicolous / लिग्नीकोल्स", "Terricolous / टेरीकोल्स"], ans: 1 },
+        { en: "From which is Litmus obtained?", hi: "लिटमस किससे निकाला जाता है ?", opt: ["Turmeric / हल्दी", "Cinchona / सिनकोना", "Mushroom / मशरूम", "Lichen / लाइकेन"], ans: 3 },
+        { en: "Which lichen is eaten as a vegetable in Japan?", hi: "जापान के लोग किस लाइकेन को सब्जी के रूप में खाते है ?", opt: ["Parmelia / परमेलिया", "Roccella / रोसेला", "Indocarpon / इन्डोकार्पन", "Cladonia / क्लेडोनिया"], ans: 2 },
+        { en: "Medicine for Epilepsy is obtained from which lichen?", hi: "मिरगी (Epilepsy) की औषधि किस लाइकेन से प्राप्त होती है ?", opt: ["Lecanora / लेकोनेरा", "Roccella / रोसेला", "Lobaria / लोबेरिया", "Parmelia / परमेलिया"], ans: 3 },
+        { en: "Which group in the Plant Kingdom is primarily aquatic?", hi: "पादप जगत में मुख्यतः कौन एक जलीय है ?", opt: ["Bryophyta / ब्रायोफाइटा", "Algae / शैवाल", "Pteridophyta / टेरिडोफाइटा", "Gymnosperms / अनावृतबीजी"], ans: 1 },
+        { en: "In which plant is there no 'differentiated body'?", hi: "निम्नलिखित में से पौधे के किस हिस्से में 'विभेदित काय' नहीं होता है ?", opt: ["Bryophyta / ब्रायोफाइटा", "Pteridophyta / टेरिडोफाइटा", "Thallophyta / थैलोफाइटा", "Gymnosperms / अनावृतबीजी"], ans: 2 },
+        { en: "Fucoxanthin is found in which algae?", hi: "फ्यूकोजैन्थिन (Fucoxanthin) किस शैवाल में पाया जाता है ?", opt: ["Red Algae / लाल शैवाल में", "Brown Algae / भूरा शैवाल में", "Green Algae / हरा शैवाल में", "All of these / इनमें से सभी"], ans: 1 },
+        { en: "What characteristic is found in Bryophyta?", hi: "ब्रायोफाइटा में क्या विशेषता पायी जाती है ?", opt: ["No vascular tissue / संवहन उत्तक नहीं", "No true roots / जड़ नहीं", "No seeds / बीज नहीं", "All of these / इनमें से सभी"], ans: 3 },
+        { en: "Bryophytes include?", hi: "ब्रायोफाइट्स में सम्मिलित है-", opt: ["Liverworts and Ferns / लिवरवर्ट एवं फर्न", "Moss and Ferns / मॉस एवं फर्न", "Liverworts and Moss / लिवरवर्ट एवं मॉस", "None of these / इनमें से कोई नहीं"], ans: 2 },
+        { en: "Which is NOT a bryophyte?", hi: "निम्नलिखित में कौन ब्रायोफाइट्स नहीं है ?", opt: ["Funaria / फ्यूनरिया", "Sphagnum / स्फैनम", "Marchantia / मारकेंशिया", "Marsilea / मार्सिलिया"], ans: 3 },
+        { en: "What is called the 'Amphibians' of the Plant Kingdom?", hi: "निम्नलिखित में किसे पादप वर्ग का उभयचर कहते है?", opt: ["Thallophyta / थैलोफाइटा", "Bryophyta / ब्रायोफाइटा", "Pteridophyta / टेरिडोफाइटा", "Gymnosperms / जिम्नोस्पर्म"], ans: 1 },
+        { en: "Rhizoids are found instead of roots in?", hi: "जड़ के स्थान पर मूलाभास (Rhizoids) पाया जाता है-", opt: ["Angiosperms / आवृतबीजी में", "Gymnosperms / अनावृतबीजी में", "Bryophyta / ब्रायोफाइटा में", "Pteridophyta / टेरिडोफाइटा में"], ans: 2 },
+        { en: "Projections from the lower epidermis of Bryophyta are called?", hi: "ब्रायोफाइटा की निचली बाह्य त्वचा कोशिकाओं से बढ़ने वाले उभार को कहा जाता है-", opt: ["Setae / सेप्स", "Capsule / कैप्सूल", "Thallus / थैलस", "Rhizoids / राइजोइड"], ans: 3 },
+        { en: "Which is false regarding Rhizoids?", hi: "निम्नलिखित में कौन-सा राइजोइड के बारे में सही नहीं है ?", opt: ["Similar to root hairs / मूल रोम के समान", "Multicellular structures / बहुकोशिकीय संरचनाएँ", "Projections from epidermis / बाह्य त्वचा से उभार", "Have fully developed stems / इनमें पूर्ण विकसित तना, जड़ और पत्तियां होते है"], ans: 3 },
+        { en: "Which is correctly matched? 1. Hepaticopsida: Liverworts 2. Anthoceropsida: Hornworts 3. Bryopsida: Moss", hi: "सही सुमेलित है? 1. हिपैटिकोप्सिडा : लिवरवर्ट्स 2. एंथोसिरोप्सिडा : हॉर्नवर्ट 3. ब्रायोप्सिडा : मॉस", opt: ["1 and 2", "2 and 3", "1 and 3", "1, 2 and 3"], ans: 3 },
+        { en: "What are called 'Vascular Cryptogams'?", hi: "निम्नलिखित में किसे वैस्कुलर क्रिप्टोगैम्स (Vascular Cryptogams) कहा जाता है ?", opt: ["Thallophyta / थैलोफाइटा", "Bryophyta / ब्रायोफाइटा", "Pteridophyta / टेरिडोफाइटा", "All of these / इनमें से सभी"], ans: 2 },
+        { en: "Which are the first terrestrial plants to have Xylem and Phloem?", hi: "विकास की दृष्टि से प्रथम स्थलीय पौधा कौन है जिनमें जाइलम तथा फ्लोएम उत्तक पाया जाता है ?", opt: ["Gymnosperms / अनावृतबीजी", "Pteridophyta / टेरिडोफाइटा", "Thallophyta / थैलोफाइटा", "Bryophyta / ब्रायोफाइटा"], ans: 1 },
+        { en: "Which is NOT included in Pteridophyta?", hi: "निम्नलिखित में कौन एक टेरिडोफाइटा में शामिल नहीं है ?", opt: ["Club moss / क्लब मॉस", "Horse-tail / हॉर्स-टेल", "Fern / फर्न", "Moss / मॉस"], ans: 3 },
+        { en: "In which of these are vascular tissues found?", hi: "निम्न में से किस एक जीव में संवहन उत्तक पाये जाते है ?", opt: ["Cladophora / क्लैडोफोरा", "Penicillium / पेनिसिलियम", "Marsilea / मार्सिलिया", "Anabaena / एनाबीना"], ans: 2 },
+        { en: "Marsilea, Fern and Horse-tail are examples of?", hi: "मार्सिलिया, फर्न तथा अश्वपुच्छीय (Horse-tail) किस पादप समूह के उदाहरण है ?", opt: ["Pteridophyta / टेरिडोफाइटा", "Bryophyta / ब्रायोफाइटा", "Gymnosperms / जिम्नोस्पर्म", "Angiosperms / एंजियोस्पर्म"], ans: 0 },
+        { en: "The nature of seeds originated in?", hi: "बीजो की प्रकृति किसमें उत्पन्न हुई है ?", opt: ["Algae / शैवाल", "Fungi / कवक", "Bryophyta / ब्रायोफाइटा", "Pteridophyta / टेरिडोफाइटा"], ans: 3 },
+        { en: "Which aquatic fern is used as a bio-fertilizer?", hi: "जलीय फर्न, जिसे जैव उर्वरक के रूप में प्रयुक्त किया जाता है, वह है-", opt: ["Azolla / एजोला", "Marsilea / मार्सिलिया", "Pteridium / टेरिडियम", "Salvinia / साल्विनिया"], ans: 0 },
+        { en: "Which of the following is used as bio-fertilizer?", hi: "निम्नलिखित में किसे जैव उर्वरक के रूप में प्रयोग किया जाता है ?", opt: ["Clostridium / क्लास्ट्रीडियम", "Urea / यूरिया", "Azolla / एजोला", "Khoyu / खोई"], ans: 2 },
+        { en: "Which is kept for decoration due to resurrection ability?", hi: "पुनर्जीवन का गुण होने के कारण निम्न में से किसे मेजो पर सजावट के लिये रखते है ?", opt: ["Psilotum / साइलोटम", "Ceratopteris / सिरैटोप्टेरिस", "Selaginella / सिलेजिनैला", "Lycopodium / लाइकोपोडियम"], ans: 2 },
+        { en: "Spores of which are used as medicine?", hi: "निम्नलिखित में से किसके बीजाणु दवा के रूप में प्रयोग किये जाते है ?", opt: ["Lycopodium / लाइकोपोडियम", "Selaginella / सिलेजिनैला", "Dryopteris / ड्रायोप्टेरिस", "Equisetum / इक्विसेटम"], ans: 0 },
+        { en: "Highest number of chromosomes are found in?", hi: "सबसे अधिक क्रोमोसोम किसमें पाये जाते है ?", opt: ["Elephant / हाथी", "Human / मनुष्य", "Pteridophytes / टेरिडोफाइट्स", "Bryophytes / ब्रायोफाइट्स"], ans: 2 },
+        { en: "Which are seedless vascular plants with unique life cycles?", hi: "बीज रहित संवहनी पौधे होते है, जो स्वतंत्र गैमीटोफाइटा तथा स्पोरोफाइटा चरणों के साथ जीवन चक्र साझा करते है?", opt: ["Pteridophyta / टेरिडोफाइटा", "Angiosperms / आवृतबीजी", "Gymnosperms / जिम्नोस्पर्म", "Bryophyta / ब्रायोफाइटा"], ans: 0 },
+        { en: "Which statement about plant classification is correct?", hi: "पौधों के वर्गीकरण के बारे में निम्नलिखित में से कौन सा कथन सही है ?", opt: ["Thallophyta has differentiated body / थैलोफाइटा में विभेदित शरीर होता है", "Funaria is a fungus / फ्यूनरिया एक कवक है", "All Pteridophytes are phanerogams / सभी टेरिडोफाइटा पुष्पोदभिद होता है", "Vascular system is not found in Bryophyta / ब्रायोफाइटा में संवहन-तंत्र नहीं पाया जाता है"], ans: 3 },
+        { en: "Selaginella is a?", hi: "सिलेजिनैला होता है-", opt: ["Algae / शैवाल", "Moss / मॉस", "Pteridophyta / टेरिडोफाइटा", "Angiosperms / आवृतबीजी"], ans: 2 },
+        { en: "In which group seeds are formed but are naked?", hi: "किस वर्ग के पौधों में बीज बनते हैं, परन्तु बीज नग्न रूप से पौधे पर लगे रहते हैं ?", opt: ["Bryophyta / ब्रायोफाइटा", "Pteridophyta / टेरिडोफाइटा", "Angiosperms / एंजियोस्पर्म", "Gymnosperms / जिम्नोस्पर्म"], ans: 3 }
+    ];
+
+    // --- LOGIC ---
+    let currentQuestions = [];
+    let currentIdx = 0;
+    let score = 0;
+    let timer = null;
+    let timeLeft = 0;
+    let audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    function synthesizeSound(freq, type, duration) {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+    }
+
+    function startQuiz() {
+        const shuffle = document.getElementById('shuffle-check').checked;
+        currentQuestions = shuffle ? [...questionsBank].sort(() => Math.random() - 0.5) : [...questionsBank];
+        
+        document.getElementById('start-screen').classList.add('hidden');
+        document.getElementById('quiz-screen').classList.remove('hidden');
+        
+        loadQuestion();
+    }
+
+    function loadQuestion() {
+        if (currentIdx >= currentQuestions.length) return finishQuiz();
+
+        const q = currentQuestions[currentIdx];
+        document.getElementById('q-en').innerText = `${currentIdx + 51}. ${q.en}`;
+        document.getElementById('q-hi').innerText = q.hi;
+        document.getElementById('q-count').innerText = `Question ${currentIdx + 1}/${currentQuestions.length}`;
+        document.getElementById('progress-bar').style.width = `${((currentIdx + 1) / currentQuestions.length) * 100}%`;
+
+        const optionsDiv = document.getElementById('options');
+        optionsDiv.innerHTML = '';
+        
+        q.opt.forEach((optText, i) => {
+            const btn = document.createElement('button');
+            btn.className = 'opt-btn';
+            btn.innerText = optText;
+            btn.onclick = () => selectOption(i);
+            optionsDiv.appendChild(btn);
+        });
+
+        startTimer();
+    }
+
+    function startTimer() {
+        clearInterval(timer);
+        const limit = parseInt(document.getElementById('timer-val').value);
+        if (limit <= 0) {
+            document.getElementById('timer-display').classList.add('hidden');
+            return;
+        }
+        
+        document.getElementById('timer-display').classList.remove('hidden');
+        timeLeft = limit;
+        document.getElementById('timer-text').innerText = timeLeft + "s";
+        document.getElementById('timer-text').classList.remove('pulse-red');
+
+        timer = setInterval(() => {
+            timeLeft--;
+            document.getElementById('timer-text').innerText = timeLeft + "s";
+            if (timeLeft <= 5) document.getElementById('timer-text').classList.add('pulse-red');
+            if (timeLeft <= 0) {
+                clearInterval(timer);
+                selectOption(-1); // Auto-fail on timeout
+            }
+        }, 1000);
+    }
+
+    function selectOption(idx) {
+        clearInterval(timer);
+        const q = currentQuestions[currentIdx];
+        const buttons = document.querySelectorAll('.opt-btn');
+        buttons.forEach(b => b.disabled = true);
+
+        if (idx === q.ans) {
+            buttons[idx].classList.add('correct');
+            score++;
+            document.getElementById('score-count').innerText = `Score: ${score.toString().padStart(2, '0')}`;
+            synthesizeSound(880, 'sine', 0.2); // Ting
+            createConfetti();
+        } else {
+            if (idx !== -1) buttons[idx].classList.add('wrong');
+            buttons[q.ans].classList.add('correct');
+            synthesizeSound(120, 'sawtooth', 0.3); // Buzz
+            showSadEmoji();
+        }
+
+        setTimeout(() => {
+            currentIdx++;
+            loadQuestion();
+        }, 1500);
+    }
+
+    function showSadEmoji() {
+        const emoji = document.getElementById('sad-emoji');
+        emoji.style.display = 'block';
+        emoji.classList.add('shake');
+        setTimeout(() => {
+            emoji.style.display = 'none';
+            emoji.classList.remove('shake');
+        }, 800);
+    }
+
+    function createConfetti() {
+        for (let i = 0; i < 30; i++) {
+            const c = document.createElement('div');
+            c.className = 'confetti';
+            c.style.left = Math.random() * 100 + 'vw';
+            c.style.top = '-10px';
+            c.style.backgroundColor = `hsl(${Math.random() * 360}, 70%, 50%)`;
+            c.style.transform = `rotate(${Math.random() * 360}deg)`;
+            document.body.appendChild(c);
+            
+            const ani = c.animate([
+                { transform: `translate(0, 0) rotate(0)` },
+                { transform: `translate(${(Math.random() - 0.5) * 200}px, 100vh) rotate(720deg)` }
+            ], { duration: 2000 + Math.random() * 1000, easing: 'cubic-bezier(0, .9, .57, 1)' });
+            
+            ani.onfinish = () => c.remove();
+        }
+    }
+
+    function finishQuiz() {
+        clearInterval(timer);
+        document.getElementById('quiz-screen').classList.add('hidden');
+        document.getElementById('result-screen').classList.remove('hidden');
+        
+        const total = currentIdx === 0 ? 1 : (currentIdx < currentQuestions.length ? currentIdx : currentQuestions.length);
+        const percent = Math.round((score / total) * 100);
+        document.getElementById('final-score').innerText = percent + "%";
+        
+        let msg = "";
+        if (percent >= 80) msg = "🏆 Outstanding Performance!";
+        else if (percent >= 50) msg = "👏 Well Done! Keep it up.";
+        else msg = "📚 Practice makes perfect! Try again.";
+        
+        document.getElementById('result-msg').innerText = msg;
+    }
+</script>
+</body>
+</html>

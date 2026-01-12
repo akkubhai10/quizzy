@@ -1,0 +1,1031 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gyan Bindu GS - Bilingual Quiz</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;700&family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --text-main: #ffffff;
+            --text-hindi: #e0e0e0;
+            --correct: #00e676;
+            --wrong: #ff1744;
+            --mesh-1: #6a11cb;
+            --mesh-2: #2575fc;
+            --mesh-3: #ff0080;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Poppins', 'Noto Sans Devanagari', sans-serif;
+            background: radial-gradient(circle at top left, var(--mesh-1), transparent 40%),
+                        radial-gradient(circle at bottom right, var(--mesh-2), transparent 40%),
+                        radial-gradient(circle at center, var(--mesh-3), transparent 50%),
+                        #1a1a2e;
+            background-size: cover;
+            background-attachment: fixed;
+            min-height: 100vh;
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow-x: hidden;
+        }
+
+        /* --- Glass Container --- */
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid var(--glass-border);
+            border-radius: 25px;
+            padding: 30px;
+            width: 95%;
+            max-width: 700px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        /* --- Screens --- */
+        .screen {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+        }
+
+        .screen.active {
+            display: flex;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* --- Start Screen --- */
+        h1 {
+            font-size: 2rem;
+            text-align: center;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .subtitle {
+            font-size: 1rem;
+            color: var(--text-hindi);
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .input-group {
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        input[type="number"] {
+            width: 100%;
+            padding: 15px;
+            border-radius: 15px;
+            border: 1px solid var(--glass-border);
+            background: rgba(0, 0, 0, 0.2);
+            color: white;
+            font-size: 1.1rem;
+            outline: none;
+        }
+
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(0,0,0,0.2);
+            padding: 15px;
+            border-radius: 15px;
+            width: 100%;
+            cursor: pointer;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 26px;
+        }
+
+        .switch input { opacity: 0; width: 0; height: 0; }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider { background-color: var(--mesh-3); }
+        input:checked + .slider:before { transform: translateX(24px); }
+
+        .btn-start, .btn-restart, .btn-finish {
+            margin-top: 20px;
+            padding: 15px 40px;
+            border: none;
+            border-radius: 50px;
+            background: linear-gradient(90deg, var(--mesh-3), var(--mesh-2));
+            color: white;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 15px rgba(255, 0, 128, 0.4);
+        }
+
+        .btn-start:hover, .btn-restart:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(255, 0, 128, 0.6);
+        }
+
+        /* --- Quiz Screen --- */
+        .quiz-header {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .progress-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 25px 25px 0 0;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: var(--correct);
+            width: 0%;
+            transition: width 0.3s ease;
+            box-shadow: 0 0 10px var(--correct);
+        }
+
+        .timer {
+            font-size: 1.2rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .timer.pulse-red {
+            color: var(--wrong);
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .question-box {
+            width: 100%;
+            margin-bottom: 25px;
+        }
+
+        .q-text-en {
+            font-size: 1.15rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+            line-height: 1.4;
+        }
+
+        .q-text-hi {
+            font-size: 1rem;
+            color: var(--text-hindi);
+            font-family: 'Noto Sans Devanagari', sans-serif;
+            margin-bottom: 15px;
+            line-height: 1.4;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+            width: 100%;
+        }
+
+        .option-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            padding: 15px;
+            border-radius: 15px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .option-btn:hover:not(.disabled) {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateX(5px);
+        }
+
+        .option-btn.disabled {
+            cursor: default;
+            opacity: 0.7;
+        }
+
+        .opt-en { font-weight: 600; font-size: 1rem; pointer-events: none;}
+        .opt-hi { font-size: 0.9rem; color: var(--text-hindi); margin-top: 2px; font-family: 'Noto Sans Devanagari', sans-serif; pointer-events: none;}
+
+        .option-btn.correct {
+            background: rgba(0, 230, 118, 0.2);
+            border-color: var(--correct);
+            box-shadow: 0 0 15px rgba(0, 230, 118, 0.3);
+        }
+
+        .option-btn.wrong {
+            background: rgba(255, 23, 68, 0.2);
+            border-color: var(--wrong);
+        }
+
+        /* --- Feedback --- */
+        .feedback-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 5rem;
+            pointer-events: none;
+            z-index: 10;
+            display: none;
+        }
+
+        .shake { animation: shake 0.5s; }
+
+        @keyframes shake {
+            0%, 100% { transform: translate(-50%, -50%); }
+            25% { transform: translate(-55%, -50%) rotate(-5deg); }
+            75% { transform: translate(-45%, -50%) rotate(5deg); }
+        }
+
+        /* --- Confetti --- */
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            background-color: #f2d74e;
+            position: absolute;
+            top: -10px;
+            z-index: 9999;
+        }
+
+        /* --- Results --- */
+        .score-circle {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            border: 5px solid var(--mesh-2);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 3rem;
+            font-weight: bold;
+            margin: 20px 0;
+            background: rgba(0,0,0,0.2);
+            box-shadow: 0 0 20px var(--mesh-2);
+        }
+
+        .result-msg {
+            font-size: 1.5rem;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .btn-finish-quiz {
+            margin-top: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid white;
+            font-size: 0.9rem;
+            padding: 10px 20px;
+            border-radius: 20px;
+            color: #ddd;
+            cursor: pointer;
+            width: 100%;
+        }
+        .btn-finish-quiz:hover {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+
+        /* Mobile Optimization */
+        @media (max-width: 600px) {
+            .glass-panel { padding: 20px; width: 100%; height: 100vh; border-radius: 0; border: none;}
+            h1 { font-size: 1.5rem; }
+            .q-text-en { font-size: 1rem; }
+            .q-text-hi { font-size: 0.9rem; }
+            .timer { font-size: 1rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="glass-panel" id="app">
+        <div class="progress-container"><div class="progress-bar" id="progress-bar"></div></div>
+
+        <div class="screen active" id="start-screen">
+            <h1>Skeletal System Quiz</h1>
+            <p class="subtitle">मानव कंकाल तंत्र और वनस्पति विज्ञान</p>
+            
+            <div class="input-group">
+                <label>⏱️ Timer per Question (Seconds)</label>
+                <input type="number" id="time-input" placeholder="e.g., 15 (Leave empty for no timer)" min="5">
+            </div>
+
+            <div class="toggle-container" onclick="document.getElementById('shuffle-toggle').click()">
+                <span>🔀 Randomize Questions / प्रश्नों को मिलाएं</span>
+                <label class="switch">
+                    <input type="checkbox" id="shuffle-toggle">
+                    <span class="slider"></span>
+                </label>
+            </div>
+
+            <button class="btn-start" onclick="initQuiz()">Start Quiz / शुरू करें</button>
+        </div>
+
+        <div class="screen" id="quiz-screen">
+            <div class="quiz-header">
+                <span id="q-counter">Q: 01/50</span>
+                <div class="timer" id="timer-display"></div>
+                <span id="score-display">Score: 0</span>
+            </div>
+
+            <div class="question-box">
+                <div class="q-text-en" id="q-en">Loading...</div>
+                <div class="q-text-hi" id="q-hi">लोड हो रहा है...</div>
+            </div>
+
+            <div class="options-grid" id="options-container">
+                </div>
+
+            <div class="feedback-overlay" id="feedback-emoji">😢</div>
+
+            <button class="btn-finish-quiz" onclick="finishQuiz()">Finish & Show Result / समाप्त करें</button>
+        </div>
+
+        <div class="screen" id="result-screen">
+            <h1>Quiz Completed!</h1>
+            <p class="subtitle">परिणाम</p>
+            
+            <div class="score-circle" id="final-score">0%</div>
+            <p class="result-msg" id="result-msg">Loading...</p>
+            <p style="text-align:center; color:#ddd;" id="detailed-score"></p>
+
+            <button class="btn-restart" onclick="location.reload()">Restart Quiz / फिर से शुरू करें</button>
+        </div>
+    </div>
+
+    <script>
+        /* --- Data: Transcribed from Images --- */
+        const rawQuestions = [
+            // Skeletal System - Image 2
+            {
+                e: "Which statement is true regarding the Human Skeletal System?",
+                h: "मानव कंकाल तंत्र या अस्थि तंत्र के संबंध निम्न में कौन-सा कथन सही है?",
+                optE: ["Participates in movement", "Stores Calcium & Phosphate", "Protects internal organs", "All of the above"],
+                optH: ["यह गति और प्रचलन में भाग लेता है", "यह शरीर में मौजूद कैल्शियम तथा फॉस्फेट को जमा रखता है", "यह शरीर के आंतरिक अंगों को बाहरी आघातों से बचाता है", "उपर्युक्त सभी"],
+                ans: 3
+            },
+            {
+                e: "The human skeletal system is mainly made of which tissue?",
+                h: "मानव कंकाल तंत्र मुख्य रूप से किस उत्तक से निर्मित होते हैं?",
+                optE: ["Epithelial tissue", "Connective tissue", "Muscular tissue", "Nervous tissue"],
+                optH: ["उपकला उत्तक", "संयोजी उत्तक", "पेशी उत्तक", "तंत्रिका उत्तक"],
+                ans: 1
+            },
+            {
+                e: "The Human Skeletal System is made up of:",
+                h: "मानव-कंकाल तंत्र बना होता है-",
+                optE: ["Bone", "Cartilage", "Tendon and Ligament", "All of the above"],
+                optH: ["अस्थि से", "उपास्थि से", "टंडन तथा लिगामेंट से", "उपर्युक्त सभी से"],
+                ans: 3
+            },
+            {
+                e: "How many bones are there in a human adult?",
+                h: "एक मनुष्य में कितनी हड्डियाँ होती है?",
+                optE: ["80", "96", "106", "206"],
+                optH: ["80", "96", "106", "206"],
+                ans: 3
+            },
+            {
+                e: "Consider the following: 1. Infants have ~300 bones. 2. Adults have 206 bones. Which is correct?",
+                h: "1. जन्म के समय शिशुओं में लगभग 300 हड्डियाँ पायी जाती हैं। 2. वयस्क मनुष्य में हड्डियों की संख्या 206 होती है।",
+                optE: ["Only 1", "Only 2", "Both 1 and 2", "Neither 1 nor 2"],
+                optH: ["केवल 1", "केवल 2", "1 तथा 2 दोनों", "न तो 1 न ही 2"],
+                ans: 2
+            },
+            {
+                e: "Which of the following is NOT a forelimb bone?",
+                h: "निम्नलिखित में कौन सी हड्डी अग्रपाद (Fore limbs) की नहीं है?",
+                optE: ["Radius", "Fibula", "Ulna", "Humerus"],
+                optH: ["रेडियस", "फिबुला", "अल्ना", "ह्यूमरस"],
+                ans: 1
+            },
+            {
+                e: "Which statement is NOT true?",
+                h: "निम्नलिखित में कौन सा कथन सत्य नहीं है?",
+                optE: ["Bone and cartilage are connective tissues", "Bone cells are Osteoblasts, Cartilage is Chondroblasts", "Bone is hollow filled with marrow", "Mammalian bones do NOT have Haversian canals"],
+                optH: ["अस्थि तथा उपास्थि संयोजी उत्तक है", "अस्थि ऑस्टियोब्लास्ट तथा उपास्थि कॉन्ड्रियोब्लास्ट कोशिका से निर्मित होते है", "अस्थि के मध्य में एक गुहा होती है, जो अस्थि मज्जा से भरी होती है", "मैमेलियन अस्थि तथा उपास्थि में अनेक नलिकाएँ समान संरचना पायी जाती है जिन्हे हैव्रीसियन नलिकाएँ कहते हैं"],
+                ans: 3 
+            },
+            {
+                e: "How many pairs of ribs are there in the chest?",
+                h: "छाती में पसलियों के कितने जोड़े होते है?",
+                optE: ["10", "12", "16", "14"],
+                optH: ["दस", "बारह", "सोलह", "चौदह"],
+                ans: 1
+            },
+            {
+                e: "Which are called 'True Ribs'?",
+                h: "सत्य पसलियाँ (True ribs) किसे कहते है?",
+                optE: ["First 7 pairs", "8th & 9th pair", "11th & 12th pair", "All of them"],
+                optH: ["प्रथम सात जोड़ी पसलियो को", "8 वाँ तथा 9 वाँ जोड़ा पसलियो को", "11 वाँ तथा 12 वाँ जोड़ा पसलियो को", "इनमें से सभी"],
+                ans: 0
+            },
+            {
+                e: "Which are called 'False Ribs'?",
+                h: "फॉल्स पसलियाँ (False ribs) किसे कहते है?",
+                optE: ["8th pair", "9th pair", "10th pair", "All of the above"],
+                optH: ["8 वाँ जोड़ा को", "9 वाँ जोड़ा को", "10 वाँ जोड़ा का", "इनमें से सभी को"],
+                ans: 3
+            },
+            {
+                e: "Which structure forms the Rib-cage?",
+                h: "निम्नलिखित में कौन-सी संरचना पसलियाँ-खाँचा (Rib-cage) बनाती है?",
+                optE: ["Thoracic Vertebra", "Ribs", "Sternum", "All of the above"],
+                optH: ["वक्षीय कशेरूक (Thoracic Vertebra)", "पसलियाँ", "स्टर्नम", "इनमें से सभी"],
+                ans: 3
+            },
+            {
+                e: "How many bones are in the Cranium region of the skull?",
+                h: "मानव खोपड़ी के कंकाल क्षेत्र (cranium region) में कुल कितने हड्डी होते है?",
+                optE: ["22", "8", "14", "1"],
+                optH: ["22", "8", "14", "1"],
+                ans: 1
+            },
+            // Image 4 - Skull & Vertebrae
+            {
+                e: "How many bones are present in the Facial region?",
+                h: "मानव खोपड़ी के आनन क्षेत्र (Facial region) में कितने हड्डी उपस्थित रहते है?",
+                optE: ["22", "8", "14", "1"],
+                optH: ["22", "8", "14", "1"],
+                ans: 2
+            },
+            {
+                e: "Malleus, Incus and Stapes bones are present in:",
+                h: "मै लियस इन्कल तथा स्टेपिस हड्डियाँ मौजूद हैं-",
+                optE: ["External Ear", "Middle Ear", "Internal Ear", "All of these"],
+                optH: ["वाह्य कर्ण में", "मध्य कर्ण में", "आंतरिक कर्ण में", "इनमें से सभी"],
+                ans: 1
+            },
+            {
+                e: "Where is the U-shaped Hyoid Bone found?",
+                h: "अंग्रेजी वर्णमाला के U अक्षर के समान (Hyoid Bone) कहाँ पायी जाती है?",
+                optE: ["Thigh", "Hand", "Buccal Cavity (Throat)", "Ear"],
+                optH: ["जाँघ", "हाथ", "मुखगुहा", "कर्ण (कान)"],
+                ans: 2
+            },
+            {
+                e: "Total number of bones in Human Skull?",
+                h: "मनुष्य के सिर (Skull) में कुल हड्डियों की संख्या कितनी होती है?",
+                optE: ["14", "6", "30", "29"],
+                optH: ["14", "6", "30", "29"],
+                ans: 3
+            },
+            {
+                e: "How many bones are found in the human Vertebral Column (adult)?",
+                h: "मनुष्य के मेरूदंड में कितनी अस्थि पायी जाती हैं?",
+                optE: ["30", "33", "28", "26"],
+                optH: ["30", "33", "28", "26"],
+                ans: 3
+            },
+            {
+                e: "Bones found in the vertebral column are called?",
+                h: "मेरूदंड में पायी जाने वाले अस्थि को कहते हैं-",
+                optE: ["Vertebra", "Clavicle", "Sternum", "Pectoral girdle"],
+                optH: ["कशेरूक (Vertebra)", "क्लेविकल", "स्टर्नम", "अंसमेखला (Pectoral girdle)"],
+                ans: 0
+            },
+            {
+                e: "Which pair is incorrectly matched regarding vertebrae?",
+                h: "निम्नलिखित में कौन-सा युग्म सुमेलित नहीं है?",
+                optE: ["Cervical - 7", "Thoracic - 12", "Lumbar - 5", "Sacrum - 3"],
+                optH: ["Cervical Vertebra - 7", "Thoracic Vertebra - 12", "Lumber Vertebra - 5", "Sacrum Vertebra - 3"],
+                ans: 3
+            },
+            {
+                e: "The first vertebra connected to the Occipital Condyle is called:",
+                h: "मेरूदंड के प्रथम कशेरूक (First Vertebra) को क्या कहते हैं जो खोपड़ी के अनुकपाल-मुण्डिका से जुड़ा रहता है?",
+                optE: ["Sacrum", "Coccygeal", "Atlas", "Femur"],
+                optH: ["सैक्रम", "कॉक्सीजियल", "एटलस", "फीमर"],
+                ans: 2
+            },
+            {
+                e: "1. Largest bone is Femur (Thigh). 2. Smallest bone is Stapes (Ear). Which is correct?",
+                h: "1. मानव की सबसे बड़ी हड्डी फीमर है, जो जाँघ में पायी जाती है 2. मानव की सबसे छोटी हड्डी स्टेपिस है, जो कान में पायी जाती है",
+                optE: ["Only 1", "Only 2", "Both 1 and 2", "Neither 1 nor 2"],
+                optH: ["केवल 1", "केवल 2", "1 तथा 2 दोनों", "न तो 1 न ही 2"],
+                ans: 2
+            },
+            {
+                e: "Where are Clavicle and Scapula bones found?",
+                h: "क्लैविकल तथा स्कैपुला नामक अस्थि कहाँ पायी जाती है?",
+                optE: ["Knee", "Pectoral Girdle", "Pelvic Girdle", "Both A and B"],
+                optH: ["घुटना में", "अंसमेखला में", "श्रोणि मेखला में", "A तथा B दोनों में"],
+                ans: 1
+            },
+            {
+                e: "What is the length of the longest bone (Femur)?",
+                h: "एक सामान्य मनुष्य के सबसे बड़ी हड्डी फीमर की लंबाई कितनी होती है?",
+                optE: ["32 cm", "48 cm", "52 cm", "120 cm"],
+                optH: ["32 cm", "48 cm", "52 cm", "120 cm"],
+                ans: 1
+            },
+            {
+                e: "Where are Tibia and Fibula bones found?",
+                h: "टिबिआ तथा फिबुला अस्थि कहाँ पायी जाती है?",
+                optE: ["Head", "Forelimb (Hand)", "Hindlimb (Leg)", "Ear"],
+                optH: ["सिर में", "हाथ में (अग्रपाद)", "पैर (पश्च पाद) में", "कान में"],
+                ans: 2
+            },
+            {
+                e: "Which part's bones are fully developed at birth?",
+                h: "जन्म के समय मानव के किस भाग की हड्डिया पूर्ण विकसित होती है?",
+                optE: ["Ear", "Throat", "Brain", "Legs"],
+                optH: ["कान के", "गल्ला के", "मस्तिष्क के", "पैर के"],
+                ans: 0
+            },
+            {
+                e: "Which is a part of the Exoskeleton?",
+                h: "निम्नलिखित में कौन बाह्यय कंकाल का हिस्सा है?",
+                optE: ["Human hair/nails", "Bird feathers", "Fish scales", "All of these"],
+                optH: ["मानव का बाल तथा नाखून", "पक्षियों के पर एवं पंख", "मत्स्य तथा सरीसृप का शल्क", "इनमें से सभी"],
+                ans: 3
+            },
+            {
+                e: "Phalanges bones are found in?",
+                h: "फैलेन्जेज (Phalanges) अस्थियाँ पाई जाती है?",
+                optE: ["Toes", "Fingers", "Both Fingers & Toes", "None"],
+                optH: ["पैर की अंगुली में", "हाथ की अंगुली में", "हाथ तथा पैर दोनों की अंगुली में", "इनमें से कोई नहीं"],
+                ans: 2
+            },
+            {
+                e: "The cap-like bone covering the knee ventrally is:",
+                h: "कैप (Cap) के समान हड्डी जो घुटने के औदरिक भाग को ढँके रहता है, वह है-",
+                optE: ["Clavicle", "Scapula", "Sternum", "Patella"],
+                optH: ["क्लैविकल", "स्कैपुला", "स्टर्नम", "पटेला"],
+                ans: 3
+            },
+            {
+                e: "Humerus bone is found in?",
+                h: "ह्यूमरस अस्थि कहाँ पायी जाती है?",
+                optE: ["Wrist", "Upper Arm", "Fingers", "Palm"],
+                optH: ["कलाई में", "ऊपरी बाह्य में", "अंगुली में", "हथेली में"],
+                ans: 1
+            },
+            {
+                e: "Which salt is found in maximum quantity in bone?",
+                h: "अस्थि में कौन-सा लवण सर्वाधिक मात्रा में रहता है?",
+                optE: ["Sodium Chloride", "Calcium Phosphate", "Ferric Nitrate", "Magnesium Carbonate"],
+                optH: ["सोडियम क्लोराइड", "कैल्शियम फॉस्फेट", "फेरिक नाइट्रेट", "मैग्नीशियम कार्बोनेट"],
+                ans: 1
+            },
+            {
+                e: "Total number of bones in Axial Skeleton?",
+                h: "अक्षीय कंकाल (Axial Skeletal) में कुल अस्थियों की संख्या कितनी है?",
+                optE: ["120", "80", "40", "56"],
+                optH: ["120", "80", "40", "56"],
+                ans: 1
+            },
+            {
+                e: "Main cause of weak bones in old age?",
+                h: "वृद्धावस्था में हड्डियाँ कमजोर होने का मुख्य कारण क्या है?",
+                optE: ["Iron deficiency", "Cobalt deficiency", "Calcium deficiency", "Iodine deficiency"],
+                optH: ["लोहे की कमी", "कोबाल्ट की कमी", "कैल्शियम की कमी", "आयोडीन की कमी"],
+                ans: 2
+            },
+            // Image 3 - Joints & Limbs
+            {
+                e: "Total bones in Fore and Hind limbs combined?",
+                h: "मानव के अग्र (Fore) तथा पश्च (Hind) पाद (Limb) में कुल अस्थियो की संख्या कितनी होती है?",
+                optE: ["90", "120", "118", "204"],
+                optH: ["90", "120", "118", "204"],
+                ans: 1
+            },
+            {
+                e: "Human leg bones are:",
+                h: "मनुष्य के पैर की हड्डियाँ-",
+                optE: ["Hollow", "Porous", "Solid", "Keeled"],
+                optH: ["खोखली होती है", "संरंध्री होती है", "ठोस होती है", "कीलक होती है"],
+                ans: 0
+            },
+            {
+                e: "Total bones in Appendicular Skeleton?",
+                h: "मानव के उपांगीय कंकाल (Appendicular Skeleton) में कुल अस्थियो की संख्या कितनी होती है?",
+                optE: ["80", "120", "126", "206"],
+                optH: ["80", "120", "126", "206"],
+                ans: 2
+            },
+            {
+                e: "Which Vitamin is needed for bone development?",
+                h: "अस्थियो के सामान्य विकास के लिये किस विटामिन की आवश्यकता होती है?",
+                optE: ["Vit A", "Vit B", "Vit C", "Vit D"],
+                optH: ["विटामिन A", "विटामिन B", "विटामिन C", "विटामिन D"],
+                ans: 3
+            },
+            {
+                e: "Disease caused by accumulation of Uric Acid in blood?",
+                h: "रक्त में यूरिक अम्ल की अधिकता से होने वाला रोग है-",
+                optE: ["Rickets", "Osteomalacia", "Gout", "Osteomyelitis"],
+                optH: ["रिकेट्स", "ऑस्टियोमलेसिया", "गठिया", "ऑस्टियोमाइलाइटिस"],
+                ans: 2
+            },
+            {
+                e: "Bone disease caused by bacterial infection?",
+                h: "अस्थियों से संबंधित निम्न में कौन सा रोग जीवाणु संक्रमण के कारण होती है?",
+                optE: ["Osteomalacia", "Osteomyelitis", "Arthritis", "Osteoporosis"],
+                optH: ["ऑस्टियोमलेसिया", "ऑस्टियोमाइलाइटिस", "आर्थराइटिस", "ऑस्टियोपोरोसिस"],
+                ans: 1
+            },
+            {
+                e: "How many bones in human neck (Cervical)?",
+                h: "मनुष्य गर्दन में कुल कितने अस्थि पाये जाते हैं?",
+                optE: ["1", "2", "3", "7"],
+                optH: ["1", "2", "3", "7"],
+                ans: 3
+            },
+            {
+                e: "What type of joint is between Vertebrae?",
+                h: "कशेरूक (Vertebra) की संधि किस प्रकार की होती है?",
+                optE: ["Immovable", "Cartilaginous/Slightly Movable", "Movable", "Pelvic"],
+                optH: ["अचल संधि", "अर्धचल संधि", "चल संधि", "श्रोणि संधि"],
+                ans: 1
+            },
+            {
+                e: "Elbow Joint and Knee Joint are types of:",
+                h: "केहुनी का जोड़ (Elbow Joint) तथा घुटने का जोड़ (Knee Joint) किस प्रकार के संधि है?",
+                optE: ["Ball and Socket", "Gliding", "Hinge", "Pivot"],
+                optH: ["Ball and Socket Joint", "Gliding Joints", "Hinge Joints", "Pivot Joints"],
+                ans: 2
+            },
+            {
+                e: "Which bone is NOT in the forelimb?",
+                h: "निम्नलिखित में कौन सा हड्डी अग्रपाद (Forelimbs) की नहीं है?",
+                optE: ["Humerus", "Radius", "Ulna", "Fibula"],
+                optH: ["ह्यूमरस", "रेडियस", "अल्ना", "फीबुला"],
+                ans: 3
+            },
+            {
+                e: "The cavity in Pelvic Girdle where Femur attaches is called:",
+                h: "श्रोणि मेखला में इलियम, इस्चियम तथा प्यूबिस अस्थि मिलकर एक गुहा बनाती है, जिसमें फीमर अस्थि जुड़ा रहता है, इस गुहा को क्या कहते है?",
+                optE: ["Acetabulum", "Atlas", "Glenoid", "Collar"],
+                optH: ["एसेटाबुलुम", "एटलस", "ग्लेनॉइड", "कॉलर"],
+                ans: 0
+            },
+            {
+                e: "What type of joint is in Wrist and Ankle?",
+                h: "कलाई (Carpus) तथा टखने (ankle) की हड्डी में किस प्रकार की संधि पायी जाती है?",
+                optE: ["Ball and Socket", "Gliding", "Hinge", "Pivot"],
+                optH: ["Ball and Socket Joint", "Gliding Joints", "Hinge Joints", "Pivot Joints"],
+                ans: 1
+            },
+            {
+                e: "Locomotion is done by:",
+                h: "प्रचलन की क्रिया सम्पन्न होती है-",
+                optE: ["Skeletal system", "Muscles", "Nervous system", "All of these"],
+                optH: ["कंकाल तंत्र द्वारा", "पेशियों के द्वारा", "तंत्रिका तंत्र द्वारा", "इनमें से सभी"],
+                ans: 3
+            },
+            {
+                e: "Chest ribs are connected to:",
+                h: "छाती के पसलियाँ (Ribs) जुड़ा होता है?",
+                optE: ["Sternum", "Vertebrae", "Both Sternum & Vertebrae", "Neither"],
+                optH: ["स्टर्नम से", "कशेरूक से", "स्टर्नम तथा कशेरूक से", "न ही स्टर्नम से तथा न ही कशेरूक से"],
+                ans: 2
+            },
+            {
+                e: "Total bones in Forelimbs?",
+                h: "अग्र (Forelimbs) में कुल अस्थियों की संख्या कितनी होती है?",
+                optE: ["30", "60", "120", "130"],
+                optH: ["30", "60", "120", "130"],
+                ans: 1
+            },
+            {
+                e: "Which statement is true? 1. Pectoral girdle connects to Femur. 2. Pelvic girdle connects to Humerus.",
+                h: "1. अंश मेखला पश्च पाद की हड्डी फीमर से जुड़ा रहता है। 2. श्रेणी मेखला अग्र पाद की हड्डी ह्यूमरस से जुड़ा रहता है।",
+                optE: ["Only 1", "Only 2", "Both", "Neither"],
+                optH: ["केवल 1", "केवल 2", "1 तथा 2 दोनों", "न तो 1 न ही 2"],
+                ans: 3
+            },
+            {
+                e: "Which pairs of ribs are called Floating Ribs?",
+                h: "किस जोड़े के पसलियाँ को फ्लोटिंग पसलियाँ कहते है?",
+                optE: ["8th & 9th", "7th & 8th", "First 7", "11th & 12th"],
+                optH: ["8 वाँ तथा 9 वाँ जोड़ा", "7 वाँ तथा 8 वाँ जोड़ा", "प्रथम 7 जोड़ा", "11 वाँ तथा 12 वाँ जोड़ा"],
+                ans: 3
+            },
+            {
+                e: "Study of external structure of plants is called?",
+                h: "पेड़-पौधे के बाहरी आकार या रूप का अध्ययन क्या कहलाता है?",
+                optE: ["Morphology", "Anatomy", "Histology", "Floriculture"],
+                optH: ["Morphology", "Anatomy", "Histology", "Floriculture"],
+                ans: 0
+            },
+            // Botany - Image 5 (Roots)
+            {
+                e: "Part of plant that remains underground is Root System. Part above ground is Shoot System. Which is true?",
+                h: "1. पौधे का वह भाग जो जमीन के अंदर रहता है, उसे जड़ तंत्र कहते हैं। 2. पौधे का वह भाग जो जमीन के ऊपर रहता है उसे प्ररोह तंत्र कहते है।",
+                optE: ["Only 1", "Only 2", "Both 1 & 2", "Neither"],
+                optH: ["केवल 1", "केवल 2", "1 तथा 2 दोनों", "न तो 1 न ही 2"],
+                ans: 2
+            },
+            {
+                e: "Root develops from:",
+                h: "जड़ या मूल (Root) विकास होता है-",
+                optE: ["Radicle", "Plumule", "Both", "Stem"],
+                optH: ["मूलांकुर से", "प्रांकुर से", "मूलांकुर अथवा प्रांकुर से", "तना से"],
+                ans: 0
+            }
+        ];
+
+        /* --- Application Logic --- */
+        let questions = [];
+        let currentIndex = 0;
+        let score = 0;
+        let timer = null;
+        let timeLeft = 0;
+        let audioCtx = null;
+        let userAnswers = [];
+
+        // --- Audio Synthesizer ---
+        function initAudio() {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+
+        function playSound(type) {
+            if (!audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            osc.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+
+            const now = audioCtx.currentTime;
+
+            if (type === 'success') {
+                // High pitched "Ting"
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(600, now);
+                osc.frequency.exponentialRampToValueAtTime(800, now + 0.1);
+                gainNode.gain.setValueAtTime(0.3, now);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+                osc.start(now);
+                osc.stop(now + 0.5);
+            } else if (type === 'fail') {
+                // Low pitched "Buzz"
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(150, now);
+                osc.frequency.linearRampToValueAtTime(100, now + 0.3);
+                gainNode.gain.setValueAtTime(0.3, now);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+                osc.start(now);
+                osc.stop(now + 0.4);
+            }
+        }
+
+        // --- Confetti Effect ---
+        function createConfetti() {
+            const colors = ['#ff0080', '#00e676', '#2575fc', '#f2d74e'];
+            for(let i=0; i<50; i++) {
+                const conf = document.createElement('div');
+                conf.classList.add('confetti');
+                conf.style.left = Math.random() * 100 + 'vw';
+                conf.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                conf.style.animation = `drop ${1 + Math.random()}s linear forwards`;
+                document.body.appendChild(conf);
+
+                // Add keyframe dynamically for drop if not exists (simplified here to inline style won't work for keyframes easily without style tag)
+                // Actually, let's just animate via JS for simplicity or assume a generic drop CSS. 
+                // Let's use JS animation for the fall.
+                let top = -10;
+                let speed = 2 + Math.random() * 5;
+                let angle = Math.random() * 360;
+                
+                const fall = setInterval(() => {
+                    top += speed;
+                    conf.style.top = top + 'px';
+                    conf.style.transform = `rotate(${angle}deg)`;
+                    angle += 10;
+                    if(top > window.innerHeight) {
+                        clearInterval(fall);
+                        conf.remove();
+                    }
+                }, 20);
+            }
+        }
+
+        // --- Quiz Flow ---
+        function initQuiz() {
+            initAudio();
+            
+            // Settings
+            const timeVal = document.getElementById('time-input').value;
+            const shuffleVal = document.getElementById('shuffle-toggle').checked;
+            
+            // Prepare Data
+            questions = [...rawQuestions];
+            if (shuffleVal) {
+                questions.sort(() => Math.random() - 0.5);
+            }
+            questions = questions.slice(0, 50); // Ensure max 50
+
+            // Reset State
+            currentIndex = 0;
+            score = 0;
+            userAnswers = [];
+            timeLeft = timeVal ? parseInt(timeVal) : 0;
+            
+            // Switch Screens
+            document.getElementById('start-screen').classList.remove('active');
+            document.getElementById('quiz-screen').classList.add('active');
+            
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            clearInterval(timer);
+            const q = questions[currentIndex];
+            const timeVal = document.getElementById('time-input').value;
+            
+            // UI Update
+            document.getElementById('q-counter').innerText = `Q: ${currentIndex + 1}/${questions.length}`;
+            document.getElementById('score-display').innerText = `Score: ${score}`;
+            document.getElementById('q-en').innerText = q.e;
+            document.getElementById('q-hi').innerText = q.h;
+            
+            // Options
+            const optContainer = document.getElementById('options-container');
+            optContainer.innerHTML = '';
+            
+            q.optE.forEach((opt, idx) => {
+                const btn = document.createElement('div');
+                btn.className = 'option-btn';
+                btn.innerHTML = `<span class="opt-en">${opt}</span><span class="opt-hi">${q.optH[idx]}</span>`;
+                btn.onclick = () => checkAnswer(idx, btn);
+                optContainer.appendChild(btn);
+            });
+
+            // Timer
+            const timerDisplay = document.getElementById('timer-display');
+            timerDisplay.classList.remove('pulse-red');
+            timerDisplay.innerHTML = ''; // Clear icon/text
+            
+            if (timeVal && parseInt(timeVal) > 0) {
+                timeLeft = parseInt(timeVal);
+                timerDisplay.innerText = `⏳ ${timeLeft}s`;
+                
+                timer = setInterval(() => {
+                    timeLeft--;
+                    timerDisplay.innerText = `⏳ ${timeLeft}s`;
+                    
+                    if (timeLeft < 5) timerDisplay.classList.add('pulse-red');
+                    
+                    if (timeLeft <= 0) {
+                        clearInterval(timer);
+                        playSound('fail');
+                        handleTimeout();
+                    }
+                }, 1000);
+            }
+        }
+
+        function checkAnswer(selectedIndex, btnElement) {
+            clearInterval(timer);
+            const q = questions[currentIndex];
+            const buttons = document.querySelectorAll('.option-btn');
+            
+            // Disable all
+            buttons.forEach(b => b.classList.add('disabled'));
+            
+            // Logic
+            if (selectedIndex === q.ans) {
+                // Correct
+                btnElement.classList.add('correct');
+                score++;
+                playSound('success');
+                createConfetti();
+            } else {
+                // Wrong
+                btnElement.classList.add('wrong');
+                // Highlight correct
+                buttons[q.ans].classList.add('correct');
+                playSound('fail');
+                
+                // Emoji Shake
+                const emoji = document.getElementById('feedback-emoji');
+                emoji.style.display = 'block';
+                emoji.classList.add('shake');
+                setTimeout(() => {
+                    emoji.style.display = 'none';
+                    emoji.classList.remove('shake');
+                }, 1000);
+            }
+
+            // Save result for report? (Optional, simplified for now)
+            
+            // Next Question
+            setTimeout(() => {
+                nextQuestion();
+            }, 1500);
+        }
+
+        function handleTimeout() {
+            const q = questions[currentIndex];
+            const buttons = document.querySelectorAll('.option-btn');
+            buttons.forEach(b => b.classList.add('disabled'));
+            // Show correct answer
+            buttons[q.ans].classList.add('correct');
+            
+            setTimeout(() => {
+                nextQuestion();
+            }, 1500);
+        }
+
+        function nextQuestion() {
+            currentIndex++;
+            if (currentIndex < questions.length) {
+                loadQuestion();
+            } else {
+                finishQuiz();
+            }
+        }
+
+        function finishQuiz() {
+            clearInterval(timer);
+            document.getElementById('quiz-screen').classList.remove('active');
+            document.getElementById('result-screen').classList.add('active');
+            
+            const percentage = Math.round((score / questions.length) * 100);
+            const scoreCircle = document.getElementById('final-score');
+            scoreCircle.innerText = percentage + '%';
+            scoreCircle.style.borderColor = percentage >= 50 ? '#00e676' : '#ff1744';
+
+            let msg = '';
+            if (percentage >= 80) msg = "🏆 Outstanding Performance!";
+            else if (percentage >= 50) msg = "👏 Well Done! Keep it up.";
+            else msg = "📚 Practice makes perfect! Try again.";
+            
+            document.getElementById('result-msg').innerText = msg;
+            document.getElementById('detailed-score').innerText = `You answered ${score} out of ${currentIndex} attempted questions correctly.`;
+        }
+    </script>
+</body>
+</html>

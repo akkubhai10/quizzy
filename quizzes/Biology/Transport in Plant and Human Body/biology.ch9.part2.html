@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bilingual Transport Quiz - Science</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-gradient: linear-gradient(45deg, #6a11cb 0%, #2575fc 50%, #ff00cc 100%);
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --correct-green: #00e676;
+            --wrong-red: #ff1744;
+            --text-main: #ffffff;
+            --text-sub: #dddddd;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; }
+
+        body {
+            min-height: 100vh;
+            background: var(--bg-gradient);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow-x: hidden;
+            padding: 20px;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .container {
+            width: 100%;
+            max-width: 700px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 25px;
+            padding: 40px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            color: var(--text-main);
+            position: relative;
+            z-index: 10;
+        }
+
+        /* Progress Bar */
+        .progress-container {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 6px;
+            background: rgba(255,255,255,0.1);
+            border-top-left-radius: 25px; border-top-right-radius: 25px;
+            overflow: hidden;
+        }
+        .progress-bar {
+            height: 100%; width: 0%;
+            background: var(--correct-green);
+            box-shadow: 0 0 10px var(--correct-green);
+            transition: width 0.4s ease;
+        }
+
+        /* UI Elements */
+        .stats-header { display: flex; justify-content: space-between; margin-bottom: 20px; font-weight: 600; }
+        .timer { font-size: 1.2rem; }
+        .timer.pulse-red { color: var(--wrong-red); animation: pulse 1s infinite; }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .question-text { font-size: 1.2rem; font-weight: 700; margin-bottom: 5px; }
+        .hindi-text { font-size: 0.95rem; color: var(--text-sub); margin-bottom: 25px; font-weight: 400; }
+
+        .options-grid { display: grid; gap: 15px; margin-bottom: 30px; }
+        .option-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            border-radius: 15px;
+            padding: 15px 20px;
+            text-align: left;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .option-btn:hover { background: rgba(255, 255, 255, 0.15); transform: translateY(-2px); }
+        .option-btn.correct { background: var(--correct-green) !important; color: #000; font-weight: bold; }
+        .option-btn.wrong { background: var(--wrong-red) !important; animation: shake 0.5s; }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .btn-main {
+            width: 100%; padding: 15px; border-radius: 50px; border: none;
+            background: white; color: #333; font-weight: 700; cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .btn-main:hover { transform: scale(1.02); }
+
+        #start-screen, #result-screen { text-align: center; }
+        #quiz-area { display: none; }
+
+        input[type="number"] {
+            background: rgba(255,255,255,0.1); border: 1px solid white;
+            color: white; padding: 10px; border-radius: 10px; margin: 10px 0; width: 100px;
+        }
+
+        .emoji-overlay {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 10rem; display: none; z-index: 1000;
+        }
+
+        canvas#confetti {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 9999;
+        }
+
+        @media (max-width: 600px) {
+            .container { padding: 20px; }
+            .question-text { font-size: 1rem; }
+        }
+    </style>
+</head>
+<body>
+
+<canvas id="confetti"></canvas>
+<div class="emoji-overlay" id="sad-emoji">😢</div>
+
+<div class="container">
+    <div class="progress-container"><div class="progress-bar" id="progress"></div></div>
+
+    <div id="start-screen">
+        <h1 style="margin-bottom: 10px;">Transport Systems Quiz</h1>
+        <p style="margin-bottom: 30px;">Plant & Human Body (Q 51-112)</p>
+        
+        <div style="margin-bottom: 20px;">
+            <label>Timer (Seconds per question, 0 for off):</label><br>
+            <input type="number" id="timer-setting" value="15" min="0">
+        </div>
+        
+        <div style="margin-bottom: 30px;">
+            <input type="checkbox" id="shuffle-setting"> <label for="shuffle-setting">Shuffle Questions</label>
+        </div>
+
+        <button class="btn-main" onclick="startQuiz()">START QUIZ</button>
+    </div>
+
+    <div id="quiz-area">
+        <div class="stats-header">
+            <div id="q-counter">Question: 0/0</div>
+            <div class="timer" id="timer-display">⏱ --</div>
+            <div id="score-display">Score: 0</div>
+        </div>
+
+        <div id="question-box">
+            <p class="question-text" id="eng-q"></p>
+            <p class="hindi-text" id="hin-q"></p>
+            
+            <div class="options-grid" id="options-box"></div>
+        </div>
+
+        <button class="btn-main" style="background: rgba(255,255,255,0.2); color: white;" onclick="endQuiz()">Finish & Show Results</button>
+    </div>
+
+    <div id="result-screen" style="display: none;">
+        <h2 id="result-title"></h2>
+        <h1 style="font-size: 4rem; margin: 20px 0;" id="final-score">0/0</h1>
+        <p id="result-msg" style="margin-bottom: 30px;"></p>
+        <button class="btn-main" onclick="location.reload()">RESTART QUIZ</button>
+    </div>
+</div>
+
+<script>
+    // --- QUESTION DATA (Extracted from Images) ---
+    const quizData = [
+        { q: "Which element is used during ATP synthesis in cells?", h: "कोशिका में ATP संश्लेषण के समय किस तत्व की उपयोगिता होती है?", a: ["Boron", "Zinc", "Iron", "Phosphorus"], c: 3 },
+        { q: "Transpiration measuring instrument is?", h: "वाष्पोत्सर्जन मापी यंत्र है-", a: ["Hygrometer", "Potometer", "Climometer", "Crescograph"], c: 1 },
+        { q: "The process of transpiration occurs in which part of the plant?", h: "पौधों में वाष्पोत्सर्जन की क्रिया किसमें होती है?", a: ["Root", "Stem", "Leaf", "All of these"], c: 3 },
+        { q: "In which condition does the rate of transpiration increase?", h: "यह परिस्थिति जिसमें वाष्पोत्सर्जन की दर बढ़ जाती है?", a: ["Low wind speed", "Excess water in soil", "Low humidity and high temp", "High humidity"], c: 2 },
+        { q: "What are the two main functions of leaves?", h: "पत्तियों के दो मुख्य कार्य कौन से है-", a: ["Transpiration and Respiration", "Respiration and Digestion", "Photosynthesis and Respiration", "Photosynthesis and Transpiration"], c: 3 },
+        { q: "The instrument used to measure respiration is called?", h: "श्वसन मापक यंत्र कहलाता है-", a: ["Potometer", "Auxanometer", "Photometer", "Respirometer"], c: 3 },
+        { q: "Which element is essential during the splitting of water in photosynthesis?", h: "प्रकाश संश्लेषण में जल के विखंडन के समय इनमें कौन-सा तत्व जरूरी है?", a: ["Boron", "Magnesium", "Zinc", "Manganese"], c: 3 },
+        { q: "In which direction does the transport of food materials in plants happen?", h: "पौधों में खाद्य पदार्थों का स्थानांतरण किधर-से-किधर होता है?", a: ["Root to stem", "Stem to leaf", "Leaf to root", "High conc. to low conc."], c: 2 },
+        { q: "Which of the following is an example of Imbibition?", h: "निम्नलिखित में कौन एक अंत: शोषण (Imbibition) का उदाहरण है-", a: ["Swelling of dry seeds in water", "Swelling of wooden doors in rain", "Absorption of water by gum/starch", "All of these"], c: 3 },
+        { q: "Each stoma in leaves is surrounded by how many guard cells?", h: "पत्तियों में स्थित प्रत्येक रंध्र कितने द्वार कोशिका से घिरा रहता है?", a: ["Two", "Three", "Four", "Not fixed"], c: 0 },
+        { q: "Water droplets seen on leaf tips of grass in the morning are from?", h: "घासों की पत्तियों के सिरों पर सुबह के समय पानी की बूँदें दिखती हैं। यह जल संचयन किससे प्राप्त होता है?", a: ["Atmosphere", "Stomata", "Vascular bundle", "Hydathode (Jalrandhra)"], c: 3 },
+        { q: "Assertion: 1. Xylem always transports water upwards. 2. Phloem can transport food both upwards and downwards.", h: "1. जाइलम में जल का संचालन हमेशा ऊपर की ओर होता है। 2. फ्लोएम में भोजन का संचालन ऊपर की ओर अथवा नीचे की ओर हो सकता है।", a: ["Only 1", "Only 2", "Both 1 and 2", "Neither"], c: 2 },
+        { q: "Who discovered the Blood Circulatory System?", h: "रक्त परिसंचरण तंत्र की खोज किसने किया?", a: ["William Harvey", "Karl Landsteiner", "De Castello", "Linnaeus"], c: 0 },
+        { q: "Which is NOT true regarding the human heart?", h: "मानव हृदय के संबंध में कौन-सा एक सही नहीं है?", a: ["It has 4 chambers", "It is the busiest organ", "Weight is 1.5 to 2 kg", "It is the pumping organ"], c: 2 },
+        { q: "What is the average weight of a human heart?", h: "मानव हृदय का औसत भार लगभग कितना होता है?", a: ["200 g", "300 g", "400 g", "500 g"], c: 1 },
+        { q: "The protective membrane on the outer layer of the heart is?", h: "हृदय के बाह्य परत पर बनी सुरक्षात्मक झिल्ली को क्या कहते हैं?", a: ["Pleura", "Keratin", "Pericardium", "Hepatic"], c: 2 },
+        { q: "The upper broad parts of the heart are called Atria, divided into left and right.", h: "हृदय के ऊपर के चौड़ा भाग आलिंद कहलाता है जो बाएँ तथा दाएँ हिस्सों में बँटा रहता है।", a: ["True", "False"], c: 0 },
+        { q: "The structure separating left and right atria/ventricles is?", h: "हृदय का दायाँ-बायाँ आलिंद तथा दायाँ-बायाँ निलय जिस संरचना द्वारा अलग रहता है, उसे क्या कहते हैं?", a: ["Septum", "Valve", "Node", "Lymph"], c: 0 },
+        { q: "Tricuspid Valve is found between?", h: "त्रिदली कपाट (Tricuspid Valve) पाये जाते है-", a: ["Right atrium and ventricle", "Left atrium and ventricle", "Between both atria", "Between both ventricles"], c: 0 },
+        { q: "Valves in the heart allow blood to flow?", h: "हृदय में पाये जाने वाले कपाट (Valve) रक्त को-", a: ["Atrium to Ventricle only", "Ventricle to Atrium only", "Out of heart only", "All of these"], c: 0 },
+        { q: "Assertion: 1. Right side of heart has oxygenated blood. 2. Left side has deoxygenated blood.", h: "1. हृदय के दाँये भाग में शुद्ध रक्त पाया जाता है। 2. हृदय के बाँये भाग में अशुद्ध रक्त पाया जाता है।", a: ["Both Correct", "Both Wrong", "1 correct", "2 correct"], c: 1 },
+        { q: "One heart beat consists of?", h: "हृदय के कक्षों में होने वाले शिथिलन को डायस्टोल तथा संकुचन को सिस्टोल कहते हैं। सिस्टोल तथा डायस्टोल मिलकर-", a: ["1 beat", "2 beats", "Circulation", "Pulse"], c: 0 },
+        { q: "How many times does a heart beat in a minute?", h: "मनुष्य में एक मिनट में कितनी हृदय धड़कने होती है?", a: ["50-55", "72-75", "120-125", "230-240"], c: 1 },
+        { q: "Where are Semilunar Valves found?", h: "हृदय में अर्धचन्द्राकार वाल्व (Semilunar Valve) कहाँ पाये जाते है?", a: ["Pulmonary arch origin", "Aorta origin", "Both A and B", "Between atrium and ventricle"], c: 2 },
+        { q: "Where does the Pulmonary Arch originate?", h: "फुफ्फुस चाप (Pulmonary arch) कहाँ से निकलती है?", a: ["Left Atrium", "Left Ventricle", "Right Atrium", "Right Ventricle"], c: 3 },
+        { q: "Where does the Aorta originate?", h: "महाधमनी (Aorta) कहाँ से निकलती है?", a: ["Left Atrium", "Left Ventricle", "Right Atrium", "Right Ventricle"], c: 1 },
+        { q: "Which fluid protects the heart from friction?", h: "हृदय गति के दौरान हृदय और पेरोकार्डियल झिल्ली के बीच घर्षण से सुरक्षा प्रदान करता है-", a: ["Pericardium", "Pericardial Cavity", "Pericardial Fluid", "Cardiac Muscle"], c: 2 },
+        { q: "Which chamber has the thickest wall?", h: "निम्नांकित में किसकी दीवार सबसे मोटी होती है?", a: ["Right Atrium", "Left Atrium", "Left Ventricle", "Right Ventricle"], c: 2 },
+        { q: "Precaval and Postcaval veins open into?", h: "अग्र तथा पश्च महाशिराएँ हृदय के किस भाग में खुलती है?", a: ["Right Atrium", "Left Atrium", "Right Ventricle", "Left Ventricle"], c: 0 },
+        { q: "What is normal blood pressure?", h: "एक स्वस्थ व्यक्ति का सामान्य स्थिति में रक्त-दाब कितना होता है?", a: ["120/80 mmHg", "160/95 mmHg", "130/90 mmHg", "80/120 mmHg"], c: 0 },
+        { q: "Blood Pressure is?", h: "रक्तचाप (Blood Pressure) होता है-", a: ["Pressure in veins", "Pressure in arteries", "Both A and B", "Neither"], c: 1 },
+        { q: "Blood pressure is generated by?", h: "रक्त पर दबाव उत्पन्न होता है-", a: ["Ventricle contraction", "Ventricle relaxation", "Both", "Atria contraction"], c: 0 },
+        { q: "Assertion: 1. Pressure is higher in veins than arteries. 2. Pressure is higher in arteries than veins.", h: "1. धमनियों की अपेक्षा शिराओं के रक्त पर दबाव अधिक होता है। 2. शिराओं के अपेक्षा धमनियों के रक्त पर दबाव अधिक होता है।", a: ["Only 1", "Only 2", "Both", "None"], c: 1 },
+        { q: "Blood pressure during running?", h: "दौड़ लगाते समय मनुष्य का रक्तचाप-", a: ["Increases", "Decreases", "Fluctuates", "Stays same"], c: 0 },
+        { q: "Blood pressure while sleeping?", h: "सोते समय मनुष्य का रक्त चाप-", a: ["Increases", "Decreases", "Stays same", "Zero"], c: 1 },
+        { q: "Where is pulse rate measured from?", h: "नाड़ी दर कहाँ से मापा जाता है?", a: ["Artery", "Vein", "Skin", "Nerve"], c: 0 },
+        { q: "Pressure generated by ventricle contraction is?", h: "निलय के संकुचन से रक्त में उत्पन्न होने वाले दबाव को क्या कहते हैं?", a: ["Systolic", "Diastolic", "Normal", "None"], c: 0 },
+        { q: "How many chambers in human heart?", h: "मानव हृदय में कितने कोष्ठक होते हैं?", a: ["1", "2", "3", "4"], c: 3 },
+        { q: "Time taken for one heart beat?", h: "मनुष्य के हृदय को एक बार धड़कने में कितना समय लगता है?", a: ["1s", "1 min", "1.5s", "0.8s"], c: 3 },
+        { q: "Instrument to measure BP?", h: "रक्त चाप की माप किस उपकरण से की जाती है?", a: ["Sphygmomanometer", "Manometer", "Pacemaker", "ECG"], c: 0 },
+        { q: "Instrument to detect heart disease?", h: "हृदय की सामान्य क्रिया और रोगों का पता लगाने हेतु किस उपकरण का उपयोग किया जाता है?", a: ["Pacemaker", "Electrocardiogram", "Sphygmomanometer", "Manometer"], c: 1 },
+        { q: "ECG records the activity of?", h: "ECG का प्रयोग किसकी गतिविधि दर्ज करने के लिये किया जाता है?", a: ["Heart", "Lungs", "Brain", "Muscles"], c: 0 },
+        { q: "Process of gas exchange in blood during respiration?", h: "किस प्रक्रिया द्वारा श्वसन के दौरान गैसें रूधिर में प्रवेश करती है और फिर उसे छोड़ती है?", a: ["Active transport", "Diffusion", "Osmosis", "Both A and B"], c: 1 },
+        { q: "Normal systolic pressure?", h: "हृदय का सामान्य सिस्टोलिक प्रेशर कितना होता है?", a: ["120 mmHg", "80 mmHg", "140 mmHg", "180 mmHg"], c: 0 },
+        { q: "What is Jarvic-7?", h: "जार्विक-7 (Jarvic-7) है-", a: ["Electronic leg", "Pacemaker", "Artificial heart", "Artificial eye"], c: 2 },
+        { q: "Function of heart in human body?", h: "मानव शरीर में हृदय का कार्य है-", a: ["Pumping station", "Energy provider", "Temp controller", "None"], c: 0 },
+        { q: "How many times heart beats in average lifetime?", h: "सामान्य जीवन काल में मनुष्य का हृदय लगभग कितनी बार धड़कता है?", a: ["1 Billion", "2 Billion", "3 Billion", "4 Billion"], c: 1 },
+        { q: "Sound of Lub-Dub is produced by?", h: "लब-डब ध्वनि किसकी क्रिया के कारण उत्पन्न होता है?", a: ["Intestine", "Stomach", "Kidney", "Heart"], c: 3 },
+        { q: "Instrument used to hear heart sound?", h: "हृदय से उत्पन्न लब-लब ध्वनि को किस यंत्र से सुना जा सकता है?", a: ["Sphygmomanometer", "Manometer", "ECG", "Stethoscope"], c: 3 },
+        { q: "Blood filling and exiting heart is called?", h: "रक्त परिवहन के दौरान हृदय में रक्त का भरना तथा फिर उसका बाहर निकलना क्या कहलाता है?", a: ["Systole", "Diastole", "Cardiac Cycle", "Double Circulation"], c: 2 },
+        { q: "Blood passes through heart how many times in one cycle?", h: "मानव शरीर में रक्त-परिवहन के एक चक्र पूरा होने पर रक्त हृदय से होकर कितनी बार गुजरता है?", a: ["1", "2", "3", "4"], c: 1 },
+        { q: "One heart beat includes?", h: "हृदय के 1 धड़कन में शामिल हैं-", a: ["1 Systole 1 Diastole", "2 Systole", "2 Diastole", "2 Systole 1 Diastole"], c: 0 },
+        { q: "Central pumping organ is?", h: "मानव शरीर का केंद्रीय पंप अंग है-", a: ["Heart", "Kidney", "Liver", "Lungs"], c: 0 },
+        { q: "Pacemaker is also called?", h: "पेसमेकर को कहते है-", a: ["S-A Node", "A-V Node", "Bundle of His", "Purkinje fibers"], c: 0 },
+        { q: "Heart rate is controlled by?", h: "मनुष्य में हृदय-गति का नियंत्रण होता है-", a: ["S-A Node", "Nerve system", "A-V Node", "All"], c: 3 },
+        { q: "Pacemaker system includes?", h: "पेसमेकर तंत्र (Pacemaker system) में शामिल होता है-", a: ["S-A node", "A-V node", "Bundle of His", "Purkinje fibers", "All of these"], c: 4 },
+        { q: "What is S-A Node?", h: "S-A नोड है-", a: ["Connective tissue", "Epithelial tissue", "Nervous tissue", "Muscular tissue"], c: 3 },
+        { q: "Path of electrical impulse in heart?", h: "हृदय के धड़कनों को नियंत्रित करने हेतु S-A नोड में उत्पन्न विद्युतीय तरंग किस पथ से आगे बढ़ती है?", a: ["AV Node -> His -> Purkinje", "AV Node -> Purkinje -> His", "Purkinje -> His -> AV Node", "His -> Purkinje -> AV Node"], c: 0 },
+        { q: "Valves in heart...?", h: "हृदय में स्थित विभिन्न कपाट (Valve)-", a: ["Control flow", "Control pressure", "Protect atria", "Protect ventricle"], c: 0 }
+    ];
+
+    let currentQuestions = [];
+    let currentIndex = 0;
+    let score = 0;
+    let timer;
+    let timeLeft;
+
+    // --- SOUND SYSTEM (Web Audio API) ---
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function playTone(freq, type, duration) {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+    }
+
+    // --- LOGIC ---
+    function startQuiz() {
+        const shuffle = document.getElementById('shuffle-setting').checked;
+        currentQuestions = shuffle ? [...quizData].sort(() => Math.random() - 0.5) : [...quizData];
+        
+        currentIndex = 0;
+        score = 0;
+        
+        document.getElementById('start-screen').style.display = 'none';
+        document.getElementById('quiz-area').style.display = 'block';
+        
+        showQuestion();
+    }
+
+    function showQuestion() {
+        const q = currentQuestions[currentIndex];
+        document.getElementById('eng-q').innerText = q.q;
+        document.getElementById('hin-q').innerText = q.h;
+        document.getElementById('q-counter').innerText = `Question: ${currentIndex + 1}/${currentQuestions.length}`;
+        document.getElementById('score-display').innerText = `Score: ${score}`;
+        
+        const optionsBox = document.getElementById('options-box');
+        optionsBox.innerHTML = '';
+        
+        q.a.forEach((opt, i) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerHTML = `<div>${opt}</div>`;
+            btn.onclick = () => checkAnswer(i, btn);
+            optionsBox.appendChild(btn);
+        });
+
+        updateProgress();
+        startTimer();
+    }
+
+    function startTimer() {
+        clearInterval(timer);
+        const limit = parseInt(document.getElementById('timer-setting').value);
+        if (limit <= 0) {
+            document.getElementById('timer-display').innerText = "⏱ Off";
+            return;
+        }
+
+        timeLeft = limit;
+        const display = document.getElementById('timer-display');
+        display.classList.remove('pulse-red');
+        
+        timer = setInterval(() => {
+            timeLeft--;
+            display.innerText = `⏱ ${timeLeft}s`;
+            if (timeLeft < 5) display.classList.add('pulse-red');
+            if (timeLeft <= 0) {
+                clearInterval(timer);
+                autoFail();
+            }
+        }, 1000);
+    }
+
+    function checkAnswer(idx, btn) {
+        clearInterval(timer);
+        const q = currentQuestions[currentIndex];
+        const buttons = document.querySelectorAll('.option-btn');
+        buttons.forEach(b => b.onclick = null); // Disable further clicks
+
+        if (idx === q.c) {
+            score++;
+            btn.classList.add('correct');
+            playTone(880, 'sine', 0.5); // "Ting"
+            triggerConfetti();
+        } else {
+            btn.classList.add('wrong');
+            buttons[q.c].classList.add('correct');
+            playTone(110, 'sawtooth', 0.5); // "Buzz"
+            showSadEmoji();
+        }
+
+        setTimeout(() => {
+            currentIndex++;
+            if (currentIndex < currentQuestions.length) showQuestion();
+            else endQuiz();
+        }, 1500);
+    }
+
+    function autoFail() {
+        const q = currentQuestions[currentIndex];
+        const buttons = document.querySelectorAll('.option-btn');
+        buttons[q.c].classList.add('correct');
+        playTone(110, 'sawtooth', 0.5);
+        setTimeout(() => {
+            currentIndex++;
+            if (currentIndex < currentQuestions.length) showQuestion();
+            else endQuiz();
+        }, 1500);
+    }
+
+    function updateProgress() {
+        const prg = (currentIndex / currentQuestions.length) * 100;
+        document.getElementById('progress').style.width = prg + "%";
+    }
+
+    function endQuiz() {
+        clearInterval(timer);
+        document.getElementById('quiz-area').style.display = 'none';
+        document.getElementById('result-screen').style.display = 'block';
+        
+        const finalScoreText = document.getElementById('final-score');
+        finalScoreText.innerText = `${score} / ${currentQuestions.length}`;
+        
+        const pct = (score / currentQuestions.length) * 100;
+        const title = document.getElementById('result-title');
+        const msg = document.getElementById('result-msg');
+        
+        if (pct >= 80) {
+            title.innerText = "🏆 Outstanding Performance!";
+            msg.innerText = "You have mastered the transport system topics!";
+            triggerConfetti();
+        } else if (pct >= 50) {
+            title.innerText = "👏 Well Done! Keep it up.";
+            msg.innerText = "Good job, but there's room for improvement.";
+        } else {
+            title.innerText = "📚 Practice makes perfect!";
+            msg.innerText = "Review the material and try again to improve your score.";
+        }
+    }
+
+    function showSadEmoji() {
+        const emoji = document.getElementById('sad-emoji');
+        emoji.style.display = 'block';
+        setTimeout(() => emoji.style.display = 'none', 1000);
+    }
+
+    function triggerConfetti() {
+        const canvas = document.getElementById('confetti');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        let particles = [];
+        for (let i = 0; i < 100; i++) {
+            particles.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height - canvas.height,
+                r: Math.random() * 6 + 4,
+                d: Math.random() * 10,
+                color: `hsl(${Math.random() * 360}, 70%, 50%)`,
+                tilt: Math.random() * 10 - 10
+            });
+        }
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach((p, i) => {
+                p.y += Math.cos(p.d) + 1 + p.r / 2;
+                p.tilt = Math.sin(p.d) * 15;
+                ctx.beginPath();
+                ctx.lineWidth = p.r;
+                ctx.strokeStyle = p.color;
+                ctx.moveTo(p.x + p.tilt + p.r / 2, p.y);
+                ctx.lineTo(p.x + p.tilt, p.y + p.tilt + p.r / 2);
+                ctx.stroke();
+            });
+            if (particles[0].y < canvas.height * 2) requestAnimationFrame(draw);
+        }
+        draw();
+    }
+</script>
+</body>
+</html>

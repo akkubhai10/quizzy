@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Animal Kingdom Professional Quiz</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --glass: rgba(255, 255, 255, 0.1);
+            --border: rgba(255, 255, 255, 0.2);
+            --success: #4caf50;
+            --error: #f44336;
+            --text-hi: #ddd;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(45deg, #4158D0, #C850C0, #FFCC70);
+            background-attachment: fixed;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            overflow-x: hidden;
+        }
+
+        /* Glass Container */
+        .quiz-container {
+            width: 90%;
+            max-width: 700px;
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            border-radius: 25px;
+            padding: 30px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            position: relative;
+            z-index: 10;
+        }
+
+        /* Progress Bar */
+        #progress-container {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 6px;
+            background: rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+        #progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(to right, #00f2fe, #4facfe);
+            box-shadow: 0 0 10px #00f2fe;
+            transition: width 0.3s ease;
+        }
+
+        /* Header Stats */
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .timer-pulse { color: #ff4d4d; animation: pulse 0.8s infinite; font-size: 1.2rem; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+
+        /* Question Styles */
+        .question-box h2 { font-size: 1.3rem; margin-bottom: 10px; line-height: 1.4; }
+        .hindi-text { 
+            display: block; 
+            font-size: 1rem; 
+            color: var(--text-hi); 
+            font-weight: 300;
+            margin-top: 5px;
+        }
+
+        /* Options */
+        .options-grid {
+            display: grid;
+            gap: 15px;
+            margin-top: 25px;
+        }
+
+        .option-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            padding: 15px 20px;
+            border-radius: 12px;
+            color: white;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            outline: none;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .option-btn.correct { background: var(--success) !important; border-color: #fff; }
+        .option-btn.wrong { background: var(--error) !important; border-color: #fff; }
+
+        /* Controls */
+        .controls {
+            margin-top: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .btn-primary {
+            background: white;
+            color: #333;
+            border: none;
+            padding: 12px 40px;
+            border-radius: 50px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        .btn-primary:hover { transform: scale(1.05); }
+
+        .btn-exit {
+            background: transparent;
+            color: white;
+            border: 1px solid var(--border);
+            padding: 8px 20px;
+            border-radius: 50px;
+            font-size: 0.8rem;
+            cursor: pointer;
+        }
+
+        /* Start Screen Inputs */
+        .start-screen input, .start-screen select {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid var(--border);
+            padding: 10px;
+            border-radius: 8px;
+            color: white;
+            margin-bottom: 15px;
+            width: 100%;
+        }
+
+        /* Animations */
+        .shake { animation: shake 0.5s; }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .emoji-overlay {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 80px;
+            z-index: 100;
+            pointer-events: none;
+        }
+
+        /* Confetti */
+        .confetti {
+            position: fixed;
+            width: 10px; height: 10px;
+            background-color: #f2d74e;
+            top: -10px;
+            z-index: 9999;
+            animation: fall linear forwards;
+        }
+        @keyframes fall { to { transform: translateY(105vh) rotate(360deg); } }
+
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+    <div id="progress-container"><div id="progress-bar"></div></div>
+
+    <div class="quiz-container" id="game-card">
+        <div id="start-screen" class="start-screen">
+            <h1 style="margin-bottom: 20px; text-align: center;">Bio-Quiz: Animal Kingdom</h1>
+            <label>Timer (Seconds per question, 0 to disable):</label>
+            <input type="number" id="timer-input" value="15" min="0">
+            
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px;">
+                <input type="checkbox" id="shuffle-check" style="width: auto; margin: 0;">
+                <label for="shuffle-check">Shuffle Questions</label>
+            </div>
+
+            <button class="btn-primary" style="width: 100%;" onclick="startQuiz()">Start Quiz</button>
+        </div>
+
+        <div id="quiz-screen" class="hidden">
+            <div class="stats">
+                <span id="q-count">Question 01/50</span>
+                <span id="timer-display"></span>
+                <span id="score-display">Score: 00</span>
+            </div>
+
+            <div class="question-box">
+                <h2 id="q-text-en"></h2>
+                <span id="q-text-hi" class="hindi-text"></span>
+            </div>
+
+            <div class="options-grid" id="options-container"></div>
+
+            <div class="controls">
+                <button class="btn-exit" onclick="showResults()">Finish & Show Results</button>
+            </div>
+        </div>
+
+        <div id="result-screen" class="hidden" style="text-align: center;">
+            <h1 id="result-emoji" style="font-size: 4rem;">🏆</h1>
+            <h2 id="result-msg" style="margin: 15px 0;"></h2>
+            <p id="final-score" style="font-size: 1.5rem; margin-bottom: 30px;"></p>
+            <button class="btn-primary" onclick="location.reload()">Restart Quiz</button>
+        </div>
+    </div>
+
+    <div id="overlay-container"></div>
+
+    <script>
+        const questions = [
+            { en: "To which phylum do these animals belong: Multicellular but no tissues, body porous, and usually called sponges?", hi: "ये जीव बहुकोशिकीय तो है परंतु इनकी कोशिका ऊतक नहीं बना पाते हैं। शरीर पर स्थित छिद्रों को ऑस्टिया कहते हैं और उन्हें स्पंज कहते हैं।", options: [ {en: "Aschelminthes", hi: "एस्केल्मिन्थीज"}, {en: "Platyhelminthes", hi: "प्लेटीहेल्मिन्थीज"}, {en: "Cnidaria", hi: "नाइडोरिया"}, {en: "Porifera", hi: "पोरिफेरा"} ], correct: 3 },
+            { en: "Which of the following is NOT a Porifera group animal?", hi: "निम्नलिखित में कौन-सा जीव पोरिफेरा समूह का नहीं है?", options: [ {en: "Hydra", hi: "हाइड्रा"}, {en: "Sycon", hi: "साइकन"}, {en: "Euplectella", hi: "यूप्लेक्टेला"}, {en: "Spongilla", hi: "स्पंजिला"} ], correct: 0 },
+            { en: "Which Porifera is known as Venus's flower basket and given as gifts in Japan?", hi: "किस पोरिफेरा जीव को वीनस की पुष्प मंजूषा कहते हैं तथा इसे जापान देश में लोगों को उपहार के रूप में दिये जाते हैं?", options: [ {en: "Euplectella", hi: "यूप्लेक्टेला"}, {en: "Hyalonema", hi: "हायलोनेमा"}, {en: "Euspongia", hi: "यूस्पोंजिया"}, {en: "Spongilla", hi: "स्पंजिला"} ], correct: 0 },
+            { en: "Which animal is called the Bath Sponge?", hi: "किस जीव को बाथस्पंज (Bath Sponge) कहते हैं?", options: [ {en: "Spongilla", hi: "स्पंजिला"}, {en: "Euspongia", hi: "यूस्पोंजिया"}, {en: "Hyalonema", hi: "हायलोनेमा"}, {en: "Sycon", hi: "साइकन"} ], correct: 1 },
+            { en: "Which Porifera animal is found in Fresh Water?", hi: "निम्न में कौन सा पोरिफेरा संघ के जीव मीठे जल (Fresh water) में पाये जाते हैं?", options: [ {en: "Sycon", hi: "साइकन"}, {en: "Hyalonema", hi: "हायलोनेमा"}, {en: "Euplectella", hi: "यूप्लेक्टेला"}, {en: "Spongilla", hi: "स्पंजिला"} ], correct: 3 },
+            { en: "The presence of Ostia and Osculum is a feature of which phylum?", hi: "ऑस्टिया (Ostia) तथा ऑसकुलम (Osculum) की उपस्थिति किस संघ के जीवों का विशेष लक्षण है?", options: [ {en: "Porifera", hi: "पोरिफेरा"}, {en: "Chordata", hi: "कॉर्डेटा"}, {en: "Arthropoda", hi: "आर्थ्रोपोडा"}, {en: "Mollusca", hi: "मोलस्का"} ], correct: 0 },
+            { en: "To which phylum does Hydra belong?", hi: "हाइड्रा किस संघ के जीव हैं?", options: [ {en: "Coelenterata", hi: "सीलेन्ट्रेटा"}, {en: "Cnidaria", hi: "नाइडोरिया"}, {en: "Platyhelminthes", hi: "प्लेटीहेल्मिन्थीज"}, {en: "Mollusca", hi: "मोलस्का"} ], correct: 1 },
+            { en: "Which of the following is NOT from the Cnidaria phylum?", hi: "निम्न में कौन से जीव नाइडेरिया संघ के नहीं हैं?", options: [ {en: "Hydra", hi: "हाइड्रा"}, {en: "Physalia", hi: "फायसेलिया"}, {en: "Schistosoma", hi: "सिस्टोसोमा"}, {en: "Coral", hi: "कोरल"} ], correct: 2 },
+            { en: "What is the larva of phylum Cnidaria called?", hi: "किस संघ के जीवों के लार्वा को प्लेनुला (Planula) कहते हैं?", options: [ {en: "Arthropoda", hi: "आर्थ्रोपोडा"}, {en: "Cnidaria", hi: "निडेरिया"}, {en: "Mollusca", hi: "मोलस्का"}, {en: "Porifera", hi: "पोरिफेरा"} ], correct: 1 },
+            { en: "Flat, ribbon-like parasitic worms are members of which phylum?", hi: "चपटे, फीतानुमा, परजीवी कृमि किस संघ के सदस्य होते हैं?", options: [ {en: "Mollusca", hi: "मोलस्का"}, {en: "Porifera", hi: "पोरिफेरा"}, {en: "Platyhelminthes", hi: "प्लेटीहेल्मिन्थीज"}, {en: "Chordata", hi: "कॉर्डेटा"} ], correct: 2 },
+            { en: "Which animal is commonly called Liver Fluke?", hi: "किस जीव को साधारणतः 'यकृत पर्णाभ' (Liver Fluke) कहा जाता है?", options: [ {en: "Fasciola hepatica", hi: "फैसिओला हिपैटिका"}, {en: "Taenia solium", hi: "टीनिया सोलियम"}, {en: "Schistosoma", hi: "सिस्टोसोमा"}, {en: "Planaria", hi: "प्लेनेरिया"} ], correct: 0 },
+            { en: "Ascaris and Filaria diseases are caused by which type of worms?", hi: "ऐस्केरिऐसिस तथा फाइलेरिया रोग किस कृमि के कारण होता है?", options: [ {en: "Roundworms", hi: "एस्केरिस"}, {en: "Wuchereria", hi: "वूचेरिया"}, {en: "Both A & B", hi: "A तथा B दोनों"}, {en: "None", hi: "इनमें से कोई नहीं"} ], correct: 2 },
+            { en: "What is the largest phylum of the animal kingdom?", hi: "जंतु जगत का सबसे बड़ा संघ कौन है?", options: [ {en: "Annelida", hi: "एनेलिडा"}, {en: "Arthropoda", hi: "आर्थ्रोपोडा"}, {en: "Mollusca", hi: "मोलस्का"}, {en: "Echinodermata", hi: "इकाइनोडर्मेटा"} ], correct: 1 },
+            { en: "Silver fish belongs to which phylum?", hi: "सिल्वर फिश किस संघ के जीव हैं?", options: [ {en: "Annelida", hi: "एनेलिडा"}, {en: "Porifera", hi: "पोरिफेरा"}, {en: "Chordata", hi: "कॉर्डेटा"}, {en: "Arthropoda", hi: "आर्थ्रोपोडा"} ], correct: 3 },
+            { en: "How many chambers are in a cockroach's heart?", hi: "तिलचट्टा का हृदय में कितने कक्ष होते हैं?", options: [ {en: "3", hi: "3"}, {en: "13", hi: "13"}, {en: "11", hi: "11"}, {en: "4", hi: "4"} ], correct: 1 },
+            { en: "From which insect is Lac (Lakh) produced?", hi: "किस कीट के शरीर से स्रावित पदार्थ से लाह (Lac) उत्पन्न होता है?", options: [ {en: "Apis", hi: "ऐपिस"}, {en: "Bombyx", hi: "बॉम्बिक्स"}, {en: "Laccifer", hi: "लैसिफर"}, {en: "Housefly", hi: "घरेलू मक्खी"} ], correct: 2 },
+            { en: "Silk production comes from which stage of the silk moth?", hi: "रेशम का उत्पादन किससे होता है?", options: [ {en: "Larva", hi: "रेशम कीट के लार्वा से"}, {en: "Pupa", hi: "रेशम कीट के प्यूपा से"}, {en: "Adult", hi: "स्वयं कीट से"}, {en: "Egg", hi: "रेशम कीट के अंडे से"} ], correct: 1 },
+            { en: "Where is the venom of a scorpion located?", hi: "बिच्छू का विष कहाँ पर होता है?", options: [ {en: "Legs", hi: "पैरों में"}, {en: "Hands", hi: "हाथ में"}, {en: "Mouth", hi: "मुँह में"}, {en: "Stinger", hi: "डंक में"} ], correct: 3 },
+            { en: "Why do a butterfly's eyes glow at night?", hi: "तितली की आँखें रात में क्यों चमकती हैं?", options: [ {en: "Special lens", hi: "विशेष लेंस के कारण"}, {en: "Gene effect", hi: "जीन प्रभाव के कारण"}, {en: "Tapetum lucidum", hi: "टेपीटम लूसीडम के कारण"}, {en: "Unknown", hi: "कोई स्पष्ट कारण नहीं"} ], correct: 2 },
+            { en: "Which animal is commonly called 'Feather Star'?", hi: "निम्न में किस जीव को साधारणतः Feather Star कहा जाता है?", options: [ {en: "Antedon", hi: "एटीडॉन"}, {en: "Ophiura", hi: "आफियोरा"}, {en: "Asterias", hi: "एस्टेरियस"}, {en: "Echinus", hi: "एकिनस"} ], correct: 0 },
+            { en: "How many bones are in a shark's body?", hi: "शार्क मछली में कितनी हड्डियाँ होती हैं?", options: [ {en: "100", hi: "100"}, {en: "0", hi: "0"}, {en: "200", hi: "200"}, {en: "300", hi: "300"} ], correct: 1 },
+            { en: "What is the larva of a frog called?", hi: "मेंढक का लार्वा क्या कहलाता है?", options: [ {en: "Pupa", hi: "प्यूपा"}, {en: "Maggot", hi: "मेगोट"}, {en: "Caterpillar", hi: "कैटरपिलर"}, {en: "Tadpole", hi: "टेटपोल"} ], correct: 3 },
+            { en: "How many chambers in a frog's heart?", hi: "मेंढक के हृदय में कितने कक्ष होते हैं?", options: [ {en: "2", hi: "2"}, {en: "3", hi: "3"}, {en: "4", hi: "4"}, {en: "5", hi: "5"} ], correct: 1 },
+            { en: "Which is a cold-blooded animal?", hi: "शीत रक्ती प्राणी है?", options: [ {en: "Fish", hi: "मछली"}, {en: "Frog", hi: "मेढक"}, {en: "Lizard", hi: "छिपकली"}, {en: "All of these", hi: "उपर्युक्त सभी"} ], correct: 3 },
+            { en: "Which animal lacks a tear gland?", hi: "निम्न में से किस जन्तु में अश्रुग्रन्थि (Tear gland) नहीं होती है?", options: [ {en: "Human", hi: "मनुष्य"}, {en: "Dog", hi: "कुत्ता"}, {en: "Ox", hi: "बैल"}, {en: "Gharial/Crocodile", hi: "घड़ियाल"} ], correct: 3 },
+            { en: "Which snake is the only one that builds a nest?", hi: "घोंसला बनाने वाला एकमात्र साँप है-", options: [ {en: "Chain Viper", hi: "चेन वाइपर"}, {en: "King Cobra", hi: "किंग कोबरा"}, {en: "Krait", hi: "करैत"}, {en: "Saw Scaled Viper", hi: "सॉ स्केल्ड वाइपर"} ], correct: 1 },
+            { en: "Who was the first cloned mammal 'Dolly'?", hi: "पहला क्लोन पशु 'डॉली' कौन-सा पशु था?", options: [ {en: "Dog", hi: "कुत्ता"}, {en: "Rabbit", hi: "खरगोश"}, {en: "Cat", hi: "बिल्ली"}, {en: "Sheep", hi: "भेड़"} ], correct: 3 },
+            { en: "The poisonous lizards is:", hi: "विषैली छिपकली है-", options: [ {en: "Chameleon", hi: "कैमीलियान"}, {en: "Astroderm", hi: "ऐसिट्रोडान"}, {en: "Heloderma", hi: "हीलोडर्मा"}, {en: "Draco", hi: "डैरेनस"} ], correct: 2 },
+            { en: "Which bird is the largest living bird on Earth?", hi: "पृथ्वी पर विशालतम जीवित पक्षी है-", options: [ {en: "Emu", hi: "ईमू"}, {en: "Ostrich", hi: "शुतुरमुर्ग"}, {en: "Albatross", hi: "एल्ब्रट्रॉस"}, {en: "Siberian Crane", hi: "साइबेरियन सारस"} ], correct: 1 },
+            { en: "Which is the smallest bird among these?", hi: "सबसे छोटा पक्षी इनमें से कौन है?", options: [ {en: "Pigeon", hi: "कबूतर"}, {en: "Parrot", hi: "तोता"}, {en: "Hummingbird", hi: "गुंजन पक्षी"}, {en: "House Sparrow", hi: "घरेलू गौरैया"} ], correct: 2 },
+            { en: "Syrinx is the voice box in:", hi: "शब्दनी (syrynx) किसमें वाक् यंत्र है?", options: [ {en: "Amphibian", hi: "उभयचर"}, {en: "Reptile", hi: "सरीसृप"}, {en: "Bird", hi: "पक्षी"}, {en: "Mammal", hi: "स्तनी"} ], correct: 2 },
+            { en: "The flightless bird found in New Zealand is:", hi: "न्यूजीलैंड में पाया जाने वाला उड्डयनहीन पक्षी है-", options: [ {en: "Ostrich", hi: "शुतुरमुर्ग"}, {en: "Albatross", hi: "एल्ब्रट्रॉस"}, {en: "Kiwi", hi: "किवी"}, {en: "Penguin", hi: "पेग्विन"} ], correct: 2 },
+            { en: "Archaeopteryx is:", hi: "आर्कियोप्टेरिक्स है-", options: [ {en: "Oldest bird of Jurassic", hi: "जुरासिक युग का सर्वपुरातन पक्षी"}, {en: "Reptile of Jurassic", hi: "जुरासिक काल का सरीसृप"}, {en: "Triassic reptile", hi: "ट्रायसिक काल का सरीसृप"}, {en: "Both Jurassic & Triassic", hi: "ट्राईएसिड तथा जुरासिक दोनों का सरीसृप"} ], correct: 0 },
+            { en: "Where are penguins found?", hi: "पेग्विन चिड़िया कहाँ पायी जाती है?", options: [ {en: "Africa", hi: "अफ्रीका"}, {en: "South America", hi: "दक्षिण अमेरिका"}, {en: "Antarctica", hi: "अंटार्कटिका"}, {en: "North America", hi: "उत्तरी अमेरिका"} ], correct: 2 },
+            { en: "The extinct bird that had teeth in its beak:", hi: "वह विलुप्त पक्षी जिसके चोंच में दाँत था, है-", options: [ {en: "Archaeopteryx", hi: "आर्कियोप्टेरिक्स"}, {en: "Dodo", hi: "डोडो"}, {en: "Kiwi", hi: "किवी"}, {en: "Pelican", hi: "पेलिकन"} ], correct: 0 },
+            { en: "National bird of India is:", hi: "भारत का राष्ट्रीय पक्षी है-", options: [ {en: "Peacock", hi: "मोर"}, {en: "Parrot", hi: "तोता"}, {en: "Pigeon", hi: "कबूतर"}, {en: "Koel", hi: "कोयल"} ], correct: 0 },
+            { en: "Pavo cristatus is the scientific name of:", hi: "पावो क्रिस्टेशस किसका वैज्ञानिक नाम है?", options: [ {en: "Tiger", hi: "बाघ"}, {en: "Parrot", hi: "तोता"}, {en: "Peacock", hi: "मोर"}, {en: "Koel", hi: "कोयल"} ], correct: 2 },
+            { en: "Only bird that can fly backwards:", hi: "वह एकमात्र पक्षी जो पीछे की ओर उड़ता है-", options: [ {en: "Sparrow", hi: "गौरैया"}, {en: "Koel", hi: "कोयल"}, {en: "Siberian Crane", hi: "साइबेरियन सारस"}, {en: "Hummingbird", hi: "गुंजन पक्षी"} ], correct: 3 },
+            { en: "What is Blubber?", hi: "ब्लबर क्या होता है?", options: [ {en: "Milk of rubber tree", hi: "रबड़ के पौधों से निकलने वाला दूधिया स्राव"}, {en: "Thick layer of fat", hi: "सघन वसा की परत"}, {en: "Aquatic plant trap", hi: "किसी एक्वैटिक पौधे द्वारा कीटों को फंसाने की युक्ति"}, {en: "Fungal infection", hi: "बावल के पौधों का फंगल संक्रमण"} ], correct: 1 },
+            { en: "Which of the following is NOT a mammal?", hi: "निम्नलिखित में से कौन-सा प्राणी स्तनधारी नहीं है?", options: [ {en: "Fish", hi: "मछली"}, {en: "Bat", hi: "चमगादड़"}, {en: "Whale", hi: "ह्वेल"}, {en: "Human", hi: "मनुष्य"} ], correct: 0 },
+            { en: "Dolphins are classified in:", hi: "डॉल्फिन वर्गीकृत किए जाते हैं-", options: [ {en: "Pisces", hi: "मत्स्य में"}, {en: "Amphibians", hi: "उभयचर में"}, {en: "Reptiles", hi: "सरीसृप में"}, {en: "Mammals", hi: "स्तनी में"} ], correct: 3 },
+            { en: "What is the largest mammal?", hi: "निम्न में से विशालतम स्तनधारी कौन-सा है?", options: [ {en: "Elephant", hi: "हाथी"}, {en: "Blue Whale", hi: "ब्लू ह्वेल"}, {en: "Dinosaur", hi: "डाइनोसोर"}, {en: "Rhino", hi: "गैंडा"} ], correct: 1 },
+            { en: "How many chambers in a mammal's heart?", hi: "स्तनी के हृदय में कितने कोष्ठ होते हैं?", options: [ {en: "2", hi: "2"}, {en: "3", hi: "3"}, {en: "4", hi: "4"}, {en: "5", hi: "5"} ], correct: 2 },
+            { en: "Who has non-nucleated RBCs?", hi: "केन्द्रक विहीन लाल रुधिराणु (RBC) किसमें होते हैं?", options: [ {en: "Reptiles", hi: "सरीसृप"}, {en: "Birds", hi: "पक्षी"}, {en: "Amphibians", hi: "एम्फीबिया"}, {en: "Mammals", hi: "स्तनी"} ], correct: 3 },
+            { en: "Why do cat's eyes glow at night?", hi: "बिल्ली की आँखें रात में क्यों चमकती हैं?", options: [ {en: "Special Lens", hi: "विशेष लेंस के कारण"}, {en: "Tapetum lucidum", hi: "टेपीटम लूसीडम के कारण"}, {en: "Gene effect", hi: "जीन प्रभाव के कारण"}, {en: "Unknown", hi: "स्पष्ट कारण ज्ञात नहीं"} ], correct: 1 },
+            { en: "Which animal has radar system for target location?", hi: "लक्ष्य निर्धारण हेतु राडार तंत्र किसमें पाया जाता है?", options: [ {en: "Rat", hi: "चूहा"}, {en: "Bat", hi: "चमगादड़"}, {en: "Cat", hi: "बिल्ली"}, {en: "Rabbit", hi: "खरगोश"} ], correct: 1 },
+            { en: "Scientific name of Humans is:", hi: "मानव का जैविक नाम है-", options: [ {en: "Homo erectus", hi: "होमो इरेक्टस"}, {en: "Homo neanderthalensis", hi: "होमो निएण्डरथैलेन्सिस"}, {en: "Homo habilis", hi: "होमो हैबिलिस"}, {en: "Homo sapiens", hi: "होमो सेपियंस"} ], correct: 3 },
+            { en: "Which animal was first domesticated by humans?", hi: "मनुष्य में सर्वप्रथम किस जन्तु को पालतू बनाया?", options: [ {en: "Dog", hi: "कुत्ता"}, {en: "Goat", hi: "बकरी"}, {en: "Cat", hi: "बिल्ली"}, {en: "Cow", hi: "गाय"} ], correct: 0 },
+            { en: "Which mammal lays eggs?", hi: "निम्न में से कौन-सा अंडज स्तनी है?", options: [ {en: "Kangaroo", hi: "कंगारू"}, {en: "Monotreme (Platypus)", hi: "मोनोट्रीम"}, {en: "Bat", hi: "चमगादड़"}, {en: "Whale", hi: "ह्वेल"} ], correct: 1 },
+            { en: "Which animal breathes through its skin?", hi: "निम्न में से कौन-सा जीव अपनी त्वचा से सांस लेता है?", options: [ {en: "Fish", hi: "मछली"}, {en: "Pigeon", hi: "कबूतर"}, {en: "Frog", hi: "मेढ़क"}, {en: "Cockroach", hi: "तिलचट्टा"} ], correct: 2 }
+        ];
+
+        let currentQuestions = [];
+        let qIndex = 0;
+        let score = 0;
+        let timerValue = 15;
+        let timeLeft = 15;
+        let timerInterval;
+        let audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function startQuiz() {
+            const shuffle = document.getElementById('shuffle-check').checked;
+            timerValue = parseInt(document.getElementById('timer-input').value) || 0;
+            
+            currentQuestions = shuffle ? [...questions].sort(() => Math.random() - 0.5) : [...questions];
+            
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('quiz-screen').classList.remove('hidden');
+            
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            if (qIndex >= currentQuestions.length) return showResults();
+
+            const q = currentQuestions[qIndex];
+            document.getElementById('q-text-en').innerText = q.en;
+            document.getElementById('q-text-hi').innerText = q.hi;
+            document.getElementById('q-count').innerText = `Question ${String(qIndex + 1).padStart(2, '0')}/${currentQuestions.length}`;
+            document.getElementById('progress-bar').style.width = `${((qIndex) / currentQuestions.length) * 100}%`;
+
+            const container = document.getElementById('options-container');
+            container.innerHTML = '';
+
+            q.options.forEach((opt, i) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerHTML = `${opt.en}<br><small style="color:rgba(255,255,255,0.7)">${opt.hi}</small>`;
+                btn.onclick = () => handleAnswer(i);
+                container.appendChild(btn);
+            });
+
+            resetTimer();
+        }
+
+        function resetTimer() {
+            clearInterval(timerInterval);
+            if (timerValue <= 0) {
+                document.getElementById('timer-display').innerText = '';
+                return;
+            }
+
+            timeLeft = timerValue;
+            updateTimerUI();
+
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                updateTimerUI();
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    handleAnswer(-1); // Timeout
+                }
+            }, 1000);
+        }
+
+        function updateTimerUI() {
+            const el = document.getElementById('timer-display');
+            el.innerText = `⏱ ${timeLeft}s`;
+            el.className = timeLeft < 5 ? 'timer-pulse' : '';
+        }
+
+        function handleAnswer(selectedIndex) {
+            clearInterval(timerInterval);
+            const q = currentQuestions[qIndex];
+            const buttons = document.querySelectorAll('.option-btn');
+            
+            buttons.forEach(b => b.disabled = true);
+
+            if (selectedIndex === q.correct) {
+                score++;
+                document.getElementById('score-display').innerText = `Score: ${String(score).padStart(2, '0')}`;
+                buttons[selectedIndex].classList.add('correct');
+                playSound(600, 800, 0.1); // Ting
+                triggerConfetti();
+            } else {
+                if (selectedIndex !== -1) buttons[selectedIndex].classList.add('wrong');
+                buttons[q.correct].classList.add('correct');
+                playSound(200, 100, 0.3); // Buzz
+                triggerSadEmoji();
+            }
+
+            setTimeout(() => {
+                qIndex++;
+                if (qIndex < currentQuestions.length) loadQuestion();
+                else showResults();
+            }, 1500);
+        }
+
+        function showResults() {
+            clearInterval(timerInterval);
+            document.getElementById('quiz-screen').classList.add('hidden');
+            const resScreen = document.getElementById('result-screen');
+            resScreen.classList.remove('hidden');
+            
+            const percent = (score / currentQuestions.length) * 100;
+            const emoji = document.getElementById('result-emoji');
+            const msg = document.getElementById('result-msg');
+
+            if (percent >= 80) {
+                emoji.innerText = "🏆";
+                msg.innerText = "Outstanding Performance!";
+            } else if (percent >= 50) {
+                emoji.innerText = "👏";
+                msg.innerText = "Well Done! Keep it up.";
+            } else {
+                emoji.innerText = "📚";
+                msg.innerText = "Practice makes perfect! Try again.";
+            }
+
+            document.getElementById('final-score').innerText = `You scored ${score} out of ${currentQuestions.length}`;
+            document.getElementById('progress-bar').style.width = '100%';
+        }
+
+        // Web Audio API Synthesizer
+        function playSound(startFreq, endFreq, duration) {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.frequency.setValueAtTime(startFreq, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(endFreq, audioCtx.currentTime + duration);
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + duration);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + duration);
+        }
+
+        function triggerSadEmoji() {
+            const emoji = document.createElement('div');
+            emoji.className = 'emoji-overlay shake';
+            emoji.innerText = '😢';
+            document.getElementById('game-card').appendChild(emoji);
+            setTimeout(() => emoji.remove(), 1000);
+        }
+
+        function triggerConfetti() {
+            for(let i=0; i<30; i++) {
+                const conf = document.createElement('div');
+                conf.className = 'confetti';
+                conf.style.left = Math.random() * 100 + 'vw';
+                conf.style.backgroundColor = `hsl(${Math.random()*360}, 70%, 50%)`;
+                conf.style.animationDuration = (Math.random() * 2 + 1) + 's';
+                conf.style.opacity = Math.random();
+                document.body.appendChild(conf);
+                setTimeout(() => conf.remove(), 3000);
+            }
+        }
+    </script>
+</body>
+</html>

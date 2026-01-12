@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Human Physiology Quiz | 151-204</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6c5ce7;
+            --secondary: #a29bfe;
+            --correct: #00b894;
+            --wrong: #d63031;
+            --glass: rgba(255, 255, 255, 0.1);
+            --border: rgba(255, 255, 255, 0.2);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #6c5ce7, #ff7675, #a29bfe);
+            background-size: 400% 400%;
+            animation: meshGradient 15s ease infinite;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        @keyframes meshGradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .glass-card {
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            border-radius: 25px;
+            width: 100%;
+            max-width: 800px;
+            padding: 40px;
+            position: relative;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.2);
+        }
+
+        .progress-bar {
+            position: absolute;
+            top: 0; left: 0; height: 6px;
+            background: linear-gradient(90deg, #00d2ff, #3a7bd5);
+            width: 0%; transition: width 0.3s ease;
+            box-shadow: 0 0 10px #00d2ff;
+        }
+
+        .screen { display: none; }
+        .screen.active { display: flex; flex-direction: column; }
+
+        .header { display: flex; justify-content: space-between; margin-bottom: 20px; font-weight: 600; }
+
+        .timer-circle {
+            width: 60px; height: 60px; border-radius: 50%;
+            border: 4px solid var(--border);
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 20px; font-size: 1.2rem; font-weight: 700;
+        }
+
+        .timer-pulse { color: #ff3f34; border-color: #ff3f34; animation: pulse 0.8s infinite; }
+
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+
+        .question-text { font-size: 1.3rem; font-weight: 700; margin-bottom: 5px; }
+        .hindi-text { font-size: 1rem; color: #ddd; font-weight: 400; display: block; margin-bottom: 25px; line-height: 1.4; }
+
+        .options-grid { display: grid; grid-template-columns: 1fr; gap: 15px; }
+
+        .option-btn {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border);
+            padding: 18px; border-radius: 15px;
+            color: white; cursor: pointer; text-align: left;
+            transition: 0.2s; display: flex; flex-direction: column;
+        }
+
+        .option-btn:hover:not(:disabled) { background: rgba(255,255,255,0.15); transform: translateX(5px); }
+
+        .option-btn.correct { background: var(--correct) !important; border-color: #fff; color: #fff; }
+        .option-btn.wrong { background: var(--wrong) !important; border-color: #fff; }
+
+        .btn-action {
+            background: white; color: var(--primary); border: none; padding: 15px 30px;
+            border-radius: 50px; font-weight: 700; cursor: pointer; transition: 0.3s;
+            margin-top: 25px; width: 100%; font-size: 1.1rem;
+        }
+        .btn-action:hover { transform: scale(1.02); box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
+
+        #sad-emoji {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 8rem; display: none; z-index: 100;
+        }
+
+        .shake { animation: shake 0.4s ease-in-out; }
+        @keyframes shake { 0%, 100% { transform: translate(-50%, -50%) rotate(0deg); } 25% { transform: translate(-50%, -50%) rotate(-10deg); } 75% { transform: translate(-50%, -50%) rotate(10deg); } }
+
+        #confetti { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; }
+    </style>
+</head>
+<body>
+
+<canvas id="confetti"></canvas>
+<div id="sad-emoji">😢</div>
+
+<div class="glass-card">
+    <div class="progress-bar" id="progress"></div>
+
+    <div id="start-screen" class="screen active">
+        <h1 style="text-align: center; margin-bottom: 10px;">Human Biology Quiz</h1>
+        <p style="text-align: center; margin-bottom: 30px; opacity: 0.8;">Nervous System & Coordination (Q. 151 - 204)</p>
+        
+        <div style="margin-bottom: 20px;">
+            <label style="display: block; margin-bottom: 10px;">Timer per Question (Seconds, 0 = Off):</label>
+            <input type="number" id="timer-input" placeholder="e.g. 15" 
+                   style="width: 100%; padding: 12px; border-radius: 10px; border: none; background: rgba(255,255,255,0.2); color: white;">
+        </div>
+
+        <div style="margin-bottom: 30px;">
+            <label style="cursor: pointer; display: flex; align-items: center; gap: 10px;">
+                <input type="checkbox" id="shuffle-toggle" style="width: 20px; height: 20px;"> Shuffle Questions (प्रश्नों को मिलाएं)
+            </label>
+        </div>
+
+        <button class="btn-action" onclick="initQuiz()">Start Quiz / शुरू करें</button>
+    </div>
+
+    <div id="quiz-screen" class="screen">
+        <div class="header">
+            <div id="q-counter">Question 00/54</div>
+            <div id="score-counter">Score: 0</div>
+        </div>
+        
+        <div id="timer-display" class="timer-circle">--</div>
+
+        <div id="q-container">
+            <h2 class="question-text" id="eng-q"></h2>
+            <span class="hindi-text" id="hin-q"></span>
+            <div class="options-grid" id="options-box"></div>
+        </div>
+
+        <button class="btn-action" style="background: rgba(255,255,255,0.1); color: white; border: 1px solid var(--border);" 
+                onclick="endQuiz()">Finish & Show Results</button>
+    </div>
+
+    <div id="result-screen" class="screen">
+        <h1 style="text-align: center;">Quiz Results</h1>
+        <div style="font-size: 4rem; font-weight: 800; text-align: center; margin: 20px 0;" id="final-score">0%</div>
+        <p id="result-msg" style="text-align: center; margin-bottom: 30px; font-size: 1.2rem;"></p>
+        <button class="btn-action" onclick="location.reload()">Restart Quiz</button>
+    </div>
+</div>
+
+<script>
+    // Full Question Set 151-204
+    const questionData = [
+        { qE: "What is Adams's Apple?", qH: "अवटु उद्र्ध (Adams's Apple) है?", options: ["Thyroid cartilage (थायराइड उपास्थि)", "Lymphatic organ (लासीका अंग)", "Parathyroid (पाराथायराइड उपास्थि)", "Thyroid sand (थायराइड की रेत)"], correct: 0 },
+        { qE: "Which gland is called the third eye residue?", qH: "निम्नलिखित में किस ग्रंथि को आत्मा का स्थान या तीसरी आँख का अवशेष कहते है?", options: ["Pineal (पीनीअल)", "Pituitary (पीयूष)", "Pons (पॉन्स)", "Hypothalamus (हाइपोथैलेमस)"], correct: 0 },
+        { qE: "What should be given to a patient with low blood pressure for relief?", qH: "रक्तचाप कम होने पर रोगी को क्या देने से आराम मिलेगा?", options: ["Insulin (इन्सुलिन)", "Adrenaline (एड्रीनेलीन)", "Gastrin (गैस्ट्रीन)", "Estrogen (एस्ट्रोजेन)"], correct: 1 },
+        { qE: "What was the first hormone discovered?", qH: "सर्वप्रथम खोजा गया हॉर्मोन कौन था?", options: ["Insulin", "Growth Hormone", "Secretin", "Adrenaline"], correct: 2 },
+        { qE: "Which hormone regulates growth in somatic cells?", qH: "निम्नलिखित में कौन-सा हॉर्मोन कायिक कोशिका में होने वाले वृद्धि को नियंत्रित करता है?", options: ["STH", "FSH", "LH", "LTH"], correct: 0 },
+        { qE: "Which hormone has an effect opposite to Insulin?", qH: "निम्नलिखित में किस हॉर्मोन में इंसुलिन का विपरित प्रभाव होता है?", options: ["Oxytocin", "Aldosterone", "Calcitonin", "Glucagon"], correct: 3 },
+        { qE: "Which plant hormone protects crops from frost and cold?", qH: "निम्नलिखित में कौन-सा पादप हॉर्मोन पाले और ठंड से सेब फसल की सुरक्षा करता है?", options: ["ABA", "IAA", "Gibberellin", "Cytokinin"], correct: 0 },
+        { qE: "Consider: 1. Calcitonin increases blood calcium. 2. Parathormone decreases it.", qH: "कथनों पर विचार करें- 1. कैल्सीटोनीन 2. पाराथॉर्मोन", options: ["Only 1", "Only 2", "1 and 2 both", "Neither"], correct: 3 },
+        { qE: "Nervous systems of high-level animals consist of?", qH: "उच्च स्तरीय जंतुओं के तंत्रिका तंत्र बने होते है-", options: ["Brain", "Spinal Cord", "Nerves", "All of these"], correct: 3 },
+        { qE: "Which is not a part of a Nerve Cell (Neuron)?", qH: "निम्नलिखित में कौन तंत्रिका कोशिका के भाग नहीं है?", options: ["Myelin Sheath", "Loop of Henle", "Node of Ranvier", "Schwann cell"], correct: 1 },
+        { qE: "Consider: 1. Long axon is called Nerve Fibre. 2. Many fibres form a Nerve.", qH: "कथनों पर विचार करें- 1. तंत्रिका तंतु 2. तंत्रिका", options: ["Only 1", "Only 2", "1 and 2 both", "Neither"], correct: 2 },
+        { qE: "What is absent in a Nerve Cell?", qH: "तंत्रिका कोशिका में निम्न में क्या अनुपस्थित होता है?", options: ["Centrosome", "Ribosome", "ER", "Golgi Body"], correct: 0 },
+        { qE: "Where is the nucleus located in a nerve cell?", qH: "तंत्रिका कोशिका के किस हिस्से में केन्द्रक उपस्थित रहता है?", options: ["Myelin Sheath", "Cyton", "Axon", "Dendron"], correct: 1 },
+        { qE: "What is it called when one nerve cell meets another?", qH: "जब एक तंत्रिका दूसरे तंत्रिका तंतु से जुड़ता है, तो उसे क्या कहते हैं?", options: ["Neuronal Synapse", "Neuromuscular Synapse", "Synaptic Cleft", "Myelin Sheath"], correct: 0 },
+        { qE: "What is it called when a nerve meets a muscle?", qH: "जब एक तंत्रिका तंतु एक मांसपेशी से जुड़ता है, तो इसे क्या कहते हैं?", options: ["Neuronal Synapse", "Neuromuscular Synapse", "Synaptic Cleft", "Myelin Sheath"], correct: 1 },
+        { qE: "What is the empty space between two nerves called?", qH: "जोड़ों के बीच कुछ खाली जगह रहता है। इस खाली जगह को क्या कहते हैं?", options: ["Neuronal Synapse", "Neuromuscular Synapse", "Synaptic Cleft", "Myelin Sheath"], correct: 2 },
+        { qE: "Who won the Nobel Prize in 1906 for the Neuron Doctrine?", qH: "न्यूरॉन सिद्धान्त प्रतिपादन हेतु 1906 में किसने नोबेल पुरस्कार जीता था?", options: ["Henry Moseley", "Pierre Curie", "Santiago Ramón y Cajal", "Luis Alvarez"], correct: 2 },
+        { qE: "Which structure's absence prevents nerve cells from dividing?", qH: "निम्नलिखित में किस संरचना के अभाव में तंत्रिका कोशिका विभाजित नहीं हो पाती है?", options: ["Golgi Body", "Centrosome", "Nucleus", "Mitochondria"], correct: 1 },
+        { qE: "Which element is necessary for electrical signal conduction in nerves?", qH: "तंत्रिका कोशिकाओं द्वारा विद्युतीय संकेत संवहन हेतु आवश्यक तत्व है?", options: ["Sodium (सोमियम)", "Rubidium", "Lithium", "Sodium (सोडियम)"], correct: 3 },
+        { qE: "Consider: 1. Myelin sheath 2. Neurilemma 3. Myelin absent in invertebrates.", qH: "कथनों पर विचार करें- मायलीन शीथ व न्यूरीलेमा", options: ["Only 1", "Only 2", "Only 3", "All of these"], correct: 3 },
+        { qE: "Where are Schwann cells present?", qH: "श्वान कोशिका (Schwann cells) उपस्थित रहते हैं-", options: ["Neurons", "Nephrons", "RBC", "WBC"], correct: 0 },
+        { qE: "In a Bipolar Neuron...", qH: "द्विध्रुवीय न्यूरॉन (Bipolar Neuron) में-", options: ["One axon and one dendron", "One axon and two or more dendrons", "Two axons and one dendron", "Two axons and two dendrons"], correct: 0 },
+        { qE: "Who secretes the Myelinated Sheath on the Axon?", qH: "न्यूरॉन के एक्सॉन पर स्थित मायलिनेटेड शीथ किसके द्वारा स्त्रावित किया जाता है-", options: ["Axon", "Schwann cells", "Cytoplasm", "Nissl's granules"], correct: 1 },
+        { qE: "Synaptic clefts are present between?", qH: "सेनेप्टिक दरार उपस्थित रहते है-", options: ["One dendron to another", "One axon to another", "Axon and Dendron", "Axon and Cyton"], correct: 2 },
+        { qE: "What comes under the Central Nervous System?", qH: "केन्द्रीय तंत्रिका तंत्र के अंतर्गत आते हैं?", options: ["Brain", "Spinal Cord", "Brain and Spinal Cord", "Cranium and Spinal nerves"], correct: 2 },
+        { qE: "Nervous system originates from which primary tissue?", qH: "तंत्रिका तंत्र की उत्पत्ति किस प्राथमिक उत्तक से होती है?", options: ["Ectoderm", "Mesoderm", "Endoderm", "None of these"], correct: 0 },
+        { qE: "Human brain is divided into how many parts?", qH: "मनुष्य का मस्तिष्क कितने भागों में विभाजित है-", options: ["2", "3", "4", "5"], correct: 1 },
+        { qE: "Which is NOT related to the Cerebrum?", qH: "निम्नलिखित में कौन-सा प्रमस्तिष्क से संबंधित नहीं है?", options: ["Largest part", "Forms anterior and lateral parts", "Has two hemispheres", "None of these"], correct: 3 },
+        { qE: "Irregular raised structures in the Cerebral Hemisphere are called?", qH: "प्रमस्तिष्क गोलार्द्ध में स्थित अनियमितआकार उभरी हुई संरचना को क्या कहते हैं?", options: ["Corpus Callosum", "Gyri", "Sulcus", "Pons"], correct: 1 },
+        { qE: "The center for intelligence and memory is located in?", qH: "बुद्धि, चतुराई, स्मरण-शक्ति का केन्द्र स्थित है-", options: ["Cerebrum", "Cerebellum", "Diencephalon", "Medulla"], correct: 0 },
+        { qE: "Which part controls involuntary acts like coughing and sneezing?", qH: "खाँसना, छींकना और उल्टी करना जैसी अनैच्छिक गतिविधियों को नियंत्रित करती है?", options: ["Pons Varolii", "Medulla Oblongata", "Cerebellum", "Cerebrum"], correct: 1 },
+        { qE: "Which part of brain controls heart rate, blood pressure and breathing?", qH: "मस्तिष्क का कौन-सा भाग हृदय गति, रक्तचाप और श्वसन गति की दर को नियंत्रित करते हैं?", options: ["Cerebellum", "Cerebrum", "Medulla Oblongata", "Pons"], correct: 2 },
+        { qE: "What is the weight of the human brain?", qH: "मानव मस्तिष्क का वजन कितना होता है?", options: ["2% of body weight", "8% of body weight", "10% of body weight", "12% of body weight"], correct: 0 },
+        { qE: "Average volume of human brain?", qH: "मनुष्य के मस्तिष्क का औसत आयतन कितना होता है?", options: ["800 mL", "1200 mL", "1400 mL", "1600 mL"], correct: 2 },
+        { qE: "Weight of human brain in grams?", qH: "मानव मस्तिष्क लगभग कितने ग्राम का होता है?", options: ["1350", "1230", "1100", "1500"], correct: 0 },
+        { qE: "Which is correct?", qH: "निम्नलिखित में कौन-सा एक सही है-", options: ["Cerebrum/Diencephalon are forebrain", "Midbrain controls eye muscles", "Hindbrain maintains balance", "All of these"], correct: 3 },
+        { qE: "What is the membrane of Fibrous Connective Tissue surrounding the brain?", qH: "तंतुमय संयोजी उत्तक की बनी झिल्ली जो मस्तिष्क को चारों ओर से घेरे रहती है, उसे क्या कहते हैं?", options: ["Sulcus", "Gyri", "Cranium", "Meninges"], correct: 3 },
+        { qE: "The part of the skull where the brain is located is?", qH: "मानव खोपड़ी का वह भाग जहाँ मस्तिष्क स्थित रहता है, उसे क्या कहते हैं?", options: ["Cranium", "Synapse", "Cerebellum", "Cerebrum"], correct: 0 },
+        { qE: "Which part of the brain is the center for memory and emotions?", qH: "मानव मस्तिष्क का कौन-सा हिस्सा स्मृति और भावनाओं का केन्द्र है-", options: ["Cerebrum", "Hypothalamus", "Corpus Callosum", "Midbrain"], correct: 0 },
+        { qE: "Consider: Brain is responsible for regulating heart rate.", qH: "कथनों पर विचार करें- मस्तिष्क हृदय गति नियंत्रण", options: ["Only 1", "Only 2", "1 and 2 both", "Neither"], correct: 2 },
+        { qE: "Regulator for swallowing and vomiting?", qH: "निगलने तथा उगलने का नियामक केन्द्र है?", options: ["Cerebellum", "Cerebrum", "Medulla", "Pons"], correct: 2 },
+        { qE: "Brain part controlling hunger, thirst and satiety?", qH: "मस्तिष्क का कौन-सा हिस्सा भूख, प्यास तथा परितृप्ति का नियंत्रण केन्द्र है?", options: ["Cerebral lobes", "Hypothalamus", "Thalamus", "Cerebellum"], correct: 1 },
+        { qE: "Brain part controlling temperature, pain and crying?", qH: "मस्तिष्क का कौन-सा भाग कम या अधिक ताप के आभास तथा दर्द और रोने जैसी क्रियाओं का नियंत्रण करता है?", options: ["Midbrain", "Cerebrum", "Diencephalon", "Cerebellum"], correct: 2 },
+        { qE: "If the Cerebellum is destroyed...", qH: "यदि किसी कारणवश मस्तिष्क का सेरीबेलम हिस्सा नष्ट हो जाये तो-", options: ["Voluntary control of limbs lost", "Difficulty talking", "Hearing affected", "All of these"], correct: 3 },
+        { qE: "Number of Cranial Nerves?", qH: "मनुष्य के शरीर में क्रेनियल तंत्रिकाओं की संख्या कितनी है?", options: ["12 pairs", "13 pairs", "31 pairs", "32 pairs"], correct: 0 },
+        { qE: "Number of Spinal Nerves?", qH: "मनुष्य के शरीर में स्पाइनल तंत्रिकाओं की संख्या कितनी है?", options: ["15 pairs", "31 pairs", "12 pairs", "32 pairs"], correct: 1 },
+        { qE: "Muscle covering the top of the Cranium?", qH: "क्रेनियम के ऊपरी भाग को ढंकने वाली मांसपेशी का नाम है-", options: ["Galea aponeurotica", "Gelia aponeurotica", "Gelia perineurotica", "Gelia hyponeurotica"], correct: 0 },
+        { qE: "Control center for Reflex Action?", qH: "प्रतिवर्ती क्रिया का नियंत्रण केन्द्र है-", options: ["Brain", "Spinal Cord", "Cerebellum", "Cerebrum"], correct: 1 },
+        { qE: "Eyelids closing when an insect flies near. What reaction is this?", qH: "कीटों के अचानक सामने से उड़कर आने पर पलकें बंद हो जाती हैं। यह कैसी प्रतिक्रिया है?", options: ["Simple Reflex", "Conditioned Reflex", "Voluntary", "None"], correct: 0 },
+        { qE: "Consider: Spinal cord is center for reflex actions.", qH: "कथनों पर विचार करें- मेरूज्जु प्रतिवर्ती क्रिया", options: ["Only 1", "Only 2", "1 and 2 both", "Neither"], correct: 2 },
+        { qE: "Chemical secreted by Sympathetic Nervous System?", qH: "सिम्पथैटिक तंत्रिका तंत्र किस रसायन का निर्माण करते हैं?", options: ["Adrenaline", "Nor-adrenaline", "Acetylcholine", "All of these"], correct: 1 },
+        { qE: "Location of Crura cerebri and Optic chiasma?", qH: "क्रूरा सेरेब्री (Crura cerebri) तथा ऑप्टिक काइज्मा (Optic chiasma) स्थित है-", options: ["Forebrain", "Midbrain", "Hindbrain", "Spinal Cord"], correct: 1 },
+        { qE: "Organ affected by Alzheimer's?", qH: "अल्जाइमर रोग में मानव का कौन-सा अंग प्रभावित होता है?", options: ["Lungs", "Brain", "Kidney", "Ear"], correct: 1 },
+        { qE: "What is called Brain Sand?", qH: "निम्नलिखित में किसे मस्तिष्क का रेत (Brain Sand) कहा जाता है?", options: ["Sodium", "Magnesium", "Potassium", "Copper"], correct: 1 } // Note: Usually Pineal sand (Ca/Mg), options suggest Mg context
+    ];
+
+    let currentQuestions = [];
+    let currentIdx = 0;
+    let score = 0;
+    let timer = null;
+    let timePerQ = 0;
+    let isTransitioning = false;
+
+    // Audio Context
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    function playSound(type) {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        if (type === 'correct') {
+            osc.frequency.setValueAtTime(880, audioCtx.currentTime); 
+            osc.type = 'sine';
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.5);
+        } else {
+            osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+            osc.type = 'sawtooth';
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.4);
+        }
+    }
+
+    // Confetti Logic
+    function runConfetti() {
+        const canvas = document.getElementById('confetti');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        let pieces = [];
+        for(let i=0; i<100; i++) pieces.push({
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height - canvas.height,
+            size: Math.random() * 10 + 5,
+            color: `hsl(${Math.random()*360}, 100%, 50%)`,
+            v: Math.random() * 3 + 2
+        });
+        function update() {
+            ctx.clearRect(0,0,canvas.width, canvas.height);
+            pieces.forEach(p => {
+                p.y += p.v;
+                ctx.fillStyle = p.color;
+                ctx.fillRect(p.x, p.y, p.size, p.size);
+            });
+            if(pieces[0].y < canvas.height) requestAnimationFrame(update);
+        }
+        update();
+    }
+
+    function initQuiz() {
+        const tVal = parseInt(document.getElementById('timer-input').value);
+        timePerQ = isNaN(tVal) ? 0 : tVal;
+        
+        currentQuestions = [...questionData];
+        if (document.getElementById('shuffle-toggle').checked) {
+            currentQuestions.sort(() => Math.random() - 0.5);
+        }
+
+        currentIdx = 0;
+        score = 0;
+        document.getElementById('start-screen').classList.remove('active');
+        document.getElementById('quiz-screen').classList.add('active');
+        loadQuestion();
+    }
+
+    function loadQuestion() {
+        if (currentIdx >= currentQuestions.length) return endQuiz();
+        
+        isTransitioning = false;
+        const q = currentQuestions[currentIdx];
+        document.getElementById('eng-q').innerText = q.qE;
+        document.getElementById('hin-q').innerText = q.qH;
+        document.getElementById('q-counter').innerText = `Question ${currentIdx + 1}/${currentQuestions.length}`;
+        document.getElementById('score-counter').innerText = `Score: ${score}`;
+        document.getElementById('progress').style.width = `${(currentIdx / currentQuestions.length) * 100}%`;
+
+        const box = document.getElementById('options-box');
+        box.innerHTML = '';
+        q.options.forEach((opt, i) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerHTML = `<span>${opt.split(' (')[0]}</span><small style="color:#bbb">${opt.includes('(') ? '(' + opt.split(' (')[1] : ''}</small>`;
+            btn.onclick = () => checkAnswer(i, btn);
+            box.appendChild(btn);
+        });
+
+        startTimer();
+    }
+
+    function startTimer() {
+        clearInterval(timer);
+        const display = document.getElementById('timer-display');
+        if (timePerQ <= 0) {
+            display.style.display = 'none';
+            return;
+        }
+        display.style.display = 'flex';
+        let timeLeft = timePerQ;
+        display.innerText = timeLeft;
+        display.classList.remove('timer-pulse');
+
+        timer = setInterval(() => {
+            timeLeft--;
+            display.innerText = timeLeft;
+            if (timeLeft < 5) display.classList.add('timer-pulse');
+            if (timeLeft <= 0) {
+                clearInterval(timer);
+                checkAnswer(-1, null);
+            }
+        }, 1000);
+    }
+
+    function checkAnswer(idx, btn) {
+        if (isTransitioning) return;
+        isTransitioning = true;
+        clearInterval(timer);
+
+        const q = currentQuestions[currentIdx];
+        const btns = document.querySelectorAll('.option-btn');
+        btns.forEach(b => b.disabled = true);
+
+        if (idx === q.correct) {
+            btn.classList.add('correct');
+            score++;
+            playSound('correct');
+            runConfetti();
+        } else {
+            if (btn) btn.classList.add('wrong');
+            btns[q.correct].classList.add('correct');
+            playSound('wrong');
+            const emoji = document.getElementById('sad-emoji');
+            emoji.style.display = 'block';
+            emoji.classList.add('shake');
+            setTimeout(() => {
+                emoji.style.display = 'none';
+                emoji.classList.remove('shake');
+            }, 1000);
+        }
+
+        setTimeout(() => {
+            currentIdx++;
+            loadQuestion();
+        }, 1500);
+    }
+
+    function endQuiz() {
+        document.getElementById('quiz-screen').classList.remove('active');
+        document.getElementById('result-screen').classList.add('active');
+        const percent = Math.round((score / currentQuestions.length) * 100);
+        document.getElementById('final-score').innerText = `${percent}%`;
+        
+        let msg = "";
+        if (percent >= 80) msg = "🏆 Outstanding Performance!";
+        else if (percent >= 50) msg = "👏 Well Done! Keep it up.";
+        else msg = "📚 Practice makes perfect! Try again.";
+        document.getElementById('result-msg').innerText = msg;
+    }
+</script>
+</body>
+</html>

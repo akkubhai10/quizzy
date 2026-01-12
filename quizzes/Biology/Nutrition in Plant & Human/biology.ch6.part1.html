@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bio-Mastery Bilingual Quiz</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --accent-green: #00e676;
+            --accent-red: #ff1744;
+            --mesh: linear-gradient(45deg, #4158D0, #C850C0, #FFCC70);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: var(--mesh);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            overflow-x: hidden;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .container {
+            width: 90%;
+            max-width: 800px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 25px;
+            padding: 2rem;
+            box-shadow: 0 8px 32px 0 rgba(0,0,0,0.3);
+            position: relative;
+        }
+
+        /* Progress Bar */
+        #progress-container {
+            position: absolute;
+            top: 0; left: 0; width: 0%;
+            height: 6px;
+            background: var(--accent-green);
+            box-shadow: 0 0 10px var(--accent-green);
+            border-radius: 25px 25px 0 0;
+            transition: width 0.3s ease;
+        }
+
+        /* Start Screen */
+        .screen { display: none; text-align: center; }
+        .active { display: block; }
+
+        .settings {
+            background: rgba(255,255,255,0.05);
+            padding: 1.5rem;
+            border-radius: 15px;
+            margin: 1.5rem 0;
+            text-align: left;
+        }
+
+        input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            border-radius: 8px;
+            border: none;
+            margin-top: 10px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            outline: none;
+        }
+
+        .btn {
+            background: white;
+            color: #333;
+            border: none;
+            padding: 12px 30px;
+            font-weight: 700;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: transform 0.2s;
+            margin-top: 10px;
+        }
+        .btn:hover { transform: scale(1.05); }
+
+        /* Quiz UI */
+        .quiz-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .timer {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+        .pulse-red { color: var(--accent-red); animation: pulse 0.5s infinite; }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+
+        .question-text { font-weight: 700; font-size: 1.2rem; margin-bottom: 5px; }
+        .hindi-text { font-size: 1rem; color: #ddd; margin-bottom: 20px; }
+
+        .options-grid {
+            display: grid;
+            gap: 12px;
+        }
+
+        .option {
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: left;
+        }
+        .option:hover { background: rgba(255,255,255,0.25); }
+        .correct { background: var(--accent-green) !important; color: white; }
+        .wrong { background: var(--accent-red) !important; color: white; }
+
+        /* Effects */
+        #sad-emoji {
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 10rem;
+            display: none;
+            z-index: 9999;
+        }
+        .shake { animation: shake 0.5s; }
+        @keyframes shake {
+            0%, 100% { transform: translate(-50%, -50%); }
+            20%, 60% { transform: translate(-52%, -50%); }
+            40%, 80% { transform: translate(-48%, -50%); }
+        }
+
+        .confetti { position: fixed; pointer-events: none; z-index: 9999; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div id="progress-container"></div>
+    
+    <div id="start-screen" class="screen active">
+        <h1>Nutrition & Photosynthesis Quiz</h1>
+        <p>Bilingual Practice Set (Hindi & English)</p>
+        <div class="settings">
+            <label>Timer per Question (Seconds):</label>
+            <input type="number" id="timer-val" placeholder="0 or empty to disable">
+            <br><br>
+            <label><input type="checkbox" id="shuffle"> Shuffle Questions</label>
+        </div>
+        <button class="btn" onclick="startQuiz()">START QUIZ</button>
+    </div>
+
+    <div id="quiz-screen" class="screen">
+        <div class="quiz-header">
+            <div id="q-count">Question 01/50</div>
+            <div id="timer-display" class="timer"></div>
+            <div id="score-display">Score: 0</div>
+        </div>
+        <div class="question-box">
+            <div class="question-text" id="q-en"></div>
+            <div class="hindi-text" id="q-hi"></div>
+        </div>
+        <div class="options-grid" id="options"></div>
+        <button class="btn" style="margin-top: 30px; background: rgba(0,0,0,0.2); color:white;" onclick="finishQuiz()">Finish & Show Results</button>
+    </div>
+
+    <div id="result-screen" class="screen">
+        <h2 id="result-title"></h2>
+        <h1 id="final-score" style="font-size: 4rem; margin: 20px 0;"></h1>
+        <button class="btn" onclick="location.reload()">RESTART QUIZ</button>
+    </div>
+</div>
+
+<div id="sad-emoji">😢</div>
+
+<script>
+    // DATA SOURCE: 1 to 50 questions from image extraction
+    const questions = [
+        { en: "Required for autotrophic nutrition is:", hi: "स्वपोषी पोषण हेतु आवश्यक है-", opts: ["Chlorophyll (क्लोरोफिल)", "H2O & CO2", "Sunlight (सूर्य का प्रकाश)", "All of these (इनमें से सभी)"], ans: 3 },
+        { en: "In autotrophic nutrition, organisms convert simple inorganic molecules into complex organic ones.", hi: "स्वपोषण में जीव सरल अकार्बनिक अणुओं से जटिल कार्बनिक अणुओं का निर्माण करते हैं।", opts: ["True (सही)", "False (गलत)"], ans: 0 },
+        { en: "Saprotrophic and Parasitic organisms consume food in which form?", hi: "मृतजीवी तथा परजीवी पोषण में जीव किस रूप में भोजन ग्रहण करते हैं?", opts: ["Solid (ठोस)", "Liquid (तरल)", "Both (दोनों)", "None (इनमें से कोई नहीं)"], ans: 2 },
+        { en: "In which of the following is Holozoic nutrition NOT found?", hi: "निम्नलिखित में किसमें प्राणी समपोषण नहीं होता है?", opts: ["Fungi (कवक)", "Amoeba (अमीबा)", "Frog (मेढ़क)", "Human (मनुष्य)"], ans: 0 },
+        { en: "Consider: 1. Plants perform photosynthesis. 2. No plant is parasitic.", hi: "विचार कीजिए- 1. पौधे प्रकाश संश्लेषण करते हैं। 2. कोई भी पौधा परजीवी नहीं होता।", opts: ["Only 1 (केवल 1)", "Only 2 (केवल 2)", "Both (1 तथा 2)", "Neither (न तो 1 न ही 2)"], ans: 0 },
+        { en: "Absorptive nutrition includes:", hi: "अवशोषक पोषण के अंतर्गत शामिल है-", opts: ["Saprotrophic (मृतजीवी)", "Parasitic (परजीवी)", "Both A & B", "Holozoic (प्राणिसम)"], ans: 2 },
+        { en: "Which of the following is a parasite?", hi: "निम्नलिखित में कौन परजीवी है?", opts: ["Bee (मधुमक्खी)", "Human (मनुष्य)", "Amoeba (अमीबा)", "Leech (जोंक)"], ans: 3 },
+        { en: "Correct equation for photosynthesis:", hi: "प्रकाशसंश्लेषण की क्रिया को दर्शाने के लिए सही समीकरण है?", opts: ["CO2 + H2O = CH2O", "6CO2 + 6H2O = C6H12O6 + 6O2", "C6H12O6 + 6O2 = 6CO2 + 6H2O", "6CO2 + 12H2O = C6H12O6 + 6O2 + 6H2O"], ans: 3 },
+        { en: "Photosynthesis is a physico-chemical process.", hi: "प्रकाश-संश्लेषण एक प्रकाश रसायनिक क्रिया है।", opts: ["Only 1 (केवल 1)", "Only 2 (केवल 2)", "Only 3 (केवल 3)", "All are correct (सभी सही)"], ans: 3 },
+        { en: "Most effective wavelength of visible light for photosynthesis?", hi: "प्रकाश संश्लेषण में अत्यधिक प्रभावशाली तरंगदैर्घ्य किस क्षेत्र में पायी जाती है?", opts: ["Red (लाल)", "Green (हरी)", "Violet (बैंगनी)", "Yellow (पीली)"], ans: 0 },
+        { en: "Essential raw materials for photosynthesis:", hi: "प्रकाश संश्लेषण प्रक्रम के लिये अनिवार्य कच्चे पदार्थ:", opts: ["1 & 2 only", "1, 2 & 3 only", "2, 3 & 4 only", "All (उपर्युक्त सभी)"], ans: 3 },
+        { en: "Percentage of light energy used by higher plants in photosynthesis?", hi: "प्रकाश ऊर्जा का कितना प्रतिशत उच्चतर पौधों द्वारा उपयोग होता है?", opts: ["1-2%", "10%", "50%", "100%"], ans: 0 },
+        { en: "Consider: 1. Sunlight is essential. 2. Photosynthesis is impossible in artificial light.", hi: "विचार करें: 1. सूर्य प्रकाश अनिवार्य है। 2. कृत्रिम प्रकाश में संभव नहीं है।", opts: ["Only 1", "Only 2", "Both", "None"], ans: 0 },
+        { en: "Which statement is FALSE regarding photosynthesis?", hi: "प्रकाश संश्लेषण में कौन सा कथन असत्य है?", opts: ["Oxygen is produced", "ATP is produced", "Oxygen comes from CO2", "Glucose is end product"], ans: 2 },
+        { en: "Oxygen released in photosynthesis comes from:", hi: "प्रकाश संश्लेषण में ऑक्सीजन कहाँ से मुक्त होती है?", opts: ["CO2", "H2O (जल)", "Chlorophyll", "Phosphoglyceric acid"], ans: 1 },
+        { en: "The limiting factor or controller of photosynthesis is:", hi: "प्रकाश संश्लेषण का नियंत्रक या सीमांतक कारक है:", opts: ["CO2", "Water", "Chlorophyll", "Sunlight"], ans: 3 },
+        { en: "Percentage of water absorbed by soil used in photosynthesis?", hi: "मिट्टी से अवशोषित जल का कितना प्रतिशत प्रकाश संश्लेषण में उपयोग होता है?", opts: ["Approx 1%", "10%", "50%", "90%"], ans: 0 },
+        { en: "Most oxygen on Earth is produced by:", hi: "पृथ्वी पर अधिकांश ऑक्सीजन किसके द्वारा उत्पादित किया जाता है?", opts: ["Algae (शैवालों)", "Lichens", "Gymnosperms", "Angiosperms"], ans: 0 },
+        { en: "Light reaction takes place in which part of chloroplast?", hi: "प्रकाशकीय प्रतिक्रिया हरित लवक के किस हिस्से में होती है?", opts: ["Stroma", "Grana", "Inner membrane", "Outer membrane"], ans: 1 },
+        { en: "Dark reaction takes place in which part of chloroplast?", hi: "अप्रकाशकीय प्रतिक्रिया हरित लवक के किस हिस्से में होती है?", opts: ["Grana", "Stroma", "Outer membrane", "Inner membrane"], ans: 1 },
+        { en: "Oxygen balance in nature is maintained by:", hi: "प्रकृति में ऑक्सीजन का संतुलन कैसे बना रहता है?", opts: ["Combination", "Decomposition", "Photosynthesis", "All"], ans: 2 },
+        { en: "When does the dark reaction (blind reaction) occur?", hi: "प्रकाश संश्लेषण की अंध प्रतिक्रिया कब होती है?", opts: ["Only day", "Only night", "Only dark", "Anytime NADPH2 is available"], ans: 3 },
+        { en: "Source of O2 in photosynthesis is:", hi: "प्रकाश संश्लेषण में O2 की उत्पत्ति किससे होती है?", opts: ["CO2", "H2O", "Both", "None"], ans: 1 },
+        { en: "Absorptive nutrition is found in:", hi: "कवकों में किस प्रकार का पोषण पाया जाता है?", opts: ["Autotrophic", "Photosynthetic", "Absorptive (अवशोषक)", "None"], ans: 2 },
+        { en: "Where is glucose formed during photosynthesis?", hi: "ग्लूकोज का निर्माण हरित लवक के किस भाग में होता है?", opts: ["Grana", "Stroma", "Both", "None"], ans: 1 },
+        { en: "Chlorophyll is called the 'Photosynthetic Unit'.", hi: "क्लोरोफिल को प्रकाश संश्लेषण इकाई कहते हैं।", opts: ["Only 1", "Only 2", "Both", "None"], ans: 2 },
+        { en: "Green plants produce:", hi: "प्रकाश संश्लेषण द्वारा हरे पौधे पैदा करते हैं?", opts: ["Organic matter", "Inorganic matter", "Minerals", "Nutrients"], ans: 0 },
+        { en: "Consider: 1. Red light is most effective. 2. Yellow/Green are least effective.", hi: "विचार करें: 1. लाल में सबसे अधिक। 2. पीली और हरी में सबसे कम प्रभावी।", opts: ["Only 1", "Only 2", "Both", "None"], ans: 2 },
+        { en: "What does NOT happen in photosynthesis?", hi: "प्रकाश संश्लेषण में निम्नांकित में क्या नहीं होता है?", opts: ["Water splitting", "O2 release", "CO2 release", "CO2 use"], ans: 2 },
+        { en: "Exchange of gases (CO2/O2) occurs via:", hi: "गैसों का आदान-प्रदान किन अंगों द्वारा होता है?", opts: ["Roots", "Stems", "Stomata on leaves", "Flowers"], ans: 2 },
+        { en: "Essential element for chlorophyll formation:", hi: "क्लोरोफिल के बनने के लिये अनिवार्य तत्व है:", opts: ["Calcium", "Magnesium", "Iron", "Potassium"], ans: 1 },
+        { en: "Grass under a brick turns yellow due to lack of sunlight.", hi: "ईंट का टुकड़ा हटाने पर घास पीली प्रतीत होती है क्योंकि धूप नहीं मिली।", opts: ["Statement A is correct", "Reason R is correct", "Both correct & R explains A", "A is wrong"], ans: 2 },
+        { en: "Which process is involved in photosynthesis?", hi: "प्रकाश-संश्लेषण में सम्मिलित है?", opts: ["Potential to Free energy", "Free to Potential energy", "Oxidation of food", "Intake of O2"], ans: 1 },
+        { en: "What are the 'Food Factories' of a plant?", hi: "किसे 'पादप की खाद्य फैक्ट्रियां' कहा जाता है?", opts: ["Leaves", "Stem", "Roots", "Branches"], ans: 0 },
+        { en: "Carbohydrates in plants are made of:", hi: "पौधे कार्बोहाइड्रेट किससे मिलकर बनाते हैं?", opts: ["Carbon", "Hydrogen", "Oxygen", "All of these"], ans: 3 },
+        { en: "Max photosynthesis occurs at:", hi: "30-35°C तापमान पर प्रकाश-संश्लेषण दर सबसे अधिक होती है?", opts: ["Only 1", "Only 2", "Both", "Neither"], ans: 0 },
+        { en: "Which pigments assist in photosynthesis?", hi: "कौन-से वर्णक प्रकाश संश्लेषण में सहायक होता है?", opts: ["Chlorophyll A/B", "Xanthophyll", "Carotenoids", "All of these"], ans: 3 },
+        { en: "Who studied the dark reaction thoroughly?", hi: "अप्रकाशकीय अभिक्रिया का पूर्ण अध्ययन सर्वप्रथम किसने किया?", opts: ["Melvin Calvin", "Blackman", "Priestley", "Robert Mayer"], ans: 0 },
+        { en: "First event in photosynthesis process:", hi: "प्रकाश संश्लेषण प्रक्रम के दौरान सर्वप्रथम होता है-", opts: ["Chlorophyll excitation", "Water splitting", "O2 release", "NADPH2 formation"], ans: 0 },
+        { en: "Which is oxidized in photosynthesis?", hi: "किसका ऑक्सीकरण होता है?", opts: ["Water (जल)", "Chlorophyll", "Sunlight", "CO2"], ans: 0 },
+        { en: "Nobel Prize winner for photosynthesis research:", hi: "प्रकाश संश्लेषण में योगदान हेतु नोबेल पुरस्कार जीता?", opts: ["Hans Krebs", "Peter Mitchell", "Linus Pauling", "Melvin Calvin"], ans: 3 },
+        { en: "Which is NOT a limiting factor?", hi: "कौन सा एक कारक सीमाकारी नहीं होगा?", opts: ["Light", "Oxygen", "CO2", "Chlorophyll"], ans: 1 },
+        { en: "First stable compound of photosynthesis:", hi: "प्रकाश संश्लेषण का प्रथम स्थिर यौगिक है-", opts: ["Starch", "Glucose", "PGA", "DPGA"], ans: 2 },
+        { en: "What is released out during photosynthesis?", hi: "प्रकाश संश्लेषण क्रिया में बाहर निकलता है?", opts: ["Hydrogen", "CO2", "Chlorine", "Oxygen"], ans: 3 },
+        { en: "Process resulting in O2 release and CO2 absorption:", hi: "जिसमें ऑक्सीजन का निकास एवं CO2 का अवशोषण होता है?", opts: ["Osmosis", "Diffusion", "Photosynthesis", "Transpiration"], ans: 2 },
+        { en: "Plants absorb which gas from atmosphere?", hi: "पौधा किस गैस का अवचूषण करते हैं?", opts: ["CO2", "O2", "N2", "H2"], ans: 0 },
+        { en: "Role of Chlorophyll:", hi: "पर्णहरित की क्या भूमिका है?", opts: ["Water absorption", "Light absorption", "CO2 absorption", "None"], ans: 1 },
+        { en: "End product of photosynthesis:", hi: "प्रकाश संश्लेषण का अन्तिम उत्पाद क्या है?", opts: ["CO2", "H2O", "Carbohydrate", "O2"], ans: 2 },
+        { en: "Where is max photosynthetic activity?", hi: "सर्वाधिक प्रकाश संश्लेषी क्रियाकलाप कहाँ चलता है?", opts: ["Blue & Red region", "Violet & Orange", "Green & Yellow", "Blue & Orange"], ans: 0 },
+        { en: "Element present in Chlorophyll:", hi: "क्लोरोफिल में कौन सा तत्व उपस्थित रहता है?", opts: ["Magnesium", "Calcium", "Iron", "Tin"], ans: 0 }
+    ];
+
+    let currentQ = 0;
+    let score = 0;
+    let timer;
+    let activeQuestions = [];
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    function beep(freq, duration) {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.frequency.value = freq;
+        osc.start();
+        gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + duration);
+        osc.stop(audioCtx.currentTime + duration);
+    }
+
+    function startQuiz() {
+        const shuffle = document.getElementById('shuffle').checked;
+        activeQuestions = shuffle ? [...questions].sort(() => Math.random() - 0.5) : [...questions];
+        
+        document.getElementById('start-screen').classList.remove('active');
+        document.getElementById('quiz-screen').classList.add('active');
+        loadQuestion();
+    }
+
+    function loadQuestion() {
+        if (currentQ >= activeQuestions.length) return finishQuiz();
+        
+        const q = activeQuestions[currentQ];
+        document.getElementById('q-en').innerText = q.en;
+        document.getElementById('q-hi').innerText = q.hi;
+        document.getElementById('q-count').innerText = `Question ${String(currentQ + 1).padStart(2, '0')}/${activeQuestions.length}`;
+        document.getElementById('progress-container').style.width = `${((currentQ) / activeQuestions.length) * 100}%`;
+
+        const optsDiv = document.getElementById('options');
+        optsDiv.innerHTML = '';
+        q.opts.forEach((opt, i) => {
+            const btn = document.createElement('div');
+            btn.className = 'option';
+            btn.innerText = opt;
+            btn.onclick = () => checkAnswer(i, btn);
+            optsDiv.appendChild(btn);
+        });
+
+        startTimer();
+    }
+
+    function startTimer() {
+        clearInterval(timer);
+        const timeVal = parseInt(document.getElementById('timer-val').value);
+        if (!timeVal) {
+            document.getElementById('timer-display').innerText = "";
+            return;
+        }
+        
+        let timeLeft = timeVal;
+        const display = document.getElementById('timer-display');
+        display.innerText = timeLeft;
+        display.classList.remove('pulse-red');
+
+        timer = setInterval(() => {
+            timeLeft--;
+            display.innerText = timeLeft;
+            if (timeLeft < 5) display.classList.add('pulse-red');
+            if (timeLeft <= 0) {
+                clearInterval(timer);
+                nextQuestion();
+            }
+        }, 1000);
+    }
+
+    function checkAnswer(idx, el) {
+        clearInterval(timer);
+        const correctIdx = activeQuestions[currentQ].ans;
+        const options = document.querySelectorAll('.option');
+        options.forEach(o => o.style.pointerEvents = 'none');
+
+        if (idx === correctIdx) {
+            el.classList.add('correct');
+            score++;
+            document.getElementById('score-display').innerText = `Score: ${score}`;
+            beep(660, 0.2);
+            confettiEffect();
+        } else {
+            el.classList.add('wrong');
+            options[correctIdx].classList.add('correct');
+            beep(150, 0.5);
+            showSadEmoji();
+        }
+
+        setTimeout(nextQuestion, 1500);
+    }
+
+    function nextQuestion() {
+        currentQ++;
+        loadQuestion();
+    }
+
+    function showSadEmoji() {
+        const emoji = document.getElementById('sad-emoji');
+        emoji.style.display = 'block';
+        emoji.classList.add('shake');
+        setTimeout(() => {
+            emoji.style.display = 'none';
+            emoji.classList.remove('shake');
+        }, 1000);
+    }
+
+    function confettiEffect() {
+        for (let i = 0; i < 50; i++) {
+            const c = document.createElement('div');
+            c.className = 'confetti';
+            c.style.left = Math.random() * 100 + 'vw';
+            c.style.top = '-10px';
+            c.style.width = '10px';
+            c.style.height = '10px';
+            c.style.backgroundColor = `hsl(${Math.random() * 360}, 100%, 50%)`;
+            document.body.appendChild(c);
+            
+            const animation = c.animate([
+                { transform: 'translateY(0) rotate(0deg)', opacity: 1 },
+                { transform: `translateY(100vh) rotate(${Math.random() * 360}deg)`, opacity: 0 }
+            ], { duration: 2000, easing: 'ease-out' });
+            
+            animation.onfinish = () => c.remove();
+        }
+    }
+
+    function finishQuiz() {
+        clearInterval(timer);
+        document.getElementById('quiz-screen').classList.remove('active');
+        document.getElementById('result-screen').classList.add('active');
+        
+        const percent = (score / activeQuestions.length) * 100;
+        document.getElementById('final-score').innerText = `${score} / ${activeQuestions.length}`;
+        
+        let msg = "";
+        if (percent >= 80) msg = "🏆 Outstanding Performance!";
+        else if (percent >= 50) msg = "👏 Well Done! Keep it up.";
+        else msg = "📚 Practice makes perfect! Try again.";
+        
+        document.getElementById('result-title').innerText = msg;
+    }
+</script>
+</body>
+</html>

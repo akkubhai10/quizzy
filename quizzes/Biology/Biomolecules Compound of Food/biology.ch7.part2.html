@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Biomolecules Bilingual Quiz</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --glass: rgba(255, 255, 255, 0.1);
+            --border: rgba(255, 255, 255, 0.2);
+            --success: #4caf50;
+            --error: #f44336;
+            --text-en: #ffffff;
+            --text-hi: #dddddd;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            display: flex; justify-content: center; align-items: center;
+            color: white; overflow-x: hidden;
+        }
+
+        @keyframes gradientBG { 0% {background-position: 0% 50%} 50% {background-position: 100% 50%} 100% {background-position: 0% 50%} }
+
+        #progress-bar {
+            position: fixed; top: 0; left: 0; height: 6px;
+            background: linear-gradient(to right, #fff, #4facfe);
+            width: 0%; transition: width 0.3s; z-index: 1000;
+            box-shadow: 0 0 15px rgba(255,255,255,0.5);
+        }
+
+        .container {
+            width: 90%; max-width: 800px; padding: 30px;
+            background: var(--glass); backdrop-filter: blur(20px);
+            border: 1px solid var(--border); border-radius: 25px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3); position: relative;
+        }
+
+        .screen { display: none; }
+        .active { display: block; animation: fadeIn 0.4s ease-out; }
+        @keyframes fadeIn { from {opacity:0; transform: scale(0.95);} to {opacity:1; transform: scale(1);} }
+
+        /* Typography */
+        .q-en { font-size: 1.25rem; font-weight: 600; margin-bottom: 5px; display: block; }
+        .q-hi { font-size: 1rem; color: var(--text-hi); font-weight: 400; display: block; margin-bottom: 20px; }
+        .opt-en { font-size: 1rem; font-weight: 500; display: block; }
+        .opt-hi { font-size: 0.85rem; color: #ccc; display: block; }
+
+        /* Buttons & Inputs */
+        .option-btn {
+            width: 100%; text-align: left; padding: 15px 20px; margin-bottom: 12px;
+            background: rgba(255,255,255,0.05); border: 1px solid var(--border);
+            border-radius: 15px; color: white; cursor: pointer; transition: 0.2s;
+        }
+        .option-btn:hover:not(:disabled) { background: rgba(255,255,255,0.15); transform: translateX(5px); }
+        .option-btn:disabled { cursor: not-allowed; }
+        
+        .correct { background: var(--success) !important; border-color: transparent; }
+        .wrong { background: var(--error) !important; border-color: transparent; }
+
+        .btn-main {
+            background: white; color: #e73c7e; border: none; padding: 15px 30px;
+            border-radius: 50px; font-weight: 600; cursor: pointer; transition: 0.3s; width: 100%;
+        }
+        .btn-main:hover { transform: scale(1.05); box-shadow: 0 0 20px rgba(255,255,255,0.4); }
+
+        .timer-pulse { color: #ff4d4d !important; animation: pulse 0.8s infinite; }
+        @keyframes pulse { 0% {opacity:1} 50% {opacity:0.3} 100% {opacity:1} }
+
+        #emoji-overlay {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 100px; display: none; z-index: 100;
+        }
+        .shake { animation: shake 0.5s; }
+        @keyframes shake { 0%, 100% {margin-left:0} 25% {margin-left:-10px} 75% {margin-left:10px} }
+
+        canvas#confetti { position: fixed; top:0; left:0; pointer-events:none; z-index:9999; }
+    </style>
+</head>
+<body>
+
+<div id="progress-bar"></div>
+<canvas id="confetti"></canvas>
+
+<div class="container">
+    <div id="emoji-overlay">😢</div>
+
+    <div id="start-screen" class="screen active">
+        <h1 style="text-align:center; margin-bottom:20px;">Biology Master Quiz</h1>
+        <div style="margin-bottom:20px;">
+            <label>Timer (Seconds per Question, 0 to disable):</label><br>
+            <input type="number" id="timer-input" value="15" style="width:100%; padding:10px; border-radius:10px; border:none; margin-top:5px;">
+        </div>
+        <div style="margin-bottom:30px;">
+            <input type="checkbox" id="shuffle-toggle"> <label for="shuffle-toggle">Shuffle Questions</label>
+        </div>
+        <button class="btn-main" onclick="startQuiz()">START QUIZ</button>
+    </div>
+
+    <div id="quiz-screen" class="screen">
+        <div style="display:flex; justify-content:space-between; margin-bottom:20px; font-size:0.9rem; opacity:0.8;">
+            <span id="q-counter">Question 00/00</span>
+            <span id="timer-display">⏱️ 00s</span>
+            <span id="score-display">Score: 0</span>
+        </div>
+        <div id="question-area">
+            <span class="q-en" id="en-q"></span>
+            <span class="q-hi" id="hi-q"></span>
+            <div id="options-grid"></div>
+        </div>
+        <button class="btn-main" style="margin-top:30px; background:transparent; border:1px solid white; color:white;" onclick="endQuiz()">Finish & Show Results</button>
+    </div>
+
+    <div id="result-screen" class="screen" style="text-align:center;">
+        <h2 id="result-title">Quiz Completed!</h2>
+        <div id="final-score" style="font-size:4rem; margin:20px 0; font-weight:600;">0</div>
+        <p id="result-msg" style="margin-bottom:30px; font-size:1.2rem;"></p>
+        <button class="btn-main" onclick="location.reload()">Restart Quiz</button>
+    </div>
+</div>
+
+<script>
+    const quizQuestions = [
+        { en: "Peptide bonds are a characteristic of which of the following?", hi: "पेप्टाइड बंधन निम्नलिखित में किसकी विशेषता है?", opts: [{en:"Vitamin", hi:"विटामिन"}, {en:"Ester", hi:"एस्टर"}, {en:"Amino Acid", hi:"एमीनो अम्ल"}, {en:"Saccharide", hi:"सैकराइड"}], correct: 2 },
+        { en: "Cholesterol is a:", hi: "कोलेस्ट्रॉल है-", opts: [{en:"Carbohydrate", hi:"कार्बोहाइड्रेट"}, {en:"Protein", hi:"प्रोटीन"}, {en:"Fat", hi:"वसा"}, {en:"Sterol", hi:"स्टेरॉल"}], correct: 3 },
+        { en: "Which of the following is not a lipid?", hi: "निम्नलिखित में कौन एक लिपिड नहीं है?", opts: [{en:"Testosterone", hi:"टेस्टोस्टेरोन"}, {en:"Cholesterol", hi:"कोलेस्ट्रॉल"}, {en:"Chitin", hi:"काइटिन"}, {en:"Cholic Acid", hi:"कोलिक अम्ल"}], correct: 2 },
+        { en: "Enzymes are highly sensitive to:", hi: "एंजाइम किसके प्रति काफी संवेदनशील होता है?", opts: [{en:"Wind", hi:"वातास"}, {en:"Light", hi:"प्रकाश"}, {en:"Rain", hi:"वृष्टि"}, {en:"pH", hi:"pH"}], correct: 3 },
+        { en: "Which of the following is found in Phospholipids?", hi: "फॉस्फोलिपिड में पाया जाता है-", opts: [{en:"Saturated Fatty Acid", hi:"संतृप्त वसा अम्ल"}, {en:"Glucose", hi:"ग्लूकोज"}, {en:"Cholesterol", hi:"कोलेस्ट्रॉल"}, {en:"Unsaturated Fatty Acid", hi:"असंतृप्त वसा अम्ल"}], correct: 3 },
+        { en: "What is the most important function of protein?", hi: "प्रोटीन का सबसे महत्वपूर्ण कार्य क्या है?", opts: [{en:"As biocatalyst", hi:"जैव उत्प्रेरक के रूप में"}, {en:"As structural material", hi:"संरचना पदार्थ के रूप में"}, {en:"As food storage", hi:"खाद्य भंडार के रूप में"}, {en:"As signaling molecule", hi:"संकेत अणु के रूप में"}], correct: 1 },
+        { en: "Lipid is a/an:", hi: "लिपिड है-", opts: [{en:"Alcohol", hi:"ऐल्कोहॉल"}, {en:"Acid", hi:"अम्ल"}, {en:"Ester", hi:"ऐस्टर"}, {en:"None", hi:"कोई नहीं"}], correct: 2 },
+        { en: "Which of the following is a saturated fatty acid?", hi: "निम्नलिखित में कौन संतृप्त फैटी अम्ल है?", opts: [{en:"Oleic Acid", hi:"ओलेइक अम्ल"}, {en:"Erucic Acid", hi:"इरुसिक अम्ल"}, {en:"Palmitoleic Acid", hi:"पाल्मिटोलेइक अम्ल"}, {en:"Butyric Acid", hi:"ब्यूटिरिक अम्ल"}], correct: 3 },
+        { en: "Which fruit primarily contains Vitamin A?", hi: "पपीते में मुख्य रूप से क्या पाया जाता है?", opts: [{en:"Vitamin A", hi:"विटामिन A"}, {en:"Vitamin B", hi:"विटामिन B"}, {en:"Vitamin C", hi:"विटामिन C"}, {en:"Vitamin D", hi:"विटामिन D"}], correct: 0 },
+        { en: "Which is a calorie-free diet?", hi: "निम्नलिखित में कौन सा एक कैलोरी-फ्री आहार है?", opts: [{en:"Water", hi:"जल"}, {en:"Carbohydrate", hi:"कार्बोहाइड्रेट"}, {en:"Protein", hi:"प्रोटीन"}, {en:"Fat", hi:"वसा"}], correct: 0 },
+        { en: "Which carbohydrate gives blue color with Iodine?", hi: "कौन सा कार्बोहाइड्रेट आयोडीन के साथ नीला रंग देता है?", opts: [{en:"Cellulose", hi:"सेल्यूलोज"}, {en:"Starch", hi:"स्टार्च"}, {en:"Glycogen", hi:"ग्लाइकोजेन"}, {en:"All of these", hi:"इनमें से सभी"}], correct: 1 },
+        { en: "Basmati rice grains become long on cooking because of:", hi: "बासमती चावल के दाने पकाने पर लंबे हो जाते हैं, क्योंकि उसमें बाहुल्य है-", opts: [{en:"Sugar", hi:"शर्करा"}, {en:"Lysine", hi:"लाइसिन"}, {en:"Amylose", hi:"एमाइलोज"}, {en:"Oil", hi:"तेल"}], correct: 2 },
+        { en: "Which fruit is rich in Iron?", hi: "निम्न में किस फल में लौह प्रचुर मात्रा में पाया जाता है?", opts: [{en:"Jamun", hi:"जामुन"}, {en:"Karonda", hi:"करौंदा"}, {en:"Loquat", hi:"लोकाट"}, {en:"Guava", hi:"अमरूद"}], correct: 1 },
+        { en: "Average fat content in Buffalo milk is:", hi: "भैंस के दूध में औसत वसा की मात्रा कितनी होती है?", opts: [{en:"7.2%", hi:"7.2%"}, {en:"9%", hi:"9%"}, {en:"4.5%", hi:"4.5%"}, {en:"10%", hi:"10%"}], correct: 0 },
+        { en: "Protein present in human hair and nails is:", hi: "मानव के बाल एवं नख में निम्नलिखित में से कौन सा प्रोटीन विद्यमान है?", opts: [{en:"Oxytocin", hi:"ऑक्सीटोसिन"}, {en:"Vasopressin", hi:"वैसोप्रेसिन"}, {en:"Keratin", hi:"किरेटिन"}, {en:"Trypsin", hi:"ट्रिप्सिन"}], correct: 2 },
+        { en: "Substance affecting bread-making quality in wheat is:", hi: "गेहूं में रोटी बनाने के गुणों को प्रभावित करने वाला पदार्थ है-", opts: [{en:"Gluten", hi:"ग्लूटीन"}, {en:"Globulin", hi:"ग्लोबुलिन"}, {en:"Lysine", hi:"लायसीन"}, {en:"Glycine", hi:"ग्लायसीन"}], correct: 0 },
+        { en: "Vitamin C helps in the absorption of which element?", hi: "किसके अवशोषण में विटामिन C मदद करता है?", opts: [{en:"Iron", hi:"लोहा"}, {en:"Sodium", hi:"सोडियम"}, {en:"Iodine", hi:"आयोडीन"}, {en:"Calcium", hi:"कैल्शियम"}], correct: 0 },
+        { en: "Which vegetable has the highest Vitamin C content?", hi: "सब्जियों में सर्वाधिक विटामिन C पाया जाता है-", opts: [{en:"Peas", hi:"मटर"}, {en:"Radish", hi:"मूली"}, {en:"Pumpkin", hi:"कद्दू"}, {en:"Chilli", hi:"मिर्च"}], correct: 3 },
+        { en: "Apples are important for heart patients because they are sources of:", hi: "सेब हृदय रोगियों के लिये विशेष महत्व का है क्योंकि ये बड़े स्रोत हैं-", opts: [{en:"Sodium/Potassium", hi:"सोडियम एवं पोटैशियम के"}, {en:"Phosphorus/Magnesium", hi:"फॉस्फोरस एवं मैग्नीशियम के"}, {en:"Potassium only", hi:"केवल पोटैशियम के"}, {en:"Potassium/Phosphorus", hi:"पोटैशियम व फॉस्फोरस के"}], correct: 2 },
+        { en: "Vitamins are:", hi: "विटामीन्स क्या हैं-", opts: [{en:"Organic compounds", hi:"कार्बनिक पदार्थ"}, {en:"Inorganic compounds", hi:"अकार्बनिक यौगिक"}, {en:"Living organisms", hi:"जीवित जीव"}, {en:"None", hi:"इनमें से कोई नहीं"}], correct: 0 },
+        { en: "Which snake venom contains lysophosphatide?", hi: "कोबरा सांप के विष में कौन सा एंजाइम पाया जाता है?", opts: [{en:"Lysophosphatide", hi:"लाइसोलेसिसथिन"}, {en:"Linolenic", hi:"लिनोलेनिक"}, {en:"Cephalin", hi:"सेफालिन"}, {en:"Plasmalogen", hi:"प्लाज्मालोजेन्स"}], correct: 0 },
+        { en: "Which of the following is water soluble?", hi: "निम्नलिखित में कौन सा एक जल में घुलनशील है?", opts: [{en:"Starch", hi:"स्टार्च"}, {en:"Glycogen", hi:"ग्लाइकोजेन"}, {en:"Cellulose", hi:"सेल्यूलोज"}, {en:"Chitin", hi:"काइटिन"}], correct: 1 },
+        { en: "A major component of food is:", hi: "भोजन का एक प्रमुख अंग है-", opts: [{en:"Starch", hi:"स्टार्च"}, {en:"Glucose", hi:"ग्लूकोज"}, {en:"Carbohydrate", hi:"कार्बोहाइड्रेट"}, {en:"Cellulose", hi:"सेल्यूलोज"}], correct: 2 },
+        { en: "Which substance acts as fuel in the human body?", hi: "निम्नलिखित में से कौन-सा पदार्थ मानव शरीर में ईंधन का काम करता है?", opts: [{en:"Protein", hi:"प्रोटीन"}, {en:"Vitamin", hi:"विटामिन"}, {en:"Carbohydrate", hi: "कार्बोहाइड्रेट"}, {en:"Water", hi: "जल"}], correct: 2 },
+        { en: "Capsule shells are made of:", hi: "कैप्सूल (Capsule) का आवरण बना होता है-", opts: [{en:"Protein", hi:"प्रोटीन का"}, {en:"Egg shell", hi:"अण्डे के छिलके का"}, {en:"Cellulose", hi:"सेल्यूलोज का"}, {en:"Starch", hi:"स्टार्च का"}], correct: 3 },
+        { en: "Major component of honey is:", hi: "शहद का प्रमुख घटक है-", opts: [{en:"Glucose", hi:"ग्लूकोज"}, {en:"Sucrose", hi:"सुक्रोज"}, {en:"Maltose", hi:"माल्टोज"}, {en:"Fructose", hi:"फ्रक्टोज"}], correct: 3 },
+        { en: "Which sugar provides instant energy?", hi: "निम्नलिखित में कौन-सी शर्करा तत्काल ऊर्जा प्रदान करती है?", opts: [{en:"Lactose", hi:"लैक्टोज"}, {en:"Cellulose", hi:"सेल्यूलोज"}, {en:"Maltose", hi:"माल्टोज"}, {en:"Glucose", hi:"ग्लूकोज"}], correct: 3 },
+        { en: "Carbohydrates are stored in the body as:", hi: "मानव शरीर में कार्बोहाइड्रेट पुनः संग्रह होता है-", opts: [{en:"Sugar", hi:"शुगर"}, {en:"Starch", hi:"स्टार्च"}, {en:"Glucose", hi:"ग्लूकोज"}, {en:"Glycogen", hi:"ग्लाइकोजेन"}], correct: 3 },
+        { en: "Muscle fatigue after hard work is caused by:", hi: "मांसपेशियों में थकान अनुभव होने का कारण होता है?", opts: [{en:"Oxygen deficiency", hi:"ऑक्सीजन की आपूर्ति में कमी"}, {en:"Fiber breakdown", hi:"पेशी तन्तु की टूट-फूट"}, {en:"Glucose depletion", hi:"ग्लूकोज का अवक्षय"}, {en:"Lactic acid accumulation", hi:"लैक्टिक एसिड का संचय"}], correct: 3 },
+        { en: "Tissues are formed from:", hi: "शरीर में ऊतकों का निर्माण किससे होता है?", opts: [{en:"Protein", hi:"प्रोटीन"}, {en:"Fat", hi:"वसा"}, {en:"Carbohydrate", hi:"कार्बोहाइड्रेट"}, {en:"Vitamin", hi:"विटामिन"}], correct: 0 },
+        { en: "Protein percentage in Soybean is:", hi: "सोयाबीन में प्रोटीन का प्रतिशत होता है-", opts: [{en:"42%", hi:"42%"}, {en:"50%", hi:"50%"}, {en:"60%", hi:"60%"}, {en:"80%", hi:"80%"}], correct: 0 },
+        { en: "Which contains no protein?", hi: "किसमें प्रोटीन नहीं पाया जाता है?", opts: [{en:"Meat", hi:"मांस"}, {en:"Milk", hi:"दूध"}, {en:"Rice", hi:"चावल"}, {en:"Pulse", hi:"दाल"}], correct: 2 },
+        { en: "Maximum protein per gram is found in:", hi: "प्रति ग्राम अधिकतम प्रोटीन मात्रा पायी जाती है?", opts: [{en:"Apple", hi:"सेब"}, {en:"Soybean", hi:"सोयाबीन"}, {en:"Wheat", hi:"गेहूं"}, {en:"Groundnut", hi:"मूंगफली"}], correct: 1 },
+        { en: "Vitamin A is stored in which organ?", hi: "मानव शरीर में विटामिन-A भण्डारित होता है-", opts: [{en:"Liver", hi:"यकृत में"}, {en:"Skin", hi:"त्वचा में"}, {en:"Lung", hi:"फुफ्फुस में"}, {en:"Kidney", hi:"वृक्क में"}], correct: 0 },
+        { en: "What is Thiamine?", hi: "थायमिन है-", opts: [{en:"Vitamin C", hi:"विटामिन C"}, {en:"Vitamin B2", hi:"विटामिन B2"}, {en:"Vitamin B6", hi:"विटामिन B6"}, {en:"Vitamin B1", hi:"विटामिन B1"}], correct: 3 },
+        { en: "Xerophthalmia is caused by deficiency of:", hi: "शुष्काक्षिपाक का मनुष्यों में प्रकोप किस विटामिन की कमी से होता है?", opts: [{en:"Vitamin K", hi:"विटामिन K"}, {en:"Vitamin D", hi:"विटामिन D"}, {en:"Vitamin A", hi:"विटामिन A"}, {en:"Vitamin C", hi:"विटामिन C"}], correct: 2 },
+        { en: "Bleeding gums is a symptom of which deficiency?", hi: "किस विटामिन की कमी के कारण मसूड़ों से रक्त आता है?", opts: [{en:"Vitamin A", hi:"विटामिन A"}, {en:"Vitamin B", hi:"विटामिन B"}, {en:"Vitamin C", hi:"विटामिन C"}, {en:"Vitamin D", hi:"विटामिन D"}], correct: 2 },
+        { en: "Chemical name of Vitamin C is:", hi: "विटामिन C का रासायनिक नाम है-", opts: [{en:"Citric Acid", hi:"साइट्रिक अम्ल"}, {en:"Ascorbic Acid", hi:"एस्कॉर्बिक अम्ल"}, {en:"Oxalic Acid", hi:"ऑक्जैलिक अम्ल"}, {en:"Nitric Acid", hi:"नाइट्रिक अम्ल"}], correct: 1 },
+        { en: "Which vitamin provides immunity?", hi: "कौन-सा विटामिन प्रतिरक्षा प्रदान करता है?", opts: [{en:"Vit A", hi:"A"}, {en:"Vit C", hi:"C"}, {en:"Vit K", hi:"K"}, {en:"Vit E", hi:"E"}], correct: 0 },
+        { en: "Vitamin produced by morning sunlight:", hi: "प्रातः कालीन धूप में मानव शरीर में कौन-सा विटामिन उत्पन्न होता है?", opts: [{en:"Vit A", hi:"विटामिन A"}, {en:"Vit B", hi:"विटामिन B"}, {en:"Vit C", hi:"विटामिन C"}, {en:"Vit D", hi:"विटामिन D"}], correct: 3 },
+        { en: "Fish liver oil is rich in:", hi: "मछलियों के यकृत के तेल में किसकी प्रचुरता होती है?", opts: [{en:"Vit A", hi:"विटामिन A"}, {en:"Vit C", hi:"विटामिन C"}, {en:"Vit D", hi:"विटामिन D"}, {en:"Vit E", hi:"विटामिन E"}], correct: 2 },
+        { en: "Chemical name of Vitamin E:", hi: "विटामिन E का रासायनिक नाम है-", opts: [{en:"Retinol", hi:"रेटिनॉल"}, {en:"Riboflavin", hi:"रिबोफ्लेविन"}, {en:"Pyridoxine", hi:"पायरीडॉक्सीन"}, {en:"Tocopherol", hi: "टोकोफेरॉल"}], correct: 3 },
+        { en: "Element necessary for bone/teeth formation:", hi: "उपस्थि तथा हड्डियों के निर्माण और सम्पोषण में आवश्यक तत्व होता है-", opts: [{en:"Magnesium", hi:"मैग्नीशियम"}, {en:"Calcium", hi:"कैल्शियम"}, {en:"Zinc", hi:"जिंक"}, {en:"Silicon", hi:"सिलिकॉन"}], correct: 1 },
+        { en: "Spinach leaves are richest in:", hi: "पालक के पत्तों में किसकी मात्रा सबसे अधिक होती है?", opts: [{en:"Vitamin", hi:"विटामिन"}, {en:"Iron", hi:"आयरन"}, {en:"Carbohydrate", hi:"कार्बोहाइड्रेट"}, {en:"Fat", hi:"वसा"}], correct: 1 },
+        { en: "Best source of Iron is:", hi: "खाद्य-स्रोत लोहे का सर्वोत्तम स्त्रोत है?", opts: [{en:"Apple", hi:"सेब"}, {en:"Rice", hi:"चावल"}, {en:"Orange", hi:"नारंगी"}, {en:"Wheat", hi:"गेहूं"}], correct: 0 },
+        { en: "Pernicious anemia is caused by deficiency of:", hi: "घातक रक्ताल्पता (एनीमिया) विटामिन की कमी के कारण होता है।", opts: [{en:"B2", hi:"B2"}, {en:"B6", hi:"B6"}, {en:"B1", hi:"B1"}, {en:"B12", hi:"B12"}], correct: 3 },
+        { en: "Calories obtained from one glass of water:", hi: "एक गिलास पानी पीने से कितनी कैलोरी मिलती है?", opts: [{en:"Zero", hi:"शून्य"}, {en:"15", hi:"15"}, {en:"25", hi:"25"}, {en:"50", hi:"50"}], correct: 0 },
+        { en: "Central Food Technological Research Institute is in:", hi: "केंद्रीय खाद्य प्रौद्योगिकी अनुसंधान संस्थान कहां स्थित है?", opts: [{en:"Lucknow", hi:"लखनऊ में"}, {en:"Ranchi", hi:"रांची में"}, {en:"Hyderabad", hi:"हैदराबाद में"}, {en:"Mysore", hi:"मैसूर में"}], correct: 3 },
+        { en: "Wilson's disease is caused by accumulation of:", hi: "विल्सन रोग एक आनुवंशिक विकार है, जिसमें अत्यधिक मात्रा में शरीर में संचित होता है।", opts: [{en:"Copper", hi:"तांबा"}, {en:"Calcium", hi:"कैल्शियम"}, {en:"Iron", hi:"लोहा"}, {en:"Sodium", hi:"सोडियम"}], correct: 0 },
+        { en: "Leukemia is a cancer of:", hi: "ल्यूकेमिया एक प्रकार का कैंसर है जिसमें असाधारण बढ़ोतरी होती है-", opts: [{en:"Bone cells", hi:"अस्थि कोशिकाओं में"}, {en:"Platelets", hi:"प्लेटलेट की संख्या में"}, {en:"RBC", hi:"लाल रक्त कोशिकाओं में"}, {en:"WBC", hi:"श्वेत रक्त कोशिकाओं की संख्या में"}], correct: 3 },
+        { en: "Mother's milk lacks which of the following?", hi: "माँ का दुग्ध नवजात को लगभग सम्पूर्ण आहार प्रदान करता है, किन्तु इसमें निम्नलिखित का अभाव होता है-", opts: [{en:"Iron", hi:"लौह"}, {en:"Calcium", hi:"कैल्शियम"}, {en:"Magnesium", hi:"मैग्नीशियम"}, {en:"Potassium", hi:"पोटैशियम"}], correct: 0 },
+        { en: "Which vitamin helps prevent infection?", hi: "मानव शरीर में इनफेक्शन रोकने के लिये कौन-सा विटामिन मदद करता है?", opts: [{en:"Vit A", hi:"विटामिन A"}, {en:"Vit B", hi:"विटामिन B"}, {en:"Vit C", hi:"विटामिन C"}, {en:"None", hi:"कोई नहीं"}], correct: 0 },
+        { en: "Vitamin lost by washing peeled vegetables:", hi: "छीली हुई सब्जियों को धोने से कौन-सा विटामिन निकल जाता है?", opts: [{en:"Vit A", hi:"विटामिन A"}, {en:"Vit C", hi:"विटामिन C"}, {en:"Vit D", hi:"विटामिन D"}, {en:"Vit E", hi:"विटामिन E"}], correct: 1 },
+        { en: "Casein is a:", hi: "केसीन दुग्ध होता/होती है-", opts: [{en:"Bacteria", hi:"जीवाणु"}, {en:"Sugar", hi:"शर्करा"}, {en:"Protein", hi:"प्रोटीन"}, {en:"Fat", hi:"वसा"}], correct: 2 },
+        { en: "Sweetness in milk is due to:", hi: "किसकी उपस्थिति के कारण दूध में मिठास आ जाती है?", opts: [{en:"Sucrose", hi:"सुक्रोज"}, {en:"Lactose", hi:"लैक्टोज"}, {en:"Microse", hi:"सुक्रोज"}, {en:"Carotene", hi:"कैरोटीन"}], correct: 1 },
+        { en: "Protein needed for a working woman per day:", hi: "एक कार्यशील महिला को प्रतिदिन कितना प्रोटीन लेना चाहिए?", opts: [{en:"30g", hi:"30 ग्राम"}, {en:"37g", hi:"37 ग्राम"}, {en:"40g", hi:"40 ग्राम"}, {en:"45g", hi:"45 ग्राम"}], correct: 3 },
+        { en: "Carbohydrates are stored in plants/animals as:", hi: "पौधों और जन्तुओं में कार्बोहाइड्रेट किस रूप में संचित होते हैं?", opts: [{en:"Cellulose/Glucose", hi:"सेल्यूलोज और ग्लूकोज"}, {en:"Starch/Glycogen", hi:"स्टार्च और ग्लाइकोजेन"}, {en:"Starch/Glucose", hi:"स्टार्च और ग्लूकोज"}, {en:"Cellulose/Glycogen", hi:"सेल्यूलोज और ग्लाइकोजेन"}], correct: 1 },
+        { en: "Ideal food for newborns:", hi: "नवजात बच्चों के लिए सबसे आदर्श भोजन निम्नलिखित में से क्या है?", opts: [{en:"Water", hi:"पानी"}, {en:"Sugar", hi:"चीनी"}, {en:"Honey", hi:"शहद"}, {en:"Milk", hi:"दूध"}], correct: 3 }
+    ];
+
+    let currentQ = 0;
+    let score = 0;
+    let timerInt;
+    let quizData = [];
+    let audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    function playSound(freq, type) {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.5);
+    }
+
+    function startQuiz() {
+        const shuffle = document.getElementById('shuffle-toggle').checked;
+        quizData = shuffle ? [...quizQuestions].sort(() => Math.random() - 0.5) : [...quizQuestions];
+        currentQ = 0; score = 0;
+        document.getElementById('start-screen').classList.remove('active');
+        document.getElementById('quiz-screen').classList.add('active');
+        loadQuestion();
+    }
+
+    function loadQuestion() {
+        if(currentQ >= quizData.length) return endQuiz();
+        
+        const q = quizData[currentQ];
+        document.getElementById('en-q').innerText = q.en;
+        document.getElementById('hi-q').innerText = q.hi;
+        document.getElementById('q-counter').innerText = `Question ${String(currentQ+1).padStart(2,'0')}/${quizData.length}`;
+        document.getElementById('score-display').innerText = `Score: ${score}`;
+        document.getElementById('progress-bar').style.width = `${((currentQ+1)/quizData.length)*100}%`;
+
+        const grid = document.getElementById('options-grid');
+        grid.innerHTML = '';
+        q.opts.forEach((opt, i) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerHTML = `<span class="opt-en">${opt.en}</span><span class="opt-hi">${opt.hi}</span>`;
+            btn.onclick = () => checkAnswer(i);
+            grid.appendChild(btn);
+        });
+
+        startTimer();
+    }
+
+    function startTimer() {
+        clearInterval(timerInt);
+        const limit = parseInt(document.getElementById('timer-input').value) || 0;
+        const display = document.getElementById('timer-display');
+        
+        if(limit === 0) {
+            display.style.display = 'none';
+            return;
+        }
+
+        let time = limit;
+        display.style.display = 'block';
+        display.innerText = `⏱️ ${time}s`;
+        display.classList.remove('timer-pulse');
+
+        timerInt = setInterval(() => {
+            time--;
+            display.innerText = `⏱️ ${time}s`;
+            if(time < 5) display.classList.add('timer-pulse');
+            if(time <= 0) {
+                clearInterval(timerInt);
+                checkAnswer(-1);
+            }
+        }, 1000);
+    }
+
+    function checkAnswer(idx) {
+        clearInterval(timerInt);
+        const btns = document.querySelectorAll('.option-btn');
+        btns.forEach(b => b.disabled = true);
+        
+        const correct = quizData[currentQ].correct;
+        const emoji = document.getElementById('emoji-overlay');
+
+        if(idx === correct) {
+            btns[idx].classList.add('correct');
+            score++;
+            playSound(800, 'sine');
+            triggerConfetti();
+        } else {
+            if(idx !== -1) btns[idx].classList.add('wrong');
+            btns[correct].classList.add('correct');
+            playSound(200, 'sawtooth');
+            emoji.style.display = 'block';
+            emoji.classList.add('shake');
+            setTimeout(() => { emoji.style.display = 'none'; emoji.classList.remove('shake'); }, 1000);
+        }
+
+        currentQ++;
+        setTimeout(loadQuestion, 1500);
+    }
+
+    function triggerConfetti() {
+        const canvas = document.getElementById('confetti');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        let particles = Array.from({length: 50}, () => ({
+            x: Math.random() * canvas.width,
+            y: canvas.height + 10,
+            v: Math.random() * 5 + 5,
+            c: `hsl(${Math.random()*360}, 70%, 50%)`
+        }));
+
+        function draw() {
+            ctx.clearRect(0,0, canvas.width, canvas.height);
+            particles.forEach(p => {
+                ctx.fillStyle = p.c;
+                ctx.fillRect(p.x, p.y, 8, 8);
+                p.y -= p.v;
+                p.v -= 0.1;
+            });
+            if(particles[0].v > -5) requestAnimationFrame(draw);
+            else ctx.clearRect(0,0, canvas.width, canvas.height);
+        }
+        draw();
+    }
+
+    function endQuiz() {
+        clearInterval(timerInt);
+        document.getElementById('quiz-screen').classList.remove('active');
+        document.getElementById('result-screen').classList.add('active');
+        document.getElementById('final-score').innerText = `${score}/${currentQ || quizData.length}`;
+        
+        const pct = (score / (currentQ || quizData.length)) * 100;
+        const msg = document.getElementById('result-msg');
+        if(pct >= 80) msg.innerText = "🏆 Outstanding Performance!";
+        else if(pct >= 50) msg.innerText = "👏 Well Done! Keep it up.";
+        else msg.innerText = "📚 Practice makes perfect! Try again.";
+    }
+</script>
+</body>
+</html>
+</html>

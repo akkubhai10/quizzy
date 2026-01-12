@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bilingual Biology Quiz | 51-100</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-gradient: linear-gradient(45deg, #6a11cb 0%, #2575fc 50%, #ff007f 100%);
+            --glass: rgba(255, 255, 255, 0.1);
+            --border: rgba(255, 255, 255, 0.2);
+            --correct: #00e676;
+            --wrong: #ff1744;
+            --hindi-color: #ddd;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; }
+
+        body {
+            min-height: 100vh;
+            background: var(--bg-gradient);
+            background-size: 400% 400%;
+            animation: gradientMove 15s ease infinite;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            padding: 20px;
+        }
+
+        @keyframes gradientMove {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            border-radius: 25px;
+            padding: 30px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+        }
+
+        .progress-container {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 6px;
+            background: rgba(255,255,255,0.05);
+        }
+
+        #progress-bar {
+            width: 0%; height: 100%;
+            background: linear-gradient(to right, #00f2fe, #4facfe);
+            box-shadow: 0 0 10px #4facfe;
+            transition: width 0.4s ease;
+        }
+
+        .header { display: flex; justify-content: space-between; margin-bottom: 20px; font-weight: 600; font-size: 0.9rem; }
+
+        .timer-circle {
+            width: 50px; height: 50px; border-radius: 50%;
+            border: 3px solid var(--border);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.2rem; margin: 0 auto 20px;
+        }
+
+        .timer-red { color: #ff1744; animation: pulse 1s infinite; border-color: #ff1744; }
+
+        @keyframes pulse { 0% { scale: 1; } 50% { scale: 1.1; } 100% { scale: 1; } }
+
+        .question-text { font-size: 1.25rem; font-weight: 700; margin-bottom: 5px; }
+        .hindi-subtext { font-size: 1rem; color: var(--hindi-color); font-weight: 400; display: block; margin-bottom: 25px; line-height: 1.4; }
+
+        .options-grid { display: grid; grid-template-columns: 1fr; gap: 15px; }
+
+        .option-btn {
+            background: rgba(255,255,255,0.08);
+            border: 1px solid var(--border);
+            padding: 15px 20px;
+            border-radius: 15px;
+            color: white;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.3s ease;
+            display: flex; flex-direction: column;
+        }
+
+        .option-btn:hover:not(:disabled) { background: rgba(255,255,255,0.2); transform: translateX(5px); }
+
+        .option-btn.correct { background: var(--correct) !important; color: #003300; border-color: #fff; }
+        .option-btn.wrong { background: var(--wrong) !important; color: white; border-color: #fff; }
+
+        .shake { animation: shake 0.4s ease-in-out; }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-10px); } 75% { transform: translateX(10px); } }
+
+        .btn-main {
+            background: white; color: #6a11cb; border: none; padding: 15px 40px;
+            border-radius: 50px; font-weight: 700; cursor: pointer; transition: 0.3s;
+            margin-top: 20px; width: 100%; font-size: 1.1rem;
+        }
+        .btn-main:hover { transform: scale(1.02); box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
+
+        #start-screen, #result-screen { text-align: center; }
+        .hidden { display: none; }
+
+        .emoji-display { font-size: 5rem; margin: 20px 0; display: none; }
+
+        /* Confetti */
+        #confetti-layer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; }
+    </style>
+</head>
+<body>
+
+<canvas id="confetti-layer"></canvas>
+
+<div class="container">
+    <div class="progress-container"><div id="progress-bar"></div></div>
+
+    <div id="start-screen">
+        <h1 style="margin-bottom: 10px;">Plant Physiology Quiz</h1>
+        <p style="margin-bottom: 30px; opacity: 0.8;">Hormones & Growth (Q. 51 - 100)</p>
+        
+        <div style="margin-bottom: 20px;">
+            <label>Timer per Question (Seconds):</label><br>
+            <input type="number" id="timer-input" placeholder="0 = No Timer" 
+                   style="padding: 10px; border-radius: 10px; border: none; margin-top: 10px; width: 150px; text-align: center;">
+        </div>
+
+        <div style="margin-bottom: 30px;">
+            <label style="cursor: pointer;">
+                <input type="checkbox" id="shuffle-toggle"> Shuffle Questions
+            </label>
+        </div>
+
+        <button class="btn-main" onclick="initQuiz()">Start Quiz / शुरू करें</button>
+    </div>
+
+    <div id="quiz-screen" class="hidden">
+        <div class="header">
+            <div id="q-counter">Question 00/50</div>
+            <div id="score-counter">Score: 00</div>
+        </div>
+        
+        <div id="timer-box" class="timer-circle">0</div>
+
+        <div id="question-area">
+            <h2 class="question-text" id="eng-q"></h2>
+            <span class="hindi-subtext" id="hin-q"></span>
+            
+            <div class="options-grid" id="options-box"></div>
+        </div>
+
+        <div id="emoji-box" class="emoji-display">😢</div>
+
+        <button class="btn-main" style="background: rgba(255,255,255,0.1); color: white; border: 1px solid var(--border);" 
+                onclick="endQuiz()">Finish & Show Results</button>
+    </div>
+
+    <div id="result-screen" class="hidden">
+        <h1 id="result-title">Quiz Finished!</h1>
+        <div style="font-size: 4rem; font-weight: 800; margin: 20px 0;" id="final-score">0%</div>
+        <p id="result-msg" style="margin-bottom: 30px;"></p>
+        <button class="btn-main" onclick="location.reload()">Restart Quiz</button>
+    </div>
+</div>
+
+<script>
+    const questions = [
+        { qE: "Which hormone breaks seed dormancy and induces germination?", qH: "निम्न में कौन-सा हॉर्मोन बीजों के प्रसुप्ति भंग कर उसे अंकुरण के लिये प्रेरित करते हैं ?", options: ["Auxin (ऑक्सीन)", "Gibberellins (जिबरेलिंस)", "Abscisic Acid (एबसिसिक एसिड)", "None of these (इनमें से कोई नहीं)"], correct: 1 },
+        { qE: "Which hormone breaks seed dormancy and promotes germination?", qH: "निम्न में कौन-सा हॉर्मोन बीजों के प्रसुप्ति भंग कर उसे अंकुरण के लिये प्रेरित करते हैं ?", options: ["Gibberellins (जिबरेलिंस)", "Cytokinin (साइटोकाइनिन)", "Auxin (ऑक्सीन)", "Both A and B (A तथा B दोनों)"], correct: 3 },
+        { qE: "Which of the following hormones prevents senescence and keeps chlorophyll from being destroyed for a long time?", qH: "निम्नलिखित में कौन-सा हॉर्मोन जीर्णता को रोकते हैं एवं क्लोरोफिल को काफी समय तक नष्ट नहीं होने देते हैं ?", options: ["Gibberellin (जिबरेलीन)", "Ethylene (एथिलीन)", "Cytokinin (साइटोकाइनिन)", "Auxin (ऑक्सीन)"], correct: 2 },
+        { qE: "Which organic chemical substance found in plants helps in cell division and cytoplasm division with the help of auxin?", qH: "पौधों में पाया जाने वाला ने कार्बनिक रासायनिक पदार्थ कौन है, जो ऑक्सीन की सहायता से कोशिका विभाजन एवं कोशिका द्रव्य विभाजन में सहायता करते हैं ?", options: ["Gibberellin (जिबरेलीन)", "Auxin (ऑक्सीन)", "Abscisic Acid (एबसिसिक एसिड)", "Cytokinin (साइटोकाइनिन)"], correct: 3 },
+        { qE: "By using which hormone do leaves stay green and fresh for a longer time?", qH: "किस हॉर्मोन के प्रयोग से पत्तियाँ अधिक समय तक हरी और ताजी बनी रहती है ?", options: ["Cytokinin (साइटोकाइनिन)", "Gibberellin (जिबरेलीन)", "Abscisic Acid (एबसिसिक अम्ल)", "Auxin (ऑक्सीन)"], correct: 0 },
+        { qE: "Which hormone helps in cell division?", qH: "कोशिका विभाजन में मदद करने वाला हॉर्मोन है-", options: ["Auxin (ऑक्सीन)", "Gibberellin (जिबरेलीन)", "Abscisic Acid (एबसिसिक अम्ल)", "Cytokinin (साइटोकाइनिन)"], correct: 3 },
+        { qE: "Stored food is mobilized during seed germination by?", qH: "बीज अंकुरण के समय किसके द्वारा संचित भोजन गतिशील होता है-", options: ["Cytokinin (साइटोकाइनिन)", "Gibberellin (जिबरेलीन)", "Ethylene (एथिलीन)", "ABA (ABA)"], correct: 1 },
+        { qE: "Bolting, which is growth in internodes immediately before flowering, is shown by?", qH: "पुष्पीकरण से तुरन्त पहले पर्व में वृद्धि अर्थात् बोल्टिंग दर्शाता है-", options: ["Auxin (ऑक्सीन)", "Abscisic Acid (एबसिसिक अम्ल)", "Gibberellin (जिबरेलीन)", "Ethylene (C2H4)"], correct: 2 },
+        { qE: "Low temperature is required for flowering. What is this process called?", qH: "पुष्पण के लिये कम तापमान की आवश्यकता होती है। कम तापमान आधारित पुष्पण की क्रिया को क्या कहते हैं ?", options: ["Photoperiodism (दीप्तिकालिता)", "Vernalization (वसंतीकरण)", "Dormancy (प्रसुप्ति)", "Inhibition (संदमन)"], correct: 1 },
+        { qE: "The hormone that replaces the requirement for vernalization is?", qH: "हॉर्मोन जो वसंतीकरण की आवश्यकता को बदलता है, वह है-", options: ["Gibberellins (जिबरेलिंस)", "Ethylene (एथिलीन)", "Gibberellin (जिबरेलीन)", "Cytokinin (साइटोकाइनिन)"], correct: 2 },
+        { qE: "Which of the following is not an effect of Gibberellin?", qH: "निम्नलिखित में कौन जिबरेलीन का प्रभाव नहीं है ?", options: ["Increase in length of sugarcane stem (गन्ने के तने के लम्बाई में वृद्धि)", "Delay in senescence of fruits (फलों के जीर्णता में देरी)", "Increase in length of grape stalks (अंगूर के डंठल के लंबाई में वृद्धि)", "Dormancy Inactivity (प्रसुप्ति निष्क्रियता)"], correct: 3 },
+        { qE: "What is sprayed to increase sugar production in sugarcane?", qH: "गन्ने में चीनी का उत्पादन बढ़ाने के लिये किसका छिड़काव किया जाता है ?", options: ["IAA", "Cytokinin", "Ethylene", "Gibberellin"], correct: 3 },
+        { qE: "Coconut water mainly contains?", qH: "नारियल पानी में मुख्यतः पाया जाता है-", options: ["Gibberellin", "Auxin", "Cytokinin", "ABA"], correct: 2 },
+        { qE: "By using which of the following can genetically dwarf plants be made tall?", qH: "निम्नलिखित में किसके प्रयोग से आनुवंशिकतः बौने पौधों को लंबा बनाया जा सकता है ?", options: ["Auxin", "Gibberellin", "Ethylene", "Cytokinin"], correct: 1 },
+        { qE: "Which plant hormone replaces low temperature?", qH: "निम्नलिखित में कौन-सा पादप हॉर्मोन निम्न तापमान को प्रतिस्थापित करता है ?", options: ["Gibberellins", "Ethylene", "Auxin", "Cytokinin"], correct: 0 },
+        { qE: "Which hormone can control the effect of Apical Dominance?", qH: "शिखर प्रभुत्व (Apical Dominance) के प्रभाव को निम्न में कौन-सा हॉर्मोन नियंत्रित कर सकता है ?", options: ["Ethylene", "Gibberellin", "Cytokinin", "IAA"], correct: 2 },
+        { qE: "Which hormone keeps seeds in dormancy and plays a key role in leaf abscission?", qH: "निम्नलिखित में कौन सा हॉर्मोन बीजों को सुप्तावस्था में रखता तथा पत्तियों के विलगन में मुख्य भूमिका निभाता है ?", options: ["Abscisic Acid", "Gibberellin", "Cytokinin", "Auxin"], correct: 0 },
+        { qE: "Which of the following is called Stress Hormone?", qH: "निम्नलिखित में किस हॉर्मोन को तनाव हॉर्मोन (Stress Hormone) कहते हैं ?", options: ["Ethylene", "Abscisic Acid", "GA3", "IAA"], correct: 1 },
+        { qE: "Which cell organelle synthesizes Abscisic Acid?", qH: "निम्नलिखित में कौन-सा कोशिका अंगक एबसिसिक अम्ल का संश्लेषण करता है ?", options: ["ER", "Golgi Body", "Lysosome", "Chloroplast"], correct: 3 },
+        { qE: "Which hormone inhibits growth in plants?", qH: "निम्नलिखित में कौन सा हॉर्मोन पौधों में वृद्धि का संदमन करता है ?", options: ["NAA", "2-4D", "ABA", "IAA"], correct: 2 },
+        { qE: "What does Abscisic acid control?", qH: "एबसिसिक अम्ल किसका नियंत्रण करते हैं-", options: ["Stem growth", "Cell division", "Cell elongation", "Abscission and Dormancy"], correct: 3 },
+        { qE: "Under maximum conditions, in what form does ABA act?", qH: "अधिकतम परिस्थितियों में ABA किस रूप में कार्य करता है ?", options: ["Auxin agonist", "Gibberellin antagonist", "Auxin antagonist", "Gibberellin agonist"], correct: 1 },
+        { qE: "You are given plant tissue for differentiation. Which pair of hormones will you use to protect both root and shoot?", qH: "आपको कृत्रिम संवर्धन में विभेदन के लिये पौधों का उत्तक दिया गया है, तो आप इनमें से कौन से हॉर्मोन के जोड़े को शीर्ष और मूल दोनों की सुरक्षित रखने के लिये प्रयोग करेंगे ?", options: ["Auxin and ABA", "Auxin and Cytokinin", "IAA and Gibberellin", "Gibberellin and ABA"], correct: 1 },
+        { qE: "Which of the following is a natural fruit ripening hormone?", qH: "निम्नलिखित में कौन-सा एक प्राकृतिक फल पकाने वाला हॉर्मोन है ?", options: ["Auxin", "Gibberellin", "Ethylene", "Cytokinin"], correct: 2 },
+        { qE: "In plants, Ethylene gas...", qH: "एथिलीन गैस पौधों में -", options: ["Slows apple ripening", "Prevents tomato ripening", "Speeds fruit ripening", "All of these"], correct: 2 },
+        { qE: "Which hormone is found in the form of gas in plants?", qH: "पौधों में गैस के रूप में पाया जाने वाला हॉर्मोन है-", options: ["Cytokinin", "Abscisic Acid", "Gibberellin", "Ethylene"], correct: 3 },
+        { qE: "Which hormone induces flowering in Pineapple?", qH: "निम्नलिखित में कौन-सा हॉर्मोन अन्नानास में पुष्पण को प्रेरित करता है ?", options: ["ABA", "Ethylene", "Gibberellins", "Auxin"], correct: 3 },
+        { qE: "Which of the following pairs is NOT correctly matched?", qH: "निम्नलिखित में कौन-सा युग्म सही सुमेलित नहीं है-", options: ["Auxin - Growth", "Gibberellin - Gibberella fungus", "Cytokinin - Herring sperm DNA", "ABA - Flower hormone"], correct: 3 },
+        { qE: "Which statement is correct regarding hormones?", qH: "हॉर्मोन के सम्बन्ध में निम्न में कौन-सा कथन सही है-", options: ["Special organic compounds affecting metabolism", "Also called growth regulators", "Effect varies with concentration", "All of the above"], correct: 3 },
+        { qE: "Which pigment found in plants absorbs Red and Far-Red light?", qH: "पौधों में पाया जाने वाला कौन-सा वर्णक लाल और सुदूर लाल प्रकाश को अवशोषित करता है ?", options: ["Xanthophyll", "Phytochrome", "Cytochrome", "Carotene"], correct: 1 },
+        { qE: "Which helps in making the necessary hormone Florigen for flowering in plants?", qH: "पौधों में पुष्पण के लिये आवश्यक हॉर्मोन फ्लोरिजेन बनाने में सहायता करता है-", options: ["Vernalin", "Gibberellin", "ABA", "IAA"], correct: 1 },
+        { qE: "Consider: 1. Low temp flowering is Vernalization. 2. Light dependent flowering is Photoperiodism.", qH: "कथनों पर विचार करें: 1. वसंतीकरण 2. दीप्तिकालिता", options: ["Only 1", "Only 2", "1 and 2 both", "Neither"], correct: 2 },
+        { qE: "Consider: 1. Hormone production occurs in endocrine glands. 2. No endocrine gland in plants.", qH: "कथनों पर विचार करें: 1. अंतःस्त्रावी ग्रंथियां 2. पादप ग्रंथियां", options: ["Only 1", "Only 2", "1 and 2 both", "Neither"], correct: 2 },
+        { qE: "Which of the following is not correct?", qH: "निम्न में कौन-सा एक सही नहीं है ?", options: ["Hormone production is by endocrine glands", "Endocrine glands are called ductless glands", "Hormones travel via blood", "All hormones are made of protein"], correct: 3 },
+        { qE: "Which gland is not situated in the brain?", qH: "निम्नलिखित में कौन सी ग्रंथि मस्तिष्क में स्थित नहीं है ?", options: ["Hypothalamus", "Pituitary", "Pineal", "Thyroid"], correct: 3 },
+        { qE: "The Release Factor and Inhibitory Factor to control pituitary activity are made by?", qH: "पीयूष ग्रंथि की क्रिया को नियंत्रित करने के लिये रिलीज फैक्टर तथा इनहिबिटरी फैक्टर का निर्माण करता है ?", options: ["Hypothalamus", "Thalamus", "Thyroid", "None"], correct: 0 },
+        { qE: "Which is NOT correct regarding the Pituitary Gland?", qH: "पीयूष ग्रंथि के संबंध में निम्न में कौन सा एक सही नहीं है-", options: ["Smallest gland", "Master gland", "Controls Thyroid and Adrenal", "Secretes only GH"], correct: 3 },
+        { qE: "Name the gland that controls other endocrine glands?", qH: "उस ग्रंथि का नाम बताऐं जो अन्य अंतः स्त्रावी ग्रंथि के कार्य को नियंत्रित करते हैं ?", options: ["Adrenal", "Pituitary", "Thyroid", "Pancreas"], correct: 1 },
+        { qE: "Where is Growth Hormone secreted from?", qH: "वृद्धि हॉर्मोन का स्त्राव कहाँ से होता है ?", options: ["Thyroid", "Parathyroid", "Pituitary", "Adrenal"], correct: 2 },
+        { qE: "Which endocrine gland can work independently of the Pituitary?", qH: "पीयूष ग्रंथि अपने प्रेरक हॉर्मोन से अन्य अंतः स्त्रावी ग्रंथि को नियंत्रित करती है। स्वतंत्र कार्य कर सकती है ?", options: ["Adrenal", "Thyroid", "Parathyroid", "Gonads"], correct: 2 },
+        { qE: "Consider: 1. Pituitary is smallest. 2. Thyroid is largest endocrine. 3. Pancreas is largest mixed.", qH: "कथनों पर विचार करें- 1. पीयूष सबसे छोटी 2. थायराइड सबसे बड़ी 3. अग्नाशय मिश्रित", options: ["1 and 2", "2 and 3", "1, 2 and 3", "Only 3"], correct: 2 },
+        { qE: "Which hormone stimulates the thyroid to release thyroxine?", qH: "थायराइड ग्रंथि से थायरॉक्सिन हॉर्मोन स्त्रावित करने के लिये उत्तेजित करने वाला अंतः स्त्रावी हॉर्मोन कौन सा है ?", options: ["TSH", "FSH", "LTH", "ACTH"], correct: 0 },
+        { qE: "Consider: 1. Pituitary controls others. 2. Hypothalamus controls Pituitary.", qH: "कथनों पर विचार करें- 1. पीयूष नियंत्रण 2. हाइपोथैलेमस नियंत्रण", options: ["Only 1", "Only 2", "Both 1 and 2", "Neither"], correct: 2 },
+        { qE: "Which gland in the body controls hormone release from Pituitary?", qH: "मानव शरीर की कौन सी ग्रंथि पीयूष ग्रंथि से हॉर्मोन के रिसाव को नियंत्रित करती है ?", options: ["Hypothalamus", "Adrenal", "Thalamus", "Thymus"], correct: 0 },
+        { qE: "The most important gland of the human body is?", qH: "मानव शरीर के सबसे महत्वपूर्ण ग्रंथि है-", options: ["Thyroid", "Pituitary", "Pancreas", "Liver"], correct: 1 },
+        { qE: "Which gland secretes Oxytocin?", qH: "ऑक्सीटोसीन हॉर्मोन स्त्रावित करने वाली ग्रंथि है-", options: ["Pituitary", "Pineal", "Adrenal", "Ovary"], correct: 0 },
+        { qE: "What is the effect of excessive pituitary hormone on the body?", qH: "पीयूष ग्रंथि से अत्यधिक हॉर्मोन स्त्राव से शरीर पर क्या प्रभाव पड़ेगा ?", options: ["Increase in length", "Unbalanced development", "Body becomes crooked", "None of these"], correct: 1 },
+        { qE: "Gland situated in the bone cavity called Sella Turcica is?", qH: "मस्तिष्क के सेला टर्सिका नामक अस्थि-गुहा में स्थित ग्रंथि है-", options: ["Pituitary", "Pineal", "Hypothalamus", "Thalamus"], correct: 0 },
+        { qE: "Who is called the Father of Endocrinology?", qH: "अंतः स्त्रावी विज्ञान (Endocrinology) के जनक किसे कहा जाता है ?", options: ["Starling", "Kurosawa", "Thomas Edison", "William Harvey"], correct: 2 },
+        { qE: "Consider: 1. Hyposecretion of GH in adults causes Acromegaly. 2. Hypersecretion causes Simmond's disease.", qH: "कथनों पर विचार करें: 1. एक्रोमिगेली 2. साइमंड रोग", options: ["Only 1", "Only 2", "Both 1 and 2", "Neither"], correct: 3 }, // Note: Both are swapped in descriptions usually
+        { qE: "Hormone controlling water concentration in kidney tubules?", qH: "वक्क नलिका में मूत्र की सांद्रता नियंत्रित करने वाला", options: ["Oxytocin", "Vasopressin", "Calcitonin", "Relaxin"], correct: 1 }
+    ];
+
+    let currentIdx = 0;
+    let score = 0;
+    let timer = null;
+    let timeLeft = 0;
+    let audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    // Sound Synthesis
+    function playTone(freq, duration, type) {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+    }
+
+    // Confetti
+    function launchConfetti() {
+        const canvas = document.getElementById('confetti-layer');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        let particles = Array.from({length: 100}, () => ({
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height - canvas.height,
+            size: Math.random() * 8 + 4,
+            color: `hsl(${Math.random() * 360}, 100%, 50%)`,
+            vel: Math.random() * 3 + 2
+        }));
+
+        function render() {
+            ctx.clearRect(0,0, canvas.width, canvas.height);
+            particles.forEach(p => {
+                ctx.fillStyle = p.color;
+                ctx.fillRect(p.x, p.y, p.size, p.size);
+                p.y += p.vel;
+            });
+            if(particles[0].y < canvas.height) requestAnimationFrame(render);
+        }
+        render();
+    }
+
+    function initQuiz() {
+        const timerVal = parseInt(document.getElementById('timer-input').value) || 0;
+        const shuffle = document.getElementById('shuffle-toggle').checked;
+        if(shuffle) questions.sort(() => Math.random() - 0.5);
+        
+        document.getElementById('start-screen').classList.add('hidden');
+        document.getElementById('quiz-screen').classList.remove('active', 'hidden');
+        showQuestion(timerVal);
+    }
+
+    function showQuestion(timerVal) {
+        if(currentIdx >= questions.length) return endQuiz();
+        
+        const q = questions[currentIdx];
+        document.getElementById('eng-q').innerText = q.qE;
+        document.getElementById('hin-q').innerText = q.qH;
+        document.getElementById('q-counter').innerText = `Question ${currentIdx + 1}/${questions.length}`;
+        document.getElementById('progress-bar').style.width = `${((currentIdx + 1)/questions.length)*100}%`;
+        
+        const box = document.getElementById('options-box');
+        box.innerHTML = '';
+        q.options.forEach((opt, i) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerText = opt;
+            btn.onclick = () => checkAnswer(i, btn);
+            box.appendChild(btn);
+        });
+
+        if(timerVal > 0) {
+            timeLeft = timerVal;
+            const tBox = document.getElementById('timer-box');
+            tBox.style.display = 'flex';
+            tBox.innerText = timeLeft;
+            tBox.classList.remove('timer-red');
+            clearInterval(timer);
+            timer = setInterval(() => {
+                timeLeft--;
+                tBox.innerText = timeLeft;
+                if(timeLeft < 5) tBox.classList.add('timer-red');
+                if(timeLeft <= 0) {
+                    clearInterval(timer);
+                    checkAnswer(-1, null);
+                }
+            }, 1000);
+        } else {
+            document.getElementById('timer-box').style.display = 'none';
+        }
+    }
+
+    function checkAnswer(idx, btn) {
+        clearInterval(timer);
+        const q = questions[currentIdx];
+        const btns = document.querySelectorAll('.option-btn');
+        btns.forEach(b => b.disabled = true);
+
+        if(idx === q.correct) {
+            btn.classList.add('correct');
+            score++;
+            document.getElementById('score-counter').innerText = `Score: ${score}`;
+            playTone(880, 0.3, 'sine'); // Ting
+            launchConfetti();
+        } else {
+            if(btn) {
+                btn.classList.add('wrong');
+                btn.classList.add('shake');
+            }
+            btns[q.correct].classList.add('correct');
+            document.getElementById('emoji-box').style.display = 'block';
+            playTone(150, 0.4, 'sawtooth'); // Buzz
+            setTimeout(() => document.getElementById('emoji-box').style.display = 'none', 1000);
+        }
+
+        setTimeout(() => {
+            currentIdx++;
+            showQuestion(parseInt(document.getElementById('timer-input').value) || 0);
+        }, 1500);
+    }
+
+    function endQuiz() {
+        clearInterval(timer);
+        document.getElementById('quiz-screen').classList.add('hidden');
+        document.getElementById('result-screen').classList.remove('hidden');
+        const percent = Math.round((score/questions.length)*100);
+        document.getElementById('final-score').innerText = `${percent}%`;
+        
+        const msg = document.getElementById('result-msg');
+        if(percent >= 80) msg.innerText = "🏆 Outstanding Performance!";
+        else if(percent >= 50) msg.innerText = "👏 Well Done! Keep it up.";
+        else msg.innerText = "📚 Practice makes perfect! Try again.";
+    }
+</script>
+
+</body>
+</html>

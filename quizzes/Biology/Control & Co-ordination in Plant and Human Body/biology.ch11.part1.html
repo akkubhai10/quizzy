@@ -1,0 +1,1089 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Biology Control & Coordination Quiz</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --text-main: #ffffff;
+            --text-hindi: #e0e0e0;
+            --correct: #00e676;
+            --wrong: #ff1744;
+            --primary: #6c5ce7;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #ff7eb3 100%);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--text-main);
+            overflow-x: hidden;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Glassmorphism Container */
+        .glass-container {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 25px;
+            padding: 2rem;
+            width: 95%;
+            max-width: 700px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            position: relative;
+            overflow: hidden;
+            transition: height 0.3s ease;
+        }
+
+        /* Screens */
+        .screen {
+            display: none;
+            flex-direction: column;
+            gap: 1.5rem;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .screen.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Typography */
+        h1, h2 { text-align: center; text-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        .hindi-text { font-size: 0.85em; color: var(--text-hindi); font-weight: 400; display: block; margin-top: 4px; }
+        
+        /* Inputs & Controls */
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        input[type="number"] {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid var(--glass-border);
+            padding: 15px;
+            border-radius: 12px;
+            color: white;
+            font-family: 'Poppins', sans-serif;
+            font-size: 1.1rem;
+            outline: none;
+        }
+        input::placeholder { color: #ddd; }
+
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(0,0,0,0.2);
+            padding: 10px;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+
+        /* Buttons */
+        .btn {
+            background: linear-gradient(45deg, #FF512F 0%, #DD2476 100%);
+            border: none;
+            padding: 15px 30px;
+            border-radius: 50px;
+            color: white;
+            font-weight: bold;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .btn:hover { transform: scale(1.05); box-shadow: 0 6px 20px rgba(0,0,0,0.3); }
+        .btn-secondary { background: rgba(255,255,255,0.2); font-size: 0.9rem; padding: 10px 20px; margin-top: 20px; }
+
+        /* Quiz UI */
+        .quiz-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+        }
+
+        .progress-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 4px;
+            background: #00f260;
+            width: 0%;
+            transition: width 0.3s ease;
+            box-shadow: 0 0 10px #00f260;
+        }
+
+        .timer-badge {
+            background: rgba(0,0,0,0.3);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-variant-numeric: tabular-nums;
+        }
+        .timer-badge.danger {
+            color: #ff4757;
+            animation: pulse 0.8s infinite;
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .question-box {
+            background: rgba(0,0,0,0.2);
+            padding: 20px;
+            border-radius: 15px;
+            border-left: 4px solid #fff;
+        }
+
+        .options-grid {
+            display: grid;
+            gap: 12px;
+        }
+
+        .option-btn {
+            background: rgba(255,255,255,0.15);
+            border: 1px solid transparent;
+            padding: 15px;
+            border-radius: 12px;
+            color: white;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .option-btn:hover { background: rgba(255,255,255,0.25); }
+        
+        .option-btn.correct { background: var(--correct); color: #000; border-color: #fff; transform: scale(1.02); }
+        .option-btn.correct .hindi-text { color: #333; }
+        
+        .option-btn.wrong { background: var(--wrong); border-color: #fff; animation: shakeBtn 0.4s; }
+
+        @keyframes shakeBtn {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        /* Feedback Overlay */
+        .emoji-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 5rem;
+            pointer-events: none;
+            opacity: 0;
+            z-index: 100;
+        }
+        .emoji-overlay.animate {
+            animation: popFade 1s forwards;
+        }
+
+        @keyframes popFade {
+            0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+            50% { transform: translate(-50%, -50%) scale(1.2) rotate(-10deg); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(1); opacity: 0; }
+        }
+
+        /* Result Screen */
+        .score-circle {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.1);
+            border: 4px solid #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin: 0 auto;
+            box-shadow: 0 0 20px rgba(255,255,255,0.3);
+        }
+
+        /* Canvas for Confetti */
+        #confetti-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+    </style>
+</head>
+<body>
+
+    <canvas id="confetti-canvas"></canvas>
+
+    <div class="glass-container">
+        <div class="progress-bar" id="progress-bar"></div>
+
+        <div id="start-screen" class="screen active">
+            <h1>Biology Quiz<br><span style="font-size: 0.6em; font-weight:400">Control & Coordination</span></h1>
+            <div style="text-align:center; opacity: 0.8;">Bilingual: English & Hindi</div>
+            
+            <div class="control-group">
+                <input type="number" id="timerInput" placeholder="Timer per Question (sec) - Optional" min="5">
+                <div class="toggle-container" onclick="toggleShuffle()">
+                    <input type="checkbox" id="shuffleToggle" style="pointer-events: none;">
+                    <label>Shuffle Questions (प्रश्नों को मिलाएं)</label>
+                </div>
+            </div>
+
+            <button class="btn" onclick="startQuiz()">Start Quiz (शुरू करें)</button>
+        </div>
+
+        <div id="quiz-screen" class="screen">
+            <div class="quiz-header">
+                <span id="question-count">Q: 01/50</span>
+                <span id="timer-display" class="timer-badge">--</span>
+                <span id="score-display">Score: 0</span>
+            </div>
+
+            <div class="question-box">
+                <h3 id="q-english">Loading...</h3>
+                <span class="hindi-text" id="q-hindi">...</span>
+            </div>
+
+            <div class="options-grid" id="options-container">
+                </div>
+
+            <div class="emoji-overlay" id="feedback-emoji">😢</div>
+
+            <button class="btn btn-secondary" onclick="finishQuiz()">Finish & Show Results (समाप्त करें)</button>
+        </div>
+
+        <div id="result-screen" class="screen">
+            <h2>Quiz Completed!</h2>
+            <div class="score-circle" id="final-score">0%</div>
+            <p id="result-message" style="text-align: center; font-size: 1.2rem;"></p>
+            <div style="text-align: center; margin-top: 10px;">
+                <p id="stats-text"></p>
+            </div>
+            <button class="btn" onclick="restartQuiz()">Restart Quiz (पुनः प्रयास करें)</button>
+        </div>
+    </div>
+
+<script>
+    // --- Data: 1-50 Questions based on Images ---
+    const rawData = [
+        {
+            qE: "What is the main function of the nervous system and hormones in the human body?",
+            qH: "मानव शरीर के तंत्रिका तंत्र तथा हॉर्मोन का मुख्य कार्य क्या है?",
+            options: [
+                { e: "Excretion", h: "उत्सर्जन", c: false },
+                { e: "Control & Coordination", h: "नियंत्रण एवं समन्वयन", c: true },
+                { e: "Coordination", h: "समन्वयन", c: false },
+                { e: "Both A and B", h: "A तथा B दोनों", c: false }
+            ]
+        },
+        {
+            qE: "Control of various biological functions in the human body is done by?",
+            qH: "मानव शरीर में विभिन्न जैविक कार्यों का नियंत्रण होता है-",
+            options: [
+                { e: "Nervous System", h: "तंत्रिका द्वारा", c: false },
+                { e: "Chemicals", h: "रसायन द्वारा", c: false },
+                { e: "Both Nervous & Chemical", h: "तंत्रिका एवं रसायन दोनों के द्वारा", c: true },
+                { e: "None of these", h: "इनमें से कोई नहीं", c: false }
+            ]
+        },
+        {
+            qE: "Which of the following is found lacking in plants?",
+            qH: "पौधों में निम्नलिखित में किसका अभाव पाया जाता है?",
+            options: [
+                { e: "Nervous System", h: "तंत्रिका तंत्र", c: true },
+                { e: "Chemical Control", h: "रासायनिक नियंत्रण", c: false },
+                { e: "Nervous Control", h: "तंत्रिका नियंत्रण", c: false },
+                { e: "Both A and C", h: "A तथा C दोनों", c: false } // A is correct specifically
+            ]
+        },
+        {
+            qE: "Movement in plants due to external stimuli is called?",
+            qH: "वाह्य उद्दीपनों के प्रभाव से पौधों में होने वाले गति को क्या कहते हैं?",
+            options: [
+                { e: "Metabolic movement", h: "उपापचयी गति", c: false },
+                { e: "Chemical movement", h: "रासायनिक गति", c: false },
+                { e: "Tropic movement", h: "अनुवर्तनी गति", c: true },
+                { e: "Coordination movement", h: "समन्वयन गति", c: false }
+            ]
+        },
+        {
+            qE: "Roots are generally:",
+            qH: "जड़ (Root) होता है-",
+            options: [
+                { e: "Negatively Phototropic", h: "ऋणात्मक प्रकाशानुवर्ती", c: false },
+                { e: "Positively Hydrotropic", h: "धनात्मक जलानुवर्ती", c: false },
+                { e: "Positively Geotropic", h: "धनात्मक गुरूत्वानुवर्ती", c: false },
+                { e: "All of these", h: "इनमें से सभी", c: true }
+            ]
+        },
+        {
+            qE: "Tendrils of peas wrap around support immediately upon contact. This shows which type of movement?",
+            qH: "मटर, कद्दू और कई अन्य पौधे के तंतु किसी ठोस सहारे के सम्पर्क में आते ही तेजी से वृद्धि कर उससे लिपट जाते है। यह किस प्रकार के गति को दर्शाता है?",
+            options: [
+                { e: "Phototropism", h: "प्रकाशानुवर्ती", c: false },
+                { e: "Geotropism", h: "गुरूत्वानुवर्ती", c: false },
+                { e: "Hydrotropism", h: "जलानुवर्ती", c: false },
+                { e: "Thigmotropism", h: "स्पर्शानुवर्ती", c: true }
+            ]
+        },
+        {
+            qE: "What type of growth occurs in the stem of a plant?",
+            qH: "पौधे के तने में किस प्रकार की वृद्धि होती है?",
+            options: [
+                { e: "Positively Phototropic", h: "धनात्मक प्रकाशानुवर्ती", c: false },
+                { e: "Negatively Geotropic", h: "ऋणात्मक गुरूत्वानुवर्ती", c: false },
+                { e: "Positively Hydrotropic", h: "धनात्मक जलानुवर्ती", c: false },
+                { e: "Both A and B", h: "A और B दोनों", c: true } // Assuming 'Inme se sabhi' implies logic of A & B primarily
+            ]
+        },
+        {
+            qE: "Flowers opening in presence of light and closing at night represents which movement?",
+            qH: "फूलों का प्रकाश की उपस्थिति से खिल जाना और रात में बंद हो जाना किस प्रकार के गति को दर्शाते हैं?",
+            options: [
+                { e: "Photonasty", h: "प्रकाशानुकुंचन", c: true },
+                { e: "Thigmonasty", h: "स्पर्शानुवर्ती", c: false },
+                { e: "Photonastic movement", h: "प्रकाशानुवर्ती", c: false },
+                { e: "Thigmotropism", h: "स्पर्शानुवर्ती", c: false }
+            ]
+        },
+        {
+            qE: "Growth in plants is:",
+            qH: "पौधे में वृद्धि होती है-",
+            options: [
+                { e: "Occasional", h: "कभी-कभार", c: false },
+                { e: "Intermittent", h: "रूक रूक कर", c: false },
+                { e: "Lifelong", h: "जीवनपर्यंत", c: true },
+                { e: "Does not occur", h: "पौधे में वृद्धि होती ही नहीं है", c: false }
+            ]
+        },
+        {
+            qE: "Consider the following statements about plant growth:",
+            qH: "निम्नलिखित कथनों पर विचार कीजिए- 1. अनियमित परिवर्तन 2. नियमित परिवर्तन 3. S आकार का ग्राफ",
+            options: [
+                { e: "Only 1", h: "केवल 1", c: false },
+                { e: "1 and 2", h: "1 और 2", c: false },
+                { e: "1 and 3", h: "1 और 3", c: false },
+                { e: "Only 3", h: "केवल 3", c: true } // Usually Sigmoid curve (S-shaped)
+            ]
+        },
+        {
+            qE: "When growth is plotted against time, an 'S' shaped curve is formed. What is this curve called?",
+            qH: "समय और आकार के सन्दर्भ में होने वाले वृद्धि को ग्राफ पर अंकित करने पर 's' आकार का वक्र बनता है, इस वक्र को क्या कहते है?",
+            options: [
+                { e: "Growth curve", h: "वृद्धि वक्र", c: false },
+                { e: "Sigmoid curve", h: "सिग्माइड वक्र", c: true },
+                { e: "Osmosis curve", h: "परासरण वक्र", c: false },
+                { e: "Excretion curve", h: "उत्सर्जन वक्र", c: false }
+            ]
+        },
+        {
+            qE: "Growth movements in plants caused by light stimuli are called:",
+            qH: "पौधों की वृद्धि गतियां जो प्रकाश उद्दीपन के कारण होती है, उसे कहते है-",
+            options: [
+                { e: "Heliotropism", h: "हेलियोट्रॉपिज्म", c: true }, // Often synonymous with phototropism in context
+                { e: "Hydrotropism", h: "हाइड्रोट्रॉपिज्म", c: false },
+                { e: "Geotropism", h: "जियोट्रॉपिज्म", c: false },
+                { e: "Thigmotropism", h: "थिग्मोट्रॉपिज्म", c: false }
+            ]
+        },
+        {
+            qE: "What type of movement occurs in the leaves of 'Touch-me-not' (Mimosa pudica)?",
+            qH: "छुईमुई के पत्तों में किस प्रकार की गति होती है?",
+            options: [
+                { e: "Seismonasty/Thigmonasty", h: "कम्पानुकुंचन", c: true },
+                { e: "Nyctinasty", h: "निशानुकुंचन", c: false },
+                { e: "Photonasty", h: "प्रकाशानुकुंचन", c: false },
+                { e: "Epinasty", h: "उपरिकुंचन", c: false }
+            ]
+        },
+        {
+            qE: "Why do the leaves of the 'Touch-me-not' plant droop when touched?",
+            qH: "स्पर्श करने पर छुईमुई पौधे की पत्तियां क्यो मुरझा जाती है?",
+            options: [
+                { e: "Nervous coordination", h: "तंत्रिका समन्वयन के कारण", c: false },
+                { e: "Leaves are soft", h: "पत्तियाँ कोमल होती है", c: false },
+                { e: "Turgor pressure changes", h: "पर्णाधार का स्फीति दाब बदल जाता है", c: true },
+                { e: "All of these", h: "इनमें से सभी", c: false }
+            ]
+        },
+        {
+            qE: "Bending of the shoot (stem) towards sunlight is called?",
+            qH: "सूर्य के प्रकाश की ओर बढ़ते हुए प्ररोह (तना) का मुड़ना क्या कहलाता है?",
+            options: [
+                { e: "Hydrotropism", h: "जलानुवर्तन", c: false },
+                { e: "Phototropism", h: "प्रकाशानुवर्तन (Helio)", c: true }, // Contextually Helio/Photo
+                { e: "Heliotropism", h: "ही लियोट्रोपिज्म", c: false }, // If both present, usually Photo is strictly defined, but here C likely meant the process
+                { e: "Photonasty", h: "प्रकाशानुकुंचन", c: false }
+            ]
+        },
+        {
+            qE: "Sunflower tracking the direction of the sun is called?",
+            qH: "सूर्यमुखी के सौर ट्रेकिंग (सूर्य की दिशा में विचलन) को कहा जाता है-",
+            options: [
+                { e: "Phototropism", h: "प्रकाशानुवर्तन", c: true }, // Actually Heliotropism, but option likely A in this set
+                { e: "Thigmotropism", h: "स्पर्शानुवर्तन", c: false },
+                { e: "Thermotropism", h: "सूर्याठवर्तन", c: false },
+                { e: "Hydrotropism", h: "जलानुवर्तन", c: false }
+            ]
+        },
+        {
+            qE: "Wrapping of pea tendrils around a support is an example of?",
+            qH: "किसी आधार के चारो ओर मटर के प्रतान का लिपटना उदाहरण है-",
+            options: [
+                { e: "Thigmotropism", h: "स्पर्शानुवर्तन", c: true },
+                { e: "Nastic movement", h: "नैश गति का", c: false },
+                { e: "Phototropism", h: "प्रकाशानुवर्तन", c: false },
+                { e: "Chemotropism", h: "रसायनुवर्तन", c: false }
+            ]
+        },
+        {
+            qE: "Locomotion in plants due to external stimuli is called?",
+            qH: "बाह्य उद्दीपनों के प्रभाव से पौधों में होना चलन (Locomotion) को कहते है-",
+            options: [
+                { e: "Tactic movement", h: "अनुवर्ती", c: false },
+                { e: "Tactic", h: "अनुचलन", c: true }, // Anuchalan = Tactic
+                { e: "Nastic", h: "अनुकुंचन", c: false },
+                { e: "None", h: "इनमें से सभी", c: false }
+            ]
+        },
+        {
+            qE: "Movement in Sundew and Venus Fly Trap insectivorous plants is:",
+            qH: "सनड्यू तथा वीनस फ्लाई ट्रेप कीटभक्षी पौधों में गति होती है-",
+            options: [
+                { e: "Nyctinasty", h: "निशानुकुंचन", c: false },
+                { e: "Thigmonasty", h: "स्पर्शानुकुंचन", c: true },
+                { e: "Seismonasty", h: "कम्पानुकुंचन", c: false },
+                { e: "Photonasty", h: "प्रभाशानुकुंचन", c: false }
+            ]
+        },
+        {
+            qE: "Roots are Positive Geotropic:",
+            qH: "जड़े धनात्मक गुरूत्वानुवर्तन (Positive Geotropism) होती है-",
+            options: [
+                { e: "Always", h: "सदैव", c: false },
+                { e: "Mostly", h: "अधिकांश", c: true }, // Pneumatophores are negative
+                { e: "Never", h: "कभी नही", c: false },
+                { e: "Sometimes", h: "कभी-कभी", c: false }
+            ]
+        },
+        {
+            qE: "Growth of a plant part towards a specific stimulus is called?",
+            qH: "पौधे के किसी अंग की वृद्धि जब किसी विशिष्ट उद्दीपक की ओर होती है, तो इस प्रक्रिया को कहा जाता है?",
+            options: [
+                { e: "Negative Phototropism", h: "ऋणात्मक प्रकाशानुवर्तन", c: false },
+                { e: "Positive Phototropism/Tropism", h: "धनात्मक प्रकाशानुवर्तन", c: true }, // General tropic logic
+                { e: "Positive Taxis", h: "धनात्मक अनुवर्तन", c: false },
+                { e: "Negative Taxis", h: "ऋणात्मक अनुवर्तन", c: false }
+            ]
+        },
+        {
+            qE: "What is Geotropism?",
+            qH: "जियोट्रोपिज्म (Geotropism) क्या है?",
+            options: [
+                { e: "Growth in response to water", h: "जल की प्रतिक्रिया के रूप में पौधों में वृद्धि", c: false },
+                { e: "Growth in response to nutrients", h: "पोषक तत्वों की प्रतिक्रिया के रूप में पौधों की वृद्धि", c: false },
+                { e: "Growth in response to sunlight", h: "सूर्य की रोशनी की प्रतिक्रिया के रूप में पौधों की वृद्धि", c: false },
+                { e: "Growth in response to gravity", h: "गुरूत्वाकर्षण की प्रतिक्रिया के रूप में पौधों की वृद्धि", c: true }
+            ]
+        },
+        {
+            qE: "Which scientist first discovered plant growth hormones?",
+            qH: "पौधों में पाये जाने वाले वृद्धि-हॉर्मोन का पता सर्वप्रथम किस वैज्ञानिक ने लगाया?",
+            options: [
+                { e: "Funk", h: "फंक", c: false },
+                { e: "William Harvey", h: "विलियम हार्वे", c: false },
+                { e: "Charles Darwin", h: " चार्ल्स डार्विन", c: true },
+                { e: "F.W. Went", h: "एफ. डब्ल्यू वेन्ट", c: false }
+            ]
+        },
+        {
+            qE: "What is meant by 'Growth' in plants?",
+            qH: "पौधों में होने वाले वृद्धि से तात्पर्य है-",
+            options: [
+                { e: "Cell Division", h: "कोशिका विभाजन", c: false },
+                { e: "Cell Elongation", h: "कोशिका दीर्घन", c: false },
+                { e: "Cell Differentiation", h: "कोशिका विभेदन", c: false },
+                { e: "All of these", h: "इनमें से सभी", c: true }
+            ]
+        },
+        {
+            qE: "In which part is the Auxin hormone produced in excess?",
+            qH: "ऑक्सिन हॉर्मोन का अत्यधिक निर्माण किस भाग में होता है?",
+            options: [
+                { e: "Shoot (Stem)", h: "प्ररोह में", c: false },
+                { e: "Root", h: "जड़ में", c: false },
+                { e: "Root Apical Meristem", h: "जड़ के विभज्योतिकी क्षेत्र में", c: false },
+                { e: "Shoot Apical Meristem", h: "प्ररोह के विभज्योतिकी क्षेत्र में", c: true }
+            ]
+        },
+        {
+            qE: "Who first isolated Auxin?",
+            qH: "ऑक्सिन का वियोजन (Isolation) सबसे पहले किसने किया था?",
+            options: [
+                { e: "Hagen-Smit", h: "हागेन स्मिट", c: false },
+                { e: "Kogl", h: "कोल", c: true }, // Kogl isolated from human urine
+                { e: "Thimann", h: "थिमान", c: false },
+                { e: "Salkowski", h: "साल्को वस्की", c: false }
+            ]
+        },
+        {
+            qE: "Due to which hormone do plants bend towards the sun?",
+            qH: "पौधों में उत्पन्न वह हॉर्मोन जिसके कारण पौधे सूर्य के प्रकाश की ओर झुक जाते हैं-",
+            options: [
+                { e: "Gibberellin", h: "जिबरेलीन", c: false },
+                { e: "Auxin", h: "ऑक्सिन", c: true },
+                { e: "Cytokinin", h: "साइटोकाइनिन", c: false },
+                { e: "Ascorbic Acid", h: "एस्कॉर्बिक एसिड", c: false }
+            ]
+        },
+        {
+            qE: "Where is the quantity of Auxin hormone highest?",
+            qH: "ऑक्सिन हॉर्मोन की मात्रा सबसे ज्यादा होती है-",
+            options: [
+                { e: "Shoot Apex", h: "तने के शीर्ष भाग में", c: true },
+                { e: "Root Apex", h: "मूलशीर्ष में", c: false },
+                { e: "Cambium", h: "कैम्बियम में", c: false },
+                { e: "Uniform everywhere", h: "संपूर्ण पौधा में समान रूप में", c: false }
+            ]
+        },
+        {
+            qE: "Consider statements: 1. Stem grows more where auxin is high. 2. Root grows less where auxin is high.",
+            qH: "निम्न कथनों पर विचार कीजिए- (Auxin effect on Stem vs Root)",
+            options: [
+                { e: "Only 1", h: "केवल 1", c: false },
+                { e: "Only 2", h: "केवल 2", c: false },
+                { e: "Both 1 and 2", h: "1 तथा 2 दोनों", c: true },
+                { e: "Neither", h: "न तो 1 न ही 2", c: false }
+            ]
+        },
+        {
+            qE: "Special complex organic substances controlling growth and development in plants are called?",
+            qH: "विशेष प्रकार के जटिल कार्बनिक पदार्थ जो पादपो में वृद्धि तथा विकास को नियंत्रित करते है, कहलाते हैं-",
+            options: [
+                { e: "Plant Hormones", h: "पादप हॉर्मोन", c: false },
+                { e: "Phytohormones", h: "पाराहॉर्मोन", c: false },
+                { e: "Growth Regulators", h: "वृद्धि नियंत्रक पदार्थ", c: false },
+                { e: "All of these", h: "इनमें से सभी", c: true }
+            ]
+        },
+        {
+            qE: "Which statement is true about Auxin?",
+            qH: "ऑक्सिन से सम्बन्धित कौन सा कथन सही है?",
+            options: [
+                { e: "Causes Apical Dominance", h: "इसके कारण पौधों में शीर्ष प्रमुखता हो जाती है", c: false },
+                { e: "Prevents Leaf Abscission", h: "यह पत्तियों का विगलन रोकता है", c: false },
+                { e: "Destroys Weeds", h: "यह खर-पतवार को नष्ट कर देता है", c: false },
+                { e: "All of the above", h: "उपर्युक्त सभी", c: true }
+            ]
+        },
+        {
+            qE: "Which of these is NOT a natural plant hormone?",
+            qH: "निम्न में कौन प्राकृतिक रूप से पाया जाने वाला पादप हॉर्मोन नहीं है?",
+            options: [
+                { e: "2,4-D", h: "2, 4 D", c: true }, // Synthetic auxin
+                { e: "IAA", h: "IAA", c: false },
+                { e: "GA3", h: "GA3", c: false },
+                { e: "Gibberellin", h: "जिबरेलीन", c: false }
+            ]
+        },
+        {
+            qE: "Auxin used rapidly to kill dicot weeds is?",
+            qH: "ऑक्सिन, जिसका द्विबीजपत्री घास को मारने में तीव्र गति से उपयोग होता है, वह है-",
+            options: [
+                { e: "IAA", h: "IAA", c: false },
+                { e: "IBA", h: "IBA", c: false },
+                { e: "NAA", h: "NAA", c: false },
+                { e: "2, 4-D", h: "2, 4 D", c: true }
+            ]
+        },
+        {
+            qE: "Excessive formation of Auxin occurs in:",
+            qH: "ऑक्सिन का अत्यधिक निर्माण होता है-",
+            options: [
+                { e: "Shoot", h: "प्ररोह में", c: false },
+                { e: "Root", h: "जड़ में", c: false },
+                { e: "Root Meristem", h: "जड़ के विभज्योतिकी क्षेत्र में", c: false },
+                { e: "Shoot Meristem", h: "प्ररोह के विभज्योतिकी क्षेत्र में", c: true }
+            ]
+        },
+        {
+            qE: "What is the function of Auxin hormone?",
+            qH: "निम्नलिखित में कौन ऑक्सिन हॉर्मोन का कार्य (Function) है-",
+            options: [
+                { e: "Increase size of tissues/organs", h: "पादप उत्तकों एवं अंगो के आकार को बढ़ाना", c: false },
+                { e: "Formation of Abscission Layer", h: "विल्गन परत (Abscission Layer) का निर्माण करना", c: false }, // It *prevents* it initially
+                { e: "Root formation", h: "जड़ों का निर्माण करना", c: false },
+                { e: "All of these", h: "इनमें से सभी", c: true } // In broad sense, used for rooting, growth
+            ]
+        },
+        {
+            qE: "If a branch cutting is treated with Auxin, then:",
+            qH: "यदि एक शाखा कलम ऑक्सिन द्वारा उपचारित होती है, तो-",
+            options: [
+                { e: "Roots originate", h: "जड़े उत्पन्न होती है", c: true },
+                { e: "Branch grows", h: "शाखा वृद्धि होती है", c: false },
+                { e: "Callus forms", h: "कैलस (Callus) निर्मित होता है", c: false },
+                { e: "All of these", h: "इनमें से सभी", c: false }
+            ]
+        },
+        {
+            qE: "Which hormone causes growth in stem via Cell Elongation?",
+            qH: "निम्नलिखित में कौन-सा हॉर्मोन कोशिका दीर्घन द्वारा तने में वृद्धि कराते है?",
+            options: [
+                { e: "Auxin", h: "ऑक्सिन", c: true },
+                { e: "Cytokinin", h: "साइटोकाइनिन", c: false },
+                { e: "Gibberellin", h: "जिबरेलीन", c: false },
+                { e: "All of these", h: "इनमें से सभी", c: false }
+            ]
+        },
+        {
+            qE: "Which is used for eradication of weeds?",
+            qH: "निम्नलिखित में किसका प्रयोग खरपतवारों के उन्मूलन में होता है?",
+            options: [
+                { e: "IAA", h: "इंडोलएसीटिक एसीड (IAA)", c: false },
+                { e: "ABA", h: "एबसिसिक एसीड (ABA)", c: false },
+                { e: "2, 4-D", h: "फेनॉक्सी एसीटिक एसीड (2, 4 D)", c: true },
+                { e: "None", h: "इनमें से कोई नहीं", c: false }
+            ]
+        },
+        {
+            qE: "Hormone responsible for Cell Elongation in plants is:",
+            qH: "पौधों में कोशिका दीर्घन (Cell elongation) हेतु जिम्मेदार हॉर्मोन है-",
+            options: [
+                { e: "Auxin", h: "ऑक्सिन", c: true },
+                { e: "Gibberellins", h: "जिबरेलिंस", c: false },
+                { e: "Abscisic Acid", h: "ऐब्रसिसिक एसीड", c: false },
+                { e: "Both A and B", h: "A तथा B दोनों", c: false }
+            ]
+        },
+        {
+            qE: "By spraying which plant hormone can Parthenocarpic fruits (seedless) be obtained?",
+            qH: "किस पादप हॉर्मोन के छिड़काव से अनिषेक फल (बीजरहित फल) प्राप्त किये जा सकते है?",
+            options: [
+                { e: "Auxin", h: "ऑक्सिन", c: true },
+                { e: "Cytokinin", h: "साइटोकाइनिन", c: false },
+                { e: "Gibberellins", h: "जिबरेलिंस", c: false },
+                { e: "Abscisic Acid", h: "एबसिसिक एसीड", c: false }
+            ]
+        },
+        {
+            qE: "Which hormone helps in production of seedless fruits?",
+            qH: "बीजरहित फलों के उत्पादन में कौन सा हॉर्मोन सहायक होते ह ?",
+            options: [
+                { e: "Cytokinin", h: "साइटोकाइनिन", c: false },
+                { e: "Auxin", h: "ऑक्सिन", c: false },
+                { e: "Gibberellins", h: "जिबरेलिन्स", c: false },
+                { e: "Both Auxin & Gibberellins", h: "ऑक्सिन एवं जिबरेलिन्स दोनों", c: true }
+            ]
+        },
+        {
+            qE: "IAA, IBA, etc are examples of?",
+            qH: "इण्डोल एसीटिक अम्ल (IAA), इंडोल पायरूविक अम्ल... क्या है?",
+            options: [
+                { e: "Enzyme", h: "इन्जाइम", c: false },
+                { e: "Fungicide", h: "कवकनाशक", c: false },
+                { e: "Synthetic Auxin", h: "संश्लेषित ऑक्सिन", c: false },
+                { e: "Natural Auxin", h: "प्राकृतिक ऑक्सिन", c: true }
+            ]
+        },
+        {
+            qE: "Which of the following is a Synthetic Auxin?",
+            qH: "निम्नलिखित में कौन संश्लेषित ऑक्सिन (Synthetic Auxin) है-",
+            options: [
+                { e: "2, 4-D", h: "2, 4 D", c: false },
+                { e: "IBA", h: "इंडोल ब्यूटाइरिक एसीड", c: false },
+                { e: "NAA", h: "नेपथैलिनएसीटिक एसिड", c: false },
+                { e: "All of these", h: "इनमें से सभी", c: true }
+            ]
+        },
+        {
+            qE: "Consider: 1. Auxin for seedless lemon/grape. 2. Gibberellin better for seedless apple/tomato.",
+            qH: "निम्न कथनों पर विचार कीजिए- (Seedless fruits logic)",
+            options: [
+                { e: "Only 1", h: "केवल 1", c: false },
+                { e: "Only 2", h: "केवल 2", c: false },
+                { e: "Both 1 and 2", h: "1 तथा 2 दोनों", c: true },
+                { e: "Neither", h: "न तो 1 न ही 2", c: false }
+            ]
+        },
+        {
+            qE: "Which hormone induces cells to bend towards light?",
+            qH: "निम्नलिखित में कौन-सा हॉर्मोन पादप कोशिका को इस प्रकार बढ़ने के लिये प्रेरित करता है, जिससे पादप प्रकाश की ओर मुड़ा हुआ प्रतीत होता है?",
+            options: [
+                { e: "Abscisic Acid", h: "एबसिसिक अम्ल", c: false },
+                { e: "Auxin", h: "ऑक्सिन", c: true },
+                { e: "Gibberellin", h: "जिबरेलीन", c: false },
+                { e: "Cytokinin", h: "साइटोकाइनिन", c: false }
+            ]
+        },
+        {
+            qE: "Phototropic movement is controlled by which hormone?",
+            qH: "प्रकाशानुवर्ती संचलन किस हॉर्मोन के द्वारा नियंत्रित होता है?",
+            options: [
+                { e: "Gibberellin", h: "जिबरेलीन", c: false },
+                { e: "Ethylene", h: "एथिलीन", c: false },
+                { e: "Cytokinin", h: "साइटोकाइनिन", c: false },
+                { e: "Auxin", h: "ऑक्सिन", c: true }
+            ]
+        },
+        {
+            qE: "Plant growth hormone Gibberellin is extracted from?",
+            qH: "पादप वृद्धि हॉर्मोन जिबरेलीन किससे निकाले जाते है?",
+            options: [
+                { e: "Fungus", h: "कवक", c: true },
+                { e: "Algae", h: "शैवाल", c: false },
+                { e: "Bacteria", h: "जीवाणु", c: false },
+                { e: "Protozoa", h: "प्रोटोजोआ", c: false }
+            ]
+        },
+        {
+            qE: "Giant size flowers/fruits are produced with help of?",
+            qH: "किस हॉर्मोन के सहायता से वृहद आकार के फलो एवं फूलो का उत्पादन किया जाता है?",
+            options: [
+                { e: "Auxin", h: "ऑक्सिन", c: false },
+                { e: "Cytokinin", h: "साइटोकाइनिन", c: false },
+                { e: "Abscisic Acid", h: "एबसिसिक अम्ल", c: false },
+                { e: "Gibberellins", h: "जिबरेलिंस", c: true }
+            ]
+        },
+        {
+            qE: "Who discovered Gibberellin hormone in Fusarium fungus?",
+            qH: "सर्वप्रथम जिबरेला फ्युजी कुराई या फ्यूजेरियम कवक में जिबरेलिंस हॉर्मोन का खोज किसने किया?",
+            options: [
+                { e: "Kurosawa", h: "कुरोसोवा", c: true },
+                { e: "Yabuta & Sumiki", h: "याबुता एवं सुमिकी", c: false },
+                { e: "Cross & McMillian", h: "क्रॉस एवं मैकमिलन", c: false },
+                { e: "Boyson & Jenson", h: "बॉयसेन एवं जेनसेन", c: false }
+            ]
+        },
+        {
+            qE: "Which hormone breaks seed dormancy and induces germination?",
+            qH: "निम्न में कौन-सा हॉर्मोन बीजो के प्रसुप्ति भंग कर उसे अंकुरण के लिये प्रेरित करते हैं?",
+            options: [
+                { e: "Auxin", h: "ऑक्सिन", c: false },
+                { e: "Gibberellins", h: "जिबरेलिंस", c: true },
+                { e: "Abscisic Acid", h: "एबसिसिक एसीड", c: false },
+                { e: "None", h: "इनमें से कोई नहीं", c: false }
+            ]
+        }
+    ];
+
+    // --- Variables ---
+    let questions = [];
+    let currentQIndex = 0;
+    let score = 0;
+    let timerInterval;
+    let timeLimit = 0;
+    let isTransitioning = false;
+
+    // --- Audio Context ---
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    function playSound(type) {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const oscillator = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+
+        if (type === 'correct') {
+            // Ting sound: High sine wave
+            oscillator.type = 'sine';
+            oscillator.frequency.setValueAtTime(800, audioCtx.currentTime);
+            oscillator.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.1);
+            gainNode.gain.setValueAtTime(0.5, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+            oscillator.start();
+            oscillator.stop(audioCtx.currentTime + 0.5);
+        } else if (type === 'wrong') {
+            // Buzz sound: Low Sawtooth
+            oscillator.type = 'sawtooth';
+            oscillator.frequency.setValueAtTime(150, audioCtx.currentTime);
+            oscillator.frequency.linearRampToValueAtTime(100, audioCtx.currentTime + 0.3);
+            gainNode.gain.setValueAtTime(0.5, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+            oscillator.start();
+            oscillator.stop(audioCtx.currentTime + 0.4);
+        }
+    }
+
+    // --- Confetti Engine ---
+    const canvas = document.getElementById('confetti-canvas');
+    const ctx = canvas.getContext('2d');
+    let particles = [];
+    
+    function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    function createConfetti() {
+        for(let i=0; i<50; i++) {
+            particles.push({
+                x: Math.random() * canvas.width,
+                y: -10,
+                r: Math.random() * 6 + 2,
+                d: Math.random() * 5 + 2,
+                color: `hsl(${Math.random()*360}, 100%, 50%)`,
+                tilt: Math.floor(Math.random() * 10) - 10,
+                tiltAngle: 0,
+                tiltAngleIncremental: (Math.random() * 0.07) + 0.05
+            });
+        }
+    }
+
+    function drawConfetti() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particles.forEach((p, i) => {
+            p.tiltAngle += p.tiltAngleIncremental;
+            p.y += (Math.cos(p.d) + 3 + p.r / 2) / 2;
+            p.x += Math.sin(p.tiltAngle) * 2;
+            p.tilt = Math.sin(p.tiltAngle) * 15;
+
+            ctx.beginPath();
+            ctx.lineWidth = p.r;
+            ctx.strokeStyle = p.color;
+            ctx.moveTo(p.x + p.tilt + (p.r / 2), p.y);
+            ctx.lineTo(p.x + p.tilt, p.y + p.tilt + (p.r / 2));
+            ctx.stroke();
+
+            if (p.y > canvas.height) particles.splice(i, 1);
+        });
+        if(particles.length > 0) requestAnimationFrame(drawConfetti);
+    }
+
+    // --- Quiz Logic ---
+    function toggleShuffle() {
+        const chk = document.getElementById('shuffleToggle');
+        chk.checked = !chk.checked;
+        const parent = chk.parentElement;
+        parent.style.background = chk.checked ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.2)';
+    }
+
+    function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+    }
+
+    function startQuiz() {
+        const timerVal = document.getElementById('timerInput').value;
+        timeLimit = timerVal ? parseInt(timerVal) : 0;
+        
+        // Clone Data
+        questions = JSON.parse(JSON.stringify(rawData));
+        
+        if (document.getElementById('shuffleToggle').checked) {
+            shuffleArray(questions);
+        }
+
+        currentQIndex = 0;
+        score = 0;
+        document.getElementById('start-screen').classList.remove('active');
+        document.getElementById('quiz-screen').classList.add('active');
+        
+        loadQuestion();
+    }
+
+    function loadQuestion() {
+        if (currentQIndex >= questions.length) {
+            finishQuiz();
+            return;
+        }
+
+        isTransitioning = false;
+        const qData = questions[currentQIndex];
+        
+        // Update UI Text
+        document.getElementById('question-count').innerText = `Q: ${String(currentQIndex + 1).padStart(2, '0')}/${questions.length}`;
+        document.getElementById('score-display').innerText = `Score: ${score}`;
+        document.getElementById('q-english').innerText = qData.qE;
+        document.getElementById('q-hindi').innerText = qData.qH;
+
+        // Progress Bar
+        const progress = ((currentQIndex) / questions.length) * 100;
+        document.getElementById('progress-bar').style.width = `${progress}%`;
+
+        // Render Options
+        const optsContainer = document.getElementById('options-container');
+        optsContainer.innerHTML = '';
+        
+        qData.options.forEach((opt, idx) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerHTML = `<span>${opt.e}</span><span class="hindi-text">${opt.h}</span>`;
+            btn.onclick = () => handleAnswer(idx, btn, qData);
+            optsContainer.appendChild(btn);
+        });
+
+        // Reset & Start Timer
+        clearInterval(timerInterval);
+        const timerDisplay = document.getElementById('timer-display');
+        timerDisplay.classList.remove('danger');
+        
+        if (timeLimit > 0) {
+            let timeLeft = timeLimit;
+            timerDisplay.style.display = 'inline-block';
+            timerDisplay.innerText = timeLeft;
+            
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                timerDisplay.innerText = timeLeft;
+                if (timeLeft <= 5) timerDisplay.classList.add('danger');
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    handleTimeOut();
+                }
+            }, 1000);
+        } else {
+            timerDisplay.style.display = 'none';
+        }
+    }
+
+    function handleAnswer(selectedIndex, btnElement, qData) {
+        if (isTransitioning) return;
+        isTransitioning = true;
+        clearInterval(timerInterval);
+
+        // Disable all buttons
+        const allBtns = document.querySelectorAll('.option-btn');
+        allBtns.forEach(b => b.style.pointerEvents = 'none');
+
+        const isCorrect = qData.options[selectedIndex].c;
+
+        if (isCorrect) {
+            btnElement.classList.add('correct');
+            playSound('correct');
+            score++;
+            createConfetti();
+            drawConfetti();
+        } else {
+            btnElement.classList.add('wrong');
+            playSound('wrong');
+            // Show correct one
+            qData.options.forEach((opt, i) => {
+                if (opt.c) allBtns[i].classList.add('correct');
+            });
+            // Show Sad Emoji
+            const emoji = document.getElementById('feedback-emoji');
+            emoji.style.opacity = 1;
+            emoji.classList.add('animate');
+            setTimeout(() => {
+                emoji.classList.remove('animate');
+                emoji.style.opacity = 0;
+            }, 1000);
+        }
+
+        setTimeout(() => {
+            currentQIndex++;
+            loadQuestion();
+        }, 1500);
+    }
+
+    function handleTimeOut() {
+        if (isTransitioning) return;
+        isTransitioning = true;
+        
+        // Show correct answer then move
+        const allBtns = document.querySelectorAll('.option-btn');
+        const qData = questions[currentQIndex];
+        
+        qData.options.forEach((opt, i) => {
+            if (opt.c) allBtns[i].classList.add('correct');
+        });
+        playSound('wrong');
+
+        setTimeout(() => {
+            currentQIndex++;
+            loadQuestion();
+        }, 1500);
+    }
+
+    function finishQuiz() {
+        clearInterval(timerInterval);
+        document.getElementById('quiz-screen').classList.remove('active');
+        document.getElementById('result-screen').classList.add('active');
+
+        // Calculate Percentage
+        // Note: Calculation based on total answered (or total questions? Usually total questions in quiz context)
+        // Adjusting to: Score vs Total Questions attempted so far (if early exit)
+        const total = currentQIndex === 0 ? 1 : currentQIndex; // Avoid div by zero if immediate exit
+        // Actually, standardized is Score / Total Questions in Deck, but if early exit, we can do score / questions seen.
+        // Let's do Score / Total (50) for strict, or Score / Seen for dynamic. User said "results based on questions answered so far".
+        
+        const questionsSeen = currentQIndex; // This is how many screens passed
+        const percent = questionsSeen === 0 ? 0 : Math.round((score / questionsSeen) * 100);
+
+        const circle = document.getElementById('final-score');
+        circle.innerText = `${percent}%`;
+        
+        // Color code circle
+        if (percent >= 80) circle.style.borderColor = '#00e676';
+        else if (percent >= 50) circle.style.borderColor = '#ffb74d';
+        else circle.style.borderColor = '#ff1744';
+
+        const msg = document.getElementById('result-message');
+        if (percent >= 80) msg.innerText = "🏆 Outstanding Performance! (शानदार प्रदर्शन)";
+        else if (percent >= 50) msg.innerText = "👏 Well Done! Keep it up. (बहुत बढ़िया)";
+        else msg.innerText = "📚 Practice makes perfect! Try again. (अभ्यास की आवश्यकता है)";
+
+        document.getElementById('stats-text').innerText = `You answered ${score} correctly out of ${questionsSeen} questions attempted.`;
+    }
+
+    function restartQuiz() {
+        document.getElementById('result-screen').classList.remove('active');
+        document.getElementById('start-screen').classList.add('active');
+        // Reset styles
+        document.getElementById('progress-bar').style.width = '0%';
+    }
+
+</script>
+</body>
+</html>

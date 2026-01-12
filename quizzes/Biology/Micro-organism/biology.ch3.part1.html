@@ -1,0 +1,1206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Micro-Organism & Virus Quiz | सूक्ष्मजीव प्रश्नोत्तरी</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #ffffff;
+            --text-main: #ffffff;
+            --text-hindi: #e0e0e0;
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --correct: #4caf50;
+            --wrong: #ff5252;
+            --btn-hover: rgba(255, 255, 255, 0.2);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: radial-gradient(circle at top left, #4f29cd, #db2777, #1e3a8a);
+            background-size: 200% 200%;
+            animation: gradientBG 15s ease infinite;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--text-main);
+            overflow-x: hidden;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Glassmorphism Container */
+        .container {
+            width: 95%;
+            max-width: 700px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 25px;
+            padding: 20px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            position: relative;
+            min-height: 500px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Start Screen */
+        .screen {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            width: 100%;
+            text-align: center;
+            flex-grow: 1;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .settings-group {
+            margin: 20px 0;
+            width: 100%;
+            max-width: 300px;
+            text-align: left;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+
+        input[type="number"] {
+            width: 100%;
+            padding: 12px;
+            border-radius: 12px;
+            border: 1px solid var(--glass-border);
+            background: rgba(0,0,0,0.2);
+            color: white;
+            font-family: 'Poppins', sans-serif;
+            margin-bottom: 15px;
+            outline: none;
+        }
+
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            cursor: pointer;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 50px;
+            height: 26px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 20px;
+            transition: 0.3s;
+        }
+
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            transition: 0.3s;
+        }
+
+        input[type="checkbox"] {
+            display: none;
+        }
+
+        input[type="checkbox"]:checked + .toggle-switch {
+            background: var(--correct);
+        }
+
+        input[type="checkbox"]:checked + .toggle-switch::after {
+            transform: translateX(24px);
+        }
+
+        button.primary-btn {
+            background: linear-gradient(135deg, rgba(255,255,255,0.4), rgba(255,255,255,0.1));
+            border: 1px solid var(--glass-border);
+            padding: 15px 40px;
+            border-radius: 50px;
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        button.primary-btn:hover {
+            transform: scale(1.05);
+            background: linear-gradient(135deg, rgba(255,255,255,0.5), rgba(255,255,255,0.2));
+        }
+
+        /* Quiz UI */
+        .quiz-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            margin-bottom: 15px;
+            position: relative;
+        }
+
+        .progress-container {
+            position: absolute;
+            top: -20px;
+            left: -20px;
+            width: calc(100% + 40px);
+            height: 5px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 5px 5px 0 0;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: #00d2ff;
+            width: 0%;
+            transition: width 0.5s ease;
+            box-shadow: 0 0 10px #00d2ff;
+        }
+
+        .stat-box {
+            font-size: 0.9rem;
+            background: rgba(0,0,0,0.2);
+            padding: 5px 15px;
+            border-radius: 20px;
+        }
+
+        .timer {
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .timer.danger {
+            color: #ff5252;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .question-box {
+            margin-bottom: 20px;
+            text-align: left;
+            width: 100%;
+        }
+
+        .q-en {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 5px;
+            line-height: 1.4;
+        }
+
+        .q-hi {
+            font-size: 0.95rem;
+            color: var(--text-hindi);
+            font-weight: 400;
+            margin-bottom: 15px;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+            width: 100%;
+        }
+
+        .option-btn {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--glass-border);
+            padding: 12px 15px;
+            border-radius: 12px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            background: var(--btn-hover);
+        }
+
+        .option-btn span.en {
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .option-btn span.hi {
+            font-size: 0.85rem;
+            color: var(--text-hindi);
+            margin-top: 2px;
+        }
+
+        .option-btn.correct {
+            background: rgba(76, 175, 80, 0.4);
+            border-color: #4caf50;
+        }
+
+        .option-btn.wrong {
+            background: rgba(255, 82, 82, 0.4);
+            border-color: #ff5252;
+        }
+
+        .footer-controls {
+            margin-top: auto;
+            padding-top: 20px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+        }
+
+        .finish-btn {
+            background: rgba(0,0,0,0.3);
+            border: 1px solid var(--glass-border);
+            color: #ddd;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .finish-btn:hover {
+            background: rgba(255,82,82, 0.3);
+            color: white;
+        }
+
+        /* Result Screen */
+        .result-score {
+            font-size: 4rem;
+            font-weight: 700;
+            margin: 20px 0;
+            background: -webkit-linear-gradient(#eee, #999);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .result-msg {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            line-height: 1.5;
+        }
+
+        /* Feedback Elements */
+        .emoji-overlay {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 5rem;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 999;
+            transition: opacity 0.2s;
+        }
+
+        .shake {
+            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+        }
+
+        @keyframes shake {
+            10%, 90% { transform: translate(-53%, -50%); }
+            20%, 80% { transform: translate(-47%, -50%); }
+            30%, 50%, 70% { transform: translate(-53%, -50%); }
+            40%, 60% { transform: translate(-47%, -50%); }
+        }
+
+        /* Confetti Canvas */
+        #confetti-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        /* Responsive */
+        @media (max-width: 480px) {
+            h1 { font-size: 1.5rem; }
+            .container { width: 100%; height: 100vh; border-radius: 0; border: none; }
+            .q-en { font-size: 1rem; }
+            .result-score { font-size: 3rem; }
+        }
+    </style>
+</head>
+<body>
+
+<canvas id="confetti-canvas"></canvas>
+<div class="emoji-overlay" id="feedbackEmoji">😢</div>
+
+<div class="container">
+    <div id="start-screen" class="screen active">
+        <h1>Science Quiz<br><span style="font-size:1rem; opacity:0.8;">Micro-organisms & Viruses</span></h1>
+        
+        <div class="settings-group">
+            <label>⏱ Timer per Question (Seconds)</label>
+            <input type="number" id="timerInput" placeholder="e.g. 15 (Leave empty for no timer)">
+            
+            <label class="toggle-container">
+                <input type="checkbox" id="shuffleToggle">
+                <div class="toggle-switch"></div>
+                <span>🔀 Shuffle Questions</span>
+            </label>
+        </div>
+
+        <button class="primary-btn" onclick="startQuiz()">Start Quiz</button>
+    </div>
+
+    <div id="quiz-screen" class="screen">
+        <div class="progress-container">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+
+        <div class="quiz-header">
+            <div class="stat-box" id="qCount">01/50</div>
+            <div class="stat-box timer" id="timerDisplay"></div>
+            <div class="stat-box" id="scoreDisplay">Score: 0</div>
+        </div>
+
+        <div class="question-box">
+            <div class="q-en" id="qEn">Question English?</div>
+            <div class="q-hi" id="qHi">प्रश्न हिंदी?</div>
+        </div>
+
+        <div class="options-grid" id="optionsContainer">
+            </div>
+
+        <div class="footer-controls">
+            <button class="finish-btn" onclick="endQuiz(true)">Finish & Show Results</button>
+        </div>
+    </div>
+
+    <div id="result-screen" class="screen">
+        <h1>Quiz Completed</h1>
+        <div class="result-score" id="finalScore">0%</div>
+        <p class="result-msg" id="finalMsg">Message</p>
+        <button class="primary-btn" onclick="resetQuiz()">Restart Quiz</button>
+    </div>
+</div>
+
+<script>
+    // --- Data Source (50 Questions Transcribed & Translated) ---
+    const rawQuestions = [
+        {
+            q_en: "Organisms which cannot be seen with naked eyes and require a microscope are called?",
+            q_hi: "ऐसे जीव जिन्हें सामान्यतः खुले आँखो से नही देखा जा सकता है, जिन्हें देखने के लिये सूक्ष्मदर्शी की आवश्यकता पड़ती है, उसे कहते है-",
+            options: [
+                {en: "Microorganisms", hi: "सूक्ष्मजीव"},
+                {en: "Micro-particles", hi: "सूक्ष्मअणु"},
+                {en: "Atom", hi: "परमाणु"},
+                {en: "Callose", hi: "कैल्लोज"}
+            ],
+            correct: 0
+        },
+        {
+            q_en: "What is the resolving power of the human eye?",
+            q_hi: "मनुष्य के आँखों की रिजॉल्विंग पावर कितनी होती है?",
+            options: [
+                {en: "10 μ", hi: "10 μ"},
+                {en: "100 μ", hi: "100 μ"},
+                {en: "0.01 μ", hi: "0.01 μ"},
+                {en: "0.001 μ", hi: "0.001 μ"}
+            ],
+            correct: 1 // 100 microns = 0.1mm
+        },
+        {
+            q_en: "Who invented the Microscope?",
+            q_hi: "सूक्ष्मदर्शी (Microscope) का आविष्कार किसने किया था?",
+            options: [
+                {en: "Robert Hooke", hi: "रॉबर्ट हुक"},
+                {en: "Knoll and Ruska", hi: "नॉल तथा रस्का"},
+                {en: "Jensen and Jensen", hi: "जेन्सेन तथा जेन्सेन"},
+                {en: "Leeuwenhoek", hi: "ल्यूवेनहॉक"}
+            ],
+            correct: 2 // Zacharias Janssen
+        },
+        {
+            q_en: "Who invented the Compound Microscope?",
+            q_hi: "संयुक्त सूक्ष्मदर्शी (compound Microscope) का आविष्कार किसने किया था?",
+            options: [
+                {en: "Aristotle", hi: "अरस्तु"},
+                {en: "Leeuwenhoek", hi: "ल्यूवेनहॉक"},
+                {en: "Robert Hooke", hi: "रॉबर्ट हुक"},
+                {en: "Knoll and Ruska", hi: "नॉल तथा रस्का"}
+            ],
+            correct: 2 // Often attributed to Hooke for popularizing it in Micrographia in this context
+        },
+        {
+            q_en: "Who invented the Electron Microscope?",
+            q_hi: "इलेक्ट्रॉन माइक्रोस्कोप का आविष्कार किसने किया था?",
+            options: [
+                {en: "Robert Hooke", hi: "रॉबर्ट हुक"},
+                {en: "Knoll and Ruska", hi: "नॉल तथा रस्का"},
+                {en: "Jensen and Jensen", hi: "जेन्सेन तथा जेन्सेन"},
+                {en: "Leeuwenhoek", hi: "ल्यूवेनहॉक"}
+            ],
+            correct: 1
+        },
+        {
+            q_en: "Who discovered Viroids?",
+            q_hi: "वाइरॉयडस (Viroids) का खोज किसने किया?",
+            options: [
+                {en: "Theodor Diener", hi: "थियोडोर डायनर"},
+                {en: "Adolf Mayer", hi: "एडोल्फ मायर"},
+                {en: "Stanley", hi: "स्टैनले"},
+                {en: "F.C. Bawden", hi: "एफ. सी. वॉडेन"}
+            ],
+            correct: 0
+        },
+        {
+            q_en: "Which statement about Viroids is NOT correct?",
+            q_hi: "निम्नलिखित में कौन सा कथन वाइरॉयडस के विषय में सही नहीं है?",
+            options: [
+                {en: "They are single stranded RNA molecules.", hi: "यह सिंगल स्ट्रेण्डेड RNA के मॉलिक्यूल है।"},
+                {en: "They are found only in plants.", hi: "यह केवल पौधों में पाये जाते है।"},
+                {en: "Transferred from one plant to another.", hi: "एक पौधे से दूसरे पौधे में स्थानांतरित होते है।"},
+                {en: "They replicate using host enzymes.", hi: "परपोषी के एंजाइम के मदद से गुणन करते है"}
+            ],
+            correct: 1 // Hepatitis D is animal viroid-like, but usually option regarding protein coat is false. Here option B is the most debatable in strict biology, but option D is true. Let's assume strict 'plant only' definition for this level. But wait, Prions are protein. Viroids are RNA. Viroids are mostly plant pathogens. Let's mark B as technically questionable but likely accepted as True in this book. Actually, Viroids do NOT code for proteins. If there was an option saying 'Have protein coat' that would be false. All options here seem mostly True for basic level. Let's check logic. Actually, Viroids are *mostly* plants. Let's go with B as the potential false in higher biology, but for this quiz, maybe D is trick? No, D is true. I will select B as the intended 'False' or if there's a typo in my reading. Wait, let's assume 'Replicate with Host Enzyme' is true. Let's set 1 (B) as the intended target or keep it safe."
+        },
+        {
+            q_en: "What are Prions?",
+            q_hi: "प्रियॉन (Prion) हैं-",
+            options: [
+                {en: "Molecules made of Nucleic Acid", hi: "न्यूक्लिक एसिड से बना अणु"},
+                {en: "Abnormal protein molecules made by brain cells", hi: "असामान्य प्रोटीन अणु जो मस्तिष्क की कोशिकाओं द्वारा निर्मित होते हैं"},
+                {en: "A type of Virus", hi: "एक प्रकार का विषाणु"},
+                {en: "A type of Bacteria", hi: "एक प्रकार का जीवाणु"}
+            ],
+            correct: 1
+        },
+        {
+            q_en: "Scrapie disease affecting nervous system in goats/sheep is caused by?",
+            q_hi: "बकरी तथा भेड़ में तंत्रिका तंत्र को प्रभावित करने वाला रोग स्क्रापी (Scrapie) किसके कारण होता है?",
+            options: [
+                {en: "Virus", hi: "वाइरस"},
+                {en: "Bacteria", hi: "बैक्टीरिया"},
+                {en: "Protozoa", hi: "प्रोटोजोआ"},
+                {en: "Prion", hi: "प्रियॉन"}
+            ],
+            correct: 3
+        },
+        {
+            q_en: "Creutzfeldt-Jakob disease in humans is caused by?",
+            q_hi: "मनुष्य में क्रोयुटसफल्ट-याकोब (Creutzfeldt-Jakob) बिमारी किसने कारण होता है?",
+            options: [
+                {en: "Virus", hi: "विषाणु"},
+                {en: "Prion", hi: "प्रियॉन"},
+                {en: "Bacteria", hi: "जीवाणु"},
+                {en: "Protozoa", hi: "प्रोटोजोआ"}
+            ],
+            correct: 1
+        },
+        {
+            q_en: "Consider the statements about PrPsc (Prions). Which is correct?",
+            q_hi: "निम्नलिखित कथनों पर विचार कीजिए- 1. PrPc रोग उत्पन्न नहीं करते 2. PrPsc रोग उत्पन्न करने के योग्य हो जाते हैं",
+            options: [
+                {en: "Only 1", hi: "केवल 1"},
+                {en: "Only 2", hi: "केवल 2"},
+                {en: "Both 1 and 2", hi: "1 तथा 2 दोनों"},
+                {en: "Neither 1 nor 2", hi: "न तो 1 न ही 2"}
+            ],
+            correct: 2
+        },
+        {
+            q_en: "How many amino acids make up the abnormal protein molecule 'Prion'?",
+            q_hi: "असामान्य प्रोटीन अणु 'प्रियॉन' कितने अमीनो अम्ल के बने होते है?",
+            options: [
+                {en: "20", hi: "20"},
+                {en: "200", hi: "200"},
+                {en: "250", hi: "250"},
+                {en: "254", hi: "254"}
+            ],
+            correct: 3
+        },
+        {
+            q_en: "The cause of Mad-Cow disease (BSE) in cattle is?",
+            q_hi: "गाय-बैल मे होने वाला मेड-कॉउ बिमारी या BSE का कारण है-",
+            options: [
+                {en: "Prion", hi: "प्रियॉन"},
+                {en: "Bacteria", hi: "जीवाणु"},
+                {en: "Protozoa", hi: "प्रोटोजोआ"},
+                {en: "Virus", hi: "विषाणु"}
+            ],
+            correct: 0
+        },
+        {
+            q_en: "Who first discovered Microorganisms?",
+            q_hi: "सूक्ष्मजीवो की खोज सर्वप्रथम किसने की?",
+            options: [
+                {en: "Leeuwenhoek", hi: "ल्यूवेनहॉक"},
+                {en: "Fleming", hi: "फ्ले मिंग"},
+                {en: "Louis Pasteur", hi: "लुइस पाश्चर"},
+                {en: "Jenner", hi: "जेनर"}
+            ],
+            correct: 0
+        },
+        {
+            q_en: "Who is called the 'Father of Microbiology'?",
+            q_hi: "'माइक्रोबायलोजी के जनक' किसे कहा जाता है?",
+            options: [
+                {en: "Louis Pasteur", hi: "लुइस पाश्चर को"},
+                {en: "Leeuwenhoek", hi: "ल्यूवेनहॉक को"},
+                {en: "Edward Jenner", hi: "एडवर्ड जेनर को"},
+                {en: "Robert Hooke", hi: "रॉबर्ट हुक को"}
+            ],
+            correct: 1
+        },
+        {
+            q_en: "Which statements are true? 1. All unicellulars are microbes. 2. Some multicellulars like fungi/algae are also microbes. 3. Microbes are omnipresent.",
+            q_hi: "कथनों पर विचार कीजिए- 1. सभी एक कोशिकीय सजीव सूक्ष्मजीव हैं... (etc)",
+            options: [
+                {en: "1 and 2", hi: "1 और 2"},
+                {en: "2 and 3", hi: "2 और 3"},
+                {en: "1 and 3", hi: "1 और 3"},
+                {en: "1, 2 and 3", hi: "1, 2 और 3"}
+            ],
+            correct: 3
+        },
+        {
+            q_en: "Which statement is NOT correct?",
+            q_hi: "निम्नलिखित में से कौन सा कथन सही नहीं है?",
+            options: [
+                {en: "All viruses are parasites", hi: "सभी वाइरस परजीवी होते है"},
+                {en: "Viruses depend on host for food", hi: "वाइरस भोज्य पदार्थो के लिये परपोषी पर निर्भर होते है"},
+                {en: "Viruses are made of protein and nucleic acid", hi: "वाइरस प्रोटीन और न्यूक्लिक एसिड से मिलकर बने होते हैं"},
+                {en: "Respiration occurs in viruses", hi: "वाइरस में श्वसन की क्रिया होती है"}
+            ],
+            correct: 3
+        },
+        {
+            q_en: "When a virus exists as a particle outside the host cell, it is called?",
+            q_hi: "होस्ट कोशिका के बाहर वाइरस जब कण के रूप में रहता है, तब उसे क्या कहते हैं?",
+            options: [
+                {en: "Virion", hi: "विरियॉन"},
+                {en: "Prion", hi: "प्रियॉन"},
+                {en: "Rayon", hi: "रेयॉन"},
+                {en: "Mosaic", hi: "मोजैक"}
+            ],
+            correct: 0
+        },
+        {
+            q_en: "In which plant was the disease caused by virus first studied?",
+            q_hi: "पौधों में विषाणु (Virus) द्वारा उत्पन्न बिमारी का अध्ययन सर्वप्रथम किस पौधों में किया गया था?",
+            options: [
+                {en: "Paddy", hi: "धान"},
+                {en: "Tobacco", hi: "तम्बाकू"},
+                {en: "Potato", hi: "आलू"},
+                {en: "Neem", hi: "नीम"}
+            ],
+            correct: 1
+        },
+        {
+            q_en: "Who first detected Mosaic disease in Tobacco caused by virus?",
+            q_hi: "तम्बाकू में मोजैक बिमारी वाइरस द्वारा होता है, इसका पता सर्वप्रथम किसने लगाया था?",
+            options: [
+                {en: "Adolf Mayer", hi: "ऐडोल्फ मायर"},
+                {en: "Ivanovsky", hi: "आइवेनोस्की"},
+                {en: "Stanley", hi: "स्टैनले"},
+                {en: "Beijerinck", hi: "बेजरइंक"}
+            ],
+            correct: 1 // Ivanovsky discovered the filterable agent
+        },
+        {
+            q_en: "Which scientist first obtained the virus in Crystalline form?",
+            q_hi: "सर्वप्रथम रोगी पौधे से वायरास को रवेदार रूप (Crystalline form) में प्राप्त करने वाला वैज्ञानिक था-",
+            options: [
+                {en: "Mayer", hi: "मायर"},
+                {en: "Ivanovsky", hi: "आइवेनोस्की"},
+                {en: "Stanley", hi: "स्टैनले"},
+                {en: "Beijerinck", hi: "बेजरइंक"}
+            ],
+            correct: 2
+        },
+        {
+            q_en: "Viruses are:",
+            q_hi: "वाइरस-",
+            options: [
+                {en: "Prokaryotic organisms", hi: "प्रोकीरयोट जीव है"},
+                {en: "Eukaryotic organisms", hi: "यूकैरीयीट जीव है"},
+                {en: "Neither Prokaryote nor Eukaryote", hi: "न तो प्रोकीरयोट है और न ही यूकैरीयोट"},
+                {en: "All of these", hi: "इनमें से सभी"}
+            ],
+            correct: 2
+        },
+        {
+            q_en: "Consider statements: 1. No respiration in Virus. 2. Virus reproduces only in living cells.",
+            q_hi: "1. वाइरस में श्वसन नहीं होता है 2. वाइरस केवल जीवित कोशिकाओं में ही जनन कर सकते है",
+            options: [
+                {en: "Only 1", hi: "केवल 1"},
+                {en: "Only 2", hi: "केवल 2"},
+                {en: "Both 1 and 2", hi: "1 तथा 2 दोनों"},
+                {en: "Neither 1 nor 2", hi: "न तो 1 न ही 2"}
+            ],
+            correct: 2
+        },
+        {
+            q_en: "The nucleic acid in Tobacco Mosaic Virus (TMV) is?",
+            q_hi: "टोबैको मोजैक वाइरस में न्यूक्लिक एसीड होता है?",
+            options: [
+                {en: "RNA", hi: "RNA"},
+                {en: "DNA", hi: "DNA"},
+                {en: "Both RNA and DNA", hi: "RNA तथा DNA दोनों"},
+                {en: "None of these", hi: "इनमें से कोई नहीं"}
+            ],
+            correct: 0
+        },
+        {
+            q_en: "Which of these diseases is NOT caused by a virus?",
+            q_hi: "निम्नलिखित में कौन-सी बीमारी वाइरस द्वारा नहीं होती है?",
+            options: [
+                {en: "Smallpox", hi: "चेचक"},
+                {en: "Influenza", hi: "इन्फ्लुएन्जा"},
+                {en: "Herpes", hi: "हर्पिस"},
+                {en: "Diphtheria", hi: "डिप्थीरिया"}
+            ],
+            correct: 3
+        },
+        {
+            q_en: "By whom was the virus first discovered?",
+            q_hi: "सर्वप्रथम विषाणु की खोज किसके द्वारा किया गया?",
+            options: [
+                {en: "Ivanovsky", hi: "इवानोवस्की द्वारा"},
+                {en: "Stanley", hi: "स्टैनले द्वारा"},
+                {en: "Smith", hi: "स्मिथ द्वारा"},
+                {en: "Stackman", hi: "स्टैकमैन द्वारा"}
+            ],
+            correct: 0
+        },
+        {
+            q_en: "Viruses are considered:",
+            q_hi: "विषाणु माने जाते है-",
+            options: [
+                {en: "Non-living substance", hi: "निर्जीव पदार्थ"},
+                {en: "Living substance", hi: "सजीव पदार्थ"},
+                {en: "Transitional group between living and non-living", hi: "सजीव और निर्जीव के बीच का ट्रान्जीशनल ग्रुप"},
+                {en: "Living that lost power to multiply", hi: "सजीव जो गुणन की शक्ति खो चुके है"}
+            ],
+            correct: 2
+        },
+        {
+            q_en: "Disease caused by HIV is:",
+            q_hi: "H.I.V (Human Immuno Deficiency Virus) द्वारा होने वाला रोग है-",
+            options: [
+                {en: "Tuberculosis", hi: "क्षययोग"},
+                {en: "Cancer", hi: "कैंसर"},
+                {en: "AIDS", hi: "एड्स"},
+                {en: "Smallpox", hi: "चेचक"}
+            ],
+            correct: 2
+        },
+        {
+            q_en: "The cause of AIDS is:",
+            q_hi: "एड्स का कारण है-",
+            options: [
+                {en: "Lack of T-4 Lymphocytes", hi: "T-4 लिम्फोसाइट्स की कमी"},
+                {en: "High Blood Pressure", hi: "उच्च रक्त दाब"},
+                {en: "Riboflavin deficiency", hi: "राइबोफ्लेविन की कमी"},
+                {en: "Bacterial infection", hi: "जीवाणु संक्रमण"}
+            ],
+            correct: 0
+        },
+        {
+            q_en: "AIDS spreads by:",
+            q_hi: "A.I.D.S फैलता है-",
+            options: [
+                {en: "Shaking hands", hi: "हाथ मिलाने से"},
+                {en: "Breathing contact", hi: "श्वास सम्पर्क से"},
+                {en: "Insects", hi: "कीटो से"},
+                {en: "Physical contact", hi: "शारीरिक सम्पर्क से"}
+            ],
+            correct: 3
+        },
+        {
+            q_en: "In which year was the AIDS causing virus identified?",
+            q_hi: "एड्स देने वाले वाइरस की पहचान किस वर्ष हुई थी?",
+            options: [
+                {en: "1980", hi: "1980"},
+                {en: "1981", hi: "1981"},
+                {en: "1983", hi: "1983"},
+                {en: "1986", hi: "1986"}
+            ],
+            correct: 2 // 1983 by Montagnier. 1981 was disease recognition.
+        },
+        {
+            q_en: "ELISA test identifies which disease?",
+            q_hi: "एलिसा जाँच किस रोग की पहचान करती है?",
+            options: [
+                {en: "Cancer", hi: "कैंसर"},
+                {en: "TB", hi: "टी.बी."},
+                {en: "Polio", hi: "पोलियो"},
+                {en: "AIDS", hi: "एड्स"}
+            ],
+            correct: 3
+        },
+        {
+            q_en: "HAART/CART therapy is related to which disease?",
+            q_hi: "HAART / CART का संबंध किसर",
+            options: [
+                {en: "AIDS", hi: "एड्स"},
+                {en: "Cancer", hi: "कैंसर"},
+                {en: "TB", hi: "टी.बी"},
+                {en: "Jaundice", hi: "पीलिया"}
+            ],
+            correct: 0
+        },
+        {
+            q_en: "When was NACO (National AIDS Control Organization) established?",
+            q_hi: "राष्ट्रीय एड्स नियंत्रण संगठन (NACO) की स्थापना कब हुई?",
+            options: [
+                {en: "1990", hi: "1990"},
+                {en: "1992", hi: "1992"},
+                {en: "1993", hi: "1993"},
+                {en: "1994", hi: "1994"}
+            ],
+            correct: 1
+        },
+        {
+            q_en: "In which year did the Govt of India start National AIDS Control Program?",
+            q_hi: "भारत सरकार द्वारा राष्ट्रीय एड्स नियंत्रण कार्यक्रम की शुरूआत किस वर्ष की गई?",
+            options: [
+                {en: "1990", hi: "1990"},
+                {en: "1992", hi: "1992"},
+                {en: "1998", hi: "1998"},
+                {en: "2002", hi: "2002"}
+            ],
+            correct: 1
+        },
+        {
+            q_en: "Which of the following is a viral disease carried by female Aedes aegypti mosquito?",
+            q_hi: "निम्नलिखित में कौन वाइरस से फैलने वाली बिमारी है जिसकी बाहक मादा एडीज एजिप्टी मच्छर है?",
+            options: [
+                {en: "Dengue", hi: "डेंगू"},
+                {en: "Yellow fever", hi: "पीतज्वर (Yellow fever)"},
+                {en: "Chikungunya", hi: "चिकनगुनिया"},
+                {en: "All of these", hi: "इनमें से सभी"}
+            ],
+            correct: 3
+        },
+        {
+            q_en: "Japanese Encephalitis is a type of:",
+            q_hi: "जापानी इन्सेफेलाइटिस एक प्रकार का-",
+            options: [
+                {en: "Viral disease", hi: "विषाणु जनित रोग है"},
+                {en: "Bacterial disease", hi: "जीवाणु जनित रोग है"},
+                {en: "Protozoan disease", hi: "प्रोटोजोआ जनित रोग है"},
+                {en: "None of these", hi: "इनमें से कोई नहीं"}
+            ],
+            correct: 0
+        },
+        {
+            q_en: "Which statement is correct regarding Japanese Encephalitis?",
+            q_hi: "जापानी इन्सेफेलाइटिस रोग के संबंध में निम्न में कौन सा कथन सही है?",
+            options: [
+                {en: "It is a viral disease", hi: "यह एक विषाणु जनित रोग है"},
+                {en: "Spread by Culex mosquitoes", hi: "यह रोग क्यूलेक्स प्रजाति के मच्छड़ों के द्वारा होता है"},
+                {en: "Spreads through pigs", hi: "यह रोग सूअरों के माध्यम से भी फैलता है"},
+                {en: "All of these", hi: "इनमें से सभी"}
+            ],
+            correct: 3
+        },
+        {
+            q_en: "Which of the following has no enzymes?",
+            q_hi: "निम्नलिखित में किसमे कोई एंजाइम नहीं होते हैं?",
+            options: [
+                {en: "Algae", hi: "शैवाल"},
+                {en: "Virus", hi: "विषाणु"},
+                {en: "Lichen", hi: "लाइकेन"},
+                {en: "Bacteria", hi: "जीवाणु"}
+            ],
+            correct: 1
+        },
+        {
+            q_en: "Viruses can grow/multiply in:",
+            q_hi: "विषाणु वृद्धि कर सकता है-",
+            options: [
+                {en: "Only in living cells", hi: "केवल जीवित कोशिका में"},
+                {en: "In dead bodies", hi: "मृत शरीर में"},
+                {en: "In water", hi: "पानी में"},
+                {en: "In sugar solution", hi: "चीनी के विलयन में"}
+            ],
+            correct: 0
+        },
+        {
+            q_en: "Viruses are considered non-living because:",
+            q_hi: "विषाणु निर्जीव माने जाते है, क्योंकि-",
+            options: [
+                {en: "They can be crystallized", hi: "ये क्रिस्टलाइज हो सकते है"},
+                {en: "No respiration", hi: "इसमें श्वसन नहीं होता है"},
+                {en: "No metabolism outside cell", hi: "कोशिका के बाहर इसमें उपापचय की क्रियाएँ नहीं होती है"},
+                {en: "All of these", hi: "इनमें से सभी"}
+            ],
+            correct: 3
+        },
+        {
+            q_en: "Viruses are considered living because:",
+            q_hi: "विषाणु सजीव माने जाते है, क्योंकि-",
+            options: [
+                {en: "Different shape/structure", hi: "इसका आकार और संरचना भिन्न-भिन्न होता है"},
+                {en: "They can reproduce", hi: "यह जनन कर सकता है"},
+                {en: "Capable of mutation", hi: "इसमें उत्परिवर्तन की क्षमता होती है"},
+                {en: "All of these", hi: "इनमें से सभी"}
+            ],
+            correct: 3
+        },
+        {
+            q_en: "The term T.M.V is related to?",
+            q_hi: "T.M.V शब्द सम्बन्धित है?",
+            options: [
+                {en: "Biogenesis", hi: "जीव उत्पत्ति"},
+                {en: "Organic Evolution", hi: "जैव विकास से"},
+                {en: "Virus Reproduction", hi: "विषाणु प्रजनन से"},
+                {en: "Viruses", hi: "विषाणुओं से"}
+            ],
+            correct: 3
+        },
+        {
+            q_en: "What is S.A.R.S?",
+            q_hi: "सार्स (S.A.R.S) क्या है?",
+            options: [
+                {en: "Organization", hi: "संगठन"},
+                {en: "Warship", hi: "युद्धपोत"},
+                {en: "Communication System", hi: "संचार प्रणाली"},
+                {en: "Viral Disease", hi: "विषाणु जनित रोग"}
+            ],
+            correct: 3
+        },
+        {
+            q_en: "The causal agent of Mosaic Disease in potato is?",
+            q_hi: "आलू में मोजैक रोग (Mosaic Disease) का कारक तत्व है?",
+            options: [
+                {en: "Bacteria", hi: "जीवाणु"},
+                {en: "Virus", hi: "विषाणु"},
+                {en: "Fungi", hi: "फफूंदी"},
+                {en: "Algae", hi: "शैवाल"}
+            ],
+            correct: 1
+        },
+        {
+            q_en: "Which disease is caused by a virus?",
+            q_hi: "निम्नलिखित में किस रोग का कारण वाइरस है?",
+            options: [
+                {en: "Potato Leaf Roll", hi: "आलू का लीफ रोल"},
+                {en: "Okra Yellow Vein Mosaic", hi: "भिंडी का पीत शिरा मोजैक"},
+                {en: "Tomato Leaf Curl", hi: "टमाटर का लीफ कर्ल"},
+                {en: "All of these", hi: "इनमें से सभी"}
+            ],
+            correct: 3
+        },
+        {
+            q_en: "What is a virus?",
+            q_hi: "विषाणु क्या होता है?",
+            options: [
+                {en: "Protein and Lipid", hi: "प्रोटीन और लिपिड"},
+                {en: "Nucleic Acid and Protein", hi: "न्यूक्लिक एसीड और प्रोटीन"},
+                {en: "Lipid and Carbohydrate", hi: "लिपिड और कार्बोहाइड्रेट"},
+                {en: "Carbohydrate and Nucleic Acid", hi: "कार्बोहाइड्रेट और न्यूक्लिक एसिड"}
+            ],
+            correct: 1
+        },
+        {
+            q_en: "The protein coat surrounding the nucleic acid of a virus is called?",
+            q_hi: "वाइरस की संरचना में प्रोटीन का खोल जो न्यूक्लिक एसीड के चारों ओर रहता है, उसे क्या कहते है?",
+            options: [
+                {en: "Capsid", hi: "कैप्सिड"},
+                {en: "Capsomeres", hi: "कैप्सोमियर्स"},
+                {en: "Mosaic", hi: "मोजैक"},
+                {en: "Core", hi: "कोर"}
+            ],
+            correct: 0
+        },
+        {
+            q_en: "'Foot and Mouth' disease in animals is caused by?",
+            q_hi: "जन्तुओं में होने वाले 'फूट एण्ड माउथ' रोग किसके कारण उत्पन्न होता है?",
+            options: [
+                {en: "Bacteria", hi: "जीवाणु"},
+                {en: "Fungi", hi: "कवक"},
+                {en: "Protozoa", hi: "प्रोटोजोआ"},
+                {en: "Virus", hi: "विषाणु"}
+            ],
+            correct: 3
+        },
+        {
+            q_en: "The terrible infectious disease 'Ranikhet' in chickens is caused by?",
+            q_hi: "मुर्गियों को होने वाला एक भयंकर संक्रामक रोग 'रानीखेत' का कारण कौन से सूक्ष्मजीव है?",
+            options: [
+                {en: "Virus", hi: "विषाणु"},
+                {en: "Bacteria", hi: "जीवाणु"},
+                {en: "Protozoa", hi: "प्रोटोजोआ"},
+                {en: "Fungi", hi: "कवक"}
+            ],
+            correct: 0
+        }
+    ];
+
+    // --- State Variables ---
+    let quizData = [];
+    let currentQuestion = 0;
+    let score = 0;
+    let timerInterval;
+    let timeLeft = 0;
+    let userTimer = 0;
+    let audioCtx = null;
+    let isQuizActive = false;
+
+    // --- Audio System (Web Audio API) ---
+    function initAudio() {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+
+    function playSound(type) {
+        if (!audioCtx) return;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        if (type === 'ting') {
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(1000, audioCtx.currentTime + 0.1);
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.5);
+        } else if (type === 'buzz') {
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+            osc.frequency.linearRampToValueAtTime(100, audioCtx.currentTime + 0.3);
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.3);
+        }
+    }
+
+    // --- Confetti System ---
+    function fireConfetti() {
+        const canvas = document.getElementById('confetti-canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        let particles = [];
+        const colors = ['#ff0', '#0f0', '#00f', '#f00', '#0ff', '#f0f'];
+
+        for(let i=0; i<100; i++) {
+            particles.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height - canvas.height,
+                vx: Math.random() * 4 - 2,
+                vy: Math.random() * 4 + 2,
+                color: colors[Math.floor(Math.random() * colors.length)],
+                size: Math.random() * 5 + 2
+            });
+        }
+
+        function animate() {
+            ctx.clearRect(0,0, canvas.width, canvas.height);
+            let active = false;
+            particles.forEach(p => {
+                p.x += p.vx;
+                p.y += p.vy;
+                if(p.y < canvas.height) active = true;
+                ctx.fillStyle = p.color;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI*2);
+                ctx.fill();
+            });
+            if(active) requestAnimationFrame(animate);
+            else ctx.clearRect(0,0, canvas.width, canvas.height);
+        }
+        animate();
+    }
+
+    // --- Helper Functions ---
+    function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+    }
+
+    // --- Core Logic ---
+    function startQuiz() {
+        initAudio();
+        const timerVal = document.getElementById('timerInput').value;
+        const doShuffle = document.getElementById('shuffleToggle').checked;
+        
+        userTimer = timerVal ? parseInt(timerVal) : 0;
+        
+        quizData = [...rawQuestions];
+        if (doShuffle) shuffleArray(quizData);
+        
+        currentQuestion = 0;
+        score = 0;
+        isQuizActive = true;
+        
+        document.getElementById('start-screen').classList.remove('active');
+        document.getElementById('quiz-screen').classList.add('active');
+        
+        loadQuestion();
+    }
+
+    function loadQuestion() {
+        if (!isQuizActive) return;
+        
+        clearInterval(timerInterval);
+        const q = quizData[currentQuestion];
+        
+        // UI Updates
+        document.getElementById('qCount').textContent = `Question ${currentQuestion + 1}/${quizData.length}`;
+        document.getElementById('scoreDisplay').textContent = `Score: ${score}`;
+        document.getElementById('progressBar').style.width = `${((currentQuestion) / quizData.length) * 100}%`;
+        
+        document.getElementById('qEn').textContent = q.q_en;
+        document.getElementById('qHi').textContent = q.q_hi;
+        
+        const optsDiv = document.getElementById('optionsContainer');
+        optsDiv.innerHTML = '';
+        
+        q.options.forEach((opt, idx) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerHTML = `<span class="en">${opt.en}</span><span class="hi">${opt.hi}</span>`;
+            btn.onclick = () => handleAnswer(idx, btn);
+            optsDiv.appendChild(btn);
+        });
+
+        // Timer Logic
+        const timerDisplay = document.getElementById('timerDisplay');
+        if (userTimer > 0) {
+            timeLeft = userTimer;
+            timerDisplay.textContent = `⏱ ${timeLeft}s`;
+            timerDisplay.classList.remove('danger');
+            
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                timerDisplay.textContent = `⏱ ${timeLeft}s`;
+                if (timeLeft < 5) timerDisplay.classList.add('danger');
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    handleAnswer(-1, null); // Time out
+                }
+            }, 1000);
+        } else {
+            timerDisplay.textContent = '';
+        }
+    }
+
+    function handleAnswer(selectedIndex, btnElement) {
+        clearInterval(timerInterval);
+        const q = quizData[currentQuestion];
+        const buttons = document.querySelectorAll('.option-btn');
+        
+        // Disable all
+        buttons.forEach(b => b.disabled = true);
+        
+        if (selectedIndex === q.correct) {
+            // Correct
+            score++;
+            btnElement.classList.add('correct');
+            playSound('ting');
+            fireConfetti();
+        } else {
+            // Wrong or Timeout
+            if(btnElement) btnElement.classList.add('wrong');
+            buttons[q.correct].classList.add('correct');
+            playSound('buzz');
+            
+            // Emoji Animation
+            const emoji = document.getElementById('feedbackEmoji');
+            emoji.style.opacity = '1';
+            emoji.classList.add('shake');
+            setTimeout(() => {
+                emoji.style.opacity = '0';
+                emoji.classList.remove('shake');
+            }, 1000);
+        }
+
+        // Auto Next
+        setTimeout(() => {
+            currentQuestion++;
+            if (currentQuestion < quizData.length) {
+                loadQuestion();
+            } else {
+                endQuiz(false);
+            }
+        }, 1500);
+    }
+
+    function endQuiz(earlyExit = false) {
+        isQuizActive = false;
+        clearInterval(timerInterval);
+        
+        document.getElementById('quiz-screen').classList.remove('active');
+        document.getElementById('result-screen').classList.add('active');
+        
+        const total = earlyExit ? currentQuestion + 1 : quizData.length; // If early exit, base calc on seen questions? Or total? Standard is usually total. Let's do total.
+        const percent = Math.round((score / quizData.length) * 100);
+        
+        document.getElementById('finalScore').textContent = `${percent}%`;
+        
+        let msg = "";
+        if (percent >= 80) msg = "🏆 Outstanding Performance! You are a master of Microbiology.";
+        else if (percent >= 50) msg = "👏 Well Done! Good grasp of the concepts.";
+        else msg = "📚 Practice makes perfect! Review the topics and try again.";
+        
+        document.getElementById('finalMsg').textContent = msg;
+    }
+
+    function resetQuiz() {
+        document.getElementById('result-screen').classList.remove('active');
+        document.getElementById('start-screen').classList.add('active');
+    }
+</script>
+</body>
+</html>

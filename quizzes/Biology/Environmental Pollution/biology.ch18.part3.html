@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Environment Quiz - Bilingual</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: 1px solid rgba(255, 255, 255, 0.2);
+            --primary-text: #ffffff;
+            --hindi-text: #dddddd;
+            --success: #00e676;
+            --error: #ff1744;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(45deg, #4158D0, #C850C0, #FFCC70);
+            background-size: 300% 300%;
+            animation: meshGradient 10s ease infinite;
+            display: flex; justify-content: center; align-items: center; padding: 15px;
+            overflow-x: hidden;
+        }
+
+        @keyframes meshGradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .container {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 25px;
+            border: var(--glass-border);
+            width: 100%;
+            max-width: 750px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            position: relative;
+            min-height: 500px;
+            display: flex; flex-direction: column;
+        }
+
+        .progress-bar-container {
+            position: absolute; top: 0; left: 0; width: 100%; height: 6px;
+            background: rgba(255,255,255,0.1); border-radius: 25px 25px 0 0;
+        }
+        #progress-fill {
+            height: 100%; width: 0%; background: var(--success);
+            box-shadow: 0 0 10px var(--success); transition: width 0.3s ease;
+        }
+
+        .header { display: flex; justify-content: space-between; margin-bottom: 25px; font-weight: 600; color: white; }
+        
+        #timer.pulse-red { color: var(--error); animation: pulse 0.8s infinite; }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+
+        .question-box { margin-bottom: 30px; }
+        .en-text { display: block; font-size: 1.3rem; font-weight: 700; color: var(--primary-text); margin-bottom: 5px; }
+        .hi-text { display: block; font-size: 1rem; color: var(--hindi-text); font-weight: 400; }
+
+        .options-list { display: grid; gap: 12px; }
+        .option-btn {
+            background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px; padding: 15px; cursor: pointer; text-align: left;
+            transition: 0.2s ease; color: white;
+        }
+        .option-btn:hover:not(:disabled) { background: rgba(255, 255, 255, 0.2); transform: scale(1.02); }
+        .option-btn.correct { background: var(--success) !important; color: black; border-color: white; }
+        .option-btn.wrong { background: var(--error) !important; border-color: white; }
+
+        .btn-start, .btn-restart {
+            padding: 15px 35px; border-radius: 50px; border: none; font-size: 1.1rem;
+            font-weight: 700; cursor: pointer; transition: 0.3s; background: white; color: #C850C0;
+        }
+        .btn-start:hover { transform: scale(1.1); box-shadow: 0 0 20px rgba(255,255,255,0.5); }
+        .finish-btn { background: rgba(255, 255, 255, 0.1); margin-top: auto; padding: 10px; border: none; color: white; border-radius: 10px; cursor: pointer; font-size: 0.9rem; }
+
+        .screen { display: none; flex-direction: column; height: 100%; }
+        .screen.active { display: flex; }
+
+        #sad-emoji { 
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 100px; display: none; z-index: 100; animation: shake 0.5s; 
+        }
+        @keyframes shake { 0% { left: 48%; } 25% { left: 52%; } 50% { left: 48%; } 75% { left: 52%; } 100% { left: 50%; } }
+
+        .confetti { position: absolute; pointer-events: none; z-index: 9999; }
+
+        /* Start screen styles */
+        .settings-group { margin: 20px 0; display: flex; flex-direction: column; gap: 15px; }
+        .setting-item { display: flex; justify-content: space-between; align-items: center; }
+        input[type="number"] { width: 60px; padding: 5px; border-radius: 5px; border: none; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="progress-bar-container"><div id="progress-fill"></div></div>
+
+    <div class="screen active" id="start-screen">
+        <h1 style="text-align: center; color: white; margin-bottom: 20px;">Environmental Pollution Quiz<br><span style="font-size: 1rem; font-weight: 400;">पर्यावरण प्रदूषण प्रश्नोत्तरी</span></h1>
+        <div class="settings-group">
+            <div class="setting-item">
+                <label style="color: white;">Timer (Seconds per Question):<br><small>0 for no timer</small></label>
+                <input type="number" id="timer-setting" value="15" min="0">
+            </div>
+            <div class="setting-item">
+                <label style="color: white;">Shuffle Questions (प्रश्नों को फेरबदल करें)</label>
+                <input type="checkbox" id="shuffle-setting" style="width: 20px; height: 20px;">
+            </div>
+        </div>
+        <button class="btn-start" onclick="initQuiz()">Start Quiz / प्रारंभ करें</button>
+    </div>
+
+    <div class="screen" id="quiz-screen">
+        <div class="header">
+            <span id="q-counter">Question 00/51</span>
+            <span id="timer">⏱ --s</span>
+            <span id="score-counter">Score: 00</span>
+        </div>
+        <div class="question-box">
+            <span class="en-text" id="en-q">Loading English question...</span>
+            <span class="hi-text" id="hi-q">Loading Hindi question...</span>
+        </div>
+        <div class="options-list" id="options"></div>
+        <div id="sad-emoji">😢</div>
+        <button class="finish-btn" onclick="endQuiz()">Finish & Show Results (प्रश्नोत्तरी समाप्त करें)</button>
+    </div>
+
+    <div class="screen" id="result-screen">
+        <h2 style="text-align: center; color: white; margin-bottom: 20px;">Quiz Results</h2>
+        <div style="text-align: center; color: white; margin-bottom: 30px;">
+            <p id="final-score" style="font-size: 3rem; font-weight: 700;">0/51</p>
+            <p id="result-msg" style="font-size: 1.2rem; margin-top: 10px;"></p>
+        </div>
+        <button class="btn-restart" onclick="location.reload()">Restart Quiz / पुनः प्रयास करें</button>
+    </div>
+</div>
+
+<script>
+    // DATA: QUESTIONS 101 - 151
+    const rawData = [
+        { en: "If water pollution continues at its current rate, what will be the consequence?", hi: "यदि जल प्रदूषण वर्तमान गति से होता रहा तो इसके क्या दुष्प्रभाव देखने मिलेंगे?", options: ["Water will be unfit for irrigation (सिंचाई योग्य नहीं रहेगा)", "BOD of water will increase (BOD मान बढ़ जाएगा)", "Oxygen for aquatic plants will become unavailable (जल पादपों के लिए ऑक्सीजन के अणु अप्राप्य हो जाएंगे)", "All of these (इनमें से सभी)"], correct: 3 },
+        { en: "Which gas does NOT pollute the air in high amounts?", hi: "निम्नलिखित में कौन-सी गैस की अधिक मात्रा वायु को प्रदूषित नहीं करती है?", options: ["O2", "CO", "NO2", "SO2"], correct: 0 },
+        { en: "Photochemical Smog is a result of reaction between?", hi: "प्रकाश रासायनिक स्मॉग इस आम क्रिया का परिणाम है-", options: ["CO, O2 and PAN in sunlight", "NO2, O3 and CO in high humidity in evening", "NO2, O3 and PAN in presence of sunlight", "CO, CO2 and NO2 at low temp"], correct: 2 },
+        { en: "Which of the following is NOT a part of vehicle pollution?", hi: "निम्नलिखित में कौन एक वाहन प्रदूषण का भाग नहीं है?", options: ["H2", "CO", "NO2", "SO2"], correct: 0 },
+        { en: "When was the Water (Prevention and Control of Pollution) Act, 1974 last amended?", hi: "जल प्रदूषण नियंत्रण एवं रोकथाम अधिनियम, 1974 में अंतिम बार किस वर्ष संशोधन किया गया?", options: ["2001", "2002", "2003", "2004"], correct: 2 },
+        { en: "Which form of energy is NOT responsible for environmental pollution?", hi: "ऊर्जा के निम्नलिखित रूपों में कौन पर्यावरण-प्रदूषण हेतु जिम्मेदार नहीं है?", options: ["Coal (कोयला)", "Nuclear (परमाणु)", "Petrol (पेट्रोल)", "Solar (सौर)"], correct: 3 },
+        { en: "Regarding SAFAR (System of Air Quality and Weather Forecasting And Research), which is true?", hi: "वायु गुणवत्ता और मौसम पूर्वानुमान तथा अनुसंधान प्रणाली-सफर (SAFAR) के संदर्भ में कौन-से कथन सत्य है?", options: ["Started to measure pollution in metros (महानगरों हेतु शुरू किया गया)", "Established in 2002 by CPCB", "National initiative to provide air pollution info to citizens", "Both 1 and 3"], correct: 3 },
+        { en: "Which of the following causes maximum noise pollution?", hi: "निम्नलिखित में कौन अधिकतम ध्वनि प्रदूषण का कारण है?", options: ["Election rallies (चुनावी सभायें)", "Heavy truck traffic (भारी ट्रक यातायात)", "Pop music (पॉप संगीत)", "Jet take-off (जेट उड़ान)"], correct: 3 },
+        { en: "Under National Clean Air Programme (2019), PM10 and PM2.5 reduction target (20-30%) is for which year?", hi: "पर्यावरण मंत्रालय ने 2019 में राष्ट्रीय स्वच्छ वायु कार्यक्रम के तहत किस वर्ष तक प्रदूषणकारी PM 10 तथा PM 2.5 कणों को 20-30 प्रतिशत तक घटाने का लक्ष्य रखा गया है?", options: ["2020", "2024", "2032", "2050"], correct: 1 },
+        { en: "Where is the National Environmental Engineering Research Institute (NEERI) located?", hi: "राष्ट्रीय पर्यावरण अभियांत्रिकी संस्थान कहाँ स्थित है?", options: ["Nagpur (नागपुर)", "Pune (पुणे)", "Lucknow (लखनऊ)", "New Delhi (नई दिल्ली)"], correct: 0 },
+        { en: "What is human-caused environmental pollution called?", hi: "मानव जनित पर्यावरण प्रदूषण क्या कहलाते हैं?", options: ["Podahari (पोड़ाहारी)", "Parjaivik (परजैविक)", "Humulin (ह्यूमेलिन)", "Anthropogenic (एंथ्रोपोजेनिक/प्रतिक्रैविक)"], correct: 3 },
+        { en: "In which year was noise pollution included in the Air Pollution Control Act, 1981?", hi: "वायु प्रदूषण नियंत्रण अधिनियम, 1981 में किस वर्ष शोर (ध्वनि) प्रदूषण को भी शामिल किया गया?", options: ["1987", "1988", "1989", "1990"], correct: 0 },
+        { en: "Global warming can lead to?", hi: "भूमण्डलीय तापन या ग्लोबल वार्मिंग के फलस्वरूप हो सकता है-", options: ["Sea level rise due to melting glaciers", "Change in coastline", "Change in crop patterns", "All of above (उपर्युक्त सभी)"], correct: 3 },
+        { en: "What is used to convert harmful vehicle exhaust gases into harmless products?", hi: "मोटरवाहनों से निकलने वाले प्रदूषण गैसों को हानिरहित उत्पाद में बदलने हेतु किसका प्रयोग किया जाता है?", options: ["Gravity settling tank", "Fabric filter", "Cyclone collector", "Catalytic converter (कैटेलिटिक कनवर्टर)"], correct: 3 },
+        { en: "Regarding the Antarctic ozone hole, which is true?", hi: "अंटार्कटिका के ऊपर ओजोन छिद्र के संदर्भ में कौन-सा कथन सही है?", options: ["Area spread up to 24 million sq km", "WMO report Jan 6, 2021 said hole is closed", "Both 1 and 2", "Neither 1 nor 2"], correct: 2 },
+        { en: "The term 'Brown Air' is used for which of the following?", hi: "ब्राउन एयर शब्द का प्रयोग किसके लिये किया जाता है?", options: ["Acidic smoke", "Photochemical smog", "Industrial smoke", "Sulfur smoke"], correct: 1 },
+        { en: "Which materials are listed in the code (Arsenic, Fluoride, Uranium, etc.) as harmful in water?", hi: "नीचे दिये गये कूट का प्रयोग कर सही उत्तर चुनिए (आर्सेनिक, फ्लोराइड, यूरेनियम आदि)", options: ["1 and 3 only", "2, 4 and 5", "1, 3 and 5", "All 1, 2, 3, 4 and 5"], correct: 2 },
+        { en: "Oil Zapping is a biological treatment involving?", hi: "ऑयल जैपिंग (oil zapping) एक जैव उपचार है जिसमें-", options: ["Use of bacteria to control oil spills", "Use of fungi to control oil spills", "Use of Algal Bloom to control oil spills", "None of these"], correct: 0 },
+        { en: "What is the most common source of reservoir pollution?", hi: "जलाशयों के प्रदूषण का सर्वाधिक सामान्य स्रोत है-", options: ["Domestic sewage", "Industrial waste", "Pesticides", "Agricultural runoff"], correct: 0 },
+        { en: "Lichens usually do not grow in cities because of?", hi: "लायकेन्स सामान्यतः शहरों में नहीं उगते हैं-", options: ["Lack of moisture", "SO2 pollution", "Lack of natural habitat", "Absence of algae/fungi"], correct: 1 },
+        { en: "Which pair of dust and related disease is NOT correctly matched?", hi: "विभिन्न प्रकार के धूलकण तथा उनसे होने वाले रोग के जोड़ों में कौन सा एक सुमेलित नहीं है?", options: ["Cotton dust: Byssinosis", "Sugarcane dust: Bagassosis", "Coal dust: Anthracosis", "Silica: Asbestosis"], correct: 3 },
+        { en: "Which pollutant from carpets and insulating foam causes eye/nose irritation?", hi: "कार्पेट, तापरोधक फोम आदि से निकलने वाले किस प्रदूषक से आँख एवं नाक में जलन एवं एलर्जी उत्पन्न होता है?", options: ["Radon", "Formaldehyde", "Benzene", "Sulfur"], correct: 1 },
+        { en: "Which respiratory disorder is common in coal mine workers?", hi: "कोयला खदानों में काम करने वाले कर्मचारियों को किस प्रकार का श्वास-विकार हो जाते हैं?", options: ["Silicosis", "Asbestosis", "Byssinosis", "Pneumoconiosis"], correct: 3 },
+        { en: "What type of pollutants are non-biodegradable?", hi: "जैव अनिम्नीकरणीय प्रदूषक किस प्रकार के होते हैं?", options: ["Particulate", "Liquid", "Gaseous", "All of these"], correct: 3 },
+        { en: "Which workers are affected by 'Byssinosis'?", hi: "श्वसन संबंधी विकास 'बाईसिनोसिस' से प्रभावित होते हैं-", options: ["Cotton mill workers", "Sugar/Glass industry workers", "Asbestos workers", "Coal mine workers"], correct: 0 },
+        { en: "Clean drinking water should be?", hi: "पीने युक्त स्वच्छ जल में निम्नलिखित में कौन-सी विशेषता होनी चाहिए?", options: ["Transparent and odorless", "Sufficient dissolved oxygen", "Free from chemicals/microbes", "All of these"], correct: 3 },
+        { en: "How can soil erosion be prevented?", hi: "मृदा अपरदन को रोका जा सकता है-", options: ["Proper drainage", "Terrace farming on slopes", "Planting trees and grass", "All of these"], correct: 3 },
+        { en: "What is the main harmful gas in cigarette smoke?", hi: "सिगरेट के धुएँ में कौन सी मुख्य गैस निकलती है जो स्वास्थ्य के लिए अत्यधिक हानिकारक है?", options: ["CO2", "Carbon Monoxide (CO)", "Methane", "SO2"], correct: 1 },
+        { en: "Which of these is NOT a gaseous air pollutant?", hi: "निम्नलिखित में कौन-सा गैसीय वायु प्रदूषण नहीं है?", options: ["Sulfur oxide", "Nitrogen oxide", "Hydrocarbon", "Smoke (धुआँ)"], correct: 3 },
+        { en: "What are PM 10 and PM 2.5?", hi: "कणीय तत्व (PM 10, PM 2.5) क्या है?", options: ["Solid gas", "Air pollutant", "Water pollutant", "Soil pollutant"], correct: 1 },
+        { en: "Acid rain is caused by?", hi: "अम्ल वर्षा होती है-", options: ["Factories", "Petrol", "Burning coal", "Wood"], correct: 0 },
+        { en: "Eutrophication is caused by?", hi: "सुपोषण निम्नलिखित में किसके कारण होता है?", options: ["Sulfates", "Acid rain", "Nitrates and Phosphates", "CO and SO2"], correct: 2 },
+        { en: "The process where excess nutrients lead to algal growth and loss of biodiversity is?", hi: "वह प्रक्रम जिसमें जल के पोषण की प्रचुरता के कारण एक या कुछ जीवों में अत्यधिक वृद्धि का होना तथा साथ ही जाति विविधता में कमी, कहलाती है-", options: ["Eutrophication (सुपोषण)", "Species promotion", "Biomagnification", "None of these"], correct: 0 },
+        { en: "Drinking water polluted with which metal causes 'Minamata' disease?", hi: "किस धातु से प्रदूषित जल को पीने से 'मिनीमाता' रोग हो जाता है?", options: ["Lead", "Mercury (पारा)", "Arsenic", "Cadmium"], correct: 1 },
+        { en: "Greenhouse effect is due to high concentration of?", hi: "ग्रीनहाउस प्रभाव किस गैस के कारण होता है?", options: ["N2O", "CO2", "CH4", "All of these"], correct: 3 },
+        { en: "Primary pollutants are those that?", hi: "प्राथमिक प्रदूषक वे होते हैं जो-", options: ["Are emitted directly from source", "Form from reaction in air", "Are harmless", "None of these"], correct: 0 },
+        { en: "Which plant is used as a bio-indicator of SO2 pollution?", hi: "SO2 प्रदूषण के जैविक सूचक के रूप में किसका प्रयोग होता है?", options: ["Algae", "Lichens", "Fungi", "Fern"], correct: 1 },
+        { en: "Fluoride pollution mainly affects?", hi: "फ्लोराइड प्रदूषण मुख्य रूप से प्रभावित करता है-", options: ["Kidneys", "Brain", "Teeth", "Eyes"], correct: 2 },
+        { en: "BOD stands for?", hi: "बी.ओ.डी. (BOD) का अर्थ है-", options: ["Biological Oxygen Demand", "Biochemical Oxygen Demand", "British Oxygen Dept", "Both A and B"], correct: 3 },
+        { en: "PAN (Peroxyacetyl Nitrate) is a?", hi: "परऑक्सी एसिटिल नाइट्रेट (PAN) क्या है?", options: ["Acidic dye", "Plant hormone", "Secondary pollutant", "Vitamin"], correct: 2 },
+        { en: "Smog is a combination of?", hi: "स्मॉग (Smog) किसका मिश्रण है?", options: ["Air and water vapor", "Water and smoke", "Fire and water", "Smoke and fog"], correct: 3 },
+        { en: "Which gas is mainly responsible for ozone layer depletion?", hi: "ओजोन परत के क्षय के लिए कौन सी गैस मुख्य उत्तरदायी है?", options: ["CO2", "CFC", "CH4", "H2"], correct: 1 },
+        { en: "Itai-Itai disease is caused by poisoning of?", hi: "इताई-इताई रोग किसके विषाक्तन से होता है?", options: ["Mercury", "Arsenic", "Cadmium", "Nitrate"], correct: 2 },
+        { en: "The loudness of sound is measured in?", hi: "ध्वनि की तीव्रता मापी जाती है-", options: ["Decibels", "Hertz", "Watts", "Pascals"], correct: 0 },
+        { en: "Maximum permissible noise level in residential areas at night?", hi: "आवासीय क्षेत्रों के लिए रात के समय ध्वनि की अधिकतम अनुमति सीमा है-", options: ["45 dB", "55 dB", "75 dB", "90 dB"], correct: 0 },
+        { en: "Main gas responsible for global warming is?", hi: "ग्लोबल वार्मिंग के लिए उत्तरदायी मुख्य गैस है-", options: ["O2", "N2", "CO2", "H2"], correct: 2 },
+        { en: "DDT is an example of?", hi: "डी.डी.टी. (DDT) एक उदाहरण है-", options: ["Biodegradable pollutant", "Non-biodegradable pollutant", "Antibiotic", "None"], correct: 1 },
+        { en: "The layer of atmosphere where ozone is found?", hi: "वायुमंडल की वह परत जहाँ ओजोन पायी जाती है?", options: ["Troposphere", "Stratosphere", "Mesosphere", "Exosphere"], correct: 1 },
+        { en: "Which day is celebrated as World Environment Day?", hi: "विश्व पर्यावरण दिवस किस दिन मनाया जाता है?", options: ["5th June", "22nd April", "16th Sept", "1st Dec"], correct: 0 },
+        { en: "Silent Valley is located in which state?", hi: "साइलेंट वैली किस राज्य में स्थित है?", options: ["Kerala", "Tamil Nadu", "Assam", "Karnataka"], correct: 0 },
+        { en: "Bhopal Gas Tragedy involved leakage of?", hi: "भोपाल गैस त्रासदी में किस गैस का रिसाव हुआ था?", options: ["Methyl Isocyanate", "CO", "SO2", "NO2"], correct: 0 }
+    ];
+
+    let questions = [];
+    let currentIdx = 0;
+    let score = 0;
+    let timer;
+    let audioCtx = null;
+
+    // AUDIO SYNTHESIS
+    function initAudio() {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+
+    function playSound(type) {
+        initAudio();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        if (type === 'ting') {
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.5);
+        } else {
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.4);
+        }
+    }
+
+    // CONFETTI ANIMATION
+    function triggerConfetti() {
+        for (let i = 0; i < 50; i++) {
+            const confetti = document.createElement('div');
+            confetti.className = 'confetti';
+            confetti.style.left = Math.random() * 100 + 'vw';
+            confetti.style.top = '-10px';
+            confetti.style.width = '10px';
+            confetti.style.height = '10px';
+            confetti.style.backgroundColor = `hsl(${Math.random() * 360}, 100%, 50%)`;
+            document.body.appendChild(confetti);
+
+            const animation = confetti.animate([
+                { transform: 'translateY(0) rotate(0deg)', opacity: 1 },
+                { transform: `translateY(100vh) rotate(${Math.random() * 360}deg)`, opacity: 0 }
+            ], { duration: 2000 + Math.random() * 1000 });
+
+            animation.onfinish = () => confetti.remove();
+        }
+    }
+
+    // QUIZ LOGIC
+    function initQuiz() {
+        const shuffle = document.getElementById('shuffle-setting').checked;
+        questions = shuffle ? [...rawData].sort(() => Math.random() - 0.5) : [...rawData];
+        currentIdx = 0;
+        score = 0;
+        
+        document.getElementById('start-screen').classList.remove('active');
+        document.getElementById('quiz-screen').classList.add('active');
+        loadQuestion();
+    }
+
+    function loadQuestion() {
+        if (currentIdx >= questions.length) return endQuiz();
+        
+        const q = questions[currentIdx];
+        document.getElementById('en-q').innerText = q.en;
+        document.getElementById('hi-q').innerText = q.hi;
+        document.getElementById('q-counter').innerText = `Question ${currentIdx + 1}/${questions.length}`;
+        document.getElementById('score-counter').innerText = `Score: ${score}`;
+        document.getElementById('progress-fill').style.width = `${((currentIdx) / questions.length) * 100}%`;
+        
+        const optionsDiv = document.getElementById('options');
+        optionsDiv.innerHTML = '';
+        
+        q.options.forEach((opt, i) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerText = opt;
+            btn.onclick = () => checkAnswer(i, btn);
+            optionsDiv.appendChild(btn);
+        });
+
+        startTimer();
+    }
+
+    function startTimer() {
+        clearInterval(timer);
+        const timeLimit = parseInt(document.getElementById('timer-setting').value);
+        if (timeLimit <= 0) {
+            document.getElementById('timer').style.display = 'none';
+            return;
+        }
+        document.getElementById('timer').style.display = 'block';
+        let remaining = timeLimit;
+        const timerDisplay = document.getElementById('timer');
+        timerDisplay.innerText = `⏱ ${remaining}s`;
+        timerDisplay.classList.remove('pulse-red');
+
+        timer = setInterval(() => {
+            remaining--;
+            timerDisplay.innerText = `⏱ ${remaining}s`;
+            if (remaining <= 5) timerDisplay.classList.add('pulse-red');
+            if (remaining <= 0) {
+                clearInterval(timer);
+                checkAnswer(-1, null);
+            }
+        }, 1000);
+    }
+
+    function checkAnswer(selectedIdx, btn) {
+        clearInterval(timer);
+        const q = questions[currentIdx];
+        const buttons = document.querySelectorAll('.option-btn');
+        buttons.forEach(b => b.disabled = true);
+
+        if (selectedIdx === q.correct) {
+            score++;
+            btn.classList.add('correct');
+            playSound('ting');
+            triggerConfetti();
+        } else {
+            if (btn) btn.classList.add('wrong');
+            buttons[q.correct].classList.add('correct');
+            playSound('buzz');
+            const emoji = document.getElementById('sad-emoji');
+            emoji.style.display = 'block';
+            setTimeout(() => emoji.style.display = 'none', 1400);
+        }
+
+        setTimeout(() => {
+            currentIdx++;
+            loadQuestion();
+        }, 1500);
+    }
+
+    function endQuiz() {
+        clearInterval(timer);
+        document.getElementById('quiz-screen').classList.remove('active');
+        document.getElementById('result-screen').classList.add('active');
+        document.getElementById('final-score').innerText = `${score} / ${questions.length}`;
+        
+        const pct = (score / questions.length) * 100;
+        const msg = document.getElementById('result-msg');
+        if (pct >= 80) msg.innerText = "🏆 Outstanding Performance!";
+        else if (pct >= 50) msg.innerText = "👏 Well Done! Keep it up.";
+        else msg.innerText = "📚 Practice makes perfect! Try again.";
+    }
+</script>
+
+</body>
+</html>

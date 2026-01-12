@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Biology Quiz: Human Excretory System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --primary-text: #ffffff;
+            --secondary-text: #ddd;
+            --accent-green: #2ecc71;
+            --accent-red: #e74c3c;
+            --accent-blue: #3498db;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            min-height: 100vh;
+            background: linear-gradient(45deg, #6610f2, #e83e8c, #007bff);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow-x: hidden;
+            color: var(--primary-text);
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 25px;
+            width: 95%;
+            max-width: 800px;
+            padding: 30px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+            position: relative;
+            z-index: 10;
+        }
+
+        .screen { display: none; flex-direction: column; }
+        .screen.active { display: flex; }
+
+        /* Progress Bar */
+        .progress-container {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 6px;
+            background: rgba(255,255,255,0.1);
+        }
+        .progress-bar {
+            height: 100%; width: 0%;
+            background: var(--accent-blue);
+            box-shadow: 0 0 10px var(--accent-blue);
+            transition: width 0.4s ease;
+        }
+
+        /* Stats */
+        .header-stats {
+            display: flex; justify-content: space-between;
+            margin-bottom: 20px; font-weight: 600; font-size: 0.9rem;
+        }
+
+        /* Question & Options */
+        .question-box { margin-bottom: 25px; }
+        .q-en { font-size: 1.3rem; font-weight: 700; display: block; }
+        .q-hi { font-size: 1rem; color: var(--secondary-text); display: block; margin-top: 5px; }
+
+        .options-list { display: grid; gap: 12px; }
+        .option-btn {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--glass-border);
+            padding: 15px; border-radius: 15px;
+            cursor: pointer; text-align: left;
+            transition: all 0.2s; color: white;
+        }
+        .option-btn:hover { background: rgba(255,255,255,0.15); transform: scale(1.02); }
+        .option-btn:disabled { cursor: not-allowed; }
+        .opt-en { display: block; font-weight: 600; }
+        .opt-hi { display: block; font-size: 0.85rem; color: #ccc; }
+
+        .correct { background: var(--accent-green) !important; border-color: #fff; }
+        .wrong { background: var(--accent-red) !important; border-color: #fff; }
+
+        /* Timer */
+        .timer-circle { font-size: 1.2rem; font-weight: bold; text-align: center; }
+        .pulse-red { color: #ff3e3e; animation: pulse 0.5s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+
+        /* Feedback Emoji */
+        #feedback-emoji {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 8rem; display: none; z-index: 100;
+        }
+        .shake { animation: shake-anim 0.5s; }
+        @keyframes shake-anim { 0%, 100% { transform: translate(-50%, -50%) rotate(0); } 25% { transform: translate(-55%, -50%) rotate(-5deg); } 75% { transform: translate(-45%, -50%) rotate(5deg); } }
+
+        /* Buttons */
+        .primary-btn {
+            margin-top: 20px; padding: 15px; border-radius: 50px;
+            border: none; background: white; color: #333;
+            font-weight: 700; cursor: pointer; transition: 0.3s;
+        }
+        .primary-btn:hover { transform: scale(1.05); box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+        .finish-btn { background: rgba(231, 76, 60, 0.2); color: white; border: 1px solid var(--accent-red); margin-top: 30px; }
+
+        input[type="number"] {
+            background: rgba(255,255,255,0.1); border: 1px solid var(--glass-border);
+            padding: 10px; border-radius: 10px; color: white; width: 100px;
+        }
+
+        .confetti {
+            position: fixed; width: 10px; height: 10px; background-color: #f00;
+            z-index: 9999; top: -10px; border-radius: 50%;
+        }
+
+        @media (max-width: 600px) {
+            .glass-card { padding: 20px; }
+            .q-en { font-size: 1.1rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="progress-container"><div class="progress-bar" id="progressBar"></div></div>
+<div id="feedback-emoji">😢</div>
+
+<div class="glass-card">
+    <div id="start-screen" class="screen active">
+        <h1 style="text-align: center; margin-bottom: 10px;">Excretion System Quiz</h1>
+        <p style="text-align: center; color: #ddd; margin-bottom: 30px;">Advance Biology (Q 51-109)</p>
+        
+        <div style="margin-bottom: 20px;">
+            <label>Timer per Question (seconds): </label>
+            <input type="number" id="timerInput" value="15" min="0">
+            <p style="font-size: 0.8rem; color: #ccc;">(Set 0 to disable)</p>
+        </div>
+        
+        <div style="margin-bottom: 30px; display: flex; align-items: center; gap: 10px;">
+            <input type="checkbox" id="shuffleToggle" style="width: 20px; height: 20px;">
+            <label>Shuffle Question Order</label>
+        </div>
+
+        <button class="primary-btn" onclick="startQuiz()">Start Quiz</button>
+    </div>
+
+    <div id="quiz-screen" class="screen">
+        <div class="header-stats">
+            <span id="qCountDisplay">Question 01/59</span>
+            <div class="timer-circle" id="timerDisplay"></div>
+            <span id="scoreDisplay">Score: 00</span>
+        </div>
+        
+        <div class="question-box">
+            <span class="q-en" id="text-en"></span>
+            <span class="q-hi" id="text-hi"></span>
+        </div>
+
+        <div class="options-list" id="optionsContainer"></div>
+
+        <button class="primary-btn finish-btn" onclick="endQuiz()">Finish & Show Results</button>
+    </div>
+
+    <div id="result-screen" class="screen" style="text-align: center;">
+        <h2 id="resultTitle">Result</h2>
+        <div style="font-size: 4rem; font-weight: 800; margin: 20px 0;" id="finalScore">0%</div>
+        <p id="resultMsg" style="font-size: 1.2rem; margin-bottom: 30px;"></p>
+        <button class="primary-btn" onclick="location.reload()">Restart Quiz</button>
+    </div>
+</div>
+
+<script>
+    const allQuestions = [
+        { en: "The main function of the Loop of Henle is-", hi: "हेनले के लूप का मुख्य कार्य है-", opts: [{en: "Absorption of sodium ion", hi: "सोडियम आयन का अवशोषण", c: true}, {en: "Absorption of calcium ion", hi: "कैल्सियम आयन का अवशोषण", c: false}, {en: "Concentrating urine", hi: "मूत्र को सांद्रित करना", c: false}, {en: "Diluting urine", hi: "मूत्र को तनु करना", c: false}]},
+        { en: "Consider: 1. Urea-rich blood enters via renal artery. 2. Clean blood leaves via renal vein.", hi: "1. यूरिया युक्त रक्त वृक्क-धमनी के द्वारा वृक्क में प्रवेश करता है 2. साफ रक्त वृक्क-शिरा द्वारा बाहर निकलता है।", opts: [{en: "Only 1", hi: "केवल 1", c: false}, {en: "Only 2", hi: "केवल 2", c: false}, {en: "Both 1 and 2", hi: "1 तथा 2 दोनों", c: true}, {en: "Neither", hi: "न तो 1 न ही 2", c: false}]},
+        { en: "Where are the kidneys located in the human body?", hi: "मानव के शरीर में किडनी कहाँ स्थित होता है ?", opts: [{en: "Both sides of spine on dorsal wall of abdominal cavity", hi: "उदरगुहा के पृष्ठीय तल पर कशेरुकदंड के दोनों ओर", c: true}, {en: "Dorsal wall of thoracic cavity", hi: "वक्षगुहा के पृष्ठीय तल पर", c: false}, {en: "Left side of spine", hi: "कशेरुकदंड के बाई ओर", c: false}, {en: "Right side of spine", hi: "कशेरुकदंड के दाई ओर", c: false}]},
+        { en: "From where is sebum secreted?", hi: "सीबम कहाँ से स्रावित होता है ?", opts: [{en: "Salivary gland", hi: "लार-ग्रंथि से", c: false}, {en: "Sebaceous (Oil) gland", hi: "वसा-ग्रंथि से", c: true}, {en: "Tongue", hi: "जीभ से", c: false}, {en: "Sweat gland", hi: "स्वेद ग्रंथि से", c: false}]},
+        { en: "Nephron is an important part of which organ?", hi: "नेफ्रॉन निम्नलिखित में किस अंग का महत्वपूर्ण हिस्सा है ?", opts: [{en: "Liver", hi: "यकृत", c: false}, {en: "Kidney", hi: "वृक्क", c: true}, {en: "Lungs", hi: "फेफड़ा", c: false}, {en: "Testes", hi: "वृषण", c: false}]},
+        { en: "Approximate number of nephrons in each human kidney?", hi: "मानव के प्रत्येक वृक्क में नेफ्रॉन की अनुमानित संख्या कितनी होती है ?", opts: [{en: "10", hi: "10", c: false}, {en: "100", hi: "100", c: false}, {en: "10,000", hi: "10,000", c: false}, {en: "1,000,000", hi: "10,00,000", c: true}]},
+        { en: "What is the cup-like structure in each nephron called?", hi: "वृक्क के प्रत्येक नेफ्रॉन में स्थित प्याले (कप) के समान संरचना को क्या कहते है ?", opts: [{en: "Bowman's capsule", hi: "बोमेन्स कैप्सूल", c: true}, {en: "Glomerulus", hi: "ग्लोमेरूलस", c: false}, {en: "Collecting duct", hi: "संग्राहक नलिका", c: false}, {en: "Afferent duct", hi: "अभिरोही चाप", c: false}]},
+        { en: "From which part does the ureter exit the kidney?", hi: "मूत्र वाहिनी वृक्क के किस भाग से बाहर निकलता है ?", opts: [{en: "Upper part", hi: "ऊपरी भाग से", c: false}, {en: "Lower part", hi: "नीचले भाग से", c: false}, {en: "Hilum", hi: "हाइलम से", c: true}, {en: "No fixed place", hi: "कोई निश्चित स्थान नहीं", c: false}]},
+        { en: "Which part of the human excretory system opens directly outside?", hi: "मानव उत्सर्जन तंत्र का कौन-सा भाग शरीर में सीधे बाहर खुलता है ?", opts: [{en: "Urinary bladder", hi: "मूत्राशय", c: false}, {en: "Urethra", hi: "मूत्रमार्ग", c: true}, {en: "Ureter", hi: "मूत्रवाहिनी", c: false}, {en: "Trigone", hi: "मूत्राशय का ट्राइगोन", c: false}]},
+        { en: "What is the length of the male urethra?", hi: "पुरुषों के मूत्र मार्ग की लंबाई कितनी होती है ?", opts: [{en: "3-4 cm", hi: "3-4 cm", c: false}, {en: "18-20 cm", hi: "18-20 cm", c: true}, {en: "25-30 cm", hi: "25-30 cm", c: false}, {en: "2-4 cm", hi: "2-4 cm", c: false}]},
+        { en: "If kidneys stop working, which substance accumulates in the body?", hi: "जब वृक्क कार्य करना बंद कर दे निम्न में कौन-सा पदार्थ शरीर में जमा होता है ?", opts: [{en: "Fat", hi: "वसा", c: false}, {en: "Protein", hi: "प्रोटीन", c: false}, {en: "Nitrogenous waste", hi: "नत्रजनित अपशिष्ट", c: true}, {en: "Sugar", hi: "शर्करा", c: false}]},
+        { en: "What is the approximate weight of an adult human kidney?", hi: "एक वयस्क मनुष्य के वृक्क का भार लगभग कितना होता है ?", opts: [{en: "100 grams", hi: "100 ग्राम", c: false}, {en: "120 grams", hi: "120 ग्राम", c: false}, {en: "140 grams", hi: "140 ग्राम", c: true}, {en: "200 grams", hi: "200 ग्राम", c: false}]},
+        { en: "Which is NOT a normal function of the kidney?", hi: "निम्नलिखित में कौन-सा मानव गुर्दे (kidney) का सामान्य कार्य नहीं है ?", opts: [{en: "Regulating water in blood", hi: "रक्त से जल की मात्रा का नियंत्रण", c: false}, {en: "Regulating sugar in blood", hi: "रक्त से शर्करा की मात्रा का नियंत्रण", c: true}, {en: "Filtering urea", hi: "रक्त से यूरिया को छानकर बाहर निकालना", c: false}, {en: "Hormone secretion", hi: "कई हॉर्मोन का स्रवण करना", c: false}]},
+        { en: "On top of which gland are the kidneys situated?", hi: "वृक्क किस ग्रंथि के ऊपर स्थित होते हैं ?", opts: [{en: "Adrenal", hi: "एड्रीनल", c: true}, {en: "Thyroid", hi: "थायराइड", c: false}, {en: "Pituitary", hi: "पिट्यूटरी", c: false}, {en: "Pineal", hi: "पीनियल", c: false}]},
+        { en: "Sweat glands in mammals are primarily related to?", hi: "स्तनपायियों में स्वेद ग्रंथि मूलतः किससे संबंधित है ?", opts: [{en: "Removing excess salt", hi: "अतिरिक्त लवण को निकालने से", c: false}, {en: "Excreting nitrogenous waste", hi: "नाइट्रोजनी अपशिष्टों के उत्सर्जन से", c: false}, {en: "Thermoregulation", hi: "ताप नियमन से", c: true}, {en: "Sexual attraction", hi: "यौन आकर्षण से", c: false}]},
+        { en: "Sweating is important for what?", hi: "स्वेदन ( पसीना का निकलना ) निम्न में किसके लिये महत्वपूर्ण है ?", opts: [{en: "Removing body odor", hi: "शरीर का गंध निकालने के लिये", c: false}, {en: "Improving general health", hi: "सामान्य स्वास्थ्य में सुधार के लिये", c: false}, {en: "Opening skin pores", hi: "त्वचा के रंध्र को खोलने के लिये", c: false}, {en: "Regulating body temperature", hi: "शरीर के तापमान को विनियन्त्रित करने के लिये", c: true}]},
+        { en: "Sweat cools the body because-", hi: "पसीना शरीर को ठंडा करता है, क्योंकि-", opts: [{en: "Water on skin gives coolness", hi: "त्वचा पर पानी की मौजूदगी शीतलता देती है", c: false}, {en: "Evaporation requires latent heat", hi: "वाष्पीकरण के लिये गुप्त उष्मा की आवश्यकता होती है", c: true}, {en: "Water is poor conductor", hi: "पानी उष्मा का हीन चालक है", c: false}, {en: "Specific heat of water is high", hi: "पानी की विशिष्ट उष्मा उच्च होती है", c: false}]},
+        { en: "Water absorption in human body occurs in: 1. Kidney tubule 2. Liver 3. Large Intestine", hi: "मानव शरीर में जल का अवशोषण होता है- 1. वृक्क के वृक्ककीय नलिका में 2. यकृत में 3. वृहदांत्र ( बड़ी आंत ) में", opts: [{en: "Only 3", hi: "केवल 3", c: false}, {en: "2 and 4", hi: "2 और 4", c: false}, {en: "1 and 3", hi: "1 और 3", c: true}, {en: "1, 2 and 3", hi: "1, 2 और 3", c: false}]},
+        { en: "Where is blood purified?", hi: "रक्त का शुद्धिकरण कहाँ होता है ?", opts: [{en: "Lungs", hi: "फेफड़ा", c: false}, {en: "Liver", hi: "यकृत", c: false}, {en: "Kidney", hi: "किडनी", c: false}, {en: "All of these", hi: "ये सभी", c: true}]},
+        { en: "Maximum amount of urea in human body is found in?", hi: "मानव शरीर में यूरिया की अधिकतम मात्रा किसमें पायी जाती है ?", opts: [{en: "Blood", hi: "रक्त में", c: false}, {en: "Heart", hi: "हृदय में", c: false}, {en: "Urine", hi: "मूत्र में", c: true}, {en: "Sweat", hi: "पसीने में", c: false}]},
+        { en: "Most of the body weight of any animal is-", hi: "किसी प्राणी के शरीर के समस्त भार का अधिकांश भाग होता है-", opts: [{en: "Water", hi: "जल", c: true}, {en: "Blood", hi: "रुधिर", c: false}, {en: "Bone", hi: "अस्थि", c: false}, {en: "Tissue", hi: "उत्तक", c: false}]},
+        { en: "Which enzyme in human tears kills bacteria?", hi: "मनुष्य के आँसू में कौन सा एन्जाइम होता है, जिससे जीवाणु मर जाते हैं ?", opts: [{en: "Amylase", hi: "एमाइलेज", c: false}, {en: "Urease", hi: "यूरिएज", c: false}, {en: "Lysozyme", hi: "लाइसोजाइम", c: true}, {en: "Tyalin", hi: "टायलीन", c: false}]},
+        { en: "Consider: 1. Kidney separates nitrogenous waste. 2. Nephrons are filtration units. 3. Selective reabsorption happens in ureter.", hi: "1. वृक्क रुधिर से नाइट्रोजन वर्ज्य पदार्थों को अलग करता है 2. वृक्क के अंदर नेफ्रॉन नामक निस्यंदन एकक होते हैं 3. चयनात्मक पुनरअवशोषण मूत्र वाहिनी में होता है।", opts: [{en: "Only 1", hi: "केवल 1", c: false}, {en: "1 and 2", hi: "1 और 2", c: true}, {en: "1 and 3", hi: "1 और 3", c: false}, {en: "1, 2 and 3", hi: "1, 2 और 3", c: false}]},
+        { en: "Which part is directly connected to the ureter?", hi: "निम्नलिखित कौन सीधे मूत्रवाहिनी से जुड़ा होता है ?", opts: [{en: "Loop of Henle", hi: "हेनले का लूप", c: false}, {en: "Collecting Duct", hi: "संग्राहक नलिका", c: true}, {en: "Common Collecting Tube", hi: "सामान्य संग्राहक नली", c: false}, {en: "Afferent Arc", hi: "अवरोही चाप", c: false}]},
+        { en: "Ornithine cycle is related to synthesis of?", hi: "ऑर्निथिन चक्र किसके संश्लेषण से संबंधित है ?", opts: [{en: "Saliva", hi: "लार", c: false}, {en: "Urea", hi: "यूरिया", c: true}, {en: "Urine", hi: "मूत्र", c: false}, {en: "Glucose", hi: "ग्लूकोज", c: false}]},
+        { en: "Main organ of human urinary system is?", hi: "मनुष्य के मूत्र तंत्र का मुख्य अंग है-", opts: [{en: "Testes", hi: "वृषण", c: false}, {en: "Ovary", hi: "अंडाशय", c: false}, {en: "Kidney", hi: "यकृत", c: true}, {en: "None of these", hi: "इनमें से कोई नहीं", c: false}]},
+        { en: "How much urine does a healthy adult pass daily?", hi: "एक स्वस्थ वयस्क मनुष्य प्रतिदिन कितना मूत्र त्याग करता है ?", opts: [{en: "1 to 1.5 Liters", hi: "1 से 1.5 लीटर", c: true}, {en: "2 to 2.5 Liters", hi: "2 से 2.5 लीटर", c: false}, {en: "1.5 to 2 Liters", hi: "1.5 से 2 लीटर", c: false}, {en: "No urine", hi: "मूत्र त्याग नहीं करता है", c: false}]},
+        { en: "Which is found in highest quantity in human urine?", hi: "मानव मूत्र में सर्वाधिक मात्रा में पाये जाते हैं-", opts: [{en: "Water", hi: "जल", c: true}, {en: "Uric Acid", hi: "यूरिक अम्ल", c: false}, {en: "Urea", hi: "यूरिया", c: false}, {en: "Urochrome", hi: "यूरोक्रोम", c: false}]},
+        { en: "Which is usually NOT present in human urine?", hi: "निम्नलिखित में कौन साधारणतः मानव मूत्र में उपस्थित नहीं होते है ?", opts: [{en: "Water", hi: "जल", c: false}, {en: "Sodium Chloride", hi: "सोडियम क्लोराइड", c: false}, {en: "Urea", hi: "यूरिया", c: false}, {en: "Sodium Nitrate", hi: "सोडियम नाइट्रेट", c: true}]},
+        { en: "Which of these is found in normal urine?", hi: "निम्नलिखित में कौन-सा पदार्थ सामान्य सूत्र में पाया जाता है ?", opts: [{en: "RBCs", hi: "RBCs", c: false}, {en: "WBCs", hi: "WBCs", c: false}, {en: "Creatinine", hi: "क्रिएटिनिन", c: true}, {en: "Blood protein", hi: "रक्त प्रोटीन", c: false}]},
+        { en: "What is the typical percentage of Urea in human urine?", hi: "मानव मूत्र में साधारणतः यूरिया की मात्रा कितनी होती है ?", opts: [{en: "96 percent", hi: "96 प्रतिशत", c: false}, {en: "2 percent", hi: "2 प्रतिशत", c: true}, {en: "50 percent", hi: "50 प्रतिशत", c: false}, {en: "4 percent", hi: "4 प्रतिशत", c: false}]},
+        { en: "Yellow color of urine is due to?", hi: "मानव मूत्र का पीला रंग किसकी मौजूदगी के कारण होता है ?", opts: [{en: "Cholesterol", hi: "कोलेस्ट्रोल", c: false}, {en: "Bile", hi: "पित्त", c: false}, {en: "Lymph", hi: "लासीका", c: false}, {en: "Urochrome", hi: "यूरोक्रोम", c: true}]},
+        { en: "Yellow color of human stool is due to?", hi: "किसकी उपस्थिति के कारण मानव मल का रंग पीला होता है ?", opts: [{en: "Renin", hi: "रेनिन", c: false}, {en: "Amylase", hi: "एमाइलेज", c: false}, {en: "Pepsin", hi: "पेपसिन", c: false}, {en: "Urobilin", hi: "यूरोबीलिन", c: true}]},
+        { en: "Increase in urine output is called?", hi: "मूत्र-स्त्राव की मात्रा बढ़ जाना को क्या कहा जाता है ?", opts: [{en: "Uremia", hi: "यूरिमिया", c: false}, {en: "Oliguria", hi: "ओलीगुरिया", c: false}, {en: "Diuresis", hi: "डाययूरैसिस", c: true}, {en: "Anuria", hi: "ऐनुरिया", c: false}]},
+        { en: "Which of these is a Diuretic substance?", hi: "निम्नलिखित में कौन डाययुरेटिक (Diuretic) पदार्थ है?", opts: [{en: "Urea", hi: "यूरिया", c: false}, {en: "Caffeine", hi: "कैफीन", c: false}, {en: "Glucose", hi: "ग्लूकोज", c: false}, {en: "All of these", hi: "इनमें से सभी", c: true}]},
+        { en: "At what volume of urine in the bladder is the urge felt?", hi: "मूत्राशय का कितना आयतन होने पर मूत्र त्याग आवश्यक हो जाता है ?", opts: [{en: "100-150 ml", hi: "100-150 ml", c: false}, {en: "250-300 ml", hi: "250-300 ml", c: false}, {en: "150-250 ml", hi: "150-250 ml", c: true}, {en: "Over 500 ml", hi: "500 ml से अधिक", c: false}]},
+        { en: "Diabetes Insipidus is caused by deficiency of which hormone?", hi: "डायबिटीज इंसिपीडस किस हॉर्मोन की कमी से होता है?", opts: [{en: "Insulin", hi: "इंसुलिन", c: false}, {en: "Oxytocin", hi: "ऑक्सीटोसीन", c: false}, {en: "Vasopressin", hi: "भासोप्रेसिन", c: true}, {en: "Adrenal", hi: "एड्रीनल", c: false}]},
+        { en: "Which is called Anti-Diuretic Hormone (ADH)?", hi: "निम्नलिखित में किसे एंटीडाययुरेटिक हॉर्मोन कहा जाता है ?", opts: [{en: "Insulin", hi: "इंसुलिन", c: false}, {en: "Oxytocin", hi: "ऑक्सीटोसीन", c: false}, {en: "Vasopressin", hi: "भासोप्रेसिन", c: true}, {en: "Aldosterone", hi: "एल्डोस्टेरोन", c: false}]},
+        { en: "Increased urea in blood is called?", hi: "रक्त में यूरिया की मात्रा बढ़ जाना क्या कहलाता है ?", opts: [{en: "Oliguria", hi: "ओलीगुरिया", c: false}, {en: "Uremia", hi: "यूरिमिया", c: true}, {en: "Anuria", hi: "ऐनुरिया", c: false}, {en: "Glycosuria", hi: "ग्लाइकोसुरिया", c: false}]},
+        { en: "Where is the highest concentration of urea found?", hi: "यूरिया का सर्वाधिक सांद्रण कहाँ पाया जाता है ?", opts: [{en: "Dorsal Aorta", hi: "पृष्ठ महाधमनी में", c: false}, {en: "Renal Vein", hi: "वृक्क शिरा में", c: true}, {en: "Hepatic Portal Vein", hi: "यकृत निवाहिका शिरा में", c: false}, {en: "Renal Artery", hi: "वृक्क धमनी में", c: false}]},
+        { en: "Which organ contains glands that excrete sweat and oil?", hi: "पसीने तथा तैलीय पदार्थ निष्कासन करने वाली ग्रंथि मानव शरीर के किस अंग में मौजूद होती है ?", opts: [{en: "Kidney", hi: "किडनी", c: false}, {en: "Liver", hi: "यकृत", c: false}, {en: "Skin", hi: "त्वचा", c: true}, {en: "Pancreas", hi: "अग्नाशय", c: false}]},
+        { en: "Glucose in urine is called?", hi: "मूत्र में ग्लूकोज का उपस्थित होना क्या कहलाता है ?", opts: [{en: "Uremia", hi: "यूरिमिया", c: false}, {en: "Hematuria", hi: "हेमाटुरिया", c: false}, {en: "Glycosuria", hi: "ग्लाइकोसुरिया", c: true}, {en: "Albuminuria", hi: "एल्ब्यूमिन्यूरिया", c: false}]},
+        { en: "Dialysis is used to perform the function of which organ?", hi: "अपोहन (Dialysis) का प्रयोग किस क्रिया को पूरा करने के लिये होता है ?", opts: [{en: "Lungs", hi: "फेफड़ा", c: false}, {en: "Liver", hi: "यकृत", c: false}, {en: "Heart", hi: "हृदय", c: false}, {en: "Kidney", hi: "वृक्क", c: true}]},
+        { en: "How does a dialysis machine work?", hi: "डायलिसिस मशीन किस तरह का कार्य करता है ?", opts: [{en: "Artificial Liver", hi: "कृत्रिम यकृत का", c: false}, {en: "Artificial Kidney", hi: "कृत्रिम वृक्क का", c: true}, {en: "Artificial Nephron", hi: "कृत्रिम वृषण का", c: false}, {en: "Artificial Gland", hi: "कृत्रिम ग्रंथि का", c: false}]},
+        { en: "On what principle does an artificial kidney work?", hi: "कृत्रिम वृक्क निम्नलिखित में किस सिद्धांत पर कार्य करता है ?", opts: [{en: "Osmosis", hi: "परासरण", c: false}, {en: "Dialysis", hi: "डायलिसिस", c: true}, {en: "Diffusion", hi: "विसरण", c: false}, {en: "Active Transport", hi: "सक्रिय परिवहन", c: false}]},
+        { en: "What is the process of blood purification by machine called?", hi: "मशीन द्वारा रक्त के शुद्धिकरण की प्रक्रिया क्या कहलाती है ?", opts: [{en: "Dialysis", hi: "डायलिसिस", c: false}, {en: "Peritoneal Dialysis", hi: "कोशिका डायलिसिस", c: false}, {en: "Hemodialysis", hi: "हिमोडायलिसिस", c: true}, {en: "Dialyzer", hi: "डायलाइजर", c: false}]},
+        { en: "Blood purification in the human body is called?", hi: "मानव शरीर में रक्त शुद्धिकरण की प्रक्रिया को क्या कहते हैं ?", opts: [{en: "Dialysis", hi: "डायलेसिस", c: true}, {en: "Osmosis", hi: "ऑस्मोसिस", c: false}, {en: "Hemolysis", hi: "हीमोलेंसिस", c: false}, {en: "Phagolysis", hi: "पैगलेंसिस", c: false}]},
+        { en: "Regulating salts and water in the body by kidneys is called?", hi: "वृक्क द्वारा शरीर में लवण और जल की मात्रा का नियंत्रण क्या कहलाता है ?", opts: [{en: "Excretion", hi: "उत्सर्जन", c: false}, {en: "Micturition", hi: "मिक्बुरीसन", c: false}, {en: "Osmoregulation", hi: "ओस्मोरैगुलेशन", c: true}, {en: "Parturition", hi: "पार्धूरीसन", c: false}]},
+        { en: "What is the main chemical compound found in kidney stones?", hi: "मानव वृक्क अश्मरी में पाया जाने वाला प्रमुख रासायनिक यौगिक है ?", opts: [{en: "Uric Acid", hi: "यूरिक अम्ल", c: false}, {en: "Calcium Oxalate", hi: "कैल्सियम ऑक्जेलेट", c: true}, {en: "Calcium Carbonate", hi: "कैल्सियम कार्बोनेट", c: false}, {en: "Calcium Sulfate", hi: "कैल्सियम सल्फेट", c: false}]},
+        { en: "Renal calculi is-", hi: "वृक्क कैलकुली है-", opts: [{en: "Basic unit of kidney", hi: "वृक्क की मौलिक कार्यात्मक इकाई", c: false}, {en: "Stone in kidney", hi: "वृक्क में पथरी", c: true}, {en: "Swelling of kidney", hi: "वृक्क की सूजन", c: false}, {en: "Vein carrying blood from kidney", hi: "वृक्क से रक्त वहन करने वाली शिरा", c: false}]},
+        { en: "Consider: 1. Amoeba has no specific organs for excretion. 2. Waste is removed via surface diffusion.", hi: "1. अमीबा में उत्सर्जन के लिये कोई विशेष अंगक नहीं पाये जाते हैं 2. अमीबा में उत्सर्जी पदार्थ शरीर के सतह से विसरण के द्वारा बाहर निकलते हैं।", opts: [{en: "Only 1", hi: "केवल 1", c: false}, {en: "Only 2", hi: "केवल 2", c: false}, {en: "Both 1 and 2", hi: "1 तथा 2 दोनों", c: true}, {en: "Neither", hi: "न तो 1 न ही 2", c: false}]},
+        { en: "What is the outer part of each kidney called?", hi: "प्रत्येक वृक्क का बाहरी भाग क्या कहलाता है -", opts: [{en: "Medulla", hi: "मेडुला", c: false}, {en: "Pyramid", hi: "पिरामिड", c: false}, {en: "Cortex", hi: "कॉर्टेक्स", c: true}, {en: "None of these", hi: "इनमें से कोई नहीं", c: false}]},
+        { en: "The kidney is surrounded by a tough fibrous cover called?", hi: "प्रत्येक वृक्क बाहर से पतले संयोजी उत्तक से निर्मित एक रेशेदार दृढ़ आवरण से घिरा रहता है, इसे क्या कहते है ?", opts: [{en: "Capsule", hi: "कैप्सूल", c: true}, {en: "Medulla", hi: "मेडुला", c: false}, {en: "Cortex", hi: "कॉर्टेक्स", c: false}, {en: "Nephron", hi: "नेफ्रॉन", c: false}]},
+        { en: "Antennal glands or green glands are excretory organs of?", hi: "एण्टीनल ग्लैण्ड या ग्रीन ग्लैण्ड उत्सर्जी अंग है-", opts: [{en: "Cockroach", hi: "कॉकरोच का", c: false}, {en: "Starfish", hi: "स्टार फिश का", c: false}, {en: "Prawn and Crab", hi: "प्रॉन तथा क्रैब का", c: true}, {en: "Octopus", hi: "ऑक्टोपस का", c: false}]},
+        { en: "An artificial kidney separates which waste products from blood?", hi: "कृत्रिम वृक्क किन अपशिष्ट उत्पादों को रूधिर से अपोहन द्वारा पृथक करता है ?", opts: [{en: "Nitrogen", hi: "नाइट्रोजन", c: true}, {en: "Oxygen", hi: "ऑक्सीजन", c: false}, {en: "Carbon", hi: "कार्बन", c: false}, {en: "All of these", hi: "इनमें से सभी", c: false}]},
+        { en: "The method of urinating is called?", hi: "मूत्र-त्याग करने की विधि क्या कहलाती है ?", opts: [{en: "Excretion", hi: "उत्सर्जन", c: false}, {en: "Micturition", hi: "मिक्बुरीसन", c: true}, {en: "Osmoregulation", hi: "ओस्मोरैगुलेशन", c: false}, {en: "Parturition", hi: "पार्धूरीसन", c: false}]},
+        { en: "How many types of nephridia are in earthworms?", hi: "केंचुआ में उत्सर्जी अंग नेफ्रिडिया कितने प्रकार के होते है-", opts: [{en: "1", hi: "1", c: false}, {en: "2", hi: "2", c: false}, {en: "3", hi: "3", c: true}, {en: "4", hi: "4", c: false}]},
+        { en: "Most prominent waste product from breakdown of organic molecules?", hi: "कार्बनिक अणुओं के विखंडन से उत्पन्न सबसे प्रमुख उत्सर्जी पदार्थ क्या है ?", opts: [{en: "Carbon Dioxide", hi: "कार्बन डाइऑक्साइड", c: true}, {en: "Urea", hi: "यूरिया", c: false}, {en: "Ammonia", hi: "अमोनिया", c: false}, {en: "Uric Acid", hi: "यूरिक अम्ल", c: false}]},
+        { en: "Consider: 1. Aldosterone causes sodium reabsorption. 2. Vasopressin causes water reabsorption.", hi: "1. एल्डोस्टेरोन हॉर्मोन के कारण वृक्ककीय नलिका में सोडियम का सक्रिय अवशोषण होता है 2. भासोप्रेसिन हॉर्मोन के कारण वृक्ककीय नलिका में जल का सक्रिय अवशोषण होता है।", opts: [{en: "Only 1", hi: "केवल 1", c: false}, {en: "Only 2", hi: "केवल 2", c: false}, {en: "Both 1 and 2", hi: "1 तथा 2 दोनों", c: true}, {en: "Neither", hi: "न तो 1 न ही 2", c: false}]},
+    ];
+
+    let currentQuestions = [];
+    let currentIndex = 0;
+    let score = 0;
+    let timerId;
+    let timePerQ = 15;
+    let audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    function playSound(freq, type) {
+        let osc = audioCtx.createOscillator();
+        let gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 1);
+        osc.stop(audioCtx.currentTime + 1);
+    }
+
+    function createConfetti() {
+        for(let i=0; i<50; i++) {
+            let conf = document.createElement('div');
+            conf.className = 'confetti';
+            conf.style.left = Math.random() * 100 + 'vw';
+            conf.style.backgroundColor = `hsl(${Math.random()*360}, 100%, 50%)`;
+            conf.style.transform = `scale(${Math.random()})`;
+            document.body.appendChild(conf);
+            let anim = conf.animate([
+                { top: '-10px', opacity: 1 },
+                { top: '100vh', opacity: 0 }
+            ], { duration: 2000 + Math.random()*3000 });
+            anim.onfinish = () => conf.remove();
+        }
+    }
+
+    function startQuiz() {
+        timePerQ = parseInt(document.getElementById('timerInput').value) || 0;
+        let shuffle = document.getElementById('shuffleToggle').checked;
+        
+        currentQuestions = [...allQuestions];
+        if(shuffle) currentQuestions.sort(() => Math.random() - 0.5);
+        
+        currentIndex = 0;
+        score = 0;
+        document.getElementById('start-screen').classList.remove('active');
+        document.getElementById('quiz-screen').classList.add('active');
+        showQuestion();
+    }
+
+    function showQuestion() {
+        if(currentIndex >= currentQuestions.length) return endQuiz();
+        
+        let q = currentQuestions[currentIndex];
+        document.getElementById('text-en').innerText = q.en;
+        document.getElementById('text-hi').innerText = q.hi;
+        document.getElementById('qCountDisplay').innerText = `Question ${currentIndex + 1}/${currentQuestions.length}`;
+        document.getElementById('scoreDisplay').innerText = `Score: ${score < 10 ? '0'+score : score}`;
+        document.getElementById('progressBar').style.width = ((currentIndex) / currentQuestions.length * 100) + '%';
+        
+        let container = document.getElementById('optionsContainer');
+        container.innerHTML = '';
+        q.opts.forEach((opt, i) => {
+            let btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerHTML = `<span class="opt-en">${opt.en}</span><span class="opt-hi">${opt.hi}</span>`;
+            btn.onclick = () => checkAnswer(i);
+            container.appendChild(btn);
+        });
+
+        startTimer();
+    }
+
+    function startTimer() {
+        clearInterval(timerId);
+        if(timePerQ <= 0) {
+            document.getElementById('timerDisplay').innerText = '';
+            return;
+        }
+        let timeLeft = timePerQ;
+        let display = document.getElementById('timerDisplay');
+        display.innerText = timeLeft;
+        display.classList.remove('pulse-red');
+
+        timerId = setInterval(() => {
+            timeLeft--;
+            display.innerText = timeLeft;
+            if(timeLeft < 5) display.classList.add('pulse-red');
+            if(timeLeft <= 0) {
+                clearInterval(timerId);
+                checkAnswer(-1); // Timeout
+            }
+        }, 1000);
+    }
+
+    function checkAnswer(idx) {
+        clearInterval(timerId);
+        let q = currentQuestions[currentIndex];
+        let btns = document.querySelectorAll('.option-btn');
+        btns.forEach(b => b.disabled = true);
+
+        let correctIdx = q.opts.findIndex(o => o.c);
+        
+        if(idx !== -1 && q.opts[idx].c) {
+            btns[idx].classList.add('correct');
+            score++;
+            playSound(800, 'sine');
+            createConfetti();
+        } else {
+            if(idx !== -1) btns[idx].classList.add('wrong');
+            btns[correctIdx].classList.add('correct');
+            playSound(200, 'sawtooth');
+            let emoji = document.getElementById('feedback-emoji');
+            emoji.style.display = 'block';
+            emoji.classList.add('shake');
+            setTimeout(() => { emoji.style.display = 'none'; emoji.classList.remove('shake'); }, 1000);
+        }
+
+        setTimeout(() => {
+            currentIndex++;
+            showQuestion();
+        }, 1500);
+    }
+
+    function endQuiz() {
+        clearInterval(timerId);
+        document.getElementById('quiz-screen').classList.remove('active');
+        document.getElementById('result-screen').classList.add('active');
+        document.getElementById('progressBar').style.width = '100%';
+        
+        let percent = Math.round((score / currentQuestions.length) * 100);
+        document.getElementById('finalScore').innerText = percent + '%';
+        
+        let msg = "";
+        if(percent >= 80) msg = "🏆 Outstanding Performance!";
+        else if(percent >= 50) msg = "👏 Well Done! Keep it up.";
+        else msg = "📚 Practice makes perfect! Try again.";
+        
+        document.getElementById('resultMsg').innerText = msg;
+    }
+</script>
+</body>
+</html>

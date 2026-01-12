@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Human Body Control & Coordination Quiz</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #ff007f 100%);
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --text-en: #ffffff;
+            --text-hi: #dddddd;
+            --correct: #00e676;
+            --wrong: #ff1744;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: var(--primary-gradient);
+            background-size: 400% 400%;
+            animation: gradientMove 15s ease infinite;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            color: white;
+            overflow-x: hidden;
+        }
+
+        @keyframes gradientMove {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 25px;
+            width: 100%;
+            max-width: 700px;
+            padding: 2rem;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            position: relative;
+            z-index: 10;
+        }
+
+        .progress-bar {
+            position: absolute;
+            top: 0; left: 0; height: 6px;
+            background: linear-gradient(to right, #00f2fe, #4facfe);
+            width: 0%; transition: width 0.3s ease;
+            box-shadow: 0 0 10px #4facfe;
+        }
+
+        .screen { display: none; flex-direction: column; gap: 1.5rem; }
+        .screen.active { display: flex; }
+
+        h1 { text-align: center; margin-bottom: 1rem; }
+        .stats { display: flex; justify-content: space-between; font-weight: 600; font-size: 0.9rem; }
+        
+        .timer-box { 
+            text-align: center; font-size: 1.5rem; font-weight: 700; 
+            margin: 10px 0; border-radius: 50%; width: 60px; height: 60px;
+            display: flex; align-items: center; justify-content: center;
+            border: 3px solid white; align-self: center;
+        }
+        .timer-pulse { color: #ff1744; border-color: #ff1744; animation: pulse 1s infinite; }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+
+        .question-box { margin-bottom: 1rem; }
+        .q-en { font-weight: 700; font-size: 1.2rem; display: block; margin-bottom: 5px; }
+        .q-hi { font-weight: 400; font-size: 1rem; color: var(--text-hi); display: block; }
+
+        .options-grid { display: grid; gap: 12px; }
+        .option-btn {
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid var(--glass-border);
+            padding: 15px; border-radius: 15px;
+            color: white; cursor: pointer; text-align: left;
+            transition: all 0.2s; display: flex; flex-direction: column;
+        }
+        .option-btn:hover { background: rgba(255, 255, 255, 0.25); transform: translateY(-2px); }
+        .option-btn.correct { background: var(--correct); color: #000; font-weight: 600; }
+        .option-btn.wrong { background: var(--wrong); color: #fff; animation: shake 0.4s; }
+
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-10px); } 75% { transform: translateX(10px); } }
+
+        .btn-start, .btn-finish, .btn-restart {
+            background: white; color: #764ba2; border: none; padding: 15px 30px;
+            border-radius: 50px; font-weight: 700; cursor: pointer; transition: transform 0.2s;
+            margin-top: 10px; width: 100%; font-size: 1.1rem;
+        }
+        .btn-start:hover { transform: scale(1.05); }
+
+        .settings { display: flex; flex-direction: column; gap: 15px; margin: 20px 0; }
+        .input-field { padding: 12px; border-radius: 10px; border: none; background: rgba(255,255,255,0.2); color: white; outline: none; }
+        .toggle { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+
+        #emoji-overlay {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 10rem; pointer-events: none; z-index: 100; display: none;
+        }
+
+        #confetti-canvas {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 9999;
+        }
+
+        .result-score { font-size: 4rem; font-weight: 800; text-align: center; margin: 20px 0; }
+        .result-msg { text-align: center; font-size: 1.2rem; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+
+    <canvas id="confetti-canvas"></canvas>
+    <div id="emoji-overlay">😢</div>
+
+    <div class="glass-card">
+        <div class="progress-bar" id="progress"></div>
+
+        <div id="start-screen" class="screen active">
+            <h1>Biology Quiz<br><small style="font-size: 0.6em; font-weight:300">Human Body: Hormones & Coordination</small></h1>
+            <div class="settings">
+                <label>Set Timer (Seconds per question, 0 = No Timer):</label>
+                <input type="number" id="manual-timer" class="input-field" placeholder="e.g. 15" min="0">
+                <label class="toggle">
+                    <input type="checkbox" id="shuffle-toggle"> Shuffle Questions (प्रश्नों को मिलाएं)
+                </label>
+            </div>
+            <button class="btn-start" onclick="startQuiz()">Start Quiz / शुरू करें</button>
+        </div>
+
+        <div id="quiz-screen" class="screen">
+            <div class="stats">
+                <span id="q-counter">Question 00/00</span>
+                <span id="score-counter">Score: 0</span>
+            </div>
+            <div id="timer-display" class="timer-box">0</div>
+            <div class="question-box">
+                <span id="eng-q" class="q-en"></span>
+                <span id="hin-q" class="q-hi"></span>
+            </div>
+            <div id="options-container" class="options-grid"></div>
+            <button class="btn-finish" onclick="finishQuiz()">Finish & Show Results (समाप्त करें)</button>
+        </div>
+
+        <div id="result-screen" class="screen">
+            <h1>Results</h1>
+            <div class="result-score" id="final-score">0%</div>
+            <p class="result-msg" id="msg-text"></p>
+            <button class="btn-restart" onclick="location.reload()">Restart Quiz (पुनः प्रयास करें)</button>
+        </div>
+    </div>
+
+<script>
+    const questions = [
+        { en: "Oxytocin is a...", hi: "हॉर्मोन है-", opts: [ {en:"Hormone", hi:"ऑक्सीटोसीन"}, {en:"Relaxin", hi:"रिलैक्सीन"}, {en:"Calcitonin", hi:"कैल्सिटोनीन"}, {en:"All of these", hi:"इनमें से सभी"} ], correct: 3 },
+        { en: "Oxytocin hormone is...", hi: "ऑक्सीटोसीन हॉर्मोन है-", opts: [ {en:"Birth hormone", hi:"जन्म हॉर्मोन"}, {en:"Milk ejection hormone", hi:"दुग्ध निष्कासन हॉर्मोन"}, {en:"Cuddle/Love hormone", hi:"आलिंगन या प्रेम हॉर्मोन"}, {en:"All of these", hi:"इनमें से सभी"} ], correct: 3 },
+        { en: "Which hormone stimulates the mammary glands to eject milk?", hi: "स्त्रियों में दुग्ध ग्रंथि से दुग्ध स्त्राव को उत्प्रेरित करता है?", opts: [ {en:"FSH", hi:"FSH"}, {en:"LH", hi:"LH"}, {en:"TSH", hi:"TSH"}, {en:"Prolactin", hi:"प्रोलैक्टिन"} ], correct: 3 },
+        { en: "The pituitary gland is attached to which part of the brain?", hi: "पीयूष ग्रंथि मस्तिष्क के किस भाग से जुड़ी रहती है?", opts: [ {en:"Hypothalamus", hi:"हाइपोथैलेमस"}, {en:"Epithalamus", hi:"एपिथैलेमस"}, {en:"Cerebellum", hi:"सेरेब्रम"}, {en:"Optic Thalami", hi:"ऑप्टिक थैलेमाई"} ], correct: 0 },
+        { en: "Which endocrine gland requires iodine for hormone production?", hi: "किस अंतः स्त्रावी ग्रंथि को हॉर्मोन बनाने हेतु आयोडीन की आवश्यकता होती है?", opts: [ {en:"Hypothalamus", hi:"हाइपोथैलेमस"}, {en:"Thymus", hi:"थाइमस"}, {en:"Thyroid", hi:"थायराइड"}, {en:"Pancreas", hi:"अग्न्याशय"} ], correct: 2 },
+        { en: "Which endocrine gland is situated in the neck?", hi: "कौन सी अंतः स्त्रावी ग्रंथि गले में स्थित होता है?", opts: [ {en:"Adrenal", hi:"एडरीनल"}, {en:"Thyroid", hi:"अवदु"}, {en:"Parathyroid", hi:"पाराअवदु"}, {en:"B and C both", hi:"B तथा C दोनों"} ], correct: 3 },
+        { en: "Myxedema disease is caused by the dysfunction of which gland?", hi: "किस ग्रंथि के कार्य प्रणाली प्रभावित होने पर मिक्सीडीमा रोग होता है?", opts: [ {en:"Pancreas", hi:"अग्न्याशय"}, {en:"Adrenal", hi:"अधिवृक्क"}, {en:"Thymus", hi:"थाइमस"}, {en:"Thyroid", hi:"थायराइड"} ], correct: 3 },
+        { en: "Graves' disease is caused by...", hi: "ग्रेव रोग है-", opts: [ {en:"Vitamin B deficiency", hi:"विटामिन B की कमी से"}, {en:"Congenital disease", hi:"हीनाजन्य रोग"}, {en:"Inactivity of Adrenal", hi:"एडरीनल ग्रंथि के निष्क्रियता से"}, {en:"Overactivity of Thyroid", hi:"अधिक उपचय के कारण उत्पन्न रोग"} ], correct: 3 },
+        { en: "What could be the cause of facial hair growth in some women?", hi: "कुछ महिलाओं के चेहरे पर बाल उग जाने के क्या कारण हो सकते हैं?", opts: [ {en:"Radiation", hi:"विकिरण"}, {en:"Pollution", hi:"प्रदूषण"}, {en:"Hormones", hi:"हॉर्मोन"}, {en:"Enzymes", hi:"एंजाइम"} ], correct: 2 },
+        { en: "Consider: 1. Development of male traits in women is Virilism. 2. Female traits in men is Gynecomastia.", hi: "कथनों पर विचार करें- 1. विरिलिज्म 2. गाइनेकोमास्टिया", opts: [ {en:"Only 1", hi:"केवल 1"}, {en:"Only 2", hi:"केवल 2"}, {en:"Both 1 & 2", hi:"1 तथा 2 दोनों"}, {en:"Neither", hi:"न तो 1 न ही 2"} ], correct: 2 },
+        { en: "Which gland regulates the biological clock for sleep/wake cycles?", hi: "कौन सी ग्रंथि शरीर में जैविक घड़ी का नियमन करती है?", opts: [ {en:"Thymus", hi:"थाइमस"}, {en:"Pineal", hi:"पिनियल"}, {en:"Adrenal", hi:"एडरीनल"}, {en:"Thyroid", hi:"थायराइड"} ], correct: 1 },
+        { en: "Thymus gland is related to...", hi: "थाइमस ग्रंथि संबंधित है-", opts: [ {en:"Body temperature", hi:"शारीरिक ताप से"}, {en:"Body growth", hi:"शरीर वृद्धि से"}, {en:"Thyroxine", hi:"थायरॉक्सिन से"}, {en:"Lymphocytes & Antibodies", hi:"लिम्फोसाइट तथा एंटीबॉडी निर्माण से"} ], correct: 3 },
+        { en: "What kind of hormones are LH and FSH?", hi: "LH तथा FSH किस प्रकार का हॉर्मोन है-", opts: [ {en:"Gonadotropic", hi:"गोनैडोट्रॉपिक हॉर्मोन"}, {en:"Follicle", hi:"फॉलिकल हॉर्मोन"}, {en:"Emergency", hi:"इमरजेन्सी हॉर्मोन"}, {en:"All of these", hi:"इनमें से सभी"} ], correct: 0 },
+        { en: "Which of the following does NOT function as both exocrine and endocrine?", hi: "दोनों बहिःस्त्रावी और अंतःस्त्रावी के रूप में व्यवहार नहीं करता?", opts: [ {en:"Pituitary", hi:"पीयूष"}, {en:"Pancreas", hi:"अग्न्याशय"}, {en:"Ovary", hi:"अण्डाशय"}, {en:"Testes", hi:"वृषण"} ], correct: 0 },
+        { en: "Which endocrine gland is NOT found in pairs in humans?", hi: "कौन-सी अंतः स्त्रावी ग्रंथि जोड़े के रूप में नहीं पायी जाती है?", opts: [ {en:"Adrenal", hi:"एडरीनल"}, {en:"Pituitary", hi:"पीयूष"}, {en:"Ovary", hi:"अण्डाशय"}, {en:"Testes", hi:"वृषण"} ], correct: 1 },
+        { en: "The thyroid gland secretes thyroxine which...", hi: "थायराइड ग्रंथि से थायरॉक्सिन हॉर्मोन स्त्राव होता है, जो-", opts: [ {en:"Regulates blood glucose", hi:"रुधिर में ग्लूकोज को नियंत्रित करना"}, {en:"Regulates ovulation", hi:"अण्डोत्सर्ग को नियंत्रित करना"}, {en:"Maintains pregnancy", hi:"गर्भावस्था पर नियंत्रण रखना"}, {en:"Regulates metabolic rate", hi:"उपापचयी दर को नियंत्रित करना"} ], correct: 3 },
+        { en: "Which hormone helps in the implantation of a fertilized egg?", hi: "निषेचित अण्डाणु के इम्प्लान्टेशन के लिये सहायक हॉर्मोन कौन सा है-", opts: [ {en:"Prolactin", hi:"प्रोलैक्टिन"}, {en:"Oxytocin", hi:"ऑक्सीटोसीन"}, {en:"Progesterone", hi:"प्रोजेस्टेरोन"}, {en:"Thyrotropin", hi:"थायरोट्रोपिन"} ], correct: 2 },
+        { en: "What does the Corpus Luteum secrete?", hi: "कॉर्पस ल्यूटियम क्या स्त्रावित करती है-", opts: [ {en:"Progesterone", hi:"प्रोजेस्टेरोन"}, {en:"Testosterone", hi:"टेस्टोस्टेरोन"}, {en:"Estrogen", hi:"एस्ट्रोजन"}, {en:"Relaxin", hi:"रिलैक्सीन"} ], correct: 0 },
+        { en: "What does the Graafian Follicle secrete?", hi: "ग्रैफियन फॉलिकिल क्या स्त्रावित करती है?", opts: [ {en:"Progesterone", hi:"प्रोजेस्टेरोन"}, {en:"Estrogen", hi:"एस्ट्रोजेन"}, {en:"Testosterone", hi:"टेस्टोस्टेरॉन"}, {en:"Insulin", hi:"इंसुलिन"} ], correct: 1 },
+        { en: "Hormones that control opposing actions are called?", hi: "दो हॉर्मोन, जो एक-दूसरे के विपरीत क्रियाओं को नियंत्रण करते हैं?", opts: [ {en:"Target hormones", hi:"निश्चित लक्ष्य वाला हॉर्मोन"}, {en:"Antagonistic", hi:"एंटागोनिस्टिक हॉर्मोन"}, {en:"Reflex hormones", hi:"रिफ्लैक्स हॉर्मोन"}, {en:"Anti-hormones", hi:"एण्टी हॉर्मोन"} ], correct: 1 },
+        { en: "Example of antagonistic hormones:", hi: "एंटागोनिस्टिक हॉर्मोन के उदाहरण है-", opts: [ {en:"Calcitonin-Parathormone", hi:"कैल्सीटोनीन - पाराथॉर्मोन"}, {en:"Insulin-Glucagon", hi:"इंसुलिन-ग्लूकागॉन"}, {en:"Gastrin-Enterogastrone", hi:"गैस्ट्रीन-एंटेरोगैस्ट्रोन"}, {en:"All of these", hi:"इनमें से सभी"} ], correct: 3 },
+        { en: "Epinephrine and Norepinephrine are...", hi: "एडरीनल तथा नॉरएडरीनल हॉर्मोन है-", opts: [ {en:"Life-saving", hi:"जीवन-बचाव हॉर्मोन"}, {en:"Growth hormone", hi:"वृद्धि हॉर्मोन"}, {en:"Emergency", hi:"आपातकालीन हॉर्मोन"}, {en:"Sex hormone", hi:"लिंग हॉर्मोन"} ], correct: 2 },
+        { en: "Hormone that controls Blood Pressure is?", hi: "रुधिर चाप को नियंत्रित करने वाला हॉर्मोन है-", opts: [ {en:"Thymus", hi:"थाइमस"}, {en:"Thyroid", hi:"थायराइड"}, {en:"Adrenal", hi:"एडरीनल"}, {en:"FSH", hi:"FSH"} ], correct: 2 },
+        { en: "Addison's disease is caused by deficiency of?", hi: "एडिसन की बीमारी किस हॉर्मोन की कमी से होता है?", opts: [ {en:"Aldosterone", hi:"एलडोस्टेरोन"}, {en:"Cortisone", hi:"कोर्टिसोन"}, {en:"Cortisol", hi:"कोर्टिसोल"}, {en:"Adrenal", hi:"एडरीनल"} ], correct: 3 },
+        { en: "Which hormone promotes healing by cell division in wounded tissues?", hi: "घायल उत्तक में कोशिका विभाजन को प्रेरित कर घाव भरने में मदद करता है?", opts: [ {en:"Glucagon", hi:"ग्लूकागॉन"}, {en:"Gastrin", hi:"गैस्ट्रीन"}, {en:"Somatostatin", hi:"सोमेटोस्टेटिन"}, {en:"Insulin", hi:"इंसुलिन"} ], correct: 1 },
+        { en: "Consider: 1. Low Insulin causes Diabetes Mellitus. 2. Low Vasopressin causes Diabetes Insipidus.", hi: "कथनों पर विचार करें- डायबिटीज मेलिटस व इंसिपीडस", opts: [ {en:"Only 1", hi:"केवल 1"}, {en:"Only 2", hi:"केवल 2"}, {en:"Both 1 & 2", hi:"1 तथा 2 दोनों"}, {en:"Neither", hi:"न तो 1 न ही 2"} ], correct: 2 },
+        { en: "In which part of the body does Thermoregulation occur?", hi: "किस हॉर्मोन की सहायता से थर्मोरैगुलेशन क्रिया सम्पन्न होती है?", opts: [ {en:"Hypothalamus", hi:"हाइपोथैलेमस"}, {en:"TSH", hi:"TSH"}, {en:"Thyroid", hi:"थायराइड"}, {en:"All of these", hi:"इनमें से सभी"} ], correct: 0 },
+        { en: "Cause of Cretinism in children is...", hi: "बच्चों में क्रेटिनिज्म रोग उत्पन्न होने का कारण है-", opts: [ {en:"Excess GH", hi:"GH की अधिकता"}, {en:"Deficiency of GH", hi:"GH की कमी"}, {en:"Excess Thyroxine", hi:"थायरॉक्सिन की अधिकता"}, {en:"Deficiency of Thyroxine", hi:"थायरॉक्सिन की कमी"} ], correct: 3 },
+        { en: "Which hormone is considered useless for the human body?", hi: "कौन-सा हॉर्मोन निरर्थक माना जाता है?", opts: [ {en:"FSH", hi:"FSH"}, {en:"ACTH", hi:"ACTH"}, {en:"TSH", hi:"TSH"}, {en:"MSH", hi:"MSH"} ], correct: 3 },
+        { en: "Which hormone has no specific target organ?", hi: "किस हॉर्मोन का कोई निश्चित टारगेट अंग नहीं है?", opts: [ {en:"Growth Hormone", hi:"ग्रोथ हॉर्मोन"}, {en:"Oxytocin", hi:"ऑक्सीटोसीन"}, {en:"Vasopressin", hi:"वासोप्रेसिन"}, {en:"None of these", hi:"इनमें से कोई नहीं"} ], correct: 0 },
+        { en: "Which gland secretes Life Saving Hormone?", hi: "जीवन रक्षक हॉर्मोन का स्त्राव किस ग्रंथि से होता है?", opts: [ {en:"Pituitary", hi:"पीयूष"}, {en:"Adrenal", hi:"एडरीनल"}, {en:"Thyroid", hi:"थायराइड"}, {en:"All of these", hi:"इनमें से सभी"} ], correct: 1 },
+        { en: "Which is called Emergency or Fight-or-Flight hormone?", hi: "आपातकालीन हॉर्मोन या लड़ो-उड़ो हॉर्मोन कहते है?", opts: [ {en:"Insulin", hi:"इन्सुलिन"}, {en:"Estrogen", hi:"एस्ट्रोजेन"}, {en:"Adrenaline", hi:"एड्रिनेलीन"}, {en:"Oxytocin", hi:"ऑक्सीटोसीन"} ], correct: 2 },
+        { en: "Which endocrine gland is called the pacemaker?", hi: "किसको अंतःस्त्रावी का पेसमेकर कहा जाता है?", opts: [ {en:"Calcitonin", hi:"कैल्सीटोनीन"}, {en:"Thyroxine", hi:"थायरॉक्सिन"}, {en:"Adrenaline", hi:"एड्रिनेलीन"}, {en:"Insulin", hi:"इंसुलिन"} ], correct: 1 },
+        { en: "Which gland disappears in old age?", hi: "कौन सी ग्रंथि वृद्धावस्था में लुप्त हो जाती है?", opts: [ {en:"Pituitary", hi:"पीयूष"}, {en:"Thyroid", hi:"थायराइड"}, {en:"Parathyroid", hi:"पाराथायराइड"}, {en:"Thymus", hi:"थाइमस"} ], correct: 3 },
+        { en: "Disease caused by iron deficiency in humans?", hi: "मनुष्य में लोहे की कमी से होने वाला रोग है-", opts: [ {en:"Myxedema", hi:"मिक्सीडीमा"}, {en:"Addison's", hi:"एडीसन"}, {en:"Acromegaly", hi:"ऐक्रोमीगैली"}, {en:"Goiter", hi:"ग्वाइटर"} ], correct: 3 },
+        { en: "Where is Prolactin secreted from?", hi: "दुग्धजनक हॉर्मोन-प्रोलैक्टिन का स्वाय कहाँ से होता है?", opts: [ {en:"Mammary gland", hi:"स्तन ग्रंथि"}, {en:"Placenta", hi:"प्लैसेंटा"}, {en:"Ovary", hi:"अण्डाशय"}, {en:"Pituitary", hi:"पीयूष"} ], correct: 3 },
+        { en: "Which hormone is NOT secreted by the thyroid?", hi: "थायराइड ग्रंथि से स्वायित नहीं होता है?", opts: [ {en:"Thymosin", hi:"थायमोसीन"}, {en:"Triiodothyronine", hi:"ट्राइआयोडोथायरोनीन"}, {en:"Calcitonin", hi:"कैल्सीटोनीन"}, {en:"Thyroxine", hi:"थायरॉक्सिन"} ], correct: 0 },
+        { en: "Which hormone increases heart rate to supply more oxygen to muscles?", hi: "हृदय गति को बढ़ा देता है?", opts: [ {en:"Insulin", hi:"इन्सुलिन"}, {en:"Thyroxine", hi:"थायरॉक्सिन"}, {en:"Adrenaline", hi:"एड्रिनेलीन"}, {en:"FSH", hi:"FSH"} ], correct: 2 },
+        { en: "Where are Islets of Langerhans found?", hi: "लैंगरहैन्स की द्वीपिकाएँ (Islets of Langerhans) पायी जाती है?", opts: [ {en:"Spleen", hi:"प्लीहा में"}, {en:"Pancreas", hi:"अग्न्याशय में"}, {en:"Pituitary", hi:"पीयूष में"}, {en:"Liver", hi:"यकृत में"} ], correct: 1 },
+        { en: "Which cells secrete Insulin?", hi: "किन कोशिकाओं से इन्सुलिन का स्वाय होता है?", opts: [ {en:"Alpha-cells", hi:"अल्फा-सेल"}, {en:"Beta-cells", hi:"बीटा-सेल"}, {en:"Delta-cells", hi:"डेल्टा-सेल"}, {en:"F-cells", hi:"एफ-सेल"} ], correct: 1 },
+        { en: "Which gland secretes Sex Hormones?", hi: "कौन-सी ग्रंथि सेक्स हॉर्मोन का स्त्राव करता है?", opts: [ {en:"Adrenal", hi:"एडरीनील"}, {en:"Thyroid", hi:"थायराइड"}, {en:"Pituitary", hi:"पीयूष"}, {en:"Parathyroid", hi:"पाराथायराइड"} ], correct: 0 },
+        { en: "Consider: 1. Hormones made of Steroids/Proteins. 2. Not produced by specific organs. 3. Do not affect producing organs. 4. Work like co-enzymes.", hi: "हॉर्मोन के गुण-धर्म पर विचार कीजिए-", opts: [ {en:"1 and 2", hi:"1 और 2"}, {en:"1, 2 and 3", hi:"1, 2 और 3"}, {en:"1 and 3", hi:"1 और 3"}, {en:"Only 4", hi:"केवल 4"} ], correct: 2 },
+        { en: "Hormones in pituitary and pancreas are made of...", hi: "पीयूष तथा अग्न्याशय ग्रंथि में हॉर्मोन का निर्माण होता है-", opts: [ {en:"Proteins", hi:"प्रोटीन से"}, {en:"Amino acids", hi:"अमीनो अम्ल से"}, {en:"Catecholamines", hi:"कैटैकॉल एमाइन से"}, {en:"Steroids", hi:"स्टेरॉयड से"} ], correct: 0 },
+        { en: "What are thyroxine hormones made of?", hi: "थायरॉक्सिन हॉर्मोन किससे निर्मित होते है?", opts: [ {en:"Phenylalanine amino acid", hi:"फेनाइल एलाकीन अमीनो अम्ल"}, {en:"Tyrosine amino acid", hi:"टाइरोसीन अमीनो अम्ल"}, {en:"Steroids", hi:"स्टेरॉइड"}, {en:"Proteins", hi:"प्रोटीन"} ], correct: 1 },
+        { en: "Which gland secretes Steroid Hormones?", hi: "कौन सा ग्रंथि स्टेराइड हॉर्मोन स्त्रावित करता है?", opts: [ {en:"Adrenal Cortex", hi:"एडरीनल कॉर्टेक्स"}, {en:"Testes", hi:"वृषण"}, {en:"Ovary", hi:"अंडाशय"}, {en:"All of these", hi:"इनमें से सभी"} ], correct: 3 },
+        { en: "Which hormone causes Labour Pain during childbirth?", hi: "शिशु के जन्म के समय कौन-सा हॉर्मोन का स्वाव होने से प्रसव वेदना उत्पन्न होता है?", opts: [ {en:"Relaxin", hi:"रिलैक्सीन"}, {en:"Prostaglandin", hi:"प्रोस्टाग्लैंडिन"}, {en:"Progesterone", hi:"प्रोजेस्टेरोन"}, {en:"Estrogen", hi:"ऐस्ट्रोजेन"} ], correct: 0 },
+        { en: "Which hormone is produced in the Placenta?", hi: "किस हॉर्मोन की उत्पत्ति Placenta में होता है?", opts: [ {en:"Progesterone", hi:"प्रोजेस्टेरोन"}, {en:"Relaxin", hi:"रिलैक्सीन"}, {en:"Prostaglandin", hi:"प्रोस्टाग्लैंडिन"}, {en:"All of these", hi:"इनमें से सभी"} ], correct: 3 },
+        { en: "What is Estrogen?", hi: "ऐस्ट्रोजेन क्या है-", opts: [ {en:"Female sex hormone", hi:"स्त्रीलिंग हॉर्मोन"}, {en:"Male sex hormone", hi:"नरलिंग हॉर्मोन"}, {en:"Digestive juice", hi:"पाचक रस"}, {en:"None", hi:"इनमें से कोई नहीं"} ], correct: 0 },
+        { en: "Which disease is called 'Suicide of Thyroid'?", hi: "किस रोग को थायराइड की आत्महत्या कहते है?", opts: [ {en:"Graves' disease", hi:"ग्रेव्स रोग"}, {en:"Hashimoto's disease", hi:"हाशीमोटो रोग"}, {en:"Pancha disease", hi:"पंचा रोग"}, {en:"Cretinism", hi:"क्रिटिनिज्म रोग"} ], correct: 1 },
+        { en: "Which of these is a female sex hormone?", hi: "कौन मादा जनन हॉर्मोन है?", opts: [ {en:"Estrogen", hi:"एस्ट्रोजेन"}, {en:"Relaxin", hi:"रिलैक्सीन"}, {en:"Progesterone", hi:"प्रोजेस्ट्रॉन"}, {en:"All of these", hi:"इनमें से सभी"} ], correct: 3 },
+        { en: "Which of these is a male sex hormone?", hi: "कौन एक नर-लैंगिक हॉर्मोन है?", opts: [ {en:"Progesterone", hi:"प्रोजेस्टेरोन"}, {en:"Testosterone", hi:"टेस्टोस्टेरॉन"}, {en:"Relaxin", hi:"रिलैक्सीन"}, {en:"Estrogen", hi:"ऐस्ट्रोजेन"} ], correct: 1 }
+    ];
+
+    let currentQ = 0;
+    let score = 0;
+    let timer;
+    let timePerQ = 0;
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    function playSound(freq, type) {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.5);
+    }
+
+    const confettiCanvas = document.getElementById('confetti-canvas');
+    const ctx = confettiCanvas.getContext('2d');
+    let particles = [];
+    function createConfetti() {
+        confettiCanvas.width = window.innerWidth;
+        confettiCanvas.height = window.innerHeight;
+        for(let i=0; i<100; i++) {
+            particles.push({
+                x: Math.random() * confettiCanvas.width,
+                y: Math.random() * confettiCanvas.height - confettiCanvas.height,
+                r: Math.random()*6+2,
+                d: Math.random()*10,
+                color: `hsl(${Math.random()*360}, 100%, 50%)`,
+                v: Math.random()*3+2
+            });
+        }
+    }
+    function drawConfetti() {
+        ctx.clearRect(0,0,confettiCanvas.width, confettiCanvas.height);
+        particles.forEach((p, i) => {
+            ctx.beginPath();
+            ctx.fillStyle = p.color;
+            ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+            ctx.fill();
+            p.y += p.v;
+            if(p.y > confettiCanvas.height) particles.splice(i, 1);
+        });
+        if(particles.length > 0) requestAnimationFrame(drawConfetti);
+    }
+
+    function startQuiz() {
+        const tVal = document.getElementById('manual-timer').value;
+        timePerQ = tVal > 0 ? parseInt(tVal) : 0;
+        if(document.getElementById('shuffle-toggle').checked) {
+            questions.sort(() => Math.random() - 0.5);
+        }
+        document.getElementById('start-screen').classList.remove('active');
+        document.getElementById('quiz-screen').classList.add('active');
+        loadQuestion();
+    }
+
+    function loadQuestion() {
+        if(currentQ >= questions.length) return finishQuiz();
+        
+        const q = questions[currentQ];
+        document.getElementById('progress').style.width = `${(currentQ / questions.length) * 100}%`;
+        document.getElementById('q-counter').innerText = `Question ${currentQ + 1}/${questions.length}`;
+        document.getElementById('eng-q').innerText = q.en;
+        document.getElementById('hin-q').innerText = q.hi;
+        
+        const container = document.getElementById('options-container');
+        container.innerHTML = '';
+        q.opts.forEach((opt, i) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerHTML = `<span>${opt.en}</span><small style="color:rgba(255,255,255,0.7)">${opt.hi}</small>`;
+            btn.onclick = () => handleAnswer(i, btn);
+            container.appendChild(btn);
+        });
+
+        startTimer();
+    }
+
+    function startTimer() {
+        clearInterval(timer);
+        const display = document.getElementById('timer-display');
+        if(timePerQ === 0) {
+            display.style.display = 'none';
+            return;
+        }
+        display.style.display = 'flex';
+        let timeLeft = timePerQ;
+        display.innerText = timeLeft;
+        display.classList.remove('timer-pulse');
+        
+        timer = setInterval(() => {
+            timeLeft--;
+            display.innerText = timeLeft;
+            if(timeLeft < 5) display.classList.add('timer-pulse');
+            if(timeLeft <= 0) {
+                clearInterval(timer);
+                handleAnswer(-1, null);
+            }
+        }, 1000);
+    }
+
+    function handleAnswer(idx, btn) {
+        clearInterval(timer);
+        const q = questions[currentQ];
+        const allBtns = document.querySelectorAll('.option-btn');
+        allBtns.forEach(b => b.disabled = true);
+
+        if(idx === q.correct) {
+            btn.classList.add('correct');
+            score++;
+            document.getElementById('score-counter').innerText = `Score: ${score}`;
+            playSound(880, 'sine'); // Ting
+            createConfetti();
+            drawConfetti();
+        } else {
+            if(btn) btn.classList.add('wrong');
+            allBtns[q.correct].classList.add('correct');
+            playSound(150, 'sawtooth'); // Buzz
+            const overlay = document.getElementById('emoji-overlay');
+            overlay.style.display = 'block';
+            overlay.style.animation = 'shake 0.4s';
+            setTimeout(() => overlay.style.display = 'none', 1000);
+        }
+
+        setTimeout(() => {
+            currentQ++;
+            loadQuestion();
+        }, 1500);
+    }
+
+    function finishQuiz() {
+        clearInterval(timer);
+        document.getElementById('quiz-screen').classList.remove('active');
+        document.getElementById('result-screen').classList.add('active');
+        
+        const percent = Math.round((score / (currentQ || 1)) * 100);
+        document.getElementById('final-score').innerText = `${percent}%`;
+        
+        let msg = "";
+        if(percent >= 80) msg = "🏆 Outstanding Performance!";
+        else if(percent >= 50) msg = "👏 Well Done! Keep it up.";
+        else msg = "📚 Practice makes perfect! Try again.";
+        document.getElementById('msg-text').innerText = msg;
+    }
+</script>
+</body>
+</html>

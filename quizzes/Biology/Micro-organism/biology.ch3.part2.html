@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Micro-Biology Quiz (51-108)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #ff0080 100%);
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --correct: #4caf50;
+            --wrong: #f44336;
+            --hindi-text: #ddd;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: var(--bg-gradient);
+            background-attachment: fixed;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            overflow-x: hidden;
+        }
+
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 25px;
+            width: 95%;
+            max-width: 600px;
+            padding: 30px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            position: relative;
+            z-index: 10;
+        }
+
+        /* Progress Bar */
+        .progress-container {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 6px;
+            background: rgba(255,255,255,0.1);
+            z-index: 1000;
+        }
+        .progress-bar {
+            width: 0%; height: 100%;
+            background: linear-gradient(to right, #00f2fe, #4facfe);
+            box-shadow: 0 0 10px #4facfe;
+            transition: width 0.3s;
+        }
+
+        /* Headers */
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .timer-display {
+            transition: color 0.3s;
+        }
+        .pulse-red {
+            color: #ff5252;
+            animation: pulse 0.5s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        /* Screens */
+        .screen { display: none; text-align: center; }
+        .active { display: block; }
+
+        /* Typography */
+        .q-text { font-weight: 700; font-size: 1.2rem; margin-bottom: 5px; }
+        .q-hindi { font-size: 0.95rem; color: var(--hindi-text); margin-bottom: 25px; display: block;}
+
+        /* Options */
+        .options-grid { display: flex; flex-direction: column; gap: 12px; }
+        .option-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            padding: 12px 20px;
+            border-radius: 15px;
+            color: white;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+        }
+        .option-btn:hover { background: rgba(255, 255, 255, 0.15); transform: translateY(-2px); }
+        .opt-en { font-weight: 600; font-size: 0.95rem; }
+        .opt-hi { font-size: 0.8rem; color: var(--hindi-text); }
+
+        .btn-correct { background: var(--correct) !important; border-color: #fff; }
+        .btn-wrong { background: var(--wrong) !important; border-color: #fff; }
+
+        /* Inputs & Main Buttons */
+        .primary-btn {
+            margin-top: 25px;
+            background: white;
+            color: #764ba2;
+            border: none;
+            padding: 15px 35px;
+            border-radius: 50px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .primary-btn:hover { transform: scale(1.05); }
+
+        .finish-btn {
+            margin-top: 20px;
+            background: rgba(255,255,255,0.1);
+            color: white;
+            border: 1px solid var(--glass-border);
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-size: 0.8rem;
+            cursor: pointer;
+        }
+
+        input[type="number"] {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid var(--glass-border);
+            padding: 10px;
+            border-radius: 10px;
+            color: white;
+            width: 100px;
+            margin: 10px;
+            text-align: center;
+        }
+
+        /* Animations */
+        #emoji-overlay {
+            position: fixed; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 100px; z-index: 10000;
+            display: none;
+        }
+        .shake { animation: shakeAnim 0.5s; }
+        @keyframes shakeAnim {
+            0%, 100% { margin-left: 0; }
+            25% { margin-left: -10px; }
+            75% { margin-left: 10px; }
+        }
+
+        #confetti-canvas {
+            position: fixed; top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none; z-index: 9999;
+        }
+
+        @media (max-width: 500px) {
+            .glass-card { padding: 20px; }
+            .q-text { font-size: 1rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="progress-container"><div class="progress-bar" id="progressBar"></div></div>
+    <canvas id="confetti-canvas"></canvas>
+    <div id="emoji-overlay">😢</div>
+
+    <div class="glass-card">
+        <div id="start-screen" class="screen active">
+            <h1 style="margin-bottom: 20px;">Micro-Biology Quiz</h1>
+            <p>Questions 51 - 108</p>
+            <div style="margin: 30px 0;">
+                <label>Timer (Seconds per question):</label><br>
+                <input type="number" id="manualTimer" placeholder="0" min="0">
+                <p style="font-size: 0.7rem; opacity: 0.7;">(0 = No Timer)</p>
+                <br>
+                <label style="cursor: pointer;">
+                    <input type="checkbox" id="shuffleToggle"> Shuffle Questions
+                </label>
+            </div>
+            <button class="primary-btn" onclick="startQuiz()">Start Quiz</button>
+        </div>
+
+        <div id="quiz-screen" class="screen">
+            <div class="stats">
+                <span id="qCount">Question: 01/58</span>
+                <span id="timerBox" class="timer-display"></span>
+                <span id="scoreBox">Score: 00</span>
+            </div>
+            <div id="question-area">
+                <h2 class="q-text" id="eng-q"></h2>
+                <span class="q-hindi" id="hin-q"></span>
+                <div class="options-grid" id="options-container"></div>
+            </div>
+            <button class="finish-btn" onclick="showResults()">Finish & Show Results</button>
+        </div>
+
+        <div id="result-screen" class="screen">
+            <h1 style="margin-bottom: 10px;">Quiz Results</h1>
+            <div id="final-score" style="font-size: 3rem; font-weight: 700; margin: 20px 0;"></div>
+            <p id="result-msg" style="margin-bottom: 30px;"></p>
+            <button class="primary-btn" onclick="location.reload()">Restart Quiz</button>
+        </div>
+    </div>
+
+<script>
+    // DATA EXTRACTION (Questions 51-108)
+    const questions = [
+        {en: "The cause of Fowl Cholera in chickens is?", hi: "मुर्गियों को होने वाले हैजा (Fowl Cholera) का कारण है?", opts: [{en:"Bacteria", hi:"जीवाणु"},{en:"Virus", hi:"विषाणु"},{en:"Protozoa", hi:"प्रोटोजोआ"},{en:"Fungi", hi:"कवक"}], ans: 0},
+        {en: "Which of the following is a viral disease?", hi: "निम्नलिखित में कौन विषाणु जनित बीमारी है?", opts: [{en:"Measles", hi:"खसरा"},{en:"Smallpox", hi:"छोटी माता"},{en:"Chickenpox", hi:"चेचक"},{en:"All of these", hi:"इनमें से सभी"}], ans: 3},
+        {en: "The fatal disease caused by a virus from a dog bite is called?", hi: "कुत्ते के काटने से जिस विषाणु के द्वारा घात रोग उत्पन्न होता है, कहलाता है-", opts: [{en:"Mumps", hi:"मम्स"},{en:"Hydrophobia", hi:"हाइड्रोफोबिया"},{en:"Jaundice", hi:"पीलिया"},{en:"Smallpox", hi:"चेचक"}], ans: 1},
+        {en: "Who developed the Smallpox vaccine?", hi: "चेचक के टीके का विकास किसने किया था?", opts: [{en:"Milstein", hi:"मिलस्टीन ने"},{en:"Louis Pasteur", hi: "लुई पाश्चर ने"},{en:"Edward Jenner", hi:"एडवर्ड जेनर ने"},{en:"Waksman", hi:"वाक्समैन ने"}], ans: 2},
+        {en: "What is a Virus?", hi: "विषाणु (Virus) क्या हैं?", opts: [{en:"Multicellular", hi:"बहुकोशिकीय"},{en:"Unicellular", hi:"एककोशिकीय"},{en:"Cellular", hi:"कोशिय"},{en:"Acellular", hi:"अकोशीय"}], ans: 3},
+        {en: "Which disease has been completely eradicated from India?", hi: "किस रोग का भारत में पूरी तरह से उन्मूलन कर दिया गया है?", opts: [{en:"Smallpox", hi:"छोटी माता"},{en:"Measles", hi:"खसरा"},{en:"Chickenpox", hi:"चेचक"},{en:"Mumps", hi:"कंठमाला"}], ans: 2},
+        {en: "What is Rabies?", hi: "रेबिज क्या है-", opts: [{en:"Worm disease", hi:"कृमिजनित रोग"},{en:"Viral disease", hi:"विषाणुजनित रोग"},{en:"Bacterial disease", hi:"जीवाणुजनित रोग"},{en:"Protozoan disease", hi:"प्रोटोजोआ जनित रोग"}], ans: 1},
+        {en: "In which disease does a patient lose control of neck muscles and become afraid of water?", hi: "किस रोग में गर्दन के पेशियों पर नियंत्रण समाप्त हो जाता है, रोगी पानी पीने में असमर्थ हो जाता है?", opts: [{en:"Rabies", hi:"रेबिज"},{en:"Influenza", hi:"इन्फ्लूएंजा"},{en:"Chickenpox", hi:"चेचक"},{en:"Polio", hi:"पोलियो"}], ans: 0},
+        {en: "Hydrophobia disease is caused by?", hi: "हाइड्रोफोबिया रोग उत्पन्न होता है-", opts: [{en:"Bacteria", hi:"जीवाणु"},{en:"Fungi", hi:"कवक"},{en:"Virus", hi:"विषाणु"},{en:"Protozoa", hi:"प्रोटोजोआ"}], ans: 2},
+        {en: "Bird Flu virus is represented by?", hi: "एवियन इन्फ्लूएंजा (Bird flu) विषाणु को निम्नलिखित से निरूपित किया जाता है?", opts: [{en:"NH51", hi:"NH51"},{en:"NH15", hi:"NH15"},{en:"N1H5", hi:"N1H5"},{en:"H5N1", hi:"H5N1"}], ans: 3},
+        {en: "Swine Flu virus is represented by?", hi: "स्वाइन फ्लू (Swine flu) विषाणु को निम्नलिखित से निरूपित किया जाता है?", opts: [{en:"NH51", hi:"NH51"},{en:"NH15", hi:"NH15"},{en:"H1N1", hi:"H1N1"},{en:"N5H1", hi:"N5H1"}], ans: 2},
+        {en: "Oseltamivir medicine is useful for?", hi: "ओसेल्टा मिविर नामक औषधि उपयोगी है-", opts: [{en:"Swine Flu treatment", hi:"स्वाइन फ्लू के उपचार में"},{en:"Polio treatment", hi:"पोलियो के उपचार में"},{en:"Measles treatment", hi:"खसरा के उपचार में"},{en:"Smallpox treatment", hi:"चेचक के उपचार में"}], ans: 0},
+        {en: "The most tried drug for AIDS virus is?", hi: "AIDS विषाणु के लिये सबसे ज्यादा आजमाई गई दवा है-", opts: [{en:"Zidovudine (AZT)", hi:"जीडो वुडीन (AZT)"},{en:"Miconazole", hi:"माइकोनाजोल"},{en:"Nonoxynol-9", hi:"नोनाक्सिनॉल-9"},{en:"Virazole", hi:"विरोजोल"}], ans: 0},
+        {en: "Hepatitis-B is caused by which microorganism?", hi: "किस सूक्ष्मजीव के द्वारा हेपेटाइटिस-B की बीमारी होती है?", opts: [{en:"Virus", hi:"विषाणु"},{en:"Protozoa", hi:"प्रोटोजोआ"},{en:"Bacteria", hi:"जीवाणु"},{en:"Fungi", hi:"कवक"}], ans: 0},
+        {en: "Which of these are viral diseases?", hi: "इनमें विषाणु जनित रोग हैं - 1.रेबीज 2.खसरा 3.फ्लू 4.ट्रेकोमा", opts: [{en:"1 and 2", hi:"1 और 2"},{en:"1, 2 and 3", hi:"1, 2 और 3"},{en:"1, 2 and 4", hi:"1, 2 और 4"},{en:"All of the above", hi:"उपर्युक्त में सभी"}], ans: 3},
+        {en: "Consider: 1.Microbe diseases are contagious. 2.Genetic diseases are not contagious.", hi: "1. सूक्ष्मजीवो द्वारा होने वाले रोग संक्रामक होते है 2. अनुवांशिक रोग संक्रामक नहीं होते हैं", opts: [{en:"Only 1", hi:"केवल 1"},{en:"Only 2", hi:"केवल 2"},{en:"Both 1 and 2", hi:"1 तथा 2 दोनों"},{en:"Neither 1 nor 2", hi:"न तो 1 न ही 2"}], ans: 2},
+        {en: "Monkey Fever is caused by?", hi: "मंकी फीवर (Monkey Fever) रोग होता है-", opts: [{en:"Virus", hi:"वायरस में"},{en:"Bacteria", hi:"जीवाणु में"},{en:"Fungi", hi:"कवक से"},{en:"Protozoa", hi:"प्रोटोजोआ से"}], ans: 0},
+        {en: "Which set contains only viral diseases?", hi: "निम्न में किस सेट में सारी विषाणु जनित बीमारी है?", opts: [{en:"TB, Herpes, Rabies", hi:"तपेदिक, हर्पीज, रेबीज"},{en:"Mumps, Rabies, Herpes", hi:"मम्स, रेबीज, हर्पीज"},{en:"Cancer, TB, Polio", hi:"कैंसर, तपेदिक, पोलियो"},{en:"Chickenpox, Cancer, TB", hi:"छोटीमाता, कैंसर, तपेदिक"}], ans: 1},
+        {en: "AIDS transmission occurs through?", hi: "एड्स का संचरण होता है - 1.लैंगिक संभोग 2.रक्ताधान 3.मच्छर 4.प्लेसेंटा", opts: [{en:"1, 2 and 3", hi:"1, 2 और 3 सही है"},{en:"1, 2 and 4", hi:"1, 2 और 4 सही है"},{en:"1, 3 and 4", hi:"1, 3 और 4 सही है"},{en:"1 and 3", hi:"1 और 3 सही है"}], ans: 1},
+        {en: "Cause of Polio is?", hi: "पोलियो का कारण है-", opts: [{en:"Bacteria", hi:"जीवाणु"},{en:"Virus", hi:"विषाणु"},{en:"Insects", hi:"कीट"},{en:"Fungi", hi:"कवक"}], ans: 1},
+        {en: "Salk vaccine is related to which disease?", hi: "साल्क टीका निम्नलिखित में से किस व्याधि से संबंधित है-", opts: [{en:"Smallpox", hi:"चेचक"},{en:"Polio", hi:"पोलियो"},{en:"Tetanus", hi:"टिटेनस"},{en:"TB", hi:"टी.बी."}], ans: 1},
+        {en: "Antibiotics have no effect on which pathogen?", hi: "निम्नलिखित में किस रोगाणु पर एंटीबायोटिक औषधियों का कोई असर नहीं होता है?", opts: [{en:"Bacteria", hi:"जीवाणु"},{en:"Virus", hi:"विषाणु"},{en:"Protozoa", hi:"प्रोटोजोआ"},{en:"Fungi", hi:"कवक"}], ans: 1},
+        {en: "Yellowing of skin and white part of eyes are symptoms of?", hi: "त्वचा एवं आँखों के सफेद भाग का पीला होना किस रोग के लक्षण है?", opts: [{en:"Conjunctivitis", hi:"कन्जंक्टिवाइटिस"},{en:"Arthritis", hi:"आर्थ्राइटिस"},{en:"Diphtheria", hi:"डायरिया"},{en:"Hepatitis", hi:"हेपेटाइटिस"}], ans: 3},
+        {en: "Which disease treatment only cures symptoms, not the root disease?", hi: "उपचार से केवल रोग के लक्षण ही ठीक हो पाते हैं, मूल रोग नहीं?", opts: [{en:"Influenza", hi:"इन्फ्लूएंजा"},{en:"Malaria", hi:"मलेरिया"},{en:"Filariasis", hi:"फाइलेरिया"},{en:"Tuberculosis", hi:"टिटबरकुलोसिस"}], ans: 0},
+        {en: "What did Edward Jenner discover?", hi: "एडवर्ड जेनर ने निम्नांकित में किसकी खोज की थी?", opts: [{en:"Bacteria", hi:"बैक्टीरिया की"},{en:"Virus", hi:"वायरस की"},{en:"Vaccine", hi:"टीका की"},{en:"Antibiotic", hi:"एंटीबायोटिक की"}], ans: 2},
+        {en: "A vaccine is?", hi: "टीका है-", opts: [{en:"Antigen", hi:"एंटीजन"},{en:"Antibody", hi:"एंटीबॉडी"},{en:"Both", hi:"एंटीजन तथा एंटीबॉडी दोनों"},{en:"None", hi:"इनमें से कोई नहीं"}], ans: 0},
+        {en: "Which disease spreads through infected blood, sperm, and breast milk?", hi: "संक्रमित रक्त, शुक्राणु तथा माँ के दूध से किस रोग के संक्रमण की सम्भावना होती है?", opts: [{en:"Malaria", hi:"मलेरिया"},{en:"Rabies", hi:"रेबिज"},{en:"Polio", hi:"पोलियो"},{en:"AIDS", hi:"AIDS (एड्स)"}], ans: 3},
+        {en: "Severity of which disease can be reduced by physiotherapy?", hi: "फिजियोथेरेपी द्वारा इनमें किस रोग की तीव्रता को कुछ कम किया जा सकता है?", opts: [{en:"AIDS", hi:"एड्स"},{en:"Polio", hi:"पोलियो"},{en:"Rabies", hi:"रेबिज"},{en:"Hepatitis", hi:"हेपेटाइटिस"}], ans: 1},
+        {en: "Which statement is NOT correct about Hepatitis?", hi: "निम्नलिखित में कौन-सा एक कथन सही नहीं है?", opts: [{en:"Hep-B spreads like HIV", hi:"हेपेटाइटिस B काफी कुछ HIV की तरह ही संचारित होता है"},{en:"Hep-C has vaccine, B does not", hi:"हेपेटाइटिस C का टीका होता है जबकि B का नहीं"},{en:"Hep-B/C count higher than HIV", hi:"हेपेटाइटिस B और C से संक्रमित व्यक्तियों की संख्या HIV से कई गुना अधिक है"},{en:"May remain symptomless for years", hi:"अनेक वर्षों तक इसके लक्षण दिखाई नहीं देते हैं"}], ans: 1},
+        {en: "Which disease is NOT spread by Tiger Mosquitoes?", hi: "निम्नलिखित रोगों में कौन टाइगर मच्छड़ों द्वारा संचारित नहीं होता है?", opts: [{en:"Yellow Fever", hi:"पीत ज्वर"},{en:"Dengue", hi:"डेंगू"},{en:"Chikungunya", hi:"चिकनगुनिया"},{en:"Japanese Encephalitis", hi:"जापानी एनसेफेलाइटिस"}], ans: 3},
+        {en: "Reason for Smallpox is?", hi: "चेचक (Small pox) होने का कारण है-", opts: [{en:"Rubiola virus", hi:"रुबिओला वायरस"},{en:"Variola virus", hi:"वैरियोला वायरस"},{en:"Varicella virus", hi:"वैरिसैला वायरस"},{en:"Myxo virus", hi:"मिक्सो वायरस"}], ans: 1},
+        {en: "Which pair is incorrect?", hi: "निम्नलिखित में कौन-सा विकल्प सही नहीं है?", opts: [{en:"Rubiola : Measles", hi:"रुबिओला वायरस : खसरा"},{en:"Variola : Smallpox", hi:"वैरियोला वायरस : चेचक"},{en:"Varicella : Chickenpox", hi:"वैरिसैला वायरस : छोटी माता"},{en:"Myxo : Plague", hi:"मिक्सो वायरस : प्लेग"}], ans: 3},
+        {en: "Which organ is affected in Jaundice?", hi: "पीलिया (Jaundice) या हेपेटाइटिस रोग में शरीर के कौन अंग प्रभावित होते हैं?", opts: [{en:"Kidney", hi:"वृक्क"},{en:"Liver", hi:"यकृत"},{en:"Lung", hi:"फेफड़ा"},{en:"Stomach", hi:"अमाशय"}], ans: 1},
+        {en: "Consider: 1. Hep-A spreads through blood/saliva. 2. Hep-B spreads through food/water.", hi: "1. हेपेटाइटिस A का संक्रमण रूधिर, लार आदि से होता है 2. हेपेटाइटिस B का संक्रमण भोजन या पानी द्वारा होता है", opts: [{en:"Only 1", hi:"केवल 1"},{en:"Only 2", hi:"केवल 2"},{en:"Both", hi:"1 तथा 2 दोनों"},{en:"Neither", hi:"न तो 1 न ही 2"}], ans: 3},
+        {en: "Smallpox vaccination involves?", hi: "चेचक के प्रति टीकाकरण में समावेश किया जाता है-", opts: [{en:"Infected cells", hi:"संक्रमित जों का"},{en:"Live antibodies", hi:"जीवित प्रतिरक्षियों का"},{en:"Activated germs", hi:"हर जर्मों का"},{en:"Weakened germs", hi:"दुर्बल जर्मों का"}], ans: 3},
+        {en: "Keeping pigs away helps in eradicating which disease?", hi: "सूअरों का मानव रिहायशी क्षेत्रों से दूर रखना किस रोग के उन्मूलन में सहायक है?", opts: [{en:"Malaria", hi:"मलेरिया"},{en:"Rabies", hi:"रेबिज"},{en:"Filariasis", hi:"हाथी पांव"},{en:"Japanese Encephalitis", hi:"जापानी एनसेफेलाइटिस"}], ans: 3},
+        {en: "Behavior of Rabid dogs?", hi: "रेबिज के वायरस में संक्रमित कुत्ते किस प्रकार के व्यवहार दर्शाते हैं?", opts: [{en:"Aggressive/Furious", hi:"अत्यंत क्रोधित एवं उग्र"},{en:"Dull/Silent", hi:"सुस्त एवं मौन होकर एकांत में"},{en:"Both A and B", hi:"A तथा B दोनों"},{en:"Neither", hi:"न तो A न B"}], ans: 2},
+        {en: "Which virus is known as 'Strike and Hide'?", hi: "'घात करो और छिप जाओ' नाम से विख्यात विषाणु कौन है?", opts: [{en:"RSV Virus", hi:"आर. एस. वी. विषाणु"},{en:"Dengue Virus", hi:"डाबेर विषाणु"},{en:"HIV Virus", hi:"एच. आई. वी. विषाणु"},{en:"None", hi:"उपरोक्त में से कोई नहीं"}], ans: 0},
+        {en: "What is deficient in Dengue fever?", hi: "डेंगू बुखार में मानव शरीर में किसकी कमी हो जाती है?", opts: [{en:"Platelets", hi:"प्लेटलेट्स"},{en:"Hemoglobin", hi:"हीमोग्लोबीन"},{en:"Water", hi:"जल"},{en:"Sugar", hi:"शर्करा"}], ans: 0},
+        {en: "Zika virus is transmitted by which mosquito?", hi: "जिका वायरस मनुष्य में किस मच्छर के द्वारा संचारित होता है?", opts: [{en:"Culex", hi:"क्यूलेक्स"},{en:"Aedes", hi:"ऐडिस"},{en:"Culicita", hi:"क्यूलिसीटा"},{en:"Anopheles", hi:"ऐनोफीलिस"}], ans: 1},
+        {en: "Zika virus affects which part of the body?", hi: "जिका वायरस मनुष्य के किस भाग को प्रभावित करता है?", opts: [{en:"Respiratory system", hi:"श्वसन तंत्र को"},{en:"Nervous system", hi:"तंत्रिका तंत्र को"},{en:"Liver", hi:"यकृत को"},{en:"Lungs", hi:"फेफड़ा को"}], ans: 1},
+        {en: "What is Ebola?", hi: "इबोला शब्द से आप क्या समझते हैं -", opts: [{en:"Virus outbreak in West Africa", hi:"पश्चिमी अफ्रीका में एक विषाणु रोग प्रकोप"},{en:"Virus outbreak in Bangladesh", hi:"बांग्लादेश में एक विषाणु रोग प्रकोप"},{en:"City in Syria destroyed by ISIS", hi:"आई. एस. आई. ए. द्वारा विनाश किया गया सीरिया का शहर"},{en:"None", hi:"इनमें से कोई नहीं"}], ans: 0},
+        {en: "Bacteriophage is a?", hi: "बैक्टीरियोफाज (Bacteriophage) है-", opts: [{en:"Virus", hi:"एक विषाणु"},{en:"Bacteria", hi:"एक जीवाणु"},{en:"Protozoa", hi:"एक प्रोटोजोआ"},{en:"Fungi", hi:"एक कवक"}], ans: 0},
+        {en: "What is found in Bacteriophage?", hi: "बैक्टीरियोफोज में पाया जाता है-", opts: [{en:"Protein/RNA", hi:"प्रोटीन, वसा RNA"},{en:"Protein/Fat", hi:"प्रोटीन और वसा"},{en:"Protein/DNA", hi:"प्रोटीन और DNA"},{en:"Carb/DNA", hi:"कार्बोहाइड्रेट और DNA"}], ans: 2},
+        {en: "HIV/AIDS suspicion symptoms in youth?", hi: "युवा व्यक्ति में HIV/AIDS होने की आशंका किन लक्षणों से होती है?", opts: [{en:"Chronic Polio", hi:"दीर्घ काल से स्थित पोलिया"},{en:"Severe Anemia", hi:"तीव्र अरक्तता"},{en:"Chronic Diarrhea", hi:"दीर्घकालीक प्रवाहिका"},{en:"Severe Headache", hi:"तीव्र दीर्घस्थायी शिरोवेदना"}], ans: 2},
+        {en: "Which disease has 'Test and Treat' policy?", hi: "किस रोग के लिये 'टेस्ट एण्ड ट्रीट' नीति प्रारम्भ की गई?", opts: [{en:"HIV", hi:"HIV"},{en:"TB", hi:"क्षय रोग"},{en:"Cancer", hi:"चेचक"},{en:"Polio", hi:"पोलियो"}], ans: 0},
+        {en: "HIV is which type of virus?", hi: "AIDS मानव प्रतिरक्षाहिनता विषाणु (HIV) के द्वारा होता है, जो है-", opts: [{en:"Retrovirus", hi:"रिट्रो विषाणु"},{en:"Lentivirus", hi:"लेप्टे विषाणु"},{en:"Arbovirus", hi:"अर्बो विषाणु"},{en:"Immuno virus", hi:"प्रतिरक्षा विषाणु"}], ans: 0},
+        {en: "Who developed the Polio vaccine?", hi: "किस व्यक्ति ने पोलियों का टीका विकसित किया?", opts: [{en:"Marie Curie", hi:"मैरी क्युरी"},{en:"Jonas Salk", hi:"जोनास एडवर्ड साल्क"},{en:"Louis Pasteur", hi:"लुईस पाश्चर"},{en:"Alfred Nobel", hi:"अल्फ्रेड बी. नोबेल"}], ans: 1},
+        {en: "Full form of ELISA?", hi: "ELISA का पूरा नाम है-", opts: [{en:"Enzyme Linked Immuno Sorbent Assay", hi:"एन्जाइम लिंक्ड इम्यूनो सोरवेण्ट एसे"},{en:"Enzyme Linked Ion Sorbent Assay", hi:"एन्जाइम लिंक्ड आयन सोरवेण्ट एसे"},{en:"Enzyme Linked Inductive Assay", hi:"एन्जाइम लिंक्ड इण्डक्टिव एसे"},{en:"None", hi:"उपरोक्त में से कोई नहीं"}], ans: 0},
+        {en: "Similarity between AIDS, Smallpox, and Polio?", hi: "एड्स, चेचक व पोलियो में क्या समानता है?", opts: [{en:"Common in children", hi:"ये छोटे बच्चों में जल्दी होते हैं"},{en:"No effective vaccine", hi:"इनके विरूद्ध कोई प्रभावी टीका नहीं बना है"},{en:"Caused by Virus", hi:"ये विषाणु द्वारा होते है"},{en:"Blood transfusion spread", hi:"इनका रोगाणु रूधिर आधान द्वारा संक्रमित हो सकता है"}], ans: 2},
+        {en: "Who discovered Bacteria?", hi: "जीवाणु की खोज किसने की?", opts: [{en:"Fleming", hi:"फ्लेमिंग"},{en:"Lamble", hi:"लेम्बल"},{en:"Leeuwenhoek", hi:"ल्यूवेनहॉक"},{en:"Temin", hi:"टेमिन"}], ans: 2},
+        {en: "Ancient bacteria are in which class?", hi: "सबसे प्राचीन जीवाणु के किस वर्ग में सम्मिलित किया गया है?", opts: [{en:"Eubacteria", hi:"यूबैक्टिरिया"},{en:"Archaebacteria", hi:"आर्कबैक्टिरिया"},{en:"Cyanobacteria", hi:"साइनोबैक्टिरिया"},{en:"Virus", hi:"वाइरस"}], ans: 1},
+        {en: "Who first stated germs cause disease?", hi: "सर्वप्रथम किसने यह मत व्यक्त किया कि जीवाणुओं से रोग फैलते हैं?", opts: [{en:"Louis Pasteur/Koch", hi:"लुई पाश्चर तथा कोच"},{en:"Leeuwenhoek", hi:"ल्यूवेनहॉक"},{en:"Ehrenberg", hi:"एहरेनबर्ग"},{en:"All", hi:"इनमें से सभी"}], ans: 0},
+        {en: "Bacteria are?", hi: "जीवाणु होते है-", opts: [{en:"Photosynthetic", hi:"प्रकाश संश्लेषी"},{en:"Chemosynthetic", hi:"रसायन संश्लेषी"},{en:"Parasitic", hi:"परपोषित"},{en:"All", hi:"इनमें से सभी"}], ans: 3},
+        {en: "Ribosomes found in Bacteria?", hi: "निम्नलिखित में कौन-सा राइबोसोम जीवाणु में पाये जाते हैं?", opts: [{en:"70S", hi:"70 S"},{en:"80S", hi:"80 S"},{en:"80S + 80S", hi:"80 S + 80 S"},{en:"90S", hi:"90 S"}], ans: 0},
+        {en: "Which statement is NOT correct?", hi: "निम्नलिखित में कौन-सा एक सही नहीं है?", opts: [{en:"Bacteria are unicellular", hi:"जीवाणु एककोशिकीय है"},{en:"Bacteria are omnipresent", hi:"जीवाणु सर्वव्यापी हैं"},{en:"Found alone or in groups", hi:"जीवाणु अकेले तथा समूहों में पाये जाते है"},{en:"Cell wall not found", hi:"जीवाणु में कोशिका भित्ति नहीं पायी जाती है"}], ans: 3},
+        {en: "Bacteria are considered plants because?", hi: "जीवाणु को पौधे माना गया है, क्योंकि-", opts: [{en:"Cannot move", hi:"ये गति नहीं कर सकते"},{en:"Found everywhere", hi:"ये सभी जगह पाये जाते हैं"},{en:"Have hard cell wall", hi:"इनमें कठोर कोशिका भित्ति होती है"},{en:"Reproduce by fission", hi:"ये विखण्डन द्वारा गुणन कर सकते है"}], ans: 2},
+        {en: "Correct statement about Bacteria?", hi: "जीवाणु से सम्बन्धित निम्न कथनों में कौन सही है?", opts: [{en:"All are Autotrophs", hi:"सभी जीवाणु स्वपोषी होते है"},{en:"All are Heterotrophs", hi:"सभी जीवाणु विविधपोषी होते है"},{en:"Mostly Heterotrophs, some Autotrophs", hi:"अधिकांश जीवाणु विविधपोषी होते है, किन्तु कुछ स्वपोषी होते है"},{en:"All are Photosynthetic", hi:"सभी जीवाणु प्रकाश-संश्लेषी होते है"}], ans: 2}
+    ];
+
+    let quizQues = [];
+    let currentIndex = 0;
+    let score = 0;
+    let timer;
+    let timeLeft;
+    let audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    function startQuiz() {
+        const manualTimer = parseInt(document.getElementById('manualTimer').value) || 0;
+        const shuffle = document.getElementById('shuffleToggle').checked;
+        
+        quizQues = [...questions];
+        if(shuffle) quizQues.sort(() => Math.random() - 0.5);
+        
+        document.getElementById('start-screen').classList.remove('active');
+        document.getElementById('quiz-screen').classList.add('active');
+        
+        timeLeft = manualTimer;
+        loadQuestion();
+    }
+
+    function loadQuestion() {
+        if(currentIndex >= quizQues.length) return showResults();
+        
+        const q = quizQues[currentIndex];
+        document.getElementById('eng-q').innerText = q.en;
+        document.getElementById('hin-q').innerText = q.hi;
+        document.getElementById('qCount').innerText = `Question: ${String(currentIndex + 1).padStart(2, '0')}/${quizQues.length}`;
+        document.getElementById('progressBar').style.width = `${((currentIndex) / quizQues.length) * 100}%`;
+        
+        const container = document.getElementById('options-container');
+        container.innerHTML = '';
+        
+        q.opts.forEach((opt, i) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerHTML = `<span class="opt-en">${opt.en}</span><span class="opt-hi">${opt.hi}</span>`;
+            btn.onclick = () => handleAnswer(i);
+            container.appendChild(btn);
+        });
+
+        resetTimer();
+    }
+
+    function resetTimer() {
+        clearInterval(timer);
+        const manualTimer = parseInt(document.getElementById('manualTimer').value) || 0;
+        if(manualTimer > 0) {
+            timeLeft = manualTimer;
+            const display = document.getElementById('timerBox');
+            display.innerText = `⏱ ${timeLeft}s`;
+            display.classList.remove('pulse-red');
+            
+            timer = setInterval(() => {
+                timeLeft--;
+                display.innerText = `⏱ ${timeLeft}s`;
+                if(timeLeft < 5) display.classList.add('pulse-red');
+                if(timeLeft <= 0) {
+                    clearInterval(timer);
+                    handleAnswer(-1);
+                }
+            }, 1000);
+        }
+    }
+
+    function handleAnswer(choice) {
+        clearInterval(timer);
+        const q = quizQues[currentIndex];
+        const buttons = document.querySelectorAll('.option-btn');
+        buttons.forEach(b => b.style.pointerEvents = 'none');
+
+        if(choice === q.ans) {
+            score++;
+            buttons[choice].classList.add('btn-correct');
+            document.getElementById('scoreBox').innerText = `Score: ${String(score).padStart(2, '0')}`;
+            playTone(880, 0.1); // Ting
+            initConfetti();
+        } else {
+            if(choice !== -1) buttons[choice].classList.add('btn-wrong');
+            buttons[q.ans].classList.add('btn-correct');
+            playTone(150, 0.3); // Buzz
+            showEmoji();
+        }
+
+        setTimeout(() => {
+            currentIndex++;
+            loadQuestion();
+        }, 1500);
+    }
+
+    function playTone(freq, duration) {
+        let osc = audioCtx.createOscillator();
+        let gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+    }
+
+    function showEmoji() {
+        const overlay = document.getElementById('emoji-overlay');
+        overlay.style.display = 'block';
+        overlay.classList.add('shake');
+        setTimeout(() => {
+            overlay.style.display = 'none';
+            overlay.classList.remove('shake');
+        }, 1000);
+    }
+
+    function initConfetti() {
+        const canvas = document.getElementById('confetti-canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        let pieces = [];
+        for(let i=0; i<50; i++) pieces.push({x: Math.random()*canvas.width, y: -20, r: Math.random()*6+2, d: Math.random()*10, c: `hsl(${Math.random()*360}, 100%, 50%)`});
+        
+        function draw() {
+            ctx.clearRect(0,0,canvas.width, canvas.height);
+            pieces.forEach(p => {
+                ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); ctx.fillStyle = p.c; ctx.fill();
+                p.y += 5; p.x += Math.sin(p.d);
+            });
+            if(pieces[0].y < canvas.height) requestAnimationFrame(draw);
+        }
+        draw();
+    }
+
+    function showResults() {
+        isQuizActive = false;
+        clearInterval(timer);
+        document.getElementById('quiz-screen').classList.remove('active');
+        document.getElementById('result-screen').classList.add('active');
+        document.getElementById('progressBar').style.width = '100%';
+        
+        const finalPercent = (score / quizQues.length) * 100;
+        document.getElementById('final-score').innerText = `${score} / ${quizQues.length}`;
+        
+        let msg = "";
+        if(finalPercent >= 80) msg = "🏆 Outstanding Performance!";
+        else if(finalPercent >= 50) msg = "👏 Well Done! Keep it up.";
+        else msg = "📚 Practice makes perfect! Try again.";
+        document.getElementById('result-msg').innerText = msg;
+    }
+</script>
+</body>
+</html>

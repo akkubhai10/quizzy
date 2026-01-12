@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Genetics Mastery Quiz (101-159)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --glass: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --correct: #2ecc71;
+            --wrong: #e74c3c;
+            --hindi-dim: #ddd;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(45deg, #6a11cb, #2575fc, #ff0844);
+            background-size: 400% 400%;
+            animation: meshGradient 15s ease infinite;
+            color: white;
+            overflow-x: hidden;
+        }
+
+        @keyframes meshGradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        #progress-bar {
+            position: fixed; top: 0; left: 0; height: 6px; background: #00f260;
+            box-shadow: 0 0 10px #00f260; transition: width 0.3s; z-index: 1000;
+        }
+
+        .glass-card {
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 25px;
+            padding: 30px;
+            width: 95%;
+            max-width: 700px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            margin: 20px;
+        }
+
+        /* Start Screen */
+        .start-ui { text-align: center; }
+        .input-group { margin: 20px 0; text-align: left; }
+        label { display: block; margin-bottom: 8px; font-size: 0.9rem; }
+        input[type="number"] {
+            width: 100%; padding: 12px; border-radius: 12px; border: none; background: rgba(255,255,255,0.2); color: white;
+        }
+        .shuffle-box { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+
+        /* Quiz UI */
+        .quiz-header { display: flex; justify-content: space-between; margin-bottom: 20px; font-weight: 600; }
+        .question-text { margin-bottom: 25px; }
+        .q-en { font-size: 1.3rem; font-weight: 700; display: block; line-height: 1.4; }
+        .q-hi { font-size: 1rem; color: var(--hindi-dim); display: block; margin-top: 5px; }
+
+        .options-grid { display: grid; gap: 15px; }
+        .opt-btn {
+            background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border);
+            padding: 15px; border-radius: 15px; cursor: pointer; text-align: left;
+            transition: all 0.2s; position: relative;
+        }
+        .opt-btn:hover { background: rgba(255,255,255,0.15); transform: scale(1.01); }
+        .opt-btn.correct { background: var(--correct) !important; border-color: white; }
+        .opt-btn.wrong { background: var(--wrong) !important; border-color: white; }
+        .opt-btn:disabled { cursor: default; }
+
+        .o-hi { font-size: 0.85rem; color: var(--hindi-dim); display: block; }
+
+        .timer-icon { font-size: 1.2rem; display: flex; align-items: center; gap: 5px; }
+        .pulse-red { color: #ff4757; animation: pulse 0.5s infinite alternate; }
+        @keyframes pulse { from { opacity: 1; transform: scale(1); } to { opacity: 0.7; transform: scale(1.1); } }
+
+        /* Effects */
+        #sad-emoji {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 150px; z-index: 9999; display: none;
+        }
+        .shake { animation: shake 0.5s; }
+        @keyframes shake {
+            0%, 100% { transform: translate(-50%, -50%); }
+            20%, 60% { transform: translate(-55%, -50%); }
+            40%, 80% { transform: translate(-45%, -50%); }
+        }
+
+        .confetti { position: fixed; width: 10px; height: 10px; z-index: 9998; pointer-events: none; }
+
+        /* Results */
+        .result-screen { text-align: center; display: none; }
+        .final-score { font-size: 4rem; font-weight: 800; margin: 20px 0; }
+        
+        .btn-action {
+            background: white; color: #6a11cb; border: none; padding: 15px 30px;
+            border-radius: 50px; font-weight: 700; cursor: pointer; transition: 0.2s;
+            margin-top: 10px;
+        }
+        .btn-action:hover { transform: scale(1.05); box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+        .btn-finish { background: rgba(255,255,255,0.1); color: white; border: 1px solid var(--glass-border); width: 100%; margin-top: 20px; }
+
+        [hidden] { display: none !important; }
+    </style>
+</head>
+<body>
+
+    <div id="progress-bar" style="width: 0%"></div>
+    <div id="sad-emoji">😢</div>
+
+    <div class="glass-card" id="main-container">
+        <div id="start-screen" class="start-ui">
+            <h1>Genetics Pro Quiz</h1>
+            <p>Bilingual (English + Hindi) | Questions 101-159</p>
+            
+            <div class="input-group">
+                <label>⏱ Timer per Question (Seconds) - 0 to disable</label>
+                <input type="number" id="timer-val" value="15" min="0">
+            </div>
+
+            <div class="input-group">
+                <label class="shuffle-box">
+                    <input type="checkbox" id="shuffle-toggle" checked> Randomize Question Order
+                </label>
+            </div>
+
+            <button class="btn-action" onclick="Quiz.init()">Start Quiz 🚀</button>
+        </div>
+
+        <div id="quiz-screen" hidden>
+            <div class="quiz-header">
+                <div id="counter">Question 01/59</div>
+                <div id="timer-display" class="timer-icon">⏳ <span id="time-left">15</span>s</div>
+                <div id="score-val">Score: 00</div>
+            </div>
+
+            <div class="question-text">
+                <span class="q-en" id="q-en">Question loading...</span>
+                <span class="q-hi" id="q-hi">प्रश्न लोड हो रहा है...</span>
+            </div>
+
+            <div class="options-grid" id="options"></div>
+
+            <button class="btn-action btn-finish" onclick="Quiz.finish()">Finish & Show Results 🏁</button>
+        </div>
+
+        <div id="result-screen" class="result-screen">
+            <h2>Quiz Results</h2>
+            <div class="final-score" id="f-score">85%</div>
+            <p id="result-msg">Outstanding!</p>
+            <div style="margin: 20px 0; font-size: 0.9rem;" id="f-stats"></div>
+            <button class="btn-action" onclick="location.reload()">Restart Quiz 🔄</button>
+        </div>
+    </div>
+
+<script>
+    const questionBank = [
+        { en: "Which of the following is NOT a chromosomal disorder?", hi: "निम्नलिखित में कौन एक आनुवंशिक विकार गुणसूत्रीय विकार के उदाहरण नहीं है?", o: [{en:"Turner Syndrome", hi:"टर्नर्स सिंड्रोम"},{en:"Down Syndrome", hi:"डाउनन्स सिंड्रोम"},{en:"Klinefelter Syndrome", hi:"क्लाइन फेल्टर्स सिंड्रोम"},{en:"Phenylketonuria", hi:"फीनाइलकीटो न्यूरिका"}], a: 3 },
+        { en: "Which of the following is a sex-linked disease?", hi: "निम्नलिखित में कौन लिंग सहलग्न (Sex-linked) रोग है?", o: [{en:"Haemophilia", hi:"हीमोफीलिया"},{en:"Color Blindness", hi:"वर्णांधता"},{en:"Both a and b", hi:"a तथा b दोनों"},{en:"Thalassemia", hi:"थैलेसीमिया"}], a: 2 },
+        { en: "Which of the following is an autosomal linked disease?", hi: "निम्नलिखित में कौन अलिंग सहलग्न (Autosome linked) रोग है?", o: [{en:"Sickle cell anemia", hi:"सिकल सेल एनिमिया"},{en:"Phenylketonuria", hi:"फीनाइलकीटोन्यूरिया"},{en:"Both a and b", hi:"a तथा b दोनों"},{en:"Haemophilia", hi:"हीमोफीलिया"}], a: 2 },
+        { en: "Which statement is true about Haemophilia and Color Blindness?", hi: "निम्नलिखित कथनों को कौन-सा सत्य है?", o: [{en:"Genes are on X-chromosome", hi:"हीमोफिलिया तथा वर्णांधता से संबंधित जीन X-गुणसूत्र पर पाए जाते हैं।"},{en:"Mother transfers traits to offspring", hi:"X-गुणसूत्र पर स्थित लक्षणों का स्थानांतरण माता से संतानों में होता है।"},{en:"Father does not transfer to offspring directly", hi:"X-गुणसूत्र पर स्थित लक्षणों का स्थानांतरण पिता से संतानों में नहीं होता है।"},{en:"All of these", hi:"इनमें से सभी"}], a: 3 },
+        { en: "What is the cause of Red-Green color blindness?", hi: "लाल-हरी वर्णांधता (Colour blindness) होने का कारण है-", o: [{en:"Excess alcohol", hi:"अत्यधिक मात्रा में शराब का सेवन"},{en:"X-chromosome inheritance", hi:"X-गुणसूत्र की वंशागति"},{en:"Y-chromosome inheritance", hi:"Y-गुणसूत्र की वंशागति"},{en:"Vitamin E deficiency", hi:"विटामिन E की कमी"}], a: 1 },
+        { en: "What is the cause of Haemophilia?", hi: "हीमोफिया होने कारण है-", o: [{en:"Excess alcohol", hi:"अत्यधिक मात्रा में शराब का सेवन"},{en:"X-chromosome inheritance", hi:"X-गुणसूत्र की वंशागति"},{en:"Y-chromosome inheritance", hi:"Y-गुणसूत्र की वंशागति"},{en:"Vitamin D deficiency", hi:"विटामिन D की कमी"}], a: 1 },
+        { en: "If a normal man marries a carrier woman for haemophilia, what will be the result?", hi: "अगर सामान्य पुरुष की शादी हीमोफिलिया रोग के वाहक स्त्री से होता है तो उनसे उत्पन्न-", o: [{en:"50% males will be affected", hi:"50 प्रतिशत नर संतान हीमोफिलिया से ग्रस्त होंगे"},{en:"50% females will be carriers", hi:"50 प्रतिशत मादा संतान हीमोफिलिया के वाहक होंगे"},{en:"50% male offspring will be normal", hi:"50 प्रतिशत नर संतान सामान्य होंगे"},{en:"All of these", hi:"इनमें से सभी"}], a: 3 },
+        { en: "If a normal woman marries a haemophilic man, all their male offspring will be:", hi: "अगर किसी सामान्य स्त्री का विवाह हीमोफिलिया से ग्रस्त पुरूष से होता तो उनसे उत्पन्न सभी नर संतान-", o: [{en:"Haemophilic", hi:"हीमोफिलिया से ग्रस्त होंगे"},{en:"Normal", hi:"सामान्य होंगे"},{en:"Carriers", hi:"हीमोफिलिया के वाहक होंगे"},{en:"None", hi:"इनमें से कोई नहीं"}], a: 1 },
+        { en: "If a colorblind woman marries a normal vision man:", hi: "एक वर्णांध स्त्री की शादी एक सामान्य दृष्टिवाले पुरूष के साथ होती है तो सन्तानों में क्या होगा?", o: [{en:"All daughters colorblind", hi:"सभी पुत्रियाँ वर्णांध"},{en:"All sons colorblind", hi:"सभी पुत्र वर्णांध"},{en:"Half sons colorblind", hi:"आधी पुत्र वर्णांध"},{en:"Half daughters colorblind", hi:"आधी पुत्रियाँ वर्णांध"}], a: 1 },
+        { en: "Marriage between a colorblind man and a daughter of a colorblind man results in:", hi: "एक वर्णांध पुरूष का विवाह दूसरे वर्णांध पुरूष के सामान्य पुत्री से हुआ हो तो सन्तानों में क्या होगा?", o: [{en:"All daughters colorblind", hi:"सभी पुत्रियाँ वर्णांध"},{en:"All sons colorblind", hi:"सभी पुत्र वर्णांध"},{en:"Half sons colorblind", hi:"आधे पुत्र वर्णांध"},{en:"No sons colorblind", hi:"कोई भी पुत्र वर्णांध नहीं"}], a: 2 },
+        { en: "Probability of colorblind sons from colorblind man and normal woman:", hi: "एक वर्णांध पुरूष व सामान्य महिला की सन्तानों में पुत्रों के वर्णांध होने की संभावना है-", o: [{en:"50%", hi:"50%"},{en:"33%", hi:"33%"},{en:"25%", hi:"25%"},{en:"0%", hi:"0%"}], a: 3 },
+        { en: "Haemophilia is a genetic disorder where:", hi: "हीमोफिलिया एक ऐसा आनुवांशिक विकार है-", o: [{en:"Blood fails to clot", hi:"मनुष्यों में रूधिर जमने की क्षमता नहीं के बराबर होती है।"},{en:"Red/Green color vision fails", hi:"रोगी लाल एवं हरे रंग की पहचान नहीं कर सकते हैं।"},{en:"RBC becomes sickle shaped", hi:"RBC अणु का आकार हँसिए की तरह हो जाता है।"},{en:"Phenylalanine accumulates", hi:"फीनाइल ऐलेनीन शरीर में जमा होने लगता है।"}], a: 0 },
+        { en: "Syndrome caused by loss of one chromosome (2n-1):", hi: "जब मनुष्य में द्विगुणित क्रोमोसोम में एक की कमी हो जाती है तब कौन-सा सिंड्रोम उत्पन्न होता है?", o: [{en:"Turner Syndrome", hi:"टर्नर्स सिंड्रोम"},{en:"Down Syndrome", hi:"डाउनन्स सिंड्रोम"},{en:"Klinefelter Syndrome", hi:"क्लाइनफेल्टर्स सिंड्रोम"},{en:"All", hi:"इनमें से सभी"}], a: 0 },
+        { en: "Syndrome caused by change in sex chromosome:", hi: "लिंग गुणसूत्र में परिवर्तन होने पर उत्पन्न होने वाला सिंड्रोम है-", o: [{en:"Turner Syndrome", hi:"टर्नर्स सिंड्रोम"},{en:"Down Syndrome", hi:"डाउनन्स सिंड्रोम"},{en:"Klinefelter Syndrome", hi:"क्लाइनफेल्टर्स सिंड्रोम"},{en:"Both a and c", hi:"a तथा c दोनों"}], a: 3 },
+        { en: "Chromosome details for Turner Syndrome:", hi: "टर्नर्स लक्षण वाले क्रोमोसोम का विवरण है?", o: [{en:"44A + XO", hi:"44A + XO"},{en:"44A + XXX", hi:"44A + XXX"},{en:"44A + XXY", hi:"44A + XXY"},{en:"44A + XYY", hi:"44A + XYY"}], a: 0 },
+        { en: "Chromosome details for Klinefelter Syndrome:", hi: "क्लाइन फेल्टर्स लक्षण वाले क्रोमोसोम का विवरण है-", o: [{en:"44A + XO", hi:"44A + XO"},{en:"44A + XXX", hi:"44A + XXX"},{en:"44A + XXY", hi:"44A + XXY"},{en:"44A + XYY", hi:"44A + XYY"}], a: 2 },
+        { en: "Example of trisomy (2n+1) disorder:", hi: "निम्नलिखित में कौन-से गुणसूत्रीय विकार ट्राइसौमी (2n + 1) के उदाहरण हैं-", o: [{en:"Down Syndrome", hi:"डाउनन्स सिंड्रोम"},{en:"Klinefelter Syndrome", hi:"क्लाइनफेल्टर्स सिंड्रोम"},{en:"Turner Syndrome", hi:"टर्नर्स सिंड्रोम"},{en:"Both a and b", hi:"a तथा b दोनों"}], a: 3 },
+        { en: "Example of Monosomy (2n-1):", hi: "निम्नलिखित में कौन-से गुणसूत्रीय विकार मोनोसोमी (2n-1) के उदाहरण हैं?", o: [{en:"Turner Syndrome", hi:"टर्नर्स सिंड्रोम"},{en:"Down Syndrome", hi:"डाउनन्स सिंड्रोम"},{en:"Klinefelter Syndrome", hi:"क्लाइनफेल्टर्स सिंड्रोम"},{en:"All", hi:"इनमें से सभी"}], a: 0 },
+        { en: "Which statement is INCORRECT?", hi: "निम्नलिखित में कौन-सा कथन सही नहीं है?", o: [{en:"Turner symptoms in Females", hi:"टर्नर्स सिंड्रोम का लक्षण नारियों (Female) में पाया जाता है।"},{en:"Down Syndrome kids live normal", hi:"डाउनन्स सिंड्रोम से ग्रसित बच्चे सामान्य जीवन जी सकते हैं।"},{en:"Klinefelter symptoms in Males", hi:"क्लाइन फेल्टर्स का लक्षण पुरूषों में पाया जाता है।"},{en:"All of these", hi:"इनमें से सभी"}], a: 1 },
+        { en: "When was the Human Genome Project started?", hi: "मानव कोशिका में मिलने वाले सभी 46 क्रोमोसोम के संपूर्ण DNA अनुक्रम को पता लगाने की महत्वाकांक्षी परियोजना 'मानव जीनोम परियोजना' कब शुरू की गई ?", o: [{en:"1987", hi:"1987"},{en:"1990", hi:"1990"},{en:"1997", hi:"1997"},{en:"2003", hi:"2003"}], a: 1 },
+        { en: "Goals of Human Genome Project:", hi: "मानव जीनोम परियोजना शुरू करने के पीछे किस लक्ष्य को ध्यान में रखा गया था?", o: [{en:"Identify all genes", hi:"मानव कोशिका में पाये जाने वाले DNA में अवस्थित सभी जीनों के बारे में जानकारी प्राप्त करना"},{en:"Determine sequence of base pairs", hi:"सभी मानव DNA के निर्माण में लगे नाइट्रोजनी क्षार युग्मों के अनुक्रमों का निर्धारण करना"},{en:"Both a and b", hi:"a तथा b दोनों"},{en:"None", hi:"इनमें से कोई नहीं"}], a: 2 },
+        { en: "A colorblind person sees red as:", hi: "वर्णांध व्यक्ति को लाल रंग दिखाई देता है-", o: [{en:"Yellow", hi:"पीला"},{en:"Blue", hi:"नीला"},{en:"Green", hi:"हरा"},{en:"Violet", hi:"बैंगनी"}], a: 2 },
+        { en: "Initial development of DNA Fingerprinting was by:", hi: "DNA फिंगर प्रिंटिंग का प्रारंभिक विकास किसके द्वारा किया गया ?", o: [{en:"Frederick Sanger", hi:"फ्रेडरिक सेंगर"},{en:"Alec Jeffreys", hi:"एलेक जेफरीज"},{en:"Dr. Lalji Singh", hi:"डॉ. लाल सिंह"},{en:"H. Khorana", hi:"हरगोबिंद खुराना"}], a: 1 },
+        { en: "Chromosomes contain:", hi: "गुणसूत्र में होते है-", o: [{en:"DNA and Lipids", hi:"DNA और लिपिड"},{en:"RNA and Amino acids", hi:"RNA और एमिनो एसिड"},{en:"DNA and Proteins", hi:"DNA और प्रोटीन"},{en:"RNA and Sugars", hi:"RNA और सुगर"}], a: 2 },
+        { en: "DNA Fingerprinting is used in:", hi: "DNA फिंगर प्रिंटिंग का उपयोग किया जाता है-", o: [{en:"Criminal identification", hi:"अपराधियों को पहचानने में"},{en:"Paternity disputes", hi:"संदिग्ध माता-पिता के बच्चे"},{en:"Disaster identification", hi:"मृत व्यक्तियों के नजदीकी संबंध जानने में"},{en:"All of these", hi:"इनमें से सभी"}], a: 3 },
+        { en: "DNA Fingerprinting identifies similarities using:", hi: "DNA फिंगर प्रिंटिंग में DNA संरचना की समानताएँ एवं विभिन्नताएँ जिसके द्वारा सिद्ध किया जाता है-", o: [{en:"Southern Blotting", hi:"साउदर्न ब्लॉटिंग टेक्निक"},{en:"Cellular Maturation", hi:"कोशिकीय परिघटना"},{en:"Nuclear Fission", hi:"नाभिकीय विखंडन"},{en:"Conservation Laws", hi:"ऊर्जा-संरक्षण सिद्धांत"}], a: 0 },
+        { en: "Sequence change within a gene is called:", hi: "जीन के भीतर अनुक्रम आधार परिवर्तन कहलाता है-", o: [{en:"Reproduction", hi:"प्रजनन"},{en:"Replication", hi:"प्रतिरूपण"},{en:"Mutation", hi:"उत्परिवर्तन"},{en:"Combination", hi:"संयोजन"}], a: 2 },
+        { en: "Random change in gene frequency is:", hi: "जीन की बारंबारता में निरूद्देश्य होने वाला परिवर्तन क्या कहलाता है ?", o: [{en:"Genetics", hi:"आनुवंशिकी"},{en:"Evolution", hi:"जैव विकास"},{en:"Genetic Drift", hi:"आनुवंशिक विचलन"},{en:"Microevolution", hi:"सूक्ष्मविकास"}], a: 2 },
+        { en: "AAXO chromosome condition results in:", hi: "मनुष्य में AAXO गुणसूत्र रहने पर क्या होता है ?", o: [{en:"Normal Male", hi:"सामान्य नर"},{en:"Normal Female", hi:"सामान्य मादा"},{en:"Abnormal Male", hi:"असामान्य नर"},{en:"Abnormal Female", hi:"असामान्य मादा"}], a: 3 },
+        { en: "Branch of biology dealing with genome data analysis:", hi: "जीव विज्ञान की वह शाखा जिससे जीवों के जीनोम संबंधित आँकड़े का संग्रह, विश्लेषण एवं इसके उपयोग की जानकारी प्राप्त होती है, कहते हैं-", o: [{en:"Genetics", hi:"Genetics"},{en:"Bioinformatics", hi:"Bioinformatics"},{en:"Biotechnology", hi:"Biotechnology"},{en:"Heredity Science", hi:"Heredity Science"}], a: 1 },
+        { en: "Units controlling traits are:", hi: "लक्षणों को नियंत्रित करने वाले इकाई कौन है?", o: [{en:"Gene", hi:"जीन"},{en:"Chromosome", hi:"गुणसूत्र"},{en:"Allele", hi:"एलील"},{en:"Nucleotide", hi:"न्यूक्लियोटाइड"}], a: 0 },
+        { en: "Phenotypic ratio in Mendel's dihybrid F2 generation:", hi: "मेंडल के डाइहाइब्रिड क्रॉस में F2 पीढ़ी में उत्पन्न मटर के पौधे का लक्षणरूपी अनुपात क्या था?", o: [{en:"3:1", hi:"3:1"},{en:"1:2:1", hi:"1:2:1"},{en:"9:3:3:1", hi:"9:3:3:1"},{en:"9:4:2:1", hi:"9:4:2:1"}], a: 2 },
+        { en: "Chemical nature of a gene:", hi: "जीन की रसायनिक संरचना क्या है-", o: [{en:"DNA", hi:"DNA"},{en:"RNA", hi:"RNA"},{en:"Protein", hi:"प्रोटीन"},{en:"All", hi:"इनमें से सभी"}], a: 0 },
+        { en: "Chromosome count in male Drosophila melanogaster:", hi: "नर ड्रोसोफिला मेलानोगेस्टर में क्रोमोसोम की संख्या कितनी होती है ?", o: [{en:"6 Autosome + XY", hi:"6 Autosome + XY"},{en:"6 Autosome + XX", hi:"6 Autosome + XX"},{en:"22 Autosome + XY", hi:"22 Autosome + XY"},{en:"22 Autosome + XX", hi:"22 Autosome + XX"}], a: 0 },
+        { en: "Which is incorrectly matched?", hi: "निम्नलिखित में कौन-सा विकल्प सही सुमेलित नहीं है?", o: [{en:"Pure Tall - TT", hi:"शुद्ध लंबा - TT"},{en:"Pure Dwarf - tt", hi:"शुद्ध बौना - tt"},{en:"Hybrid Tall - Tt", hi:"संकर लंबा - Tt"},{en:"First Gen - F2", hi:"प्रथम पीढ़ी - F2"}], a: 3 },
+        { en: "Nitrogen bases in DNA are:", hi: "डी.एन.ए. में कौन-कौन नाइट्रोजन क्षार है ?", o: [{en:"A, C, G, T", hi:"एडीनीन, साइटोसीन, गुआनीन, थाइमीन"},{en:"A, G, C, U", hi:"एडीनीन, गुआनीन, साइटोसीन, यूरासील"},{en:"A, C, U, T", hi:"एडीनीन, साइटोसीन, यूरासील, थाइमीन"},{en:"A, G, U, T", hi:"एडीनीन, गुआनीन, यूरासील, थाइमीन"}], a: 0 },
+        { en: "Phenotypic ratio of Mendel's monohybrid F2:", hi: "मेंडल के मोनोहाइब्रिड क्रॉस में F2 पीढ़ी में लक्षण-प्रारूपी अनुपात क्या था?", o: [{en:"3:1", hi:"3:1"},{en:"1:2:1", hi:"1:2:1"},{en:"9:3:3:1", hi:"9:3:3:1"},{en:"1:2:2:4:1:2:1:2:1", hi:"1:2:2:4:1:2:1:2:1"}], a: 0 },
+        { en: "DNA components are:", hi: "डी.एन.ए. का निर्माण किन-किन से हुआ है ?", o: [{en:"Ribose, Phosphate, N-Base", hi:"राइबोज सुगर, फॉस्फेट एवं नाइट्रोजन क्षार"},{en:"Deoxyribose, Phosphate, N-Base", hi:"डीऑक्सीराइबोज सुगर, फॉस्फेट एवं नाइट्रोजन क्षार"},{en:"Deoxyribose, Phosphate, Nucleotide", hi:"डीऑक्सीराइबोज सुगर, फॉस्फेट एवं न्यूक्लियोटाइड्स"},{en:"Deoxyribose, Sugar, Nucleoside", hi:"डीऑक्सीराइबोज सुगर, फॉस्फेट एवं न्यूक्लियोसाइड्स"}], a: 1 },
+        { en: "Genetic makeup of an organism is:", hi: "किसी जीव की जीनी संरचना उस जीव का क्या कहलाता है?", o: [{en:"Phenotype", hi:"फेनोटाइप"},{en:"Dominant", hi:"प्रभावी गुण"},{en:"Genotype", hi:"जीनोटाइप"},{en:"Recessive", hi:"अप्रभावी गुण"}], a: 2 },
+        { en: "Active genes are found in which part of chromosome?", hi: "क्रोमोसोम के किस भाग में क्रियाशील जीन पाये जाते हैं?", o: [{en:"Full length", hi:"पूरी लम्बाई से"},{en:"Chromomere", hi:"क्रोमोमियर में"},{en:"Heterochromatin", hi:"हेटेरोक्रोमोटिन में"},{en:"Euchromatin", hi:"यूक्रोमैटीन में"}], a: 3 },
+        { en: "Average nitrogen base count in a gene:", hi: "प्रत्येक जीन में औसत नाइट्रोजन क्षार की संख्या होती है-", o: [{en:"3000", hi:"3000"},{en:"300", hi:"300"},{en:"30", hi:"30"},{en:"3", hi:"3"}], a: 0 },
+        { en: "Main enzyme in DNA Replication:", hi: "DNA द्विगुणन (Replication) में किस एंजाइम की मुख्य भूमिका रहती है-", o: [{en:"DNA Polymerase", hi:"DNA पॉलीमरेज"},{en:"RNA Polymerase", hi:"RNA पॉलीमरेज"},{en:"Lipase", hi:"लाइपेज"},{en:"Transcriptase", hi:"ट्रांसक्रिप्टेज"}], a: 0 },
+        { en: "Enzyme that cuts DNA molecules:", hi: "वह एंजाइम जो DNA अणु को खंडों में काटता है, कहलाता है-", o: [{en:"DNA Ligase", hi:"DNA लाइगेज"},{en:"DNA Polymerase", hi:"DNA पॉलीमरेज"},{en:"DNA Gyrase", hi:"DNA जाइरेज"},{en:"Restriction Enzyme", hi:"रेस्ट्रिक्शन एंजाइम"}], a: 3 },
+        { en: "Length of one turn of DNA helix:", hi: "DNA के एक चक्कर की लंबाई कितनी होती है ?", o: [{en:"34 CM", hi:"34 CM"},{en:"34 nm", hi:"34 नैनोमीटर"},{en:"34 mm", hi:"34 mm"},{en:"34 Å", hi:"34 Å"}], a: 3 },
+        { en: "Who discovered sex chromosomes?", hi: "सेक्स क्रोमोसोम की खोज किसने की ?", o: [{en:"Balbiani", hi:"बाल्बियानी"},{en:"McClung", hi:"मैककलंग"},{en:"Henking", hi:"हेंकिंग"},{en:"Morgan", hi:"मॉर्गन"}], a: 1 },
+        { en: "Who discovered Y-chromosome?", hi: "Y-क्रोमोसोम का खोज किसके द्वारा किया गया ?", o: [{en:"Balbiani", hi:"बाल्बियानी"},{en:"McClung", hi:"मैककलंग"},{en:"Henking", hi:"हेंकिंग"},{en:"Stevens/Morgan", hi:"स्टीवंस/मॉर्गन"}], a: 3 },
+        { en: "From which country was Mendel a monk?", hi: "मेंडल किस देश में ईसाइयों के एक मठ के पादरी थे ?", o: [{en:"Australia", hi:"ऑस्ट्रेलिया"},{en:"England", hi:"इंग्लैंड"},{en:"France", hi:"फ्रांस"},{en:"Austria", hi:"ऑस्ट्रिया"}], a: 3 },
+        { en: "DNA Fingerprinting is used for:", hi: "DNA फिंगर प्रिंटिंग का कार्य है-", o: [{en:"Identifying parents", hi:"संदिग्ध माता-पिता की जानकारी प्राप्त करना"},{en:"Identifying children", hi:"संतान के सही माता-पिता की पहचान करना"},{en:"Forensic identification", hi:"फोरेंसिक विज्ञान प्रयोगशाला में अपराधियों की पहचान करना"},{en:"All", hi:"इनमें से सभी"}], a: 3 },
+        { en: "How does genetic variation occur in sexual reproduction?", hi: "लैंगिक जनन से आनुवंशिक विचरण कैसे होता है ?", o: [{en:"Gene shuffling", hi:"जीन के सम्मिश्रण से"},{en:"Chromosome change", hi:"क्रोमोसोम के बदलाव से"},{en:"Gene mixing", hi:"जीन के मिश्रण में"},{en:"All", hi:"उपर्युक्त सभी"}], a: 3 },
+        { en: "Genetics is the study of:", hi: "आनुवंशिकी निम्नलिखित में किसका अध्ययन है ?", o: [{en:"Mendel's Laws", hi:"मेंडल का नियम"},{en:"Heredity and Variation", hi:"आनुवंशिकता और विचरण"},{en:"DNA Structure", hi:"DNA संरचना"},{en:"Evolution", hi:"जैव विकास"}], a: 1 },
+        { en: "Somatic variation is:", hi: "कायिक विभिन्नता किस प्रकार की होती है ?", o: [{en:"Hereditary", hi:"आनुवंशिक"},{en:"Acquired", hi:"उपार्जित"},{en:"Both", hi:"a तथा b दोनों"},{en:"None", hi:"इनमें से कोई नहीं"}], a: 1 },
+        { en: "Specific segments of DNA that produce DNA:", hi: "गुणसूत्रों के DNA के विशिष्ट भाग जो एक विशेष प्रकार के DNA का निर्माण करते हैं, वह है-", o: [{en:"Chlorophyll", hi:"क्लोरोफिल"},{en:"Histone", hi:"हिस्टोन"},{en:"Gene", hi:"जीन"},{en:"Allele", hi:"एलील"}], a: 2 },
+        { en: "Red-Green color blindness is known as:", hi: "मनुष्य में लाल-हरी वर्णांधता को जाना जाता है ?", o: [{en:"Protanopia", hi:"प्रोटोनीपिया के रूप में"},{en:"Deuteranopia", hi:"ड्यूटेरानोपिया के रूप में"},{en:"Both a and b", hi:"a तथा b दोनों"},{en:"Marfan Syndrome", hi:"मार्फेन्स सिंड्रोम के रूप में"}], a: 2 },
+        { en: "Traits whose genes are on X-chromosome are:", hi: "लक्षण जिनके जीन X-गुणसूत्र पर होते हैं, कहलाते हैं-", o: [{en:"Sex influenced", hi:"लिंग प्रभावित"},{en:"Sex linked", hi:"लिंग सहलग्न"},{en:"Sex limited", hi:"लिंग सीमित"},{en:"None", hi:"इनमें से कोई नहीं"}], a: 1 },
+        { en: "Who discovered sex-linked inheritance?", hi: "लिंग-सहलग्न वंशागति के खोजकर्त्ता कौन थे ?", o: [{en:"Morgan", hi:"मॉर्गन"},{en:"McClung", hi:"मैककलंग"},{en:"Landsteiner", hi:"लैंडस्टीनर"},{en:"Mendel", hi:"मेंडल"}], a: 0 },
+        { en: "What is an Allosome?", hi: "एलोसोम होता है-", o: [{en:"Cell organelle", hi:"कोशिकांग"},{en:"Plant hormone", hi:"पादप हॉर्मोन"},{en:"Allele", hi:"एलील"},{en:"Sex chromosome", hi:"लिंग गुणसूत्र"}], a: 3 },
+        { en: "Plasmids are:", hi: "प्लाज्मिड (Plasmid) होते हैं-", o: [{en:"Extrachromosomal DNA in bacteria", hi:"जीवाणु के आनुवंशिक पदार्थ जो क्रोमोसोम से बाहर होते हैं।"},{en:"Genetic unit of bacteria", hi:"जीवाणु की आनुवंशिक इकाई"},{en:"Bacterial disease", hi:"जीवाणु का एक रोग"},{en:"Bacterial antibiotic", hi:"जीवाणु से प्राप्त प्रतिजैविक"}], a: 0 },
+        { en: "Which trait in humans cannot be hereditary?", hi: "मानव का इनमें कौन-सा लक्षण आनुवंशिकी नहीं हो सकता ?", o: [{en:"Influenza", hi:"इन्फ्लूएंजा"},{en:"Enamel-less teeth", hi:"इनेमल विहीन दाँत"},{en:"Broad nostrils", hi:"चौड़े नथुने"},{en:"Color blindness", hi:"वर्णांधता"}], a: 0 },
+        { en: "Who discovered Jumping Genes?", hi: "जंपिंग जीन की खोज किसने की ?", o: [{en:"Barbara McClintock", hi:"बारबरा मैकलिन्टॉक"},{en:"J. Monod", hi:"जे. मोनाड्"},{en:"Beadle and Tatum", hi:"बीडल एवं टैटम"},{en:"Garrod", hi:"गैरड"}], a: 0 }
+    ];
+
+    const Quiz = {
+        currentQ: 0,
+        score: 0,
+        timer: null,
+        data: [],
+        audioCtx: null,
+
+        initAudio() {
+            this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        },
+
+        playSound(freq, type) {
+            if (!this.audioCtx) return;
+            const osc = this.audioCtx.createOscillator();
+            const gain = this.audioCtx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, this.audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.1, this.audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, this.audioCtx.currentTime + 0.3);
+            osc.connect(gain);
+            gain.connect(this.audioCtx.destination);
+            osc.start();
+            osc.stop(this.audioCtx.currentTime + 0.3);
+        },
+
+        init() {
+            this.initAudio();
+            const shuffle = document.getElementById('shuffle-toggle').checked;
+            this.data = shuffle ? [...questionBank].sort(() => Math.random() - 0.5) : [...questionBank];
+            
+            document.getElementById('start-screen').hidden = true;
+            document.getElementById('quiz-screen').hidden = false;
+            this.loadQuestion();
+        },
+
+        loadQuestion() {
+            if (this.currentQ >= this.data.length) return this.finish();
+            
+            const q = this.data[this.currentQ];
+            document.getElementById('q-en').innerText = q.en;
+            document.getElementById('q-hi').innerText = q.hi;
+            document.getElementById('counter').innerText = `Question ${this.currentQ + 1}/${this.data.length}`;
+            
+            const optionsDiv = document.getElementById('options');
+            optionsDiv.innerHTML = '';
+            
+            q.o.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = 'opt-btn';
+                btn.innerHTML = `<span>${opt.en}</span><span class="o-hi">${opt.hi}</span>`;
+                btn.onclick = () => this.checkAnswer(idx, btn);
+                optionsDiv.appendChild(btn);
+            });
+
+            this.updateProgress();
+            this.startTimer();
+        },
+
+        startTimer() {
+            clearInterval(this.timer);
+            const limit = parseInt(document.getElementById('timer-val').value);
+            if (limit <= 0) {
+                document.getElementById('timer-display').hidden = true;
+                return;
+            }
+
+            document.getElementById('timer-display').hidden = false;
+            let time = limit;
+            const display = document.getElementById('time-left');
+            display.innerText = time;
+            display.parentElement.classList.remove('pulse-red');
+
+            this.timer = setInterval(() => {
+                time--;
+                display.innerText = time;
+                if (time < 5) display.parentElement.classList.add('pulse-red');
+                if (time <= 0) {
+                    clearInterval(this.timer);
+                    this.checkAnswer(-1, null);
+                }
+            }, 1000);
+        },
+
+        checkAnswer(idx, btn) {
+            clearInterval(this.timer);
+            const correctIdx = this.data[this.currentQ].a;
+            const buttons = document.querySelectorAll('.opt-btn');
+            buttons.forEach(b => b.disabled = true);
+
+            if (idx === correctIdx) {
+                btn.classList.add('correct');
+                this.score++;
+                this.playSound(880, 'sine'); // Ting
+                this.spawnConfetti();
+            } else {
+                if (btn) btn.classList.add('wrong');
+                buttons[correctIdx].classList.add('correct');
+                this.playSound(110, 'sawtooth'); // Buzz
+                this.showSad();
+            }
+
+            document.getElementById('score-val').innerText = `Score: ${String(this.score).padStart(2, '0')}`;
+            
+            setTimeout(() => {
+                this.currentQ++;
+                this.loadQuestion();
+            }, 1500);
+        },
+
+        updateProgress() {
+            const p = (this.currentQ / this.data.length) * 100;
+            document.getElementById('progress-bar').style.width = p + '%';
+        },
+
+        showSad() {
+            const el = document.getElementById('sad-emoji');
+            el.style.display = 'block';
+            el.classList.add('shake');
+            setTimeout(() => {
+                el.style.display = 'none';
+                el.classList.remove('shake');
+            }, 1000);
+        },
+
+        spawnConfetti() {
+            for(let i=0; i<30; i++) {
+                const div = document.createElement('div');
+                div.className = 'confetti';
+                div.style.left = Math.random() * 100 + 'vw';
+                div.style.top = '-10px';
+                div.style.backgroundColor = `hsl(${Math.random()*360}, 70%, 50%)`;
+                document.body.appendChild(div);
+                
+                const anim = div.animate([
+                    { transform: 'translateY(0) rotate(0deg)', opacity: 1 },
+                    { transform: `translateY(100vh) rotate(${Math.random()*360}deg)`, opacity: 0 }
+                ], { duration: 2000, easing: 'ease-out' });
+                
+                anim.onfinish = () => div.remove();
+            }
+        },
+
+        finish() {
+            clearInterval(this.timer);
+            document.getElementById('quiz-screen').hidden = true;
+            document.getElementById('result-screen').style.display = 'block';
+            document.getElementById('progress-bar').style.width = '100%';
+
+            const total = this.currentQ || 1;
+            const percent = Math.round((this.score / total) * 100);
+            document.getElementById('f-score').innerText = percent + '%';
+            document.getElementById('f-stats').innerText = `Attempted: ${total} | Correct: ${this.score}`;
+            
+            let msg = "";
+            if (percent >= 80) msg = "🏆 Outstanding Performance!";
+            else if (percent >= 50) msg = "👏 Well Done! Keep it up.";
+            else msg = "📚 Practice makes perfect! Try again.";
+            document.getElementById('result-msg').innerText = msg;
+        }
+    };
+</script>
+</body>
+</html>

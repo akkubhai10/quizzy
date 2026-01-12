@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Biology Quiz | जीव विज्ञान प्रश्नोत्तरी</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --text-primary: #ffffff;
+            --text-secondary: #dddddd;
+            --correct: #2ecc71;
+            --wrong: #e74c3c;
+            --accent: #f39c12;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #6610f2, #007bff, #e83e8c);
+            background-attachment: fixed;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow-x: hidden;
+            color: var(--text-primary);
+        }
+
+        /* Glassmorphism Card */
+        .quiz-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 25px;
+            width: 95%;
+            max-width: 700px;
+            padding: 30px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+            position: relative;
+            z-index: 10;
+        }
+
+        .screen { display: none; flex-direction: column; }
+        .active { display: flex; animation: fadeIn 0.5s ease-out; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Progress Bar */
+        .progress-container {
+            position: absolute; top: 0; left: 0; width: 100%; height: 6px;
+            background: rgba(255, 255, 255, 0.05); border-radius: 25px 25px 0 0;
+        }
+        .progress-bar { width: 0%; height: 100%; background: var(--correct); transition: width 0.3s ease; box-shadow: 0 0 10px var(--correct); }
+
+        /* HUD */
+        .hud { display: flex; justify-content: space-between; margin-bottom: 20px; font-weight: 600; font-size: 0.9rem; }
+        #timer-display { font-size: 1.2rem; }
+        .pulse-red { color: var(--wrong); animation: pulse 0.8s infinite; }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+
+        /* Content Styles */
+        h1 { text-align: center; margin-bottom: 20px; font-weight: 700; font-size: 1.8rem; }
+        .question-box { margin-bottom: 25px; }
+        .q-en { font-weight: 700; font-size: 1.2rem; margin-bottom: 8px; line-height: 1.4; }
+        .q-hi { color: var(--text-secondary); font-size: 1rem; line-height: 1.4; }
+
+        .options-grid { display: grid; gap: 12px; }
+        .option-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 15px;
+            color: white;
+            text-align: left;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            flex-direction: column;
+        }
+        .option-btn:hover:not(:disabled) { background: rgba(255, 255, 255, 0.15); transform: scale(1.02); }
+        .opt-hi { font-size: 0.85rem; color: #ddd; margin-top: 4px; }
+
+        .correct { background: var(--correct) !important; border-color: white; }
+        .wrong { background: var(--wrong) !important; border-color: white; }
+
+        /* Feedback Elements */
+        #emoji-overlay {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 100px; display: none; z-index: 1000; pointer-events: none;
+        }
+        .shake { animation: shakeAnim 0.5s; }
+        @keyframes shakeAnim { 0%, 100% { margin-left: 0; } 20%, 60% { margin-left: -15px; } 40%, 80% { margin-left: 15px; } }
+
+        /* Start Screen UI */
+        .settings { margin-bottom: 25px; display: flex; flex-direction: column; gap: 15px; }
+        .setting-item { display: flex; justify-content: space-between; align-items: center; }
+        input[type="number"] { background: var(--glass-bg); border: 1px solid var(--glass-border); color: white; padding: 5px 10px; border-radius: 8px; width: 80px; }
+        .switch { position: relative; display: inline-block; width: 50px; height: 26px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--correct); }
+        input:checked + .slider:before { transform: translateX(24px); }
+
+        .btn-main {
+            background: var(--text-primary); color: #222; border: none; padding: 15px;
+            border-radius: 15px; font-weight: 700; cursor: pointer; transition: 0.3s;
+            text-align: center; font-size: 1.1rem; text-decoration: none;
+        }
+        .btn-main:hover { transform: scale(1.05); box-shadow: 0 0 20px rgba(255,255,255,0.4); }
+
+        .finish-btn { margin-top: 20px; background: transparent; border: 1px solid var(--glass-border); color: #ddd; font-size: 0.8rem; padding: 10px; cursor: pointer; border-radius: 10px; }
+
+        /* Result Screen */
+        .result-score { font-size: 3.5rem; font-weight: 700; text-align: center; margin: 20px 0; }
+        .result-msg { text-align: center; font-size: 1.2rem; margin-bottom: 30px; }
+        
+        #confetti-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; }
+    </style>
+</head>
+<body>
+
+<canvas id="confetti-canvas"></canvas>
+<div id="emoji-overlay">😢</div>
+
+<div class="quiz-card">
+    <div class="progress-container"><div id="progress-bar" class="progress-bar"></div></div>
+
+    <div id="start-screen" class="screen active">
+        <h1>Biology Quiz</h1>
+        <div class="settings">
+            <div class="setting-item">
+                <span>Timer (Seconds per Q):<br><small>0 = No Timer</small></span>
+                <input type="number" id="manual-timer" value="30" min="0">
+            </div>
+            <div class="setting-item">
+                <span>Shuffle Questions:</span>
+                <label class="switch">
+                    <input type="checkbox" id="shuffle-toggle" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </div>
+        <button class="btn-main" onclick="startQuiz()">Start Quiz</button>
+    </div>
+
+    <div id="quiz-screen" class="screen">
+        <div class="hud">
+            <span id="counter">Question: 01/20</span>
+            <span id="timer-display">⏱️ 30s</span>
+            <span id="score-display">Score: 00</span>
+        </div>
+        <div class="question-box">
+            <div class="q-en" id="q-en">Loading...</div>
+            <div class="q-hi" id="q-hi">लोड हो रहा है...</div>
+        </div>
+        <div class="options-grid" id="options-grid"></div>
+        <button class="finish-btn" onclick="showResults()">Finish & Show Results</button>
+    </div>
+
+    <div id="result-screen" class="screen">
+        <h1>Quiz Complete!</h1>
+        <div class="result-score" id="final-percentage">0%</div>
+        <div class="result-msg" id="dynamic-msg">Outstanding!</div>
+        <div id="stats" style="text-align: center; margin-bottom: 20px; font-size: 0.9rem; color: #ddd;"></div>
+        <button class="btn-main" onclick="location.reload()">Restart Quiz</button>
+    </div>
+</div>
+
+<script>
+    // --- Data Extraction 101-150 ---
+    const rawQuestions = [
+        {
+            en: "101. Which type of fruit is characterized by Litchi and Cashew?", hi: "101. फलों का वह प्रकार जिसमें लीची तथा काजू को रखा जा सकता है, वह है-",
+            options: [
+                {en: "Pome", hi: "अष्ठिल"}, {en: "Berry", hi: "बेरी"}, {en: "Nut", hi: "नट"}, {en: "Lomentum", hi: "लोमेन्टम"}
+            ],
+            correct: 2
+        },
+        {
+            en: "102. What type of fruit is Pineapple?", hi: "102. अन्नानास किस प्रकार का फल है ?",
+            options: [
+                {en: "Siliqua", hi: "सिलिकुआ"}, {en: "Sorosis", hi: "सोरोसिस"}, {en: "Syconus", hi: "साइकोनस"}, {en: "Cypela", hi: "सिपसेला"}
+            ],
+            correct: 1
+        },
+        {
+            en: "103. Which of the following is an example of a Sorosis fruit?", hi: "103. निम्नलिखित में कौन सोरोसिस फल के उदाहरण है-",
+            options: [
+                {en: "Mulberry", hi: "शहतूत"}, {en: "Jackfruit", hi: "कटहल"}, {en: "Pineapple", hi: "अन्नानास"}, {en: "All of these", hi: "इनमें से सभी"}
+            ],
+            correct: 3
+        },
+        {
+            en: "104. Orange, Musambi, Lemon, etc. are which type of fruits?", hi: "104. संतरा, मुसम्मी, नींबू आदि किस प्रकार के फल हैं-",
+            options: [
+                {en: "Pome", hi: "पोम"}, {en: "Berry", hi: "बेरी"}, {en: "Hesperidium", hi: "हेस्पिरीडियम"}, {en: "Pepo", hi: "पीपो"}
+            ],
+            correct: 2
+        },
+        {
+            en: "105. Wheat, Barley, Maize, Rice, etc. are categorized under which type of fruit?", hi: "105. गेहूँ, जौ, मक्का, धान आदि को फलों के निम्न प्रकार में किसमें रखा जा सकता है ?",
+            options: [
+                {en: "Nut", hi: "नट"}, {en: "Pod", hi: "फली"}, {en: "Berry", hi: "बेरी"}, {en: "Caryopsis", hi: "कैरियोप्सिस"}
+            ],
+            correct: 3
+        },
+        {
+            en: "106. After fertilization, the seed coat develops from?", hi: "106. निषेचन के पश्चात् बीजों के बीजावरण विकसित होते हैं-",
+            options: [
+                {en: "Integuments", hi: "अध्यावरणों में"}, {en: "Endosperm", hi: "भ्रूणपोष से"}, {en: "Ovule", hi: "बीजाण्ड से"}, {en: "Secondary nucleus", hi: "द्वितीयक केन्द्रक से"}
+            ],
+            correct: 0
+        },
+        {
+            en: "107. A Pollen Grain is?", hi: "107. परागकण (Pollen grain) है-",
+            options: [
+                {en: "Immature embryo", hi: "अपूर्ण विकसित भ्रूण"}, {en: "Immature male gametophyte", hi: "अपूर्ण विकसित नर युग्मोदभिद"}, {en: "Spore mother cell", hi: "बीजाणु मातृ कोशिका"}, {en: "Male sperm cell", hi: "एक नर शुक्राणु कोशिका"}
+            ],
+            correct: 1
+        },
+        {
+            en: "108. Which is true regarding bisexual/hermaphrodite flowers?", hi: "108. निम्नलिखित में कौन-सा एक उभयलिंगी/द्विलिंगी पुष्पों के बारे में सही है-",
+            options: [
+                {en: "They only have carpels", hi: "उनके केवल अंडप होता है"}, {en: "They have both stamens and carpels", hi: "उनमें पुंकेसर तथा अंडप दोनों होते हैं।"}, {en: "They only have stamens", hi: "उनमें केवल पुंकेसर होता है"}, {en: "They have either stamen or carpel", hi: "उनमें या तो पुकेसर या अंडप होता है।"}
+            ],
+            correct: 1
+        },
+        {
+            en: "109. The smallest flower in the world is?", hi: "109. संसार का सबसे छोटा पुष्प है-",
+            options: [
+                {en: "Rafflesia", hi: "रैफ्लीशिया"}, {en: "Lotus", hi: "कमल"}, {en: "Wolffia", hi: "वुल्फिया"}, {en: "Rose", hi: "गुलाब"}
+            ],
+            correct: 2
+        },
+        {
+            en: "110. The largest flower in the world is?", hi: "110. विश्व का सबसे बड़ा पुष्प है-",
+            options: [
+                {en: "Sunflower", hi: "सूर्यमुखी"}, {en: "Lotus", hi: "कमल"}, {en: "Lily", hi: "लिली"}, {en: "Rafflesia", hi: "रैफ्लेशिया"}
+            ],
+            correct: 3
+        },
+        {
+            en: "111. Which of the following flowers once in 12 years?", hi: "111. निम्नलिखित में किसमें 12 वर्ष में केवल एक बार फूल खिलते हैं ?",
+            options: [
+                {en: "Sunflower", hi: "सूर्यमुखी"}, {en: "Mango", hi: "आम"}, {en: "Neelakurinji", hi: "नीला कुरंजी"}, {en: "Mahua", hi: "महुआ"}
+            ],
+            correct: 2
+        },
+        {
+            en: "112. What is the reason for Kurinji flower blooming once in 12 years?", hi: "112. कुरंजी पुष्प का 12 वर्ष में मात्र एक बार खिलने का कारण क्या है ?",
+            options: [
+                {en: "Photoperiod", hi: "प्रकाश अवधि"}, {en: "Scatoperiod", hi: "अदीप्त अवधि"}, {en: "Florigen secretion", hi: "फ्लोरिजन स्त्राव"}, {en: "All of these", hi: "उपर्युक्त सभी"}
+            ],
+            correct: 2
+        },
+        {
+            en: "113. Consider: 1. Plants that flower only once are Monocarpic. 2. Bamboo is a monocarpic plant. Which is true?", hi: "113. निम्नलिखित कथनों पर विचार कीजिए- 1. वैसे पौधे जिनके जीवन काल में केवल एक बार पुष्प होता है, मोनोकार्पिक कहलाता है। 2. बाँस मोनोकार्पिक पौधा है। सत्य है?",
+            options: [
+                {en: "Only 1", hi: "केवल 1"}, {en: "Only 2", hi: "केवल 2"}, {en: "Both 1 and 2", hi: "1 तथा 2 दोनों"}, {en: "Neither 1 nor 2", hi: "न तो 1 न ही 2"}
+            ],
+            correct: 2
+        },
+        {
+            en: "114. Consider: 1. Water hyacinth is called the 'Terror of Bengal'. 2. It grows in standing water and drains oxygen. Which is true?", hi: "114. निम्नलिखित कथनों पर विचार कीजिए- 1. जलकुंभी (water hyacinta) को बंगाल का आतंक कहा जाता है। 2. जलकुंभी ठहरे हुए पानी में उग कर ऑक्सीजन को खींच लेता है। सत्य है?",
+            options: [
+                {en: "Only 1", hi: "केवल 1"}, {en: "Only 2", hi: "केवल 2"}, {en: "Both 1 and 2", hi: "1 तथा 2 दोनों"}, {en: "Neither 1 nor 2", hi: "न तो 1 न ही 2"}
+            ],
+            correct: 2
+        },
+        {
+            en: "115. Which part is Diploid (2n)?", hi: "115. निम्नलिखित में कौन-सा भाग द्विगुणित (Deploid) है-",
+            options: [
+                {en: "Zygote", hi: "युग्मनज"}, {en: "Egg", hi: "अंड (egg)"}, {en: "Pollen grain", hi: "पराग (Pollengrain)"}, {en: "Male gamete", hi: "नर युग्मक"}
+            ],
+            correct: 0
+        },
+        {
+            en: "116. Which part is Haploid (n)?", hi: "116. निम्नलिखित में कौन-सा भाग अगुणित (Haploid) है-",
+            options: [
+                {en: "Ovary", hi: "अंडाशय"}, {en: "Anther", hi: "परागकोष"}, {en: "Pollen", hi: "पराग"}, {en: "Zygote", hi: "युग्मनज"}
+            ],
+            correct: 2
+        },
+        {
+            en: "117. Which three conditions are most important for seed germination?", hi: "117. एक बीज के अंकुरण के लिये निम्नलिखित में से कौन-सी तीन परिस्थितियाँ सर्वाधिक महत्वपूर्ण हैं ?",
+            options: [
+                {en: "Soil, Water, Oxygen", hi: "मिट्टी, पानी, ऑक्सीजन"}, {en: "Water, Proper temp, Oxygen", hi: "पानी, उचित तापमान, ऑक्सीजन"}, {en: "Proper temp, Oxygen, CO2", hi: "उचित तापमान, ऑक्सीजन, कार्बन डाइऑक्साइड"}, {en: "Temp, Oxygen, Light", hi: "तापमान, ऑक्सीजन, प्रकाश"}
+            ],
+            correct: 1
+        },
+        {
+            en: "118. What is usually NOT required for germination?", hi: "118. अंकुरण हेतु प्रायः किसकी आवश्यकता नहीं होती है?",
+            options: [
+                {en: "Moisture", hi: "नमी"}, {en: "Air", hi: "हवा"}, {en: "Light", hi: "प्रकाश"}, {en: "Temperature", hi: "तापमान"}
+            ],
+            correct: 2
+        },
+        {
+            en: "119. In which category of plants are naked embryos called spores found?", hi: "119. निम्नलिखित में किस वर्ग के पौधों में नग्न भ्रूण पाये जाते हैं, जिन्हें बीजाणु कहा जाता है ?",
+            options: [
+                {en: "Thallophyta", hi: "थैलोफाइटा"}, {en: "Bryophyta", hi: "ब्रायोफाइटा"}, {en: "Pteridophyta", hi: "टेरिडोफाइटा"}, {en: "All of these", hi: "इनमें से सभी"}
+            ],
+            correct: 3
+        },
+        {
+            en: "120. What is Vivipary germination?", hi: "120. पौधों में पितृस्थ या सजीवप्रजक (Vivipary) अंकुरण का अभिप्राय है-",
+            options: [
+                {en: "Fruit development after burying fertilized seed", hi: "निषेचित बीज को भूमि में दबाने के पश्चात फल का परिवर्धन"}, {en: "Seed germination in soil collected in stem hollows", hi: "तने में बनी खोखरों में संग्रहित मिट्टी में बीजों का अंकुरण"}, {en: "Seed germination inside the fruit while attached to parent tree", hi: "जनक वृक्ष पर लगे हुए फल के भीतर बीजों का अंकुरण"}, {en: "Association of many seeds", hi: "अनेक बीजों का संगठन"}
+            ],
+            correct: 2
+        },
+        {
+            en: "121. In which plant is Vivipary germination found?", hi: "121. सजीव प्रजक (Vivipary) अंकुरण निम्न में किसमें पाया जाता है-",
+            options: [
+                {en: "Rhizoclonium", hi: "राइजोक्लोनियम में"}, {en: "Pineapple", hi: "अन्नानास में"}, {en: "Rhizophora", hi: "राइजोफोरा में"}, {en: "Rhizobium", hi: "राइजोबियम में"}
+            ],
+            correct: 2
+        },
+        {
+            en: "122. Epigeal germination is found in?", hi: "122. भूम्योपरिक अंकुरण (Epigeal germination) पाया जाता है-",
+            options: [
+                {en: "Maize", hi: "मक्का में"}, {en: "Wheat", hi: "गेहूँ में"}, {en: "Pea", hi: "मटर में"}, {en: "Castor", hi: "अरण्डी में"}
+            ],
+            correct: 3
+        },
+        {
+            en: "123. Hypogeal germination is found in?", hi: "123. अधोभूमिक अंकुरण (Hypogeal germination) पाया जाता है-",
+            options: [
+                {en: "Cucurbita", hi: "कद्दू में"}, {en: "Maize", hi: "मक्का में"}, {en: "Rhizophora", hi: "राइजोफोरा में"}, {en: "Bean", hi: "सेम में"}
+            ],
+            correct: 1
+        },
+        {
+            en: "124. Orchid seeds are?", hi: "124. ऑर्किड (Orchid) का बीज होते हैं-",
+            options: [
+                {en: "Light and Dry", hi: "हल्के तथा शुष्क"}, {en: "Small and Sticky", hi: "छोटे तथा चिकने"}, {en: "Large and Heavy", hi: "अधिक बड़े एवं भारी"}, {en: "None of these", hi: "इनमें से कोई नहीं"}
+            ],
+            correct: 0
+        },
+        {
+            en: "125. Which tree requires maximum water for its growth?", hi: "125. निम्नलिखित में किस पेड़ को अपनी वृद्धि के लिये सर्वाधिक मात्रा में जल की आवश्यकता होती है ?",
+            options: [
+                {en: "Acacia", hi: "बबूल"}, {en: "Mango", hi: "आम"}, {en: "Guava", hi: "अमरूद"}, {en: "Eucalyptus", hi: "यूक्लिप्टस"}
+            ],
+            correct: 3
+        },
+        {
+            en: "126. Where does fertilization occur in a female flower?", hi: "126. मादा पुष्प के किस भाग में निषेचन होता है-",
+            options: [
+                {en: "Stigma", hi: "वर्तिकाग्र"}, {en: "Style", hi: "वर्तिका"}, {en: "Ovary", hi: "अंडाशय"}, {en: "Stamen", hi: "रेशा"}
+            ],
+            correct: 2
+        },
+        {
+            en: "127. Correct sequence of pollen path in gynoecium?", hi: "127. किसी प्रारूपिक पुष्प में, अंकुरित होने वाले परागकण, बीजांड में पहुँचने से पहले जायांग के कई भागों से गुजरते हैं, सही अनुक्रम चुनें-",
+            options: [
+                {en: "Carpel, Style, Ovary", hi: "स्त्रीकेसर, वर्तिकाग्र, अंडाशय"}, {en: "Stigma, Style, Ovary", hi: "वर्तिका, वर्तिकाग्र, अंडाशय"}, {en: "Stigma, Style, Ovary", hi: "वर्तिकाग्र, वर्तिका, अंडाशय"}, {en: "Ovary, Carpel, Stigma", hi: "अंडाशय, स्त्रीकेसर, वर्तिकाग्र"}
+            ],
+            correct: 2
+        },
+        {
+            en: "128. Under what conditions can seeds be preserved?", hi: "128. बीजों को किस स्थिति में संरक्षित किया जा सकता है?",
+            options: [
+                {en: "Cold and Humid", hi: "ठंडी और नम स्थिति"}, {en: "Hot and Dry", hi: "गर्म और शुष्क स्थिति"}, {en: "Hot and Humid", hi: "गर्म और नम स्थिति"}, {en: "Cold and Dry", hi: "ठंडी और शुष्क स्थिति"}
+            ],
+            correct: 3
+        },
+        {
+            en: "129. Asexual reproduction from root, stem, leaf or bud is called?", hi: "129. अलैंगिक प्रजनन का एक प्रकार, जिसमें जड़ों, तनों, पत्तियों और कलिकाओं से नये पौधे उत्पन्न होते हैं, यह कहलाता है-",
+            options: [
+                {en: "Spore reproduction", hi: "अंकुर प्रजनन"}, {en: "Grafting", hi: "कलम प्रजनन"}, {en: "Budding", hi: "मुकुलन प्रजनन"}, {en: "Vegetative reproduction", hi: "वानस्पतिक प्रजनन"}
+            ],
+            correct: 3
+        },
+        {
+            en: "130. Which of the following is NOT a male reproductive organ?", hi: "130. निम्नलिखित में कौन-सा एक नर-जनन अंग नहीं है ?",
+            options: [
+                {en: "Testis", hi: "Testis"}, {en: "Epididymis", hi: "Epididymis"}, {en: "Urethra", hi: "Urethra"}, {en: "Fallopian tube", hi: "Fallopian tube"}
+            ],
+            correct: 3
+        },
+        {
+            en: "131. Which is NOT a part of the male reproductive gland system?", hi: "131. निम्नलिखित में कौन सी जनन-ग्रंथि नर-जनन तंत्र के भाग नहीं है ?",
+            options: [
+                {en: "Seminal Vesicle", hi: "Seminal Vesicle"}, {en: "Bartholin Gland", hi: "Bartholian Gland"}, {en: "Prostate gland", hi: "Prostate gland"}, {en: "Cowper's gland", hi: "Cowper's gland"}
+            ],
+            correct: 1
+        },
+        {
+            en: "132. What is the nature of secretions from male reproductive glands?", hi: "132. नर जनन तंत्र संबंधित जनन-ग्रंथि द्वारा स्त्रावित पदार्थ की प्रकृति कैसी होती है ?",
+            options: [
+                {en: "Alkaline", hi: "क्षारीय"}, {en: "Acidic", hi: "अम्लीय"}, {en: "Neutral", hi: "उदासीन"}, {en: "None of these", hi: "इनमें से कोई नहीं"}
+            ],
+            correct: 0
+        },
+        {
+            en: "133. Length of the Vas deferens in males is approx?", hi: "133. नर जनन अंग शुक्रवाहिनी नली की लंबाई लगभग कितनी होती है ?",
+            options: [
+                {en: "10 cm", hi: "10 cm"}, {en: "15 cm", hi: "15 cm"}, {en: "20 cm", hi: "20 cm"}, {en: "25 cm", hi: "25 cm"}
+            ],
+            correct: 3
+        },
+        {
+            en: "134. Where is the scrotum located in males?", hi: "134. नर में वृषण कोष स्थित रहता है-",
+            options: [
+                {en: "Abdominal cavity", hi: "उदरगुहा में"}, {en: "Thoracic cavity", hi: "वृक्ष गुहा में"}, {en: "Both", hi: "दोनों में"}, {en: "Outside abdominal cavity", hi: "उदर गुहा के बाहर"}
+            ],
+            correct: 3
+        },
+        {
+            en: "135. Average weight of a Testis?", hi: "135. वृषण (Testis) का औसत भार कितना होता है ?",
+            options: [
+                {en: "10 g", hi: "10 g"}, {en: "12 g", hi: "12 ग्राम"}, {en: "16 g", hi: "16 ग्राम"}, {en: "20 g", hi: "20 ग्राम"}
+            ],
+            correct: 1
+        },
+        {
+            en: "136. Suitable temperature range for sperm production?", hi: "136. शुक्राणु निर्माण हेतु वृषण कोष का उपयुक्त ताप मान परिसर है-",
+            options: [
+                {en: "34 - 35°C", hi: "34 - 35° C"}, {en: "37 - 40°C", hi: "37 - 40° C"}, {en: "20 - 25°C", hi: "20 - 25° C"}, {en: "42 - 48°C", hi: "42 - 48° C"}
+            ],
+            correct: 0
+        },
+        {
+            en: "137. Which cells in the testis secrete Androgen?", hi: "137. वृषण में स्थित किस कोशिका द्वारा नर हार्मोन एंड्रोजेन स्त्रावित होता है ?",
+            options: [
+                {en: "Follicle cell", hi: "फॉलिकल कोशिका"}, {en: "Leydig cell", hi: "लाइडिंग कोशिका"}, {en: "Rete testis cell", hi: "रेट टेस्टिट कोशिका"}, {en: "Sertoli cell", hi: "सहायक कोशिका"}
+            ],
+            correct: 1
+        },
+        {
+            en: "138. Where is the Prostate gland found?", hi: "138. प्रोस्टेट ग्लैंड पाया जाता है-",
+            options: [
+                {en: "All mammals", hi: "सभी स्तनधारियों में"}, {en: "Only female mammals", hi: "सिर्फ मादा स्तनधारियों में"}, {en: "Only male mammals", hi: "सिर्फ नर स्तनधारियों में"}, {en: "All animals", hi: "सभी जंतु जगत के जीवों में"}
+            ],
+            correct: 2
+        },
+        {
+            en: "139. What is Semen?", hi: "139. वीर्य (Semen) किसे कहते हैं ?",
+            options: [
+                {en: "Frozen blood", hi: "जमे रक्त को"}, {en: "Fresh blood fluid", hi: "ताजा रक्त के तरल को"}, {en: "Sperm only", hi: "शुक्राणु को"}, {en: "Sperm and accessory gland secretions", hi: "शुक्राणु और सभी सहायक ग्रंथि के स्त्राव को"}
+            ],
+            correct: 3
+        },
+        {
+            en: "140. pH of Semen is?", hi: "140. वीर्य (Semen) का pH मान कितना होता है ?",
+            options: [
+                {en: "7.3 - 7.5", hi: "7.3 - 7.5"}, {en: "7.5 - 8.5", hi: "7.5 - 8.5"}, {en: "3.5 - 7.5", hi: "3.5 - 7.5"}, {en: "4.5 - 6.5", hi: "4.5 - 6.5"}
+            ],
+            correct: 0
+        },
+        {
+            en: "141. Inner layer of Testis connective tissue is called?", hi: "141. वृषण (Testis) के ऊपर संयोजी उत्तक की तीन परतें पायी जाती है, सबसे भीतरी परत को क्या कहते हैं ?",
+            options: [
+                {en: "Tunica Vaginalis", hi: "Tunicia Vaginalis"}, {en: "Tunica Albuginea", hi: "Tunica Albuginae"}, {en: "Tunica Vasculosa", hi: "Tunica Vasculosa"}, {en: "All of these", hi: "इनमें से सभी"}
+            ],
+            correct: 2
+        },
+        {
+            en: "142. Consider: 1. Scrotum temp is 2-3°C lower than body. 2. Scrotum temp is 2-3°C higher than body. Correct?", hi: "142. निम्नलिखित पर विचार कीजिए- 1. स्कोटम सैक का तापमान शरीर के तापमान से 2° C - 3° C कम होता है 2. स्कोटम का तापमान शरीर के तापमान से 2° - 3° C अधिक होता है। सही है?",
+            options: [
+                {en: "Only 1", hi: "केवल 1"}, {en: "Only 2", hi: "केवल 2"}, {en: "Both 1 and 2", hi: "1 तथा 2 दोनों"}, {en: "Neither 1 nor 2", hi: "न तो 1 न ही 2"}
+            ],
+            correct: 0
+        },
+        {
+            en: "143. Where are Sertoli cells found?", hi: "143. सर्टोली कोशिका कहाँ पायी जाती है ?",
+            options: [
+                {en: "Liver", hi: "यकृत में"}, {en: "Ovary", hi: "अंडाशय में"}, {en: "Testis", hi: "वृषण में"}, {en: "Uterus", hi: "गर्भाशय में"}
+            ],
+            correct: 2
+        },
+        {
+            en: "144. Approx how many sperm are produced daily in an adult male?", hi: "144. एक वयस्क नर में प्रतिदिन लगभग कितने शुक्राणु कोशिका का निर्माण होता है ?",
+            options: [
+                {en: "10^12 to 10^13", hi: "10^12 से 10^13"}, {en: "10^13 to 10^15", hi: "10^13 से 10^15"}, {en: "10^15 to 10^16", hi: "10^15 से 10^26"}, {en: "10^20 to 10^25", hi: "10^20 से 10^25"}
+            ],
+            correct: 0
+        },
+        {
+            en: "145. Acrosome is a part of?", hi: "145. एक्रोसोम निम्नलिखित में किसका भाग है-",
+            options: [
+                {en: "Human sperm tail", hi: "मानव शुक्राणु का पूँछ वाला भाग"}, {en: "Human sperm midpiece", hi: "मानव शुक्राणु का मध्य भाग"}, {en: "Human sperm head cap", hi: "मानव शुक्राणु का सिर पर का टोपीनुमा भाग"}, {en: "All of these", hi: "इनमें से सभी"}
+            ],
+            correct: 2
+        },
+        {
+            en: "146. Where does sperm maturation and storage occur?", hi: "146. वृषण में तैयार शुक्राणु का परिपक्ववन तथा संचय कहाँ होता है ?",
+            options: [
+                {en: "Testis", hi: "वृषण में ही"}, {en: "Epididymis", hi: "अधिवृषण में"}, {en: "Vas deferens", hi: "शुक्रवाहिका नली में"}, {en: "Urethra", hi: "मूत्रवाहिनी नली में"}
+            ],
+            correct: 1
+        },
+        {
+            en: "147. Reproductive organs develop from which embryonic layer?", hi: "147. जनन अंगों का विकास किस भ्रूणीय परत से होता है?",
+            options: [
+                {en: "Ectoderm", hi: "एक्टोडर्म"}, {en: "Endoderm", hi: "एण्डोडर्म"}, {en: "Mesoderm", hi: "मिसोडर्म"}, {en: "Mesoderm and Ectoderm", hi: "मीसोडर्म एवं एक्टोडर्म"}
+            ],
+            correct: 2
+        },
+        {
+            en: "148. Location of Prostate gland?", hi: "148. प्रोस्टेट ग्रंथि कहाँ उपस्थित रहते हैं ?",
+            options: [
+                {en: "Near testis", hi: "वृषण के पास"}, {en: "Above kidney", hi: "वृक्क के ऊपर"}, {en: "Near ureters", hi: "यूरेटस के निकट"}, {en: "Around urethra", hi: "मूत्र-मार्ग के चारो ओर"}
+            ],
+            correct: 3
+        },
+        {
+            en: "149. Which of the following is a gamete?", hi: "149. निम्नलिखित में कौन एक युग्मक (gamit) है ?",
+            options: [
+                {en: "Sperm", hi: "शुक्राणु"}, {en: "Ovum", hi: "अंडाणु"}, {en: "Both", hi: "शुक्राणु तथा अंडाणु दोनों"}, {en: "None", hi: "इनमें से कोई नहीं"}
+            ],
+            correct: 2
+        },
+        {
+            en: "150. Chromosome count in a gamete?", hi: "150. युग्मको में गुणसूत्र की संख्या कितनी होती है ?",
+            options: [
+                {en: "21", hi: "21"}, {en: "23", hi: "23"}, {en: "44", hi: "44"}, {en: "46", hi: "46"}
+            ],
+            correct: 1
+        }
+    ];
+
+    let questions = [];
+    let currentIdx = 0;
+    let score = 0;
+    let timer;
+    let timePerQ = 30;
+    let audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    // --- Sound Synthesis ---
+    function playSound(type) {
+        let osc = audioCtx.createOscillator();
+        let gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        
+        if(type === 'correct') {
+            osc.frequency.setValueAtTime(880, audioCtx.currentTime); 
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.5);
+        } else {
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(110, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.3);
+        }
+    }
+
+    // --- Quiz Logic ---
+    function startQuiz() {
+        timePerQ = parseInt(document.getElementById('manual-timer').value);
+        let shuffle = document.getElementById('shuffle-toggle').checked;
+        
+        questions = [...rawQuestions];
+        if(shuffle) questions.sort(() => Math.random() - 0.5);
+        
+        document.getElementById('start-screen').classList.remove('active');
+        document.getElementById('quiz-screen').classList.add('active');
+        loadQuestion();
+    }
+
+    function loadQuestion() {
+        if(currentIdx >= questions.length) return showResults();
+        
+        const q = questions[currentIdx];
+        document.getElementById('counter').innerText = `Question: ${String(currentIdx + 1).padStart(2, '0')}/${questions.length}`;
+        document.getElementById('q-en').innerText = q.en;
+        document.getElementById('q-hi').innerText = q.hi;
+        
+        const grid = document.getElementById('options-grid');
+        grid.innerHTML = '';
+        
+        q.options.forEach((opt, i) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerHTML = `<span>${opt.en}</span><span class="opt-hi">${opt.hi}</span>`;
+            btn.onclick = () => checkAnswer(i);
+            grid.appendChild(btn);
+        });
+
+        updateProgress();
+        startTimer();
+    }
+
+    function startTimer() {
+        clearInterval(timer);
+        if(timePerQ <= 0) {
+            document.getElementById('timer-display').style.display = 'none';
+            return;
+        }
+        
+        let left = timePerQ;
+        const display = document.getElementById('timer-display');
+        display.style.display = 'block';
+        display.innerText = `⏱️ ${left}s`;
+        display.classList.remove('pulse-red');
+
+        timer = setInterval(() => {
+            left--;
+            display.innerText = `⏱️ ${left}s`;
+            if(left < 5) display.classList.add('pulse-red');
+            if(left <= 0) {
+                clearInterval(timer);
+                checkAnswer(-1); // Timeout
+            }
+        }, 1000);
+    }
+
+    function checkAnswer(idx) {
+        clearInterval(timer);
+        const q = questions[currentIdx];
+        const btns = document.querySelectorAll('.option-btn');
+        btns.forEach(b => b.disabled = true);
+
+        if(idx === q.correct) {
+            btns[idx].classList.add('correct');
+            score++;
+            playSound('correct');
+            triggerConfetti();
+        } else {
+            if(idx !== -1) btns[idx].classList.add('wrong');
+            btns[q.correct].classList.add('correct');
+            playSound('wrong');
+            showSadEmoji();
+        }
+
+        document.getElementById('score-display').innerText = `Score: ${String(score).padStart(2, '0')}`;
+        
+        setTimeout(() => {
+            currentIdx++;
+            loadQuestion();
+        }, 1500);
+    }
+
+    function updateProgress() {
+        const p = (currentIdx / questions.length) * 100;
+        document.getElementById('progress-bar').style.width = p + '%';
+    }
+
+    function showSadEmoji() {
+        const ov = document.getElementById('emoji-overlay');
+        ov.style.display = 'block';
+        ov.classList.add('shake');
+        setTimeout(() => { 
+            ov.style.display = 'none'; 
+            ov.classList.remove('shake');
+        }, 800);
+    }
+
+    function triggerConfetti() {
+        const canvas = document.getElementById('confetti-canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        
+        let particles = [];
+        for(let i=0; i<100; i++) {
+            particles.push({
+                x: Math.random() * canvas.width,
+                y: -20,
+                r: Math.random() * 6 + 2,
+                d: Math.random() * 10,
+                color: `hsl(${Math.random()*360}, 70%, 50%)`,
+                tilt: Math.random() * 10 - 5
+            });
+        }
+
+        function draw() {
+            ctx.clearRect(0,0,canvas.width, canvas.height);
+            particles.forEach((p, i) => {
+                p.y += Math.cos(p.d) + 1 + p.r/2;
+                p.x += Math.sin(p.d) * 2;
+                ctx.beginPath();
+                ctx.lineWidth = p.r;
+                ctx.strokeStyle = p.color;
+                ctx.moveTo(p.x + p.tilt + p.r/2, p.y);
+                ctx.lineTo(p.x + p.tilt, p.y + p.tilt + p.r/2);
+                ctx.stroke();
+            });
+            if(particles[0].y < canvas.height) requestAnimationFrame(draw);
+            else ctx.clearRect(0,0,canvas.width, canvas.height);
+        }
+        draw();
+    }
+
+    function showResults() {
+        clearInterval(timer);
+        document.getElementById('quiz-screen').classList.remove('active');
+        document.getElementById('result-screen').classList.add('active');
+        
+        const pct = Math.round((score / (currentIdx || 1)) * 100);
+        document.getElementById('final-percentage').innerText = pct + '%';
+        
+        let msg = "";
+        if(pct >= 80) msg = "🏆 Outstanding Performance!";
+        else if(pct >= 50) msg = "👏 Well Done! Keep it up.";
+        else msg = "📚 Practice makes perfect! Try again.";
+        
+        document.getElementById('dynamic-msg').innerText = msg;
+        document.getElementById('stats').innerText = `Answered: ${currentIdx} | Correct: ${score}`;
+    }
+</script>
+
+</body>
+</html>

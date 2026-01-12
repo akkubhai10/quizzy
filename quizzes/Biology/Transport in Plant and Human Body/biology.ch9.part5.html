@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Professional Biology Quiz: Q201-254</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-gradient: linear-gradient(45deg, #6a11cb 0%, #2575fc 50%, #ff00cc 100%);
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --correct-green: #00e676;
+            --wrong-red: #ff1744;
+            --text-main: #ffffff;
+            --text-sub: #dddddd;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; }
+
+        body {
+            min-height: 100vh;
+            background: var(--bg-gradient);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            display: flex; align-items: center; justify-content: center;
+            overflow: hidden; padding: 20px;
+        }
+
+        @keyframes gradientBG { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+
+        .app-card {
+            width: 100%; max-width: 700px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border); border-radius: 25px;
+            padding: 35px; box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            position: relative; z-index: 10;
+        }
+
+        .progress-container {
+            position: absolute; top: 0; left: 0; width: 100%; height: 6px;
+            background: rgba(255, 255, 255, 0.1); border-radius: 25px 25px 0 0; overflow: hidden;
+        }
+        .progress-bar { height: 100%; width: 0%; background: var(--correct-green); box-shadow: 0 0 10px var(--correct-green); transition: width 0.4s ease; }
+
+        .header { display: flex; justify-content: space-between; margin-bottom: 25px; color: var(--text-main); font-weight: 600; font-size: 0.9rem; }
+        .timer-badge { font-size: 1.1rem; display: flex; align-items: center; gap: 8px; }
+        .pulse-red { color: var(--wrong-red); animation: pulse 1s infinite; }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+
+        .question-box { margin-bottom: 30px; }
+        .q-en { font-size: 1.25rem; font-weight: 700; color: var(--text-main); line-height: 1.4; margin-bottom: 4px; }
+        .q-hi { font-size: 1rem; color: var(--text-sub); font-weight: 400; }
+
+        .options-grid { display: grid; gap: 12px; margin-bottom: 25px; }
+        .option-btn {
+            background: rgba(255, 255, 255, 0.05); border: 1px solid var(--glass-border);
+            padding: 16px 20px; border-radius: 15px; color: white; text-align: left;
+            cursor: pointer; transition: all 0.2s ease; display: flex; flex-direction: column;
+        }
+        .option-btn:hover:not(:disabled) { background: rgba(255, 255, 255, 0.15); transform: translateY(-2px); }
+        .opt-hi { font-size: 0.85rem; color: #ccc; margin-top: 2px; }
+
+        .correct { background: var(--correct-green) !important; color: #1a1a1a !important; font-weight: 700; border-color: var(--correct-green); }
+        .wrong { background: var(--wrong-red) !important; border-color: var(--wrong-red); animation: shake 0.4s; }
+
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
+
+        .primary-btn {
+            background: white; color: #2575fc; padding: 14px 40px; border-radius: 50px;
+            border: none; font-weight: 700; cursor: pointer; transition: 0.3s;
+            margin-top: 15px; font-size: 1rem; width: 100%;
+        }
+        .primary-btn:hover { transform: scale(1.03); box-shadow: 0 0 20px rgba(255, 255, 255, 0.3); }
+
+        .hidden { display: none; }
+        .screen { text-align: center; }
+
+        #emoji-feedback { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 10rem; display: none; z-index: 1000; }
+        canvas#confetti { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; }
+        
+        input[type="number"] { background: rgba(255,255,255,0.1); border: 1px solid white; color: white; padding: 8px; border-radius: 10px; width: 80px; text-align: center; }
+    </style>
+</head>
+<body>
+
+<canvas id="confetti"></canvas>
+<div id="emoji-feedback">😢</div>
+
+<div class="app-card">
+    <div class="progress-container"><div class="progress-bar" id="progress-bar"></div></div>
+
+    <div id="screen-start" class="screen">
+        <h1 style="color: white; margin-bottom: 10px;">Biology Master Quiz</h1>
+        <p style="color: #ddd; margin-bottom: 30px;">Blood Groups & Circulation (Q201-254)</p>
+        
+        <div style="color: white; margin-bottom: 25px;">
+            <label style="display: block; margin-bottom: 8px;">Timer (Seconds / Question)</label>
+            <input type="number" id="input-timer" value="20" min="0">
+            <p style="font-size: 0.75rem; margin-top: 5px; opacity: 0.7;">Set to 0 to disable timer</p>
+        </div>
+        
+        <div style="color: white; margin-bottom: 30px;">
+            <label style="cursor: pointer;"><input type="checkbox" id="check-shuffle"> Shuffle Question Order</label>
+        </div>
+
+        <button class="primary-btn" onclick="quiz.init()">START QUIZ</button>
+    </div>
+
+    <div id="screen-quiz" class="hidden">
+        <div class="header">
+            <div id="label-counter">Question 00/00</div>
+            <div id="label-timer" class="timer-badge">⏱️ <span>00</span>s</div>
+            <div id="label-score">Score: 0</div>
+        </div>
+
+        <div class="question-box">
+            <div class="q-en" id="text-q-en">Loading Question...</div>
+            <div class="q-hi" id="text-q-hi">लोड हो रहा है...</div>
+        </div>
+
+        <div class="options-grid" id="container-options"></div>
+
+        <button class="primary-btn" style="background: rgba(255,255,255,0.15); color: white;" onclick="quiz.finish()">Finish & Show Results</button>
+    </div>
+
+    <div id="screen-result" class="hidden screen">
+        <h2 id="result-title" style="color: white; font-size: 2rem; margin-bottom: 15px;">Result</h2>
+        <div id="result-score" style="color: white; font-size: 4.5rem; font-weight: 700; margin-bottom: 15px;">0</div>
+        <p id="result-msg" style="color: #ddd; margin-bottom: 35px;"></p>
+        <button class="primary-btn" onclick="location.reload()">RESTART QUIZ</button>
+    </div>
+</div>
+
+<script>
+/**
+ * QUESTION DATA (201-254)
+ * Extracted from provided source materials
+ */
+const questionsData = [
+    { en: "Who is the discoverer of Blood Groups?", hi: "रक्त समूह (Blood group) का आविष्कारक है-", opt: [{en:"Edward Jenner", hi:"एडवर्ड जेनर"}, {en:"Karl Landsteiner", hi:"कार्ल लैंडस्टीनर"}, {en:"William Harvey", hi:"विलियम हार्वे"}, {en:"Robert Hooke", hi:"रॉबर्ट हुक"}], ans: 1 },
+    { en: "In which year was Landsteiner awarded the Nobel Prize for discovering blood groups?", hi: "रक्त-समूह के खोज हेतु लैंड स्टीनर को किस वर्ष नोबेल पुरस्कार से सम्मानित किया गया?", opt: [{en:"1901", hi:"1901"}, {en:"1930", hi:"1930"}, {en:"1940", hi:"1940"}, {en:"1902", hi:"1902"}], ans: 1 },
+    { en: "Who discovered the ABO blood group system?", hi: "ABO रक्त समूह प्रणाली का आविष्कार किसने किया था?", opt: [{en:"Karl Koller", hi:"कार्ल कोल्लर"}, {en:"Maurice Hilleman", hi:"मॉरिस हिलमैन"}, {en:"Edward Jenner", hi:"एडवर्ड जेनर"}, {en:"Karl Landsteiner", hi:"कार्ल लैंडस्टीनर"}], ans: 3 },
+    { en: "In AB blood group:", hi: "AB रक्त समूह में-", opt: [{en:"Antigens are absent", hi:"एंटीजन नहीं होते है"}, {en:"Antibodies are absent", hi:"एंटीबॉडी नहीं होते है"}, {en:"Neither antigens nor antibodies are present", hi:"न तो एंटीजन और न ही एंटीबॉडी पाये जाते है"}, {en:"Both are present", hi:"एंटीजन तथा एंटीबॉडी दोनों पाये जाते है"}], ans: 1 },
+    { en: "In which blood group is no antigen present?", hi: "किस रक्त समूह कोई एंटीजन उपस्थित नहीं रहता है?", opt: [{en:"A", hi:"A"}, {en:"AB", hi:"AB"}, {en:"B", hi:"B"}, {en:"O", hi:"O"}], ans: 3 },
+    { en: "Antigens are present on the surface of:", hi: "रक्त में एंटीजन उपस्थित होते है-", opt: [{en:"White Blood Cells", hi:"श्वेत रक्त कणिकाओं के सतह पर"}, {en:"Red Blood Cells", hi:"लाल रक्त कणिकाओं के सतह पर"}, {en:"Platelets", hi:"प्लेटलेट्स के सतह पर"}, {en:"Plasma", hi:"प्लाज्मा में"}], ans: 1 },
+    { en: "Antibodies are present in:", hi: "रक्त में एंटीबॉडी मौजूद रहते है-", opt: [{en:"Red Blood Cells", hi:"लाल रक्त कणिकाओं में"}, {en:"White Blood Cells", hi:"श्वेत रक्त कणिकाओं में"}, {en:"Platelets", hi:"प्लेटलेट्स में"}, {en:"Plasma", hi:"प्लाज्मा में"}], ans: 3 },
+    { en: "Antigen is a substance that:", hi: "एंटीजन (प्रतिजन) एक ऐसा पदार्थ है जो-", opt: [{en:"Promotes antibody formation", hi:"प्रतिरक्षी निर्माण को बढ़ावा देता है"}, {en:"Used for poisoning", hi:"विष से बचाव के लिये प्रयोग किया जाता है"}, {en:"Destroys harmful bacteria", hi:"हानिकारक जीवाणुओं को नष्ट करता है"}, {en:"Lowers body temperature", hi:"शरीर के तापमान को कम करता है"}], ans: 0 },
+    { en: "Consider: 1. AB is a blood group with both antibodies. 2. O group has no antigens. Which is true?", hi: "1. AB ऐसा रक्त समूह है जिनमें दोनों एंटीबॉडी पाये जाते है। 2. O रक्त समूह में कोई एंटीजन नहीं पाया जाता है।", opt: [{en:"Only 1", hi:"केवल 1"}, {en:"Only 2", hi:"केवल 2"}, {en:"Both 1 and 2", hi:"1 तथा 2 दोनों"}, {en:"Neither", hi:"न तो 1 न ही 2"}], ans: 1 },
+    { en: "What is the main function of an antibody?", hi: "एंटीबॉडी का मुख्य कार्य किसके विरुद्ध होता है?", opt: [{en:"Adverse environment", hi:"प्रतिकूल वातावरणीय दशा में"}, {en:"Nutrient deficiency", hi:"पोषक पदार्थों की कमी के"}, {en:"Accidents", hi:"विपत्ति के"}, {en:"Infection", hi:"संक्रमण के"}], ans: 3 },
+    { en: "Which blood group has no antibodies?", hi: "किस रूधिर वर्ग में कोई एंटीबॉडी नहीं पायी जाती है", opt: [{en:"A", hi:"A"}, {en:"B", hi:"B"}, {en:"AB", hi:"AB"}, {en:"O", hi:"O"}], ans: 2 },
+    { en: "A person with blood group B can receive blood from:", hi: "कोई B प्रकार के रूधिर वाला व्यक्ति किसी आकस्मिक संकट में किस प्रकार के रूधिर वाले व्यक्ति को रूधिर दान कर सकता है?", opt: [{en:"B or A", hi:"B या A"}, {en:"AB or A", hi:"AB या A"}, {en:"A or O", hi:"A या O"}, {en:"AB or B", hi:"AB या B"}], ans: 3 },
+    { en: "A person with blood group A can receive blood from:", hi: "कोई A प्रकार के रूधिर वाला व्यक्ति किसी आकस्मिक संकट में किस प्रकार के रूधिर वाले व्यक्ति को रूधिर दान कर सकता है?", opt: [{en:"A or B", hi:"A या B"}, {en:"A or AB", hi:"A या AB"}, {en:"A or O", hi:"A या O"}, {en:"AB or B", hi:"AB या B"}], ans: 1 },
+    { en: "From which blood group can an O group person receive blood?", hi: "रक्त समूह O वाला व्यक्ति किस रक्त समूह के व्यक्तियों से रक्त ले सकता है?", opt: [{en:"Only A and B", hi:"केवल A और B"}, {en:"A, B and O", hi:"A, B और O"}, {en:"O and AB", hi:"O और AB"}, {en:"Only O", hi:"केवल O"}], ans: 3 },
+    { en: "To which blood group can an AB group person donate blood?", hi: "रक्त समूह AB वाला व्यक्ति किस रक्त समूह समूह के व्यक्तियों को रक्त-दान कर सकता है?", opt: [{en:"A and B", hi:"A और B"}, {en:"A, B and O", hi:"A, B और O"}, {en:"O and AB", hi:"O और AB"}, {en:"Only AB", hi:"केवल AB"}], ans: 3 },
+    { en: "In which blood group are both antibodies found?", hi: "किस रक्त वर्ग में दोनों एंटीबॉडी पाये जाते है ?", opt: [{en:"A", hi:"A"}, {en:"B", hi:"B"}, {en:"AB", hi:"AB"}, {en:"O", hi:"O"}], ans: 3 },
+    { en: "The largest artery in the body is:", hi: "शरीर की विशालतम धमनी है-", opt: [{en:"Vena cava", hi:"वेनाकोवा"}, {en:"Aorta", hi:"एऑर्टा"}, {en:"Capillary", hi:"केशिका"}, {en:"Ventricle", hi:"निलय"}], ans: 1 },
+    { en: "A person with AB blood group:", hi: "AB रक्त वाला एक व्यक्ति-", opt: [{en:"Can donate to A, B and O", hi:"A, B और O रक्त वर्ग वाले लोगों को रक्त दान कर सकता है"}, {en:"Is a universal donor", hi:"सार्वभौमिक रक्त दाता कहा जाता है"}, {en:"Can take blood from any group", hi:"किसी भी वर्ग से रक्त ले सकता है"}, {en:"Is neither universal donor nor receiver", hi:"न तो एक सार्वभौमिक प्राप्तकर्ता है, और न ही एक सार्वभौमिक दाता है"}], ans: 2 },
+    { en: "Which blood group is the universal donor?", hi: "मानव रक्ताधान के लिये कौन सा रक्त समूह सार्वत्रिक दाता (Universal Donor) होता है?", opt: [{en:"B+ Group", hi:"B+ समूह"}, {en:"O Group", hi:"O समूह"}, {en:"AB Group", hi:"AB समूह"}, {en:"A+ Group", hi:"A+ समूह"}], ans: 1 },
+    { en: "O group is the universal donor because:", hi: "रूधिर वर्ग 'O' वाले व्यक्ति को यूनिवर्सल डोनर कहते है क्योंकि इनमें-", opt: [{en:"Antigen A is present", hi:"एंटीजन A उपस्थित होते है"}, {en:"Antigen B is present", hi:"एंटीजन B उपस्थित होते है"}, {en:"Both A and B antigens are present", hi:"एंटीजन A तथा B दोनों उपस्थित होते है"}, {en:"Both A and B antigens are absent", hi:"एंटीजन A तथा B दोनों अनुपस्थित होते है"}], ans: 3 },
+    { en: "Which blood group is called the universal receiver?", hi: "किस रक्त समूह को सार्वभौमिक प्राप्तकर्ता (Universal Accepter) कहा जाता है?", opt: [{en:"A", hi:"A"}, {en:"O", hi:"O"}, {en:"AB", hi:"AB"}, {en:"B", hi:"B"}], ans: 2 },
+    { en: "Blood group AB is called the universal receiver because:", hi: "रूधिर वर्ग 'AB' की यूनिवर्सल ऐसेप्टर (सर्वग्राही) कहते है, क्योंकि इनमें", opt: [{en:"Antibody a is present", hi:"एंटीबॉडी a उपस्थित होते है"}, {en:"Antibody b is present", hi:"एंटीबॉडी b उपस्थित होते है"}, {en:"Both a and b antibodies are present", hi:"एंटीबॉडी a एवं b दोनों उपस्थित होते है"}, {en:"Both a and b antibodies are absent", hi:"एंटीबॉडी a एवं b दोनों अनुपस्थित होते है"}], ans: 3 },
+    { en: "Assertion (A): O is universal donor. Reason (R): No antigen in O blood.", hi: "अभिकथन (A): O रक्त समूह वाले व्यक्ति को यूनिवर्सल प्राप्तकर्ता माना जाता है। कारण (R): O प्रकार के रक्त में कोई एंटीजन नहीं होता है।", opt: [{en:"A is true, R is false", hi:"A सही है, लेकिन R गलत है"}, {en:"A is false, R is true", hi:"A गलत है, लेकिन R सही है"}, {en:"A & R true, R is correct explanation", hi:"A और R दोनों सही है, और R, A की सही व्याख्या है।"}, {en:"A & R true, R is not correct explanation", hi:"A और R दोनों सही है, और R, A की सही व्याख्या नहीं है।"}], ans: 1 },
+    { en: "If parents are AB and O, children could be:", hi: "यदि माता-पिता में से किसी एक का रूधिर वर्ग AB और दूसरे का O हो, तो उनके बच्चे का सम्भावित रूधिर वर्ग होगा-", opt: [{en:"A or B", hi:"A या B"}, {en:"A or B or O", hi:"A या B या O"}, {en:"A or AB or O", hi:"A या AB या O"}, {en:"A, B, AB or O", hi:"A, B, AB या O"}], ans: 0 },
+    { en: "If man is AB and woman is B, which group child CANNOT have?", hi: "यदि किसी पुरुष का रक्त वर्ग AB हो तथा महिला का रक्त वर्ग B हो, तो उनकी सन्तानों में निम्नलिखित में से कौन सा रक्त वर्ग उपस्थित नहीं हो सकता है?", opt: [{en:"AB", hi:"AB"}, {en:"B", hi:"B"}, {en:"A", hi:"A"}, {en:"O", hi:"O"}], ans: 3 },
+    { en: "If both parents are AB, children could be:", hi: "यदि दोनों जनकों का रूधिर वर्ग AB हो, तो उनके बच्चों का संभावित रूधिर वर्ग होंगे-", opt: [{en:"A, B, AB and O", hi:"A, B, AB और O"}, {en:"A, B and AB", hi:"A, B और AB"}, {en:"A and B", hi:"A और B"}, {en:"A, B and O", hi:"A, B और O"}], ans: 1 },
+    { en: "If father is A and mother is O, child CANNOT have:", hi: "यदि एक पिता का रक्त वर्ग A है और माता का रक्त वर्ग O हो तो बताइए कि उनके पुत्र का निम्नलिखित में से कौन सा रक्त वर्ग उपस्थित नहीं हो सकता है?", opt: [{en:"AB", hi:"AB"}, {en:"B", hi:"B"}, {en:"A", hi:"A"}, {en:"O", hi:"O"}], ans: 0 },
+    { en: "If parents are A and O, which child group is NOT possible?", hi: "यदि एक पिता और माता का रक्त वर्ग क्रमशः A और O है, तो निम्नलिखित कौन सा रक्त वर्ग उनके बच्चे में सम्भव नहीं है?", opt: [{en:"B", hi:"B"}, {en:"AB", hi:"AB"}, {en:"O", hi:"O"}, {en:"B, AB or O", hi:"B, AB या O"}], ans: 3 },
+    { en: "If parents are A and O, possible child group:", hi: "यदि माता-पिता में से एक का रूधिर वर्ग A है, और दूसरे का O तो उनके बच्चे का संभावित रूधिर वर्ग होगा ?", opt: [{en:"A or B", hi:"A और B"}, {en:"A, B or O", hi:"A या B या O"}, {en:"A or O", hi:"A या O"}, {en:"AB or O", hi:"AB या O"}], ans: 2 },
+    { en: "Which statement is correct?", hi: "निम्नलिखित में कौन सा एक सही है?", opt: [{en:"Group A donates only to A", hi:"रक्त समूह A वाला व्यक्ति केवल A को ही रक्त दे सकता है"}, {en:"Group AB receives only from AB", hi:"रक्त समूह AB वाला व्यक्ति केवल AB से ही रक्त दे सकता है"}, {en:"Rh+ blood given to Rh+", hi:"Rh+ को Rh+ का रक्त एवं Rh- को Rh- का रक्त ही दिया जाता है"}, {en:"Group O donates only to O", hi:"रक्त समूह O वाला व्यक्ति केवल O को ही रक्त-दान कर सकता है।"}], ans: 2 },
+    { en: "Who discovered the Rh factor?", hi: "Rh फैक्टर का पता किसने लगाया ?", opt: [{en:"Leeuwenhoek", hi:"ल्यूवेनहॉक ने"}, {en:"Wiener", hi:"विएनर ने"}, {en:"Landsteiner", hi:"लैंडस्टीनर ने"}, {en:"Landsteiner and Wiener", hi:"लैंडस्टीनर तथा विएनर ने"}], ans: 3 },
+    { en: "Rh factor name is related to:", hi: "Rh फैक्टर नाम किससे संबंधित है ?", opt: [{en:"Bear", hi:"भालू से"}, {en:"Monkey", hi:"बंदर से"}, {en:"Human", hi:"मनुष्य से"}, {en:"Cat", hi:"बिल्ली से"}], ans: 1 },
+    { en: "Rh antigen was first found in:", hi: "Rh एन्टीजन को सर्वप्रथम पाया गया था-", opt: [{en:"Rhesus Crow", hi:"रीसेस काक में"}, {en:"Rhesus Monkey", hi:"रीसेस बन्दर में"}, {en:"Rhesus Cat", hi:"रीसेस बिल्ली में"}, {en:"All of these", hi:"इनमें से सभी में"}], ans: 1 },
+    { en: "In which pair would agglutination occur?", hi: "निम्नलिखित में रक्त-समूह के जोड़े में किसमें रक्त का अभिश्लेषण (agglutination) हो जाएगा ?", opt: [{en:"A and B", hi:"A और B"}, {en:"A and A", hi:"A और A"}, {en:"B and B", hi:"B और B"}, {en:"All of these", hi:"इनमें से सभी"}], ans: 0 },
+    { en: "Erythroblastosis fetalis is caused by:", hi: "संतानो की भ्रूणीय अवस्था में माता के गर्भाशय के अंदर ही रक्त का थक्का बनने से मृत्यु हो जाती है। इस रोग को इरिथ्रोब्लास्टोसिस फीटेलिस कहा जाता है। इसका कारण है-", opt: [{en:"Father Rh+ and Mother Rh+", hi:"पिता का Rh+ तथा माता का Rh+ होना"}, {en:"Father Rh- and Mother Rh+", hi:"पिता का Rh- तथा माता का Rh+ होना"}, {en:"Father Rh- and Mother Rh-", hi:"पिता का Rh- तथा माता का Rh- होना"}, {en:"Father Rh+ and Mother Rh-", hi:"पिता का Rh+ तथा माता का Rh- होना"}], ans: 3 },
+    { en: "Which marriage pair is NOT suitable per Rh element?", hi: "Rh तत्व के अनुसार निम्नलिखित में कौन सी जोड़ी विवाह के लिये उपयुक्त नहीं है ?", opt: [{en:"Rh+ Male and Rh+ Female", hi:"Rh+ पुरुष तथा Rh+ महिला"}, {en:"Rh- Male and Rh+ Female", hi:"Rh- पुरुष तथा Rh+ महिला"}, {en:"Rh+ Male and Rh- Female", hi:"Rh+ पुरुष तथा Rh- महिला"}, {en:"Rh- Male and Rh- Female", hi:"Rh- पुरुष तथा Rh- महिला"}], ans: 2 },
+    { en: "Erythroblastosis fetalis occurs when:", hi: "इरिथ्रोब्लास्टोसिस फीटेलिस की स्थिति उत्पन्न होती है-", opt: [{en:"Fetus Rh+ and Mother Rh-", hi:"जब भ्रूण का रक्त Rh+ तथा माता का रक्त Rh- हो"}, {en:"Fetus Rh- and Mother Rh+", hi:"जब भ्रूण तथा माता दोनों का रक्त Rh+ हो"}, {en:"Fetus Rh- and Mother Rh-", hi:"जब भ्रूण तथा माता दोनों का रक्त Rh- हो"}, {en:"Fetus Rh+ and Mother Rh+", hi:"जब भ्रूण का रक्त Rh- तथा माता का रक्त Rh+ हो"}], ans: 0 },
+    { en: "Average body temperature of a healthy person is?", hi: "सामान्य स्वस्थ व्यक्ति के शरीर का तापक्रम होता है ?", opt: [{en:"98.4 F", hi:"98.4° F"}, {en:"98 F", hi:"98° F"}, {en:"98.8 F", hi:"98.8° F"}, {en:"98.6 F", hi:"98.6° F"}], ans: 3 },
+    { en: "Human body temperature:", hi: "मानव शरीर का तापमान-", opt: [{en:"Decreases in winter", hi:"जाड़ों में घट जाता है"}, {en:"Increases in summer", hi:"गर्मियों में बढ़ जाता है"}, {en:"Stays constant", hi:"न ही जाड़ों में घटता है और न ही गर्मियों में बढ़ता है"}, {en:"Increases in winter", hi:"जाड़ों में बढ़ जाता है"}], ans: 2 },
+    { en: "The fluid found between body tissues is called:", hi: "शरीर उत्तकों के बीच पाये जाने वाले द्रव्य को कहते है-", opt: [{en:"Lymph", hi:"लासीका"}, {en:"Tissue fluid", hi:"उत्तक द्रव्य"}, {en:"Lymph fluid", hi:"लिम्फ"}, {en:"All of these", hi:"इनमें से सभी"}], ans: 3 },
+    { en: "Which are NOT found in Lymph?", hi: "लासीका में नहीं पाये जाते है-", opt: [{en:"RBCs", hi:"RBCs"}, {en:"WBCs", hi:"WBCs"}, {en:"Blood Platelets", hi:"Blood Platelets"}, {en:"Both A and C", hi:"A तथा C दोनों"}], ans: 3 },
+    { en: "Which is a recessive gene in blood group determination?", hi: "रक्त-समूह के निर्धारण हेतु निम्नलिखित में कौन एक अप्रभावी जीन है ?", opt: [{en:"I^A", hi:"I^A"}, {en:"I^B", hi:"I^B"}, {en:"I^O", hi:"I^O"}, {en:"None", hi:"इनमें से कोई नहीं"}], ans: 2 },
+    { en: "If child gets I^A I^B genes, what is the blood group?", hi: "संतान को यदि माता-पिता से I^A I^B जीन प्राप्त होता है तो, उस संतान में कौन सा रक्त वर्ग होगा ?", opt: [{en:"A", hi:"A"}, {en:"B", hi:"B"}, {en:"AB", hi:"AB"}, {en:"O", hi:"O"}], ans: 2 },
+    { en: "Human blood pressure is:", hi: "मानव का रक्त दाब-", opt: [{en:"Higher than atmospheric pressure", hi:"वायुमंडलीय दाब से अधिक होता है"}, {en:"Lower than atmospheric pressure", hi:"वायुमंडलीय दाब से कम होता है"}, {en:"Equal to atmospheric pressure", hi:"वायुमंडलीय दाब से बराबर होता है"}, {en:"None", hi:"इनमें से कोई नहीं"}], ans: 0 },
+    { en: "Consider: 1. Women have fewer RBCs than men. 2. Women have more blood than men. Which is true?", hi: "1. पुरूष के रक्त के तुलना में महिलाओं के रक्त में लाल रक्त कणों (RBC) की संख्या कम होती है 2. पुरूष के शरीर में महिलाओं के अपेक्षा रक्त की मात्रा अधिक होती है", opt: [{en:"Only 1", hi:"केवल 1"}, {en:"Only 2", hi:"केवल 2"}, {en:"Both 1 and 2", hi:"1 तथा 2 दोनों"}, {en:"Neither", hi:"न तो 1 न ही 2"}], ans: 2 },
+    { en: "Insufficient blood supply in human body is called:", hi: "मानव शरीर में रक्त की अपर्याप्त आपूर्ति को क्या कहते है-", opt: [{en:"Dyslexia", hi:"डिसेलेक्सिया"}, {en:"Ischemia", hi:"इस्कीमिया"}, {en:"Hypertension", hi:"हाइपरटेंशन"}, {en:"Uremia", hi:"यूरेमिया"}], ans: 1 },
+    { en: "When a person gets old, blood pressure:", hi: "व्यक्ति के वृद्धि हो जाने पर रक्तचाप-", opt: [{en:"Decreases", hi:"घट जाता है"}, {en:"Increases", hi:"बढ़ जाता है"}, {en:"Stays constant", hi:"अपरिवर्तित रहता है"}, {en:"None", hi:"इनमें से कोई नहीं"}], ans: 1 },
+    { en: "The largest White Blood Cell (WBC) is:", hi: "सबसे बड़ी श्वेत रक्त कण (WBC) है-", opt: [{en:"Lymphocyte", hi:"लिम्फोसाइट"}, {en:"Acidophil", hi:"एसिडोफील"}, {en:"Monocyte", hi:"मोनोसाइट"}, {en:"Basophil", hi:"बेसोफील"}], ans: 2 },
+    { en: "The diameter of human WBC is approximately:", hi: "मानव के श्वेत रक्त कणों (WBC) का व्यास होता है, लगभग-", opt: [{en:"0.007 mm", hi:"0.007 mm"}, {en:"0.00007 mm", hi:"0.00007 mm"}, {en:"0.07 mm", hi:"0.07 mm"}, {en:"0.7 mm", hi:"0.7 mm"}], ans: 0 },
+    { en: "The diameter of human RBC is approximately:", hi: "मानव के लाल रक्त कणों (RBC) का व्यास होता है, लगभग-", opt: [{en:"5 mm", hi:"5 mm"}, {en:"7 micrometer (approx)", hi:"7 mm"}, {en:"9 mm", hi:"9 mm"}, {en:"100 mm", hi:"100 mm"}], ans: 1 },
+    { en: "Consider: 1. Pure and impure blood flow together. 2. They flow separately. Which is true?", hi: "1. मानव शरीर में शुद्ध तथा अशुद्ध रक्त एक साथ प्रवाहित होते है 2. मानव शरीर में शुद्ध तथा अशुद्ध रक्त अलग-अलग प्रवाहित होता है", opt: [{en:"Only 1", hi:"केवल 1"}, {en:"Only 2", hi:"केवल 2"}, {en:"Both 1 and 2", hi:"1 तथा 2 दोनों"}, {en:"Neither", hi:"न तो 1 न ही 2"}], ans: 1 },
+    { en: "The number of RBCs is determined by:", hi: "रक्त में लाल रक्त कण (RBC) की संख्या किससे ज्ञात की जाती है ?", opt: [{en:"Haemocytometer", hi:"हीमोसाइटोमीटर"}, {en:"Hydrometer", hi:"हाइग्रोमीटर"}, {en:"Hypsometer", hi:"हिप्सोमीटर"}, {en:"Gravimeter", hi:"ग्रेवीमीटर"}], ans: 0 },
+    { en: "In which of the following is the nucleus lobed?", hi: "निम्नलिखित में किसका केंद्रक पालियत् होता है ?", opt: [{en:"Thrombocytes", hi:"थ्रोम्बोसाइटस"}, {en:"Neutrophil", hi:"न्यूट्रोफिल"}, {en:"Eosinophil", hi:"इओसिनोफिल"}, {en:"All of these", hi:"इनमें से सभी"}], ans: 1 }
+];
+
+const quiz = {
+    data: [],
+    index: 0,
+    score: 0,
+    timer: null,
+    timeLimit: 0,
+    ctx: new (window.AudioContext || window.webkitAudioContext)(),
+
+    init() {
+        const shuffle = document.getElementById('check-shuffle').checked;
+        const limit = parseInt(document.getElementById('input-timer').value);
+        this.timeLimit = isNaN(limit) ? 0 : limit;
+
+        this.data = shuffle ? [...questionsData].sort(() => Math.random() - 0.5) : [...questionsData];
+        this.index = 0;
+        this.score = 0;
+
+        document.getElementById('screen-start').classList.add('hidden');
+        document.getElementById('screen-quiz').classList.remove('hidden');
+        this.load();
+    },
+
+    load() {
+        const q = this.data[this.index];
+        document.getElementById('text-q-en').innerText = q.en;
+        document.getElementById('text-q-hi').innerText = q.hi;
+        document.getElementById('label-counter').innerText = `Question ${this.index + 1}/${this.data.length}`;
+        document.getElementById('label-score').innerText = `Score: ${this.score}`;
+        
+        const prg = (this.index / this.data.length) * 100;
+        document.getElementById('progress-bar').style.width = `${prg}%`;
+
+        const container = document.getElementById('container-options');
+        container.innerHTML = '';
+        
+        q.opt.forEach((o, i) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerHTML = `<span>${o.en}</span><span class="opt-hi">${o.hi}</span>`;
+            btn.onclick = () => this.check(i, btn);
+            container.appendChild(btn);
+        });
+
+        this.startTimer();
+    },
+
+    startTimer() {
+        clearInterval(this.timer);
+        const display = document.querySelector('#label-timer span');
+        const badge = document.getElementById('label-timer');
+        
+        if (this.timeLimit <= 0) {
+            badge.classList.add('hidden');
+            return;
+        }
+
+        badge.classList.remove('hidden', 'pulse-red');
+        let current = this.timeLimit;
+        display.innerText = current;
+
+        this.timer = setInterval(() => {
+            current--;
+            display.innerText = current;
+            if (current < 5) badge.classList.add('pulse-red');
+            if (current <= 0) {
+                clearInterval(this.timer);
+                this.next();
+            }
+        }, 1000);
+    },
+
+    check(idx, btn) {
+        clearInterval(this.timer);
+        const q = this.data[this.index];
+        const buttons = document.querySelectorAll('.option-btn');
+        buttons.forEach(b => b.disabled = true);
+
+        if (idx === q.ans) {
+            this.score++;
+            btn.classList.add('correct');
+            this.playTone(880, 0.1, 0.15); // Ting
+            this.confetti();
+        } else {
+            btn.classList.add('wrong');
+            buttons[q.ans].classList.add('correct');
+            this.playTone(150, 0.3, 0.4); // Buzz
+            this.showEmoji();
+        }
+
+        setTimeout(() => this.next(), 1500);
+    },
+
+    next() {
+        this.index++;
+        if (this.index < this.data.length) {
+            this.load();
+        } else {
+            this.finish();
+        }
+    },
+
+    finish() {
+        clearInterval(this.timer);
+        document.getElementById('screen-quiz').classList.add('hidden');
+        document.getElementById('screen-result').classList.remove('hidden');
+        document.getElementById('progress-bar').style.width = '100%';
+
+        const pct = (this.score / this.data.length) * 100;
+        const title = document.getElementById('result-title');
+        const msg = document.getElementById('result-msg');
+        document.getElementById('result-score').innerText = `${this.score}/${this.data.length}`;
+
+        if (pct >= 80) {
+            title.innerText = "🏆 Outstanding Performance!";
+            msg.innerText = "Exceptional knowledge! You are a master of biology basics.";
+            this.confetti();
+        } else if (pct >= 50) {
+            title.innerText = "👏 Well Done! Keep it up.";
+            msg.innerText = "Great effort! Review the wrong answers to improve further.";
+        } else {
+            title.innerText = "📚 Practice makes perfect!";
+            msg.innerText = "Keep studying! Try the quiz again to boost your score.";
+        }
+    },
+
+    playTone(freq, vol, dur) {
+        const osc = this.ctx.createOscillator();
+        const g = this.ctx.createGain();
+        osc.connect(g); g.connect(this.ctx.destination);
+        osc.frequency.value = freq;
+        g.gain.setValueAtTime(vol, this.ctx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + dur);
+        osc.start(); osc.stop(this.ctx.currentTime + dur);
+    },
+
+    showEmoji() {
+        const e = document.getElementById('emoji-feedback');
+        e.style.display = 'block';
+        setTimeout(() => e.style.display = 'none', 1000);
+    },
+
+    confetti() {
+        const c = document.getElementById('confetti');
+        const ctx = c.getContext('2d');
+        c.width = window.innerWidth; c.height = window.innerHeight;
+        const p = Array.from({length: 100}, () => ({
+            x: Math.random()*c.width, y: -20,
+            s: Math.random()*4+2, v: Math.random()*4+2,
+            c: `hsl(${Math.random()*360}, 100%, 50%)`
+        }));
+        const run = () => {
+            ctx.clearRect(0,0,c.width,c.height);
+            p.forEach(i => { i.y += i.v; ctx.fillStyle=i.c; ctx.fillRect(i.x, i.y, i.s, i.s); });
+            if (p.some(i => i.y < c.height)) requestAnimationFrame(run);
+        }
+        run();
+    }
+};
+</script>
+</body>
+</html>

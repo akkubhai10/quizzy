@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Biology Mastery Quiz | जीव विज्ञान प्रश्नोत्तरी</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --accent-green: #00e676;
+            --accent-red: #ff1744;
+            --text-en: #ffffff;
+            --text-hi: #dddddd;
+            --mesh-bg: linear-gradient(45deg, #6a11cb 0%, #2575fc 50%, #ff007f 100%);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: var(--mesh-bg);
+            background-size: 400% 400%;
+            animation: gradientMove 15s ease infinite;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            overflow-x: hidden;
+        }
+
+        @keyframes gradientMove {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .container {
+            width: 90%;
+            max-width: 750px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 25px;
+            padding: 2.5rem;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Progress Bar */
+        #progress-bar {
+            position: absolute;
+            top: 0; left: 0;
+            height: 6px;
+            width: 0%;
+            background: var(--accent-green);
+            box-shadow: 0 0 10px var(--accent-green);
+            transition: width 0.4s ease;
+        }
+
+        /* Screens */
+        .screen { display: none; flex-direction: column; gap: 20px; }
+        .active { display: flex; }
+
+        h1 { text-align: center; margin-bottom: 10px; font-weight: 700; }
+
+        /* Settings */
+        .settings-card { background: rgba(0,0,0,0.2); padding: 20px; border-radius: 15px; }
+        .input-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 8px; font-size: 0.9rem; }
+        input[type="number"] {
+            width: 100%; padding: 12px; border-radius: 10px; border: none; 
+            background: rgba(255,255,255,0.2); color: white; outline: none;
+        }
+
+        .toggle-group { display: flex; align-items: center; justify-content: space-between; }
+        .switch { position: relative; display: inline-block; width: 50px; height: 24px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--accent-green); }
+        input:checked + .slider:before { transform: translateX(26px); }
+
+        /* Quiz UI */
+        .quiz-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .timer-box { font-weight: 700; font-size: 1.2rem; }
+        .pulse-red { color: var(--accent-red); animation: pulse 0.8s infinite; }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+
+        .question-box { margin-bottom: 25px; }
+        .q-en { font-size: 1.3rem; font-weight: 700; color: var(--text-en); line-height: 1.4; margin-bottom: 5px; }
+        .q-hi { font-size: 1.1rem; color: var(--text-hi); font-weight: 400; }
+
+        .options-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
+        .option {
+            background: rgba(255,255,255,0.1); border: 1px solid var(--glass-border);
+            padding: 18px; border-radius: 12px; cursor: pointer; transition: 0.3s;
+            text-align: left; position: relative;
+        }
+        .option:hover { background: rgba(255,255,255,0.2); transform: translateY(-2px); }
+        .opt-en { display: block; font-weight: 600; font-size: 1rem; }
+        .opt-hi { display: block; font-size: 0.85rem; color: var(--text-hi); }
+
+        .correct { background: var(--accent-green) !important; color: white; border-color: transparent; }
+        .wrong { background: var(--accent-red) !important; color: white; border-color: transparent; }
+        .disabled { pointer-events: none; opacity: 0.8; }
+
+        /* Feedback Elements */
+        #sad-emoji {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0);
+            font-size: 8rem; transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 1000;
+        }
+        .shake { animation: shakeAnim 0.5s; }
+        @keyframes shakeAnim {
+            0%, 100% { transform: translate(-50%, -50%); }
+            20%, 60% { transform: translate(-55%, -50%); }
+            40%, 80% { transform: translate(-45%, -50%); }
+        }
+
+        .btn {
+            background: #fff; color: #333; padding: 15px 30px; border: none; 
+            border-radius: 50px; font-weight: 700; cursor: pointer; transition: 0.3s; margin-top: 10px;
+        }
+        .btn:hover { transform: scale(1.05); box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+        .btn-finish { background: rgba(255,255,255,0.15); color: #fff; margin-top: 25px; border: 1px solid var(--glass-border); }
+
+        /* Confetti */
+        .confetti { position: absolute; width: 10px; height: 10px; z-index: 9999; }
+
+        /* Result */
+        .result-score { font-size: 4rem; font-weight: 800; margin: 20px 0; }
+        .result-msg { font-size: 1.2rem; margin-bottom: 30px; }
+
+        @media (max-width: 600px) {
+            .container { padding: 1.5rem; width: 95%; }
+            .q-en { font-size: 1.1rem; }
+            .opt-en { font-size: 0.9rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div id="progress-bar"></div>
+
+    <div id="screen-start" class="screen active">
+        <h1>Biology Quiz<br><small style="font-weight:300">Set: 51 - 100</small></h1>
+        <div class="settings-card">
+            <div class="input-group">
+                <label>Timer per Question (Seconds)</label>
+                <input type="number" id="input-timer" placeholder="Leave 0 for no timer" min="0">
+            </div>
+            <div class="toggle-group">
+                <label>Shuffle Questions</label>
+                <label class="switch">
+                    <input type="checkbox" id="input-shuffle">
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </div>
+        <button class="btn" onclick="startQuiz()">Start Quiz</button>
+    </div>
+
+    <div id="screen-quiz" class="screen">
+        <div class="quiz-header">
+            <div id="q-counter">Question 01/50</div>
+            <div id="timer-display" class="timer-box"></div>
+            <div id="score-counter">Score: 0</div>
+        </div>
+        <div class="question-box">
+            <div class="q-en" id="q-en"></div>
+            <div class="q-hi" id="q-hi"></div>
+        </div>
+        <div class="options-grid" id="options-container"></div>
+        <button class="btn btn-finish" onclick="endQuiz()">Finish & Show Results</button>
+    </div>
+
+    <div id="screen-result" class="screen" style="text-align:center">
+        <h1>Quiz Results</h1>
+        <div class="result-score" id="res-score">0/50</div>
+        <div class="result-msg" id="res-msg"></div>
+        <button class="btn" onclick="location.reload()">Restart Quiz</button>
+    </div>
+</div>
+
+<div id="sad-emoji">😢</div>
+
+<script>
+    // --- QUESTION DATA 51-100 ---
+    const rawQuestions = [
+        { qe: "The first step of photosynthesis is:", qh: "प्रकाश संश्लेषण की प्रक्रिया का प्रथम चरण होता है-", opts: [
+            { ee: "Fixation of CO2", eh: "कार्बन डाइऑक्साइड का स्थिरीकरण" },
+            { ee: "Excitation of chlorophyll by light", eh: "सूर्य के प्रकाश द्वारा क्लोरोफिल का उत्तेजन", correct: true },
+            { ee: "Release of O2 from water", eh: "पानी से ऑक्सीजन का निकलना" },
+            { ee: "Formation of Carbohydrates", eh: "कार्बोहाइड्रेट का निर्माण" }
+        ]},
+        { qe: "The rate of photosynthesis is maximum in:", qh: "प्रकाश संश्लेषण की दर सबसे अधिक होती है?", opts: [
+            { ee: "Green light", eh: "हरे रंग की प्रकाश में" },
+            { ee: "Violet light", eh: "बैंगनी रंग की प्रकाश में" },
+            { ee: "Blue light", eh: "नीले रंग के प्रकाश में" },
+            { ee: "Red light", eh: "लाल रंग के प्रकाश में", correct: true }
+        ]},
+        { qe: "The rate of photosynthesis is minimum in:", qh: "प्रकाश संश्लेषण की दर सबसे कम होती है?", opts: [
+            { ee: "Red light", eh: "लाल रंग के प्रकाश में" },
+            { ee: "Blue light", eh: "नीले रंग के प्रकाश में" },
+            { ee: "Green light", eh: "हरे रंग के प्रकाश में", correct: true },
+            { ee: "Violet light", eh: "बैंगनी रंग के प्रकाश में" }
+        ]},
+        { qe: "Photosynthesis occurs in:", qh: "प्रकाश संश्लेषण होता है-", opts: [
+            { ee: "At night", eh: "रात्रि में" },
+            { ee: "Day and Night", eh: "दिन और रात्री में" },
+            { ee: "Only in day", eh: "केवल दिन में", correct: true },
+            { ee: "Only in night", eh: "केवल रात में" }
+        ]},
+        { qe: "Statement 1: Photosynthesis cannot occur in darkness. 2: Light is not needed for the mechanism.", qh: "कथन 1: अंधेरे में प्रकाश संश्लेषण नहीं हो सकता। 2: क्रियाविधि में प्रकाश की आवश्यकता नहीं पड़ती।", opts: [
+            { ee: "Only 1 is correct", eh: "केवल 1", correct: true },
+            { ee: "Only 2 is correct", eh: "केवल 2" },
+            { ee: "Both 1 and 2", eh: "1 तथा 2 दोनों" },
+            { ee: "Neither 1 nor 2", eh: "न तो 1 न ही 2" }
+        ]},
+        { qe: "The green substance in plants that performs photosynthesis is:", qh: "हरे रंग का पदार्थ जो पौधों में प्रकाश संश्लेषण करता है:", opts: [
+            { ee: "Chlorophyll", eh: "क्लोरोफिल", correct: true },
+            { ee: "Chloroplast", eh: "क्लोरोप्लास्ट" },
+            { ee: "Chloroform", eh: "क्लोरोफॉर्म" },
+            { ee: "None", eh: "इनमें से कोई नहीं" }
+        ]},
+        { qe: "Auxanometer is used for measuring:", qh: "ऑक्सेनोमीटर का प्रयोग किया जाता है-", opts: [
+            { ee: "Rate of photosynthesis", eh: "प्रकाश-संश्लेषण की दर मापने में" },
+            { ee: "Growth rate", eh: "वृद्धि मापने में", correct: true },
+            { ee: "Osmosis rate", eh: "रसाकर्षण की दर मापने में" },
+            { ee: "Energy loss", eh: "ऊर्जा ह्रास की दर मापने में" }
+        ]},
+        { qe: "Statement 1: Carbohydrates and O2 are formed in photosynthesis. 2: It occurs in other green parts besides leaves.", qh: "कथन 1: कार्बोहाइड्रेट तथा ऑक्सीजन गैस बनती है। 2: पत्तियों के अलावे पादप के दूसरे हरे भाग में भी होता है।", opts: [
+            { ee: "Only 1", eh: "केवल 1" },
+            { ee: "Only 2", eh: "केवल 2" },
+            { ee: "Both 1 and 2", eh: "1 तथा 2 दोनों", correct: true },
+            { ee: "Neither", eh: "न तो 1 न ही 2" }
+        ]},
+        { qe: "Artificial light:", qh: "कृत्रिम प्रकाश-", opts: [
+            { ee: "Can destroy chlorophyll", eh: "क्लोरोफिल नष्ट कर सकता है" },
+            { ee: "Can synthesize chlorophyll", eh: "क्लोरोफिल का संश्लेषण कर सकता है" },
+            { ee: "Can be a cause of photosynthesis", eh: "प्रकाश संश्लेषण का कारण हो सकता है", correct: true },
+            { ee: "Cannot be a cause of photosynthesis", eh: "प्रकाश संश्लेषण का कारण नहीं हो सकता है" }
+        ]},
+        { qe: "Some plant species are insectivorous because:", qh: "कुछ वनस्पति जातियाँ कीटाहारी होती हैं। क्यों?", opts: [
+            { ee: "Grown in shade", eh: "छायादार स्थानों पर उगने के कारण" },
+            { ee: "Adapted to nitrogen-deficient soil", eh: "वे नाइट्रोजनी न्यून मृदा में उगने के लिये अनुकूलित हैं", correct: true },
+            { ee: "Both A and B", eh: "A तथा B दोनों" },
+            { ee: "None", eh: "इनमें से कोई नहीं" }
+        ]},
+        { qe: "The nature of saliva is:", qh: "लार की प्रकृति होती है-", opts: [
+            { ee: "Acidic", eh: "अम्लीय", correct: true },
+            { ee: "Alkaline", eh: "क्षारीय" },
+            { ee: "Neutral", eh: "उदासीन" },
+            { ee: "None", eh: "इनमें से कोई नहीं" }
+        ]},
+        { qe: "Which salivary gland is affected by Mumps (Paramyxovirus)?", qh: "मम्प्स या गलसुआ रोग किस लार ग्रंथि को प्रभावित करती है?", opts: [
+            { ee: "Parotid", eh: "पैरोटिड", correct: true },
+            { ee: "Submandibular", eh: "सबमैंडीबुलर" },
+            { ee: "Sublingual", eh: "सबलिंगुअल" },
+            { ee: "All", eh: "इनमें से सभी" }
+        ]},
+        { qe: "Ptyalin enzyme is present in:", qh: "टायलीन एंजाइम निम्नलिखित में किसमें मौजूद रहता है?", opts: [
+            { ee: "Gastric juice", eh: "गैस्ट्रिक रस में" },
+            { ee: "Intestinal juice", eh: "आंत्र-रस में" },
+            { ee: "Saliva", eh: "लार में", correct: true },
+            { ee: "Bile juice", eh: "पित्त रस में" }
+        ]},
+        { qe: "How many pairs of salivary glands are in humans?", qh: "मनुष्य के मुख-गुहा में कितने जोड़ी लार ग्रंथियाँ पायी जाती है?", opts: [
+            { ee: "One", eh: "एक" },
+            { ee: "Two", eh: "दो" },
+            { ee: "Three", eh: "तीन", correct: true },
+            { ee: "Four", eh: "चार" }
+        ]},
+        { qe: "Which enzymes are present in saliva?", qh: "लार में कौन से एंजाइम उपस्थित रहते हैं?", opts: [
+            { ee: "Ptyalin", eh: "टायलीन" },
+            { ee: "Lysozyme", eh: "लाइसोजाइम" },
+            { ee: "Both A and B", eh: "A तथा B दोनों", correct: true },
+            { ee: "Mucus", eh: "म्यूकस" }
+        ]},
+        { qe: "Statement 1: Digestion starts in mouth. 2: Carbohydrates are digested first.", qh: "कथन 1: भोजन का पाचन मुखगुहा से ही शुरू हो जाता है। 2: सर्वप्रथम कार्बोहाइड्रेट का पाचन होता है?", opts: [
+            { ee: "Only 1", eh: "केवल 1" },
+            { ee: "Only 2", eh: "केवल 2" },
+            { ee: "Both 1 and 2", eh: "1 तथा 2 दोनों", correct: true },
+            { ee: "Neither", eh: "न तो 1 न ही 2" }
+        ]},
+        { qe: "Which statement is FALSE regarding saliva?", qh: "निम्नलिखित में कौन कथन असत्य है?", opts: [
+            { ee: "It neutralizes acid", eh: "लार भोजन के अम्लीयता को नष्ट कर उसे उदासीन बनाता है" },
+            { ee: "Ptyalin converts starch to maltose", eh: "लार में उपस्थित टायलीन स्टार्च को माल्टोस में बदलता है" },
+            { ee: "All starch is digested in mouth", eh: "भोजन में उपस्थित समस्त मंड का पाचन मुख गुहा में ही हो जाता है", correct: true },
+            { ee: "Frog and whale lack salivary glands", eh: "मेढ़क तथा व्हेल मछली में लार-ग्रंथि नहीं पाया जाता है" }
+        ]},
+        { qe: "Where are blood vessels and nerve fibers located in the tooth?", qh: "दाँत के किस हिस्से में रूधिरवाहिनी संयोजी उत्तक तथा तंत्रिका सूत्र भरी रहती है?", opts: [
+            { ee: "Pulp Cavity", eh: "मज्जा गुहा", correct: true },
+            { ee: "Dentine", eh: "दंतास्थि" },
+            { ee: "Enamel", eh: "इनेमल" },
+            { ee: "None", eh: "इनमें से कोई नहीं" }
+        ]},
+        { qe: "How many types of teeth are in the human mouth?", qh: "मनुष्य के मुखगुहा में कितने प्रकार के दाँत पाये जाते हैं?", opts: [
+            { ee: "1", eh: "1" },
+            { ee: "2", eh: "2" },
+            { ee: "3", eh: "3" },
+            { ee: "4", eh: "4", correct: true }
+        ]},
+        { qe: "Which tooth is fewest in the human mouth?", qh: "मनुष्य के मुख गुहा में किस प्रकार के दाँत सबसे कम होते हैं?", opts: [
+            { ee: "Incisor", eh: "इनसाइजर" },
+            { ee: "Canine", eh: "केनाइन", correct: true },
+            { ee: "Premolar", eh: "प्रीमोलर" },
+            { ee: "Molar", eh: "मोलर" }
+        ]},
+        { qe: "Most part of the tooth is made of:", qh: "दाँत का अधिकांश हिस्सा तैयार करता है?", opts: [
+            { ee: "Pulp cavity", eh: "मज्जा गुहा" },
+            { ee: "Dentine", eh: "दंतास्थि", correct: true },
+            { ee: "Enamel", eh: "इनेमल" },
+            { ee: "None", eh: "इनमें से कोई नहीं" }
+        ]},
+        { qe: "The layer of Calcium Phosphate on the upper tooth is:", qh: "दाँत के ऊपरी भाग में स्थित कैल्शियम फॉस्फेट के बने परत को क्या कहते हैं?", opts: [
+            { ee: "Enamel", eh: "इनेमल", correct: true },
+            { ee: "Dentine", eh: "डेंटाइन" },
+            { ee: "Keratin", eh: "कैरटीन" },
+            { ee: "Chitin", eh: "काइटीन" }
+        ]},
+        { qe: "Fluorine is necessary for the healthy development of enamel.", qh: "इनेमल के स्वस्थ विकास हेतु फ्लोरीन आवश्यक है।", opts: [
+            { ee: "Correct", eh: "सही", correct: true },
+            { ee: "Incorrect", eh: "गलत" }
+        ]},
+        { qe: "Which papilla on tongue lacks taste buds?", qh: "जीभ पर उपस्थित किस पैपिला में स्वाद कलिका नहीं पायी जाती है?", opts: [
+            { ee: "Filiform", eh: "फिलीफॉर्म", correct: true },
+            { ee: "Fungiform", eh: "फंगीफॉर्म" },
+            { ee: "Circumvallate", eh: "सरकमवैलेट" },
+            { ee: "All", eh: "इनमें से सभी" }
+        ]},
+        { qe: "Sweet taste is perceived on which part of the tongue?", qh: "जीभ के अग्र भाग में कौन से स्वाद ग्रहण करने वाला स्वाद कलिका पाये जाते हैं?", opts: [
+            { ee: "Sour", eh: "खट्टा" },
+            { ee: "Salty", eh: "नमकीन" },
+            { ee: "Bitter", eh: "तीखा" },
+            { ee: "Sweet", eh: "मीठा", correct: true }
+        ]},
+        { qe: "What follows the buccal cavity in humans?", qh: "मनुष्य में मुखगुहा के बाद होता है-", opts: [
+            { ee: "Duodenum", eh: "ग्रहणी" },
+            { ee: "Pharynx", eh: "ग्रसनी", correct: true },
+            { ee: "Oesophagus", eh: "ग्रासनली" },
+            { ee: "Stomach", eh: "अमाशय" }
+        ]},
+        { qe: "Coughing while eating fast is caused by food entering:", qh: "जल्दी-जल्दी खाने से खाँसी या हिचकी क्यों आती है?", opts: [
+            { ee: "Pressure on stomach", eh: "अमाशय के भित्ती पर दाब बढ़ जाना" },
+            { ee: "Food in windpipe", eh: "भोजन श्वास नली में फँस जाता है", correct: true },
+            { ee: "Food in Oesophagus", eh: "ग्रासनली में भोजन के कण अटकना" },
+            { ee: "Acid secretion", eh: "अमाशय से अम्ल का स्राव अचानक बढ़ जाना" }
+        ]},
+        { qe: "Gastric glands are found in:", qh: "जठर-ग्रंथि पायी जाती है-", opts: [
+            { ee: "Stomach", eh: "अमाशय में", correct: true },
+            { ee: "Small Intestine", eh: "छोटी आँत में" },
+            { ee: "Large Intestine", eh: "बड़ी आँत में" },
+            { ee: "Liver", eh: "यकृत में" }
+        ]},
+        { qe: "Stomach is the primary site for:", qh: "अमाशय (Stomach)-", opts: [
+            { ee: "Carbohydrate digestion", eh: "कार्बोहाइड्रेट पाचन का प्रमुख स्थान" },
+            { ee: "Fat digestion", eh: "वसा पाचन का प्रमुख स्थान" },
+            { ee: "Protein digestion", eh: "प्रोट्रीन पाचन का प्रमुख स्थान", correct: true },
+            { ee: "All", eh: "इनमें से सभी" }
+        ]},
+        { qe: "Pepsin enzyme is present in:", qh: "पेप्सिन एंजाइम मौजूद रहता है?", opts: [
+            { ee: "Bile juice", eh: "पित्त रस में" },
+            { ee: "Gastric juice", eh: "जठर-रस में", correct: true },
+            { ee: "Intestinal juice", eh: "आंत्र-रस में" },
+            { ee: "Pancreatic juice", eh: "अग्न्याशयी-रस में" }
+        ]},
+        { qe: "The length of human digestive tract is approx:", qh: "मनुष्य की पाचन नली लगभग कितने फीट लम्बी होती है?", opts: [
+            { ee: "16", eh: "16" },
+            { ee: "18", eh: "18" },
+            { ee: "25", eh: "25" },
+            { ee: "32", eh: "32", correct: true }
+        ]},
+        { qe: "Length of human alimentary canal is:", qh: "मनुष्य के आहारनाल की लंबाई कितनी होती है?", opts: [
+            { ee: "8-10 m", eh: "8-10 m", correct: true },
+            { ee: "8-10 cm", eh: "8-10 cm" },
+            { ee: "2-6 m", eh: "2-6 m" },
+            { ee: "1-2 m", eh: "1-2 m" }
+        ]},
+        { qe: "Which is NOT a part of Gastric Gland?", qh: "निम्नलिखित में कौन अमाशय ग्रंथि या जठर ग्रंथि का भाग नहीं है?", opts: [
+            { ee: "Mucus cells", eh: "म्यूकस कोशिकाएँ" },
+            { ee: "Bile duct", eh: "मूल पित्तवाहिनी", correct: true },
+            { ee: "Zymogen cells", eh: "जाइमोजिन कोशिकाएँ" },
+            { ee: "Oxyntic cells", eh: "अम्ल जन कोशिकाएँ" }
+        ]},
+        { qe: "Which is NOT present in Gastric juice?", qh: "निम्नलिखित में कौन सा एक जठर रस में मौजूद नहीं रहता है?", opts: [
+            { ee: "Mucus", eh: "म्यूकस" },
+            { ee: "Bile", eh: "पित्त", correct: true },
+            { ee: "HCl", eh: "हाइड्रोक्लोरिक अम्ल" },
+            { ee: "Pepsinogen", eh: "पेप्सिनोजन" }
+        ]},
+        { qe: "Which structure prevents food from entering the windpipe?", qh: "कौन सी रचना मुखगुहा से भोजन को श्वास नली में जाने से रोकता है?", opts: [
+            { ee: "Oesophagus", eh: "ग्रासनली" },
+            { ee: "Pharynx", eh: "ग्रसनी" },
+            { ee: "Epiglottis", eh: "एपोग्लौटिस", correct: true },
+            { ee: "Glottis", eh: "कंठद्वार" }
+        ]},
+        { qe: "The acid 'X' produced in stomach helps digestion. 'X' is:", qh: "अमाशय में अम्ल 'X' उत्पन्न होता है, जो पाचन में सहायता करता है। 'X' है?", opts: [
+            { ee: "Sulphuric acid", eh: "सल्फ्यूरिक अम्ल" },
+            { ee: "Methanoic acid", eh: "मेथेनोइक अम्ल" },
+            { ee: "Hydrochloric acid", eh: "हाइड्रोक्लोरिक अम्ल", correct: true },
+            { ee: "Citric acid", eh: "सिट्रिक अम्ल" }
+        ]},
+        { qe: "The lining of the inner stomach wall consists of:", qh: "अमाशय के भीतरी दीवारों पर किस प्रकार के कोशिकाओं का स्तर होता है?", opts: [
+            { ee: "Cuboidal Epithelium", eh: "क्यूबॉइडल एपिथीलियम कोशिका" },
+            { ee: "Ciliated Epithelium", eh: "पक्षमल एपिथीलियम कोशिका" },
+            { ee: "Squamous Epithelium", eh: "शल्काम एपिथीलियम कोशिका" },
+            { ee: "Columnar Epithelium", eh: "स्तंभाकार एपिथीलियम कोशिका", correct: true }
+        ]},
+        { qe: "Permanent layer formed due to improper cleaning of teeth:", qh: "दाँतों को अच्छी प्रकार से सफाई नहीं करने पर दाँतों पर बनने वाला एक स्थायी परत क्या कहलाता है?", opts: [
+            { ee: "Pulp Cavity", eh: "मज्जागुहा" },
+            { ee: "Dental Caries", eh: "दंत-अस्थिक्षय" },
+            { ee: "Dentine", eh: "डेंटाइन" },
+            { ee: "Dental Plaque", eh: "दंत-प्लाक", correct: true }
+        ]},
+        { qe: "Ulcers in the stomach wall are caused by excess secretion of:", qh: "अमाशय के दिवार पर होने वाला घाव या अल्सर किसके अत्यधिक स्राव के कारण होता है?", opts: [
+            { ee: "Gastric Lipase", eh: "गैस्ट्रिक लाइपेज" },
+            { ee: "Acidic juice", eh: "अम्लीय-स्राव", correct: true },
+            { ee: "Pepsin", eh: "पेप्सिन" },
+            { ee: "Mucus", eh: "म्यूकस" }
+        ]},
+        { qe: "Where are all properties of living beings found in a cell?", qh: "कोशिका के किस भाग में सजीवों के सारे गुण मौजूद रहते है?", opts: [
+            { ee: "Cell Wall", eh: "कोशिका भित्ती" },
+            { ee: "Cell Membrane", eh: "कोशिका झिल्ली" },
+            { ee: "Protoplasm", eh: "जीवद्रव्य", correct: true },
+            { ee: "None", eh: "इनमें से कोई नहीं" }
+        ]},
+        { qe: "Statement 1: Digestion starts in mouth. 2: It completes in small intestine.", qh: "कथन 1: मुखगुहा से शुरू होता है। 2: छोटी आँत में पूर्ण होता है।", opts: [
+            { ee: "Only 1", eh: "केवल 1" },
+            { ee: "Only 2", eh: "केवल 2" },
+            { ee: "Both 1 and 2", eh: "1 तथा 2 दोनों", correct: true },
+            { ee: "Neither", eh: "न तो 1 न ही 2" }
+        ]},
+        { qe: "Ducts of Liver and Pancreas open into which part of the gut?", qh: "यकृत तथा अग्न्याशय की नली आहारनाल के किस भाग में खुलती है?", opts: [
+            { ee: "Buccal Cavity", eh: "मुखगुहा" },
+            { ee: "Stomach", eh: "अमाशय" },
+            { ee: "Small Intestine", eh: "छोटी आँत", correct: true },
+            { ee: "Large Intestine", eh: "बड़ी आँत" }
+        ]},
+        { qe: "Jejunum is a part of:", qh: "जेजुनम किसका अंग है?", opts: [
+            { ee: "Oesophagus", eh: "ग्रासनली का" },
+            { ee: "Duodenum", eh: "ग्रहणी का" },
+            { ee: "Large Intestine", eh: "बड़ी आँत का" },
+            { ee: "Small Intestine", eh: "छोटी आँत का", correct: true }
+        ]},
+        { qe: "Which is NOT a part of the human small intestine?", qh: "निम्नलिखित में कौन मनुष्य के छोटी आँत का भाग नहीं है?", opts: [
+            { ee: "Duodenum", eh: "ड्यूओडिनम" },
+            { ee: "Colon", eh: "कोलन", correct: true },
+            { ee: "Ileum", eh: "इलियम" },
+            { ee: "Jejunum", eh: "जेजुनम" }
+        ]},
+        { qe: "Largest gland of human body:", qh: "मानव शरीर की सबसे बड़ी ग्रंथि है-", opts: [
+            { ee: "Liver", eh: "यकृत", correct: true },
+            { ee: "Pancreas", eh: "अग्नाशय" },
+            { ee: "Salivary Gland", eh: "लार-ग्रंथि" },
+            { ee: "Gallbladder", eh: "पित्ताशय" }
+        ]},
+        { qe: "Statement 1: Liver cells secrete bile. 2: Bile is stored in gallbladder.", qh: "कथन 1: यकृत की कोशिकाओं से पित्त रस का स्राव होता है। 2: पित्त रस का संचय पित्ताशय में होता है।", opts: [
+            { ee: "Only 1", eh: "केवल 1" },
+            { ee: "Only 2", eh: "केवल 2" },
+            { ee: "Both 1 and 2", eh: "1 तथा 2 दोनों", correct: true },
+            { ee: "Neither", eh: "न तो 1 न ही 2" }
+        ]},
+        { qe: "Digestion in small intestine is performed by:", qh: "छोटी आँत में भोजन का पाचन किसके द्वारा होता है?", opts: [
+            { ee: "Bile juice", eh: "पित्त रस" },
+            { ee: "Pancreatic juice", eh: "अग्न्याशयी रस" },
+            { ee: "Succus Entericus", eh: "सक्कस एंटेरिकस" },
+            { ee: "All of these", eh: "इनमें से सभी", correct: true }
+        ]},
+        { qe: "Which part of human alimentary canal is longest?", qh: "मनुष्य के आहारनाल के किस भाग की लंबाई सबसे अधिक होती है?", opts: [
+            { ee: "Buccal Cavity", eh: "मुखगुहा" },
+            { ee: "Stomach", eh: "अमाशय" },
+            { ee: "Small Intestine", eh: "छोटी आँत", correct: true },
+            { ee: "Large Intestine", eh: "बड़ी आँत" }
+        ]},
+        { qe: "Most part of human digestion is completed in:", qh: "मानव शरीर में पाचन का अधिकांश भाग किस अंग में सम्पन्न होता है?", opts: [
+            { ee: "Large Intestine", eh: "बड़ी आँत" },
+            { ee: "Small Intestine", eh: "छोटी आँत", correct: true },
+            { ee: "Stomach", eh: "अमाशय" },
+            { ee: "Liver", eh: "यकृत" }
+        ]},
+        { qe: "Where is the most nutrient absorption into the blood?", qh: "अधिकतम पोषक तत्व रक्त में कहाँ अवशोषित किये जाते है?", opts: [
+            { ee: "Buccal Cavity", eh: "मुख-गुहा" },
+            { ee: "Large Intestine", eh: "बड़ी आँत" },
+            { ee: "Small Intestine", eh: "छोटी आँत", correct: true },
+            { ee: "Stomach", eh: "अमाशय" }
+        ]}
+    ];
+
+    // --- LOGIC ---
+    let questions = [];
+    let currentIdx = 0;
+    let score = 0;
+    let timerInterval;
+    let timePerQuestion = 0;
+    let audioCtx = null;
+
+    function initAudio() {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+
+    function playSound(freq, type) {
+        initAudio();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.2);
+    }
+
+    function startQuiz() {
+        const isShuffle = document.getElementById('input-shuffle').checked;
+        timePerQuestion = parseInt(document.getElementById('input-timer').value) || 0;
+        
+        questions = isShuffle ? [...rawQuestions].sort(() => Math.random() - 0.5) : [...rawQuestions];
+        
+        document.getElementById('screen-start').classList.remove('active');
+        document.getElementById('screen-quiz').classList.add('active');
+        
+        loadQuestion();
+    }
+
+    function loadQuestion() {
+        if (currentIdx >= questions.length) return endQuiz();
+        
+        const q = questions[currentIdx];
+        document.getElementById('q-counter').innerText = `Question ${String(currentIdx + 1).padStart(2, '0')}/${questions.length}`;
+        document.getElementById('q-en').innerText = q.qe;
+        document.getElementById('q-hi').innerText = q.qh;
+        
+        const container = document.getElementById('options-container');
+        container.innerHTML = '';
+        
+        q.opts.forEach((opt, i) => {
+            const div = document.createElement('div');
+            div.className = 'option';
+            div.innerHTML = `<span class="opt-en">${opt.ee}</span><span class="opt-hi">${opt.eh}</span>`;
+            div.onclick = () => handleAnswer(i, div);
+            container.appendChild(div);
+        });
+
+        updateProgress();
+        startTimer();
+    }
+
+    function handleAnswer(idx, el) {
+        clearInterval(timerInterval);
+        const options = document.querySelectorAll('.option');
+        options.forEach(o => o.classList.add('disabled'));
+
+        const q = questions[currentIdx];
+        const correctIdx = q.opts.findIndex(o => o.correct === true);
+
+        if (q.opts[idx].correct) {
+            score++;
+            el.classList.add('correct');
+            playSound(880, 'sine'); // Ting
+            triggerConfetti();
+        } else {
+            el.classList.add('wrong');
+            options[correctIdx].classList.add('correct');
+            playSound(110, 'sawtooth'); // Buzz
+            triggerSadEmoji();
+        }
+
+        document.getElementById('score-counter').innerText = `Score: ${score}`;
+        
+        setTimeout(() => {
+            currentIdx++;
+            loadQuestion();
+        }, 1500);
+    }
+
+    function startTimer() {
+        clearInterval(timerInterval);
+        const display = document.getElementById('timer-display');
+        display.classList.remove('pulse-red');
+        
+        if (timePerQuestion <= 0) {
+            display.innerText = "";
+            return;
+        }
+
+        let timeLeft = timePerQuestion;
+        display.innerText = timeLeft + "s";
+
+        timerInterval = setInterval(() => {
+            timeLeft--;
+            display.innerText = timeLeft + "s";
+            if (timeLeft <= 5) display.classList.add('pulse-red');
+            if (timeLeft <= 0) {
+                clearInterval(timerInterval);
+                handleAnswer(-1, {classList: {add: ()=>{}}}); // Timeout as wrong
+            }
+        }, 1000);
+    }
+
+    function updateProgress() {
+        const percent = (currentIdx / questions.length) * 100;
+        document.getElementById('progress-bar').style.width = percent + "%";
+    }
+
+    function triggerSadEmoji() {
+        const emoji = document.getElementById('sad-emoji');
+        emoji.style.transform = "translate(-50%, -50%) scale(1.2)";
+        emoji.classList.add('shake');
+        setTimeout(() => {
+            emoji.style.transform = "translate(-50%, -50%) scale(0)";
+            emoji.classList.remove('shake');
+        }, 1000);
+    }
+
+    function triggerConfetti() {
+        for (let i = 0; i < 30; i++) {
+            const c = document.createElement('div');
+            c.className = 'confetti';
+            c.style.left = Math.random() * 100 + "%";
+            c.style.top = "-10px";
+            c.style.backgroundColor = `hsl(${Math.random() * 360}, 70%, 50%)`;
+            document.body.appendChild(c);
+
+            const anim = c.animate([
+                { transform: 'translateY(0) rotate(0deg)', opacity: 1 },
+                { transform: `translateY(${window.innerHeight}px) rotate(720deg)`, opacity: 0 }
+            ], { duration: 2000 + Math.random() * 1000 });
+
+            anim.onfinish = () => c.remove();
+        }
+    }
+
+    function endQuiz() {
+        clearInterval(timerInterval);
+        document.getElementById('screen-quiz').classList.remove('active');
+        document.getElementById('screen-result').classList.add('active');
+        
+        const finalScore = document.getElementById('res-score');
+        finalScore.innerText = `${score}/${questions.length}`;
+        
+        const msg = document.getElementById('res-msg');
+        const percent = (score / questions.length) * 100;
+
+        if (percent >= 80) msg.innerText = "🏆 Outstanding Performance!";
+        else if (percent >= 50) msg.innerText = "👏 Well Done! Keep it up.";
+        else msg.innerText = "📚 Practice makes perfect! Try again.";
+    }
+</script>
+
+</body>
+</html>

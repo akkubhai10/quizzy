@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Biology Quiz: Human Reproduction</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --glass: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --correct: #2ecc71;
+            --wrong: #e74c3c;
+            --hi-dim: #ddd;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(45deg, #6a11cb, #2575fc, #ff0080);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow-x: hidden;
+            color: white;
+            padding: 20px;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .card {
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 25px;
+            width: 100%;
+            max-width: 700px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            position: relative;
+            z-index: 10;
+        }
+
+        /* Progress Bar */
+        #progress-container {
+            position: absolute; top: 0; left: 0; width: 100%; height: 6px;
+            background: rgba(255,255,255,0.05); border-radius: 25px 25px 0 0; overflow: hidden;
+        }
+        #progress-bar { width: 0%; height: 100%; background: #00f2fe; box-shadow: 0 0 10px #00f2fe; transition: 0.4s; }
+
+        /* Screens */
+        .screen { display: none; flex-direction: column; }
+        .active { display: flex; animation: fadeIn 0.5s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* HUD */
+        .hud { display: flex; justify-content: space-between; margin-bottom: 20px; font-weight: 600; font-size: 0.9rem; }
+        #timer { font-size: 1.2rem; }
+        .pulse-red { color: var(--wrong); animation: pulse 0.8s infinite; }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+
+        /* Typography */
+        h1 { text-align: center; margin-bottom: 20px; font-weight: 700; }
+        .q-en { font-weight: 700; font-size: 1.15rem; margin-bottom: 5px; }
+        .q-hi { font-size: 0.95rem; color: var(--hi-dim); margin-bottom: 25px; }
+
+        /* Options */
+        .options-grid { display: grid; gap: 12px; }
+        .option-btn {
+            background: var(--glass); border: 1px solid var(--glass-border);
+            padding: 15px; border-radius: 15px; color: white; text-align: left;
+            cursor: pointer; transition: 0.3s; display: flex; flex-direction: column;
+        }
+        .option-btn:hover:not(:disabled) { background: rgba(255,255,255,0.2); transform: scale(1.02); }
+        .opt-hi { font-size: 0.85rem; color: #ccc; margin-top: 2px; }
+        .correct { background: var(--correct) !important; border-color: white; }
+        .wrong { background: var(--wrong) !important; border-color: white; }
+
+        /* Start UI */
+        .setting-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        input[type="number"] { background: var(--glass); border: 1px solid var(--glass-border); color: white; padding: 5px 10px; border-radius: 8px; width: 80px; }
+        .btn-start { background: white; color: #333; border: none; padding: 15px; border-radius: 15px; font-weight: 700; cursor: pointer; transition: 0.3s; margin-top: 10px; }
+        .btn-start:hover { transform: scale(1.05); box-shadow: 0 0 15px rgba(255,255,255,0.5); }
+
+        /* Feedback */
+        #emoji-overlay {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 100px; display: none; z-index: 1000;
+        }
+        .shake { animation: shakeAnim 0.5s; }
+        @keyframes shakeAnim { 0%,100% { transform: translate(-50%,-50%); } 25% { transform: translate(-55%,-50%); } 75% { transform: translate(-45%,-50%); } }
+
+        /* Confetti */
+        .confetti { position: fixed; width: 10px; height: 10px; z-index: 9999; }
+    </style>
+</head>
+<body>
+
+<div id="emoji-overlay">😢</div>
+
+<div class="card">
+    <div id="progress-container"><div id="progress-bar"></div></div>
+
+    <div id="screen-start" class="screen active">
+        <h1>Biology Quiz</h1>
+        <div class="setting-item">
+            <span>Timer (Sec per Q, 0=None):</span>
+            <input type="number" id="input-timer" value="30" min="0">
+        </div>
+        <div class="setting-item">
+            <span>Shuffle Questions:</span>
+            <input type="checkbox" id="input-shuffle" checked>
+        </div>
+        <button class="btn-start" onclick="startQuiz()">Start Quiz</button>
+    </div>
+
+    <div id="screen-quiz" class="screen">
+        <div class="hud">
+            <span id="counter">Q: 0/0</span>
+            <span id="timer">⏱️ --</span>
+            <span id="score-hud">Score: 0</span>
+        </div>
+        <div id="question-box">
+            <div class="q-en" id="q-en"></div>
+            <div class="q-hi" id="q-hi"></div>
+        </div>
+        <div class="options-grid" id="options"></div>
+        <button class="btn-start" style="margin-top:25px; background:rgba(255,0,0,0.2); color:white" onclick="showResults()">Finish & Show Results</button>
+    </div>
+
+    <div id="screen-result" class="screen">
+        <h1>Results</h1>
+        <div id="final-score" style="font-size: 3rem; text-align:center; font-weight:700;"></div>
+        <p id="result-msg" style="text-align:center; margin: 20px 0; font-size: 1.2rem;"></p>
+        <button class="btn-start" onclick="location.reload()">Restart Quiz</button>
+    </div>
+</div>
+
+<script>
+    const questionsDB = [
+        { en: "151. In which part of the sperm cell is mitochondria located?", hi: "151. शुक्राणु कोशिका के किस भाग में माइटोकांड्रिया उपस्थित रहता है ?", opts: [{en:"Head", hi:"सिर में"}, {en:"Middle piece", hi:"मध्य भाग में"}, {en:"Tail", hi:"पूँछ में"}, {en:"None of these", hi:"इनमें से कोई नहीं"}], ans: 1 },
+        { en: "152. Where are Fertilizin proteins found?", hi: "152. फर्टिलाइजिन प्रोटीन कहाँ पाये जाते हैं ?", opts: [{en:"Surface of sperm", hi:"शुक्राणु के सतह पर"}, {en:"Surface of egg", hi:"अंडाणु के सतह पर"}, {en:"Uterus", hi:"गर्भाशय में"}, {en:"Fallopian tube", hi:"फैलोपियन नलिका में"}], ans: 1 },
+        { en: "153. Which of the following statements is NOT correct?", hi: "153. निम्नलिखित में कौन-सा एक कथन सही नहीं है ?", opts: [{en:"Spermatogenesis is the process of gamete formation in reproductive organs", hi:"जनन अंगों में युग्मकों के निर्माण प्रक्रिया को शुक्राणुजनन कहते है।"}, {en:"Sperm is called male-gamete", hi:"शुक्राणु को नर-युग्मक कहा जाता है।"}, {en:"Egg is called female-gamete", hi:"अंडाणु को मादा-युग्मक कहा जाता है।"}, {en:"None of these", hi:"इनमें से कोई नहीं"}], ans: 0 },
+        { en: "154. Consider: 1. Spermatogenesis starts at 11-13 years in males. 2. Oogenesis starts at 9-11 years in females. Which is true?", hi: "154. निम्नलिखित कथनों पर विचार कीजिए- 1. शुक्रजनन की क्रिया 11-13 वर्ष के नर के वृषण में स्थित शुक्रजनन नलिकाओं में प्रारंभ होता है। 2. अंडजनन की क्रिया 9-11 वर्ष के मादा के अंडाशय के फॉलीकील में प्रारंभ होता है।", opts: [{en:"Only 1", hi:"केवल 1"}, {en:"Only 2", hi: "केवल 2"}, {en:"Both 1 and 2", hi:"1 तथा 2 दोनों"}, {en:"Neither 1 nor 2", hi:"न तो 1 न ही 2"}], ans: 2 },
+        { en: "155. Which of the following is a female reproductive organ?", hi: "155. निम्नलिखित में कौन मादा जनन अंग है ?", opts: [{en:"Ovary", hi:"Ovary"}, {en:"Oviducts", hi:"Oviducts"}, {en:"Uterus", hi:"Uterus"}, {en:"All of these", hi:"All of these"}], ans: 3 },
+        { en: "156. Which of the following is NOT a female reproductive organ?", hi: "156. निम्नलिखित में कौन एक मादा जनन अंग नहीं है ?", opts: [{en:"Vagina", hi:"Vagina"}, {en:"Fallopian tube", hi:"Fallopian tube"}, {en:"Seminal Vesicle", hi:"Seminal Vesicle"}, {en:"Ovary", hi:"Ovary"}], ans: 2 },
+        { en: "157. What is the length of the Fallopian tube?", hi: "157. अंडवाहिनी नली (Fallopian tube) की लंबाई कितनी होती है ?", opts: [{en:"10 cm", hi:"10 cm"}, {en:"12 cm", hi:"12 cm"}, {en:"15 cm", hi:"15 cm"}, {en:"20 cm", hi:"20 cm"}], ans: 0 },
+        { en: "158. Which of the following is a female accessory reproductive gland?", hi: "158. निम्नलिखित में कौन एक मादा सहायक जनन ग्रंथि है?", opts: [{en:"Bartholin's gland", hi:"बार्थोलियन ग्रंथि"}, {en:"Seminal vesicle", hi:"सेमिलन वेसिकल"}, {en:"Prostate gland", hi:"प्रोस्ट्रेट ग्रंथि"}, {en:"Cowper's gland", hi:"कॉडपर ग्रंथि"}], ans: 0 },
+        { en: "159. How many days is the menstrual cycle of a healthy woman?", hi: "159. एक स्वस्थ स्त्री का मासिक चक्र कितने दिनों का होता है ?", opts: [{en:"20 days", hi:"20 दिन"}, {en:"25 days", hi:"25 दिन"}, {en:"28 days", hi:"28 दिन"}, {en:"30 days", hi:"30 दिन"}], ans: 2 },
+        { en: "160. What is the thin membrane covering the external opening of the Vagina called?", hi: "160. योनि (Vagina) का बाह्य छिद्र जिस पतली झिल्ली द्वारा ढँका होता है उसे क्या कहते हैं ?", opts: [{en:"Hymen", hi:"हाइमेन झिल्ली"}, {en:"Vestibule", hi:"वेस्टी ब्यूली झिल्ली"}, {en:"Clitoris", hi:"क्लाइटोरिस"}, {en:"Labia minora", hi:"लोबिया माइनोरा"}], ans: 0 },
+        { en: "161. On which day of the menstrual cycle does ovulation occur?", hi: "161. मासिक चक्र के दरम्यान किस दिन अण्डोत्सर्जन होता है ?", opts: [{en:"Day 8 to 10", hi:"8वें से 10वें दिन"}, {en:"Day 12 to 14", hi:"12वें से 14वें दिन"}, {en:"Day 14 to 15", hi:"14वें से 15वें दिन"}, {en:"Last two days", hi:"मासिक चक्र के अंतिम दो दिन"}], ans: 2 },
+        { en: "162. Statement (A): If one ovary is removed, reproduction is not affected. Reason (R): The other ovary enlarges to compensate.", hi: "162. कथन (A) : यदि एक अण्डाशय निकाल दिया जाए तब भी प्रजनन की क्रिया प्रभावित नहीं होती है। कथन (R) : दूसरा अण्डाशय बड़ा होकर प्रथम अण्डाशय का कार्य करने लगता है।", opts: [{en:"Both A and R are true and R is correct explanation", hi:"A और R दोनों सही है तथा R, A का सही स्पष्टीकरण है।"}, {en:"Both A and R are true but R is NOT correct explanation", hi:"A और R दोनों सही है किन्तु R, A का सही स्पष्टीकरण नहीं है।"}, {en:"A is true, R is false", hi:"A सही है, किन्तु R गलत है।"}, {en:"A is false, R is true", hi:"A गलत है, किन्तु R सही है।"}], ans: 0 },
+        { en: "163. From what does the Corpus luteum develop?", hi: "163. कॉर्पस ल्यूटियम का विकास होता है-", opts: [{en:"Nephrostome", hi:"नेफ्रोस्टोम से"}, {en:"Oocyte", hi:"अण्डकोश से"}, {en:"Endometrium", hi:"एण्डोमीट्रियम से"}, {en:"Graafian follicle", hi:"ग्रेफियन फॉलिकिल से"}], ans: 3 },
+        { en: "164. Which hormone is secreted by the Corpus luteum?", hi: "164. कॉर्पस ल्यूटियम के द्वारा स्त्रावित होने वाला हार्मोन है ?", opts: [{en:"Estrogen", hi:"ऐस्ट्रोजेन"}, {en:"Progesterone", hi:"प्रोजेस्ट्रोन"}, {en:"LH", hi:"LH"}, {en:"FSH", hi:"FSH"}], ans: 1 },
+        { en: "165. Consider: 1. First menstruation is Menopause. 2. Stopping of menstruation is Menarche. 3. Starts at 12-15 and ends at 45-50. Which is true?", hi: "165. निम्नलिखित कथनों पर विचार कीजिए- 1. बालिकाओं में पहली बार मासिक चक्र का प्रारंभ होना रजोनिवृत्ति (Menopause) कहलाता है। 2. स्त्रियों में मासिक चक्र की क्रिया बंद होना मेनार्क कहलाता है। 3. मासिक चक्र 12 से 15 वर्ष की आयु से प्रारंभ होकर 45 से 50 वर्ष की उम्र तक चलता रहता है।", opts: [{en:"Only 1", hi:"केवल 1"}, {en:"Only 2", hi:"केवल 2"}, {en:"Only 3", hi:"केवल 3"}, {en:"All of these", hi:"उपर्युक्त सभी"}], ans: 2 },
+        { en: "166. Total eggs produced in a healthy woman's lifetime is approximately?", hi: "166. एक स्वस्थ महिला के पूरे जीवन काल में उत्पन्न कुल अंडों की संख्या होती है-", opts: [{en:"40", hi:"40"}, {en:"400", hi:"400"}, {en:"4000", hi:"4000"}, {en:"365", hi:"365"}], ans: 1 },
+        { en: "167. What is the fusion of sperm (male gamete) and egg (female gamete) called?", hi: "167. शुक्राणु (malegamit) तथा अंडाणु (Female Jamit) का संयोजन क्या कहलाता है ?", opts: [{en:"Fertilization", hi:"निषेचन"}, {en:"Spermatogenesis", hi:"शुक्राणु जनन"}, {en:"Oogenesis", hi:"अंड जनन"}, {en:"Gamete formation", hi:"युग्मक जनन"}], ans: 0 },
+        { en: "168. Where does fertilization occur in humans and other mammals?", hi: "168. मानव एवं अन्य स्तनधारियों में निषेचन की क्रिया सम्पन्न होती है-", opts: [{en:"Ovary", hi:"अण्डाशय में"}, {en:"Uterus", hi:"गर्भाशय में"}, {en:"Vagina", hi:"योनि से"}, {en:"Fallopian tube", hi:"फैलोपियन नलिका में"}], ans: 3 },
+        { en: "169. What is formed by the fusion of male and female gametes?", hi: "169. नर युग्मक (Sperm) तथा मादा युग्मक (Ova) के संयोजन से बनता है-", opts: [{en:"Sperm", hi:"शुक्राणु"}, {en:"Semen", hi:"वीर्य"}, {en:"Zygote", hi:"युग्मनज"}, {en:"Egg", hi:"अण्डाणु"}], ans: 2 },
+        { en: "170. What is the 16-cell stage of the embryo called?", hi: "170. भ्रूण (Embryo) की 16 कोशिका वाले अवस्था को क्या कहते हैं ?", opts: [{en:"Morula", hi:"मोरुला"}, {en:"Gastrula", hi:"गैस्ट्रुला"}, {en:"Blastula", hi:"ब्लास्टुला"}, {en:"Blastomere", hi:"ब्लास्टोमियर"}], ans: 0 },
+        { en: "171. After how long after fertilization does Implantation occur in the uterus?", hi: "171. निषेचन के कितने समय बाद भ्रूण का गर्भ में आरोपण (Implantation) होता है ?", opts: [{en:"1 week", hi:"1 सप्ताह"}, {en:"2 weeks", hi:"2 सप्ताह"}, {en:"3 weeks", hi:"3 सप्ताह"}, {en:"4 weeks", hi:"4 सप्ताह"}], ans: 0 },
+        { en: "172. What is the outermost membrane of the Foetus called?", hi: "172. गर्भ (Foetus) के सबसे बाहरी झिल्ली को क्या कहते हैं ?", opts: [{en:"Villi", hi:"अंकुर (Villi)"}, {en:"Chorion", hi:"जरायु (Chrion)"}, {en:"Placenta", hi:"अपरा (Placenta)"}, {en:"Umbilical cord", hi:"नाभिरज्जु"}], ans: 1 },
+        { en: "173. When is the Placenta formed in humans?", hi: "173. मनुष्य में अपरा (Placenta) का निर्माण कब होता है?", opts: [{en:"At time of implantation", hi:"भ्रूण रोपण के समय"}, {en:"One week after implantation", hi:"भ्रूण रोपण के एक सप्ताह के बाद"}, {en:"Four weeks after implantation", hi:"भ्रूण रोपण के चार सप्ताह बाद"}, {en:"No fixed time", hi:"कोई निश्चित समय नहीं है।"}], ans: 1 },
+        { en: "174. Through which organ is food supplied for embryonic development?", hi: "174. भ्रूण के विकास के लिए निम्नलिखित में से किस अंग के द्वारा खाद्य की पूर्ति की जाती है ?", opts: [{en:"Fallopian tube", hi:"फैलोपियन नली"}, {en:"Uterus", hi:"गर्भाशय"}, {en:"Placenta", hi:"प्लेसेन्टा"}, {en:"None of these", hi:"इनमें से कोई नहीं"}], ans: 2 },
+        { en: "175. What is the fluid in which the human foetus floats in the uterus?", hi: "175. गर्भाशय में मानव भ्रूण जिस द्रव्य में तैरता रहता है, उसे क्या कहते हैं ?", opts: [{en:"Chorion fluid", hi:"Chorionfluid"}, {en:"Amniotic fluid", hi:"Amniotic fluid"}, {en:"Placental fluid", hi:"Placental fluid"}, {en:"Blood plasma", hi:"Blood plasma"}], ans: 1 },
+        { en: "176. What is the strong cord-like structure connecting the foetus to the placenta?", hi: "176. मानव गर्भ, प्लेसेन्टा से एक मजबूत डोरी समान संरचना से जुड़ी रहती है, उसे क्या कहते हैं ?", opts: [{en:"Umbilical cord", hi:"नाभिरज्जु"}, {en:"Chorion", hi:"कोरियॉन"}, {en:"Villi", hi:"विलाई"}, {en:"Dehiscence", hi:"डेहिसेंस"}], ans: 0 },
+        { en: "177. How many days is the human pregnancy period?", hi: "177. मानव में गर्भावस्था कितने दिनों की होती है ?", opts: [{en:"8 months", hi:"आठ महीने"}, {en:"9 months", hi:"नौ महीने"}, {en:"9 months 10 days", hi:"नौ महीने दस दिन"}, {en:"10 months", hi:"दस महीना"}], ans: 2 },
+        { en: "178. Which cell division process immediately after egg fertilization leads to a multicellular organism?", hi: "178. अंडा (Ova) निषेचित होने के तुरंत बाद किस कोशिका विभाजन की प्रक्रिया के फलस्वरूप एक बहुकोशकीय जीव को जन्म देता है ?", opts: [{en:"Amitosis", hi:"असूत्री (Amitosis)"}, {en:"Mitosis", hi:"समसूत्री (Mitosis)"}, {en:"Meiosis", hi:"अर्द्धसूत्री (Meiosis)"}, {en:"None of these", hi:"इनमें से कोई नहीं"}], ans: 1 },
+        { en: "179. Consider: 1. Sperm lives in Fallopian tube for 12 hours. 2. Egg lives in Fallopian tube for 36 hours. Which is true?", hi: "179. निम्नलिखित कथनों पर विचार कीजिए- 1. शुक्राणु, फैलोपियन नली में 12 घंटे तक जीवित रहते है। 2. अंडाणु, फैलोपियन नली में 36 घंटे तक जीवित रहते है।", opts: [{en:"Only 1", hi:"केवल 1"}, {en:"Only 2", hi:"केवल 2"}, {en:"Both 1 and 2", hi:"1 तथा 2 दोनों"}, {en:"Neither 1 nor 2", hi:"न तो 1 न ही 2"}], ans: 3 },
+        { en: "180. How many eggs are released (Ovulation) during each menstrual cycle?", hi: "180. प्रत्येक मासिक चक्र के दौरान कितने अण्डाणु का उत्सर्जन (Ovulation) होता है ?", opts: [{en:"Two", hi:"दो"}, {en:"One", hi:"एक"}, {en:"More than two", hi:"दो से अधिक"}, {en:"400", hi:"400"}], ans: 1 },
+        { en: "181. Which of the following is a Haploid structure?", hi: "181. निम्नलिखित में कौन अगुणित (Haploid) संरचना है ?", opts: [{en:"Egg", hi:"अंड (Ova)"}, {en:"Sperm", hi:"शुक्राणु (Sperm)"}, {en:"Pollen", hi:"पराग (Pollen)"}, {en:"Zygote", hi:"युग्मनज (Zygote)"}], ans: 3 },
+        { en: "182. When is gender determination of the foetus decided in humans?", hi: "182. मनुष्य में गर्भ का लिंग निर्धारण होता है-", opts: [{en:"At time of fertilization", hi:"निषेचन के समय"}, {en:"One week after fertilization", hi:"निषेचन के एक सप्ताह बाद"}, {en:"When embryo is in uterus", hi:"जब गर्भ गर्भाशय में स्थापित होता है"}, {en:"At time of birth", hi:"जन्म के समय"}], ans: 0 },
+        { en: "183. In what order do the three germinal layers of the human embryo form?", hi: "183. मानव भ्रूण तीन जनन स्तरों (Germinal layer) का निर्माण किस क्रम में करती है ?", opts: [{en:"Endoderm -> Ectoderm -> Mesoderm", hi:"Endoderm -> Ectoderm -> Mesoderm"}, {en:"Endoderm -> Mesoderm -> Ectoderm", hi:"Endoderm -> Mesoderm -> Ectoderm"}, {en:"Ectoderm -> Mesoderm -> Endoderm", hi:"Ectoderm -> Mesoderm -> Endoderm"}, {en:"Endoderm -> Ectoderm -> Mesoderm", hi:"Endoderm -> Etoderm -> Mesoderm"}], ans: 0 },
+        { en: "184. From which germinal layer does the nervous system (brain, spinal cord) develop?", hi: "184. भ्रूण के किस जनन स्तर से तंत्रिका तंत्र (मस्तिष्क, मेरुरज्जु) का विकास होता है।", opts: [{en:"Ectoderm", hi:"एक्टोडर्म"}, {en:"Mesoderm", hi:"मिसोडर्म"}, {en:"Endoderm", hi:"एंडोडर्म"}, {en:"All of these", hi:"उपर्युक्त तीनों"}], ans: 0 },
+        { en: "185. From which germinal layer do stem cells develop?", hi: "185. स्टेम सेल का विकास किस जनन स्तर से होता है ?", opts: [{en:"Ectoderm", hi:"एक्टोडर्म"}, {en:"Endoderm", hi:"एंडोडर्म"}, {en:"Mesoderm", hi:"मेसोडर्म"}, {en:"All of these", hi:"इनमें से सभी"}], ans: 3 },
+        { en: "186. What is the process of childbirth called?", hi: "186. संतान उत्पत्ति (प्रसव) की प्रक्रिया का क्या नाम है ?", opts: [{en:"Micturition", hi:"मिक्क्यूरीसन"}, {en:"Parturition", hi:"पाच्युरीसन"}, {en:"Lactation", hi:"लैक्टेशन"}, {en:"Expiration", hi:"एस्पायरेशन"}], ans: 1 },
+        { en: "187. When does fertilization occur in humans?", hi: "187. मनुष्य में निषेचन कब होता है ?", opts: [{en:"First day of cycle", hi:"मासिक चक्र के पहले दिन"}, {en:"First week of cycle", hi:"मासिक चक्र के पहले सप्ताह में"}, {en:"Day 16 to 18 of cycle", hi:"मासिक चक्र के 16वें से 18 दिन"}, {en:"Last day of cycle", hi:"मासिक चक्र के अंतिम दिन"}], ans: 2 },
+        { en: "188. What is the human gestation period?", hi: "188. मनुष्य में गर्भावधि काल होता है-", opts: [{en:"10 weeks", hi:"10 सप्ताह"}, {en:"25 weeks", hi:"25 सप्ताह"}, {en:"36 weeks", hi:"36 सप्ताह"}, {en:"26 weeks", hi:"26 सप्ताह"}], ans: 2 },
+        { en: "189. Under what condition does the Corpus luteum remain active and secrete Progesterone and Relaxin?", hi: "189. किस स्थिति में कॉर्पस ल्यूटियम सक्रिय रहकर हार्मोन प्रोजेस्टेरोन तथा रिलैक्सीन स्त्रावित करता है ?", opts: [{en:"After egg fertilization", hi:"अंडाणु के निषेचन के बाद"}, {en:"Before egg fertilization", hi:"अंडाणु के निषेचन के पहले"}, {en:"Both cases", hi:"a तथा b दोनों ही अवस्था में"}, {en:"None of these", hi:"इनमें से कोई नहीं"}], ans: 0 },
+        { en: "190. What is the common path formed when the Vas deferens joins the tube from the bladder?", hi: "190. शुक्रवाहिका (Vasa defrentia) मूत्राशय से आने वाली नली के साथ जुड़कर एक सामान्य मार्ग बनाता है, जिसे क्या कहते हैं-", opts: [{en:"Urethra", hi:"मूत्रमार्ग"}, {en:"Ureter", hi:"मूत्रवाहिनी"}, {en:"Testis", hi:"वृषण"}, {en:"Seminal vesicle", hi:"शुक्राशय"}], ans: 0 },
+        { en: "191. Where is sperm stored temporarily?", hi: "191. शुक्राणु अस्थायी रूप से कहाँ रखा जाता है ?", opts: [{en:"Epididymis", hi:"अधिवृषण"}, {en:"Bladder", hi:"मूत्राशय"}, {en:"Prostate gland", hi:"प्रोस्टेट ग्रंथि"}, {en:"Vas deferens", hi:"शुक्रवाहिका"}], ans: 0 },
+        { en: "192. Why is the male scrotum located outside the body?", hi: "192. पुरुषों का वृषण कोष शरीर के बाहर क्या होता है ?", opts: [{en:"Temp for sperm production is higher than body temp", hi:"शुक्राणु निर्माण हेतु सामान्य तापक्रम शरीर के सामान्य तापक्रम के तुलना में अधिक होता है।"}, {en:"Temp for sperm production is lower than body temp", hi:"शुक्राणु निर्माण के लिए सामान्य शरीर के तापमान के तुलना में कम तापमान की आवश्यकता होती है।"}, {en:"Presence of vas deferens", hi:"शुक्रवाहिका की उपस्थिति के कारण"}, {en:"Special tissues in abdomen", hi:"पेट में पाये जाने वाले विशेष उत्तकों के कारण"}], ans: 1 },
+        { en: "193. What does the Placenta assist with?", hi: "193. भ्रूण की अपरापोषिका (Placenta) किसमें सहायक होती है ?", opts: [{en:"Excretion", hi:"उत्सर्जन"}, {en:"Respiration", hi:"श्वसन"}, {en:"Protection", hi:"संरक्षण"}, {en:"Digestion", hi:"पाचन"}], ans: 0 },
+        { en: "194. In which part of the male reproductive system is the primary genetic material found?", hi: "194. नर प्रजनन तंत्र के कौन से अंग में मुख्य आनुवंशिक सामग्री पायी जाती है ?", opts: [{en:"Sperm", hi:"शुक्राणु"}, {en:"Prostate gland", hi:"प्रोस्टेट ग्रंथि"}, {en:"Scrotum", hi:"अणुकोश"}, {en:"Vas deferens", hi:"मूत्रवाहिनी"}], ans: 0 },
+        { en: "195. Consider: a) Maturation of spermatogenesis/sperm. b) Motility of sperm. c) Only sperm motility. d) Maturation and motility. Which is correct?", hi: "195. एक सामान्य मनुष्य के सन्दर्भ में निम्न कथनों पर विचार कीजिए- (a) शुक्रजनन तथा शुक्राणुओं में परिपक्ववन (b) शुक्रजनन तथा शुक्राणुओं की गतिशीलता (c) केवल शुक्राणुओं की गतिशीलता (d) शुक्राणुओं का परिपक्ववन और उसकी गतिशीलता", opts: [{en:"a and b", hi:"a और b"}, {en:"b and c", hi:"b और c"}, {en:"c and d", hi:"c और d"}, {en:"Only d", hi:"केवल d"}], ans: 3 },
+        { en: "196. When does the human foetus heart start beating?", hi: "196. मानव भ्रूण का हृदय कब स्पंदन करने लगता है ?", opts: [{en:"1st week of development", hi:"अपने परिवर्धन के प्रथम सप्ताह में"}, {en:"3rd week of development", hi:"अपने परिवर्धन के तृतीय सप्ताह में"}, {en:"4th week of development", hi:"अपने परिवर्धन के चौथे सप्ताह में"}, {en:"6th week of development", hi:"अपने परिवर्धन के छठे सप्ताह में"}], ans: 2 },
+        { en: "197. Consider: 1. Leydig cells secrete testosterone. 2. Corpus luteum cells secrete estrogen. 3. Fertilized egg implants in blastocyst stage. Which is true?", hi: "197. निम्नलिखित कथनों पर विचार कीजिए- 1. पुरुष में लीडिंग कोशिकाएँ टेस्टोस्टेरोन को रूधिर में स्त्रावित करती है। 2. स्त्रियों में, कॉर्पस ल्यूटियम की कोशिका एस्ट्रोजेन स्त्रावित करती है। 3. निषेचित अण्डाणु गर्भाशय के दिवार में ब्लास्टोसिस्ट अवस्था में अध्यारोपित होती है।", opts: [{en:"1 and 2", hi:"1 और 2"}, {en:"1 and 3", hi:"1 और 3"}, {en:"2 and 3", hi:"2 और 3"}, {en:"1, 2 and 3", hi:"1, 2 और 3"}], ans: 1 },
+        { en: "198. What is the study of 3-month-old infants called?", hi: "198. नवजात शिशु की 3 माह तक की आयु के अध्ययन को कहते है ?", opts: [{en:"Chorology", hi:"कोरोलॉजी"}, {en:"Conchology", hi:"कॉन्कोलॉजी"}, {en:"Neonatology", hi:"नियोनेटोलॉजी"}, {en:"Nematology", hi:"नीमैटोलॉजी"}], ans: 2 },
+        { en: "199. What is the sequence of hormones secreted at the start of the menstrual cycle?", hi: "199. मासिक चक्र के आरंभ से स्त्रावित होनेवाले हॉर्मोन का क्रम है-", opts: [{en:"FSH, Progesterone, Estrogen", hi:"FSH, प्रोजेस्ट्रोन, इस्ट्रोजेन"}, {en:"FSH, Estrogen, Progesterone", hi:"FSH, इस्ट्रोजेन, प्रोजेस्ट्रॉन"}, {en:"Estrogen, FSH, Progesterone", hi:"इस्ट्रोजेन, FSH, प्रोजेस्ट्रॉन"}, {en:"Estrogen, Progesterone, FSH", hi:"इस्ट्रोजेन, प्रोजेस्ट्रोन, FSH"}], ans: 1 },
+        { en: "200. Which of the following acts as a temporary endocrine gland?", hi: "200. निम्नलिखित में कौन एक अल्पकालीन अंतःस्त्रावी ग्रंथि का कार्य करता है ?", opts: [{en:"Testis", hi:"वृषण"}, {en:"Ovary", hi:"अण्डाशय"}, {en:"Corpus luteum", hi:"कॉर्पस ल्यूटियम"}, {en:"Graafian follicle", hi:"ग्राफी पुटक"}], ans: 2 },
+        { en: "201. Oral contraceptives for females prevent pregnancy by inhibiting which process?", hi: "201. मुख के द्वारा मादा (Female) द्वारा लिया गया गर्भनिरोधक गोलियाँ निम्नलिखित में किस प्रक्रिया को रोककर गर्भभता (Pregnancy) से निजात दिलाता है ?", opts: [{en:"Ovulation", hi:"अण्डोत्सर्जन (Ovluation)"}, {en:"Fertilization", hi:"निषेचन (Fertilization)"}, {en:"Implantation", hi:"भ्रूण रोपण (Hmplantation)"}, {en:"All of these", hi:"इनमें से सभी"}], ans: 0 },
+        { en: "202. What does Copper-T prevent?", hi: "202. कॉपर-टी रोकता है-", opts: [{en:"Embryo implantation", hi:"भ्रूण-रोपण को"}, {en:"Ovulation", hi:"अण्डोत्सर्जन को"}, {en:"Fertilization", hi:"अण्ड-निषेचन को"}, {en:"None of these", hi:"इनमें से कोई नहीं"}], ans: 0 },
+        { en: "203. Consider: 1. Test tube baby fertilization is external, development internal. 2. External fertilization is also called IVF. Which is true?", hi: "203. निम्नलिखित कथनों पर विचार कीजिए- 1. परखनली शिशु (Test tube baby) का निषेचन बाह्य होता है जबकि विकास आंतरिक। 2. बाह्य निषेचन को इन विट्रो निषेचन (IVF) भी कहा जाता है।", opts: [{en:"Only 1", hi:"केवल 1"}, {en:"Only 2", hi:"केवल 2"}, {en:"Both 1 and 2", hi:"1 तथा 2 दोनों"}, {en:"Neither 1 nor 2", hi:"न तो 1 न ही 2"}], ans: 2 },
+        { en: "204. What was the name of the world's first test tube baby?", hi: "204. विश्व के प्रथम परखनली शिशु का नाम क्या है ?", opts: [{en:"Astha", hi:"आस्था"}, {en:"Indira", hi:"इन्दिरा"}, {en:"Dolly", hi:"डॉली"}, {en:"Louise", hi:"लुईस"}], ans: 3 },
+        { en: "205. What is the fluid in which the human foetus floats in the uterus?", hi: "205. गर्भाशय में मानव भ्रूण जिस द्रव में तैरता रहता है, उसे क्या कहते है ?", opts: [{en:"Amniotic fluid", hi:"एम्नियोटिक द्रव"}, {en:"Placental fluid", hi:"प्लेसेन्टल द्रव"}, {en:"Chorionic fluid", hi:"कोरियोनिक द्रव"}, {en:"None of these", hi:"इनमें से कोई नहीं"}], ans: 0 },
+        { en: "206. Up to how many months is an abortion safe?", hi: "206. गर्भावस्था के अधिकतम कितने महीने तक गर्भपात (Abortim) सुरक्षित होता है ?", opts: [{en:"1 month", hi:"1 महीना"}, {en:"2 months", hi:"2 महीना"}, {en:"3 months", hi:"3 महीना"}, {en:"4 months", hi:"4 महीना"}], ans: 2 },
+        { en: "207. Consider: 1. Abortion is safe up to 3 months. 2. Abortion after 6 months is dangerous for both mother and child. Which is true?", hi: "207. निम्नलिखित पर विचार कीजिए- 1. गर्भावस्था के तीन महीने तक गर्भपात सुरक्षित होता है 2. छः महीने पूरा हो जाने गर्भपात कराना माता एवं शिशु दोनों के लिये खतरनाक है", opts: [{en:"Only 1", hi:"केवल 1"}, {en:"Only 2", hi:"केवल 2"}, {en:"Both 1 and 2", hi:"1 तथा 2 दोनों"}, {en:"Neither 1 nor 2", hi:"न तो 1 न ही 2"}], ans: 2 },
+        { en: "208. What is male sterilization called?", hi: "208. नर-नसबंदी को क्या कहते है ?", opts: [{en:"Vasectomy", hi:"Vasectomy"}, {en:"Tubectomy", hi:"Tubectomy"}, {en:"Amniocentesis", hi:"Amniocentesis"}, {en:"MTP", hi:"MTP"}], ans: 0 },
+        { en: "209. What is female sterilization called?", hi: "209. मादा-नसबंदी को क्या कहते है ?", opts: [{en:"MTP", hi:"MTP"}, {en:"Amniocentesis", hi:"Amniocentesis"}, {en:"Tubectomy", hi:"Tubectomy"}, {en:"Vasectomy", hi:"Vasectomy"}], ans: 2 },
+        { en: "210. What is the method for testing foetal sex and genetic defects?", hi: "210. गर्भ में विकसित हो रहे भ्रूण के लिंग, अनुवंशिक विकृति की जाँच की विधि का नाम है-", opts: [{en:"Laparoscopy", hi:"लेप्रोस्कोपी"}, {en:"Amniocentesis", hi:"एमनियो सेन्टोसिम"}, {en:"IVF", hi:"इन वीत्रो"}, {en:"Coitus interruptus", hi:"कोइटस इण्टरप्टस"}], ans: 1 },
+        { en: "211. Consider: 1. In male sterilization, vas deferens is cut and tied. 2. In female sterilization, fallopian tube is cut and tied. Which is true?", hi: "211. निम्नलिखित पर विचार कीजिए- 1. नर नसबंदी में नर के शुक्रवाहिका को काटकर धागे से बाँध दिया जाता है 2. मादा-नसबंदी में मादा के फैलोपियन नलिका को काटकर बाँध दिया जाता है", opts: [{en:"Only 1", hi:"केवल 1"}, {en:"Only 2", hi:"केवल 2"}, {en:"Both 1 and 2", hi:"1 तथा 2 दोनों"}, {en:"Neither 1 nor 2", hi:"न तो 1 न ही 2"}], ans: 2 },
+        { en: "212. Which method is used to test for STD (Sexually Transmitted Disease)?", hi: "212. STD (Sexually transmitted Disease) की जाँच किस विधि के द्वारा की जाती है ?", opts: [{en:"DNA hybridization", hi:"DNA hybridization"}, {en:"PCR", hi:"PCR"}, {en:"ELISA", hi:"ELISA"}, {en:"All of these", hi:"इनमें से सभी"}], ans: 3 },
+        { en: "213. Which population control method is NOT used by women?", hi: "213. निम्नलिखित में से जनसंख्या नियंत्रण की कौन युक्ति महिलाओं के द्वारा प्रयोग नहीं की जाती है ?", opts: [{en:"Oral pills", hi:"मुखीय गोली"}, {en:"Diaphragm", hi:"डायफ्राम"}, {en:"Condom", hi:"निरोध"}, {en:"Copper-T", hi:"कॉपर-टी"}], ans: 2 },
+        { en: "214. Which is true? a) Pills contain hormones, taken for 21 days. b) Lippes loop/Copper-T are IUDs placed in uterus. c) Saheli is a steroid pill with side effects. d) Diaphragm covers cervix during intercourse.", hi: "214. निम्नलिखित में कौन-सा कथन सही है/हैं ? (a) गर्भ निरोधक गोलियाँ विभिन्न प्रकार के हॉर्मोन की बनी होती है। जिसे मासिक चक्र के प्रथम पाँच दिनों से लगातार 21 दिनों तक ली जाती है। (b) लिप्पस लूप, कॉपर टी, कॉपर-7 एक IUD (Intra Uterine Divice) है जिसे प्रशिक्षित नर्स द्वारा योनि मार्ग से गर्भाशय में लगाया जाता है। (c) सहेली नामक गर्भनिरोध गोली स्टेराइड प्रकृति का होता है जिसका दुष्प्रभाव शरीर पर अधिक पड़ता है। (d) डायफ्राम एक मानव निर्मित उपकरण है जिसे सहवास के पूर्व गर्भाशय ग्रीवा ढँकने हेतु इस्तेमाल किया जाता है जिससे शुक्राणु का प्रवेश बाधित हो जाए।", opts: [{en:"a and b", hi:"a और b"}, {en:"b and c", hi:"b और c"}, {en:"c and d", hi:"c और d"}, {en:"a, b and d", hi:"a, b और d"}], ans: 3 },
+        { en: "215. Consider: 1. Viviparous organisms produce eggs, no placenta. 2. Oviparous organisms produce children, placenta present. Which is true?", hi: "215. निम्नलिखित पर विचार कीजिए- 1. अंडे उत्पन्न करने वाली जीव Viviparous कहलाते है, इसमें Placenta का निर्माण नहीं होता है 2. बच्चे उत्पन्न करने वाले जीव को Oviparous कहते है, इसमें Placents का निर्माण होता है", opts: [{en:"Only 1", hi:"केवल 1"}, {en:"Only 2", hi:"केवल 2"}, {en:"Both 1 and 2", hi:"1 तथा 2 दोनों"}, {en:"Neither 1 nor 2", hi:"न तो 1 न ही 2"}], ans: 3 },
+        { en: "216. When did the Family Planning program start in India?", hi: "216. भारत में परिवार नियोजन कार्यक्रम कब आरंभ हुआ ?", opts: [{en:"1951 AD", hi:"1951 ई."}, {en:"1960 AD", hi:"1960 ई."}, {en:"1971 AD", hi:"1971 ई."}, {en:"1981 AD", hi:"1981 ई."}], ans: 0 }
+    ];
+
+    let currentQuestions = [];
+    let currentIdx = 0;
+    let score = 0;
+    let timerId = null;
+    let timerDuration = 30;
+
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    function playSound(type) {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        if (type === 'correct') {
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.5);
+        } else {
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(200, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.4);
+        }
+    }
+
+    function createConfetti() {
+        for (let i = 0; i < 30; i++) {
+            const c = document.createElement('div');
+            c.className = 'confetti';
+            c.style.left = Math.random() * 100 + 'vw';
+            c.style.top = '-10px';
+            c.style.backgroundColor = `hsl(${Math.random() * 360}, 100%, 50%)`;
+            c.style.transform = `rotate(${Math.random() * 360}deg)`;
+            document.body.appendChild(c);
+            c.animate([
+                { transform: 'translateY(0vh) rotate(0deg)', opacity: 1 },
+                { transform: 'translateY(100vh) rotate(720deg)', opacity: 0 }
+            ], { duration: 2000 + Math.random() * 1000, easing: 'linear' }).onfinish = () => c.remove();
+        }
+    }
+
+    function startQuiz() {
+        timerDuration = parseInt(document.getElementById('input-timer').value);
+        currentQuestions = [...questionsDB];
+        if (document.getElementById('input-shuffle').checked) {
+            currentQuestions.sort(() => Math.random() - 0.5);
+        }
+        currentIdx = 0;
+        score = 0;
+        document.getElementById('screen-start').classList.remove('active');
+        document.getElementById('screen-quiz').classList.add('active');
+        loadQuestion();
+    }
+
+    function loadQuestion() {
+        if (currentIdx >= currentQuestions.length) return showResults();
+        const q = currentQuestions[currentIdx];
+        document.getElementById('counter').innerText = `Q: ${currentIdx + 1}/${currentQuestions.length}`;
+        document.getElementById('score-hud').innerText = `Score: ${score}`;
+        document.getElementById('q-en').innerText = q.en;
+        document.getElementById('q-hi').innerText = q.hi;
+        document.getElementById('progress-bar').style.width = `${(currentIdx / currentQuestions.length) * 100}%`;
+
+        const optsDiv = document.getElementById('options');
+        optsDiv.innerHTML = '';
+        q.opts.forEach((opt, i) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerHTML = `<span>${opt.en}</span><span class="opt-hi">${opt.hi}</span>`;
+            btn.onclick = () => handleAnswer(i);
+            optsDiv.appendChild(btn);
+        });
+
+        startTimer();
+    }
+
+    function startTimer() {
+        clearInterval(timerId);
+        if (timerDuration === 0) {
+            document.getElementById('timer').innerText = '⏱️ ∞';
+            return;
+        }
+        let time = timerDuration;
+        const timerEl = document.getElementById('timer');
+        timerEl.classList.remove('pulse-red');
+        timerEl.innerText = `⏱️ ${time}s`;
+
+        timerId = setInterval(() => {
+            time--;
+            timerEl.innerText = `⏱️ ${time}s`;
+            if (time < 5) timerEl.classList.add('pulse-red');
+            if (time <= 0) {
+                clearInterval(timerId);
+                handleAnswer(-1);
+            }
+        }, 1000);
+    }
+
+    function handleAnswer(choice) {
+        clearInterval(timerId);
+        const q = currentQuestions[currentIdx];
+        const buttons = document.querySelectorAll('.option-btn');
+        buttons.forEach(b => b.disabled = true);
+
+        if (choice === q.ans) {
+            buttons[choice].classList.add('correct');
+            score++;
+            playSound('correct');
+            createConfetti();
+        } else {
+            if (choice !== -1) buttons[choice].classList.add('wrong');
+            buttons[q.ans].classList.add('correct');
+            playSound('wrong');
+            const emoji = document.getElementById('emoji-overlay');
+            emoji.style.display = 'block';
+            emoji.classList.add('shake');
+            setTimeout(() => { emoji.style.display = 'none'; emoji.classList.remove('shake'); }, 1000);
+        }
+
+        setTimeout(() => {
+            currentIdx++;
+            loadQuestion();
+        }, 1500);
+    }
+
+    function showResults() {
+        clearInterval(timerId);
+        document.getElementById('screen-quiz').classList.remove('active');
+        document.getElementById('screen-result').classList.add('active');
+        const pct = Math.round((score / currentQuestions.length) * 100);
+        document.getElementById('final-score').innerText = `${score} / ${currentQuestions.length}`;
+        let msg = "";
+        if (pct >= 80) msg = "🏆 Outstanding Performance!";
+        else if (pct >= 50) msg = "👏 Well Done! Keep it up.";
+        else msg = "📚 Practice makes perfect! Try again.";
+        document.getElementById('result-msg').innerText = msg;
+        document.getElementById('progress-bar').style.width = '100%';
+    }
+</script>
+
+</body>
+</html>

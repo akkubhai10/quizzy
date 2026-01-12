@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Environmental Science Quiz</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: 1px solid rgba(255, 255, 255, 0.2);
+            --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            --primary-text: #ffffff;
+            --secondary-text: #e0e0e0;
+            --hindi-text: #dcdcdc;
+            --accent-green: #00e676;
+            --accent-red: #ff1744;
+            --mesh-gradient: radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
+                             radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%), 
+                             radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 50%);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+
+        body {
+            background-color: #0f0c29;
+            background-image: var(--mesh-gradient), linear-gradient(to bottom right, #302b63, #24243e);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--primary-text);
+            overflow-x: hidden;
+        }
+
+        /* Glassmorphism Card */
+        .quiz-container {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: var(--glass-border);
+            box-shadow: var(--glass-shadow);
+            border-radius: 25px;
+            width: 95%;
+            max-width: 700px;
+            padding: 30px;
+            position: relative;
+            min-height: 500px;
+            display: flex;
+            flex-direction: column;
+            transition: all 0.3s ease;
+        }
+
+        /* Screens */
+        .screen { display: none; flex-direction: column; align-items: center; width: 100%; height: 100%; }
+        .screen.active { display: flex; animation: fadeIn 0.5s ease; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Start Screen */
+        h1 { font-size: 2rem; margin-bottom: 20px; text-align: center; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+        .input-group { margin: 15px 0; width: 100%; max-width: 300px; }
+        label { display: block; margin-bottom: 5px; font-size: 0.9rem; color: var(--secondary-text); }
+        
+        input[type="number"] {
+            width: 100%;
+            padding: 12px;
+            border-radius: 12px;
+            border: none;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            font-size: 1rem;
+            outline: none;
+            transition: 0.3s;
+        }
+        input[type="number"]:focus { background: rgba(255,255,255,0.3); box-shadow: 0 0 10px rgba(255,255,255,0.2); }
+
+        .toggle-container { display: flex; align-items: center; justify-content: space-between; width: 100%; max-width: 300px; margin-bottom: 25px; }
+        .switch { position: relative; display: inline-block; width: 50px; height: 26px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(255,255,255,0.2); transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--accent-green); }
+        input:checked + .slider:before { transform: translateX(24px); }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            padding: 15px 40px;
+            color: white;
+            font-size: 1.1rem;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            font-weight: 600;
+            margin-top: 20px;
+        }
+        .btn:hover { transform: scale(1.05); box-shadow: 0 10px 20px rgba(0,0,0,0.3); }
+        .btn-finish { background: linear-gradient(135deg, #ff512f 0%, #dd2476 100%); margin-top: auto; padding: 10px 20px; font-size: 0.9rem; }
+
+        /* Quiz UI */
+        .progress-bar-container { position: absolute; top: 0; left: 0; width: 100%; height: 6px; border-radius: 25px 25px 0 0; overflow: hidden; }
+        .progress-bar { height: 100%; width: 0%; background: linear-gradient(90deg, #00c6ff, #0072ff); transition: width 0.3s ease; box-shadow: 0 0 10px #00c6ff; }
+
+        .header-info { display: flex; justify-content: space-between; width: 100%; margin-bottom: 20px; margin-top: 10px; font-weight: 600; }
+        .timer-badge { background: rgba(0,0,0,0.3); padding: 5px 15px; border-radius: 20px; display: flex; align-items: center; gap: 5px; }
+        .pulse-red { animation: pulseRed 1s infinite; color: var(--accent-red); font-weight: bold; }
+        @keyframes pulseRed { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+
+        .question-box { margin-bottom: 20px; width: 100%; }
+        .q-text-en { font-size: 1.2rem; font-weight: 700; color: white; margin-bottom: 5px; line-height: 1.4; }
+        .q-text-hi { font-size: 1rem; color: var(--hindi-text); font-weight: 400; line-height: 1.4; }
+
+        .options-grid { display: grid; gap: 12px; width: 100%; }
+        .option-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 15px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+        .option-btn:hover:not(:disabled) { background: rgba(255, 255, 255, 0.15); border-color: rgba(255,255,255,0.4); }
+        .opt-en { font-weight: 600; font-size: 1rem; color: white; }
+        .opt-hi { font-size: 0.85rem; color: #ccc; margin-top: 2px; }
+
+        .option-btn.correct { background: rgba(0, 230, 118, 0.2); border-color: var(--accent-green); box-shadow: 0 0 15px rgba(0, 230, 118, 0.4); }
+        .option-btn.wrong { background: rgba(255, 23, 68, 0.2); border-color: var(--accent-red); animation: shake 0.4s; }
+
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+
+        /* Feedback Overlay */
+        .feedback-emoji {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 5rem; display: none; z-index: 100; animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            filter: drop-shadow(0 0 20px rgba(0,0,0,0.5));
+        }
+        @keyframes popIn { from { transform: translate(-50%, -50%) scale(0); } to { transform: translate(-50%, -50%) scale(1); } }
+
+        /* Confetti */
+        .confetti { position: absolute; width: 10px; height: 10px; background-color: #f0f; animation: fall linear forwards; pointer-events: none; z-index: 9999; }
+        @keyframes fall { to { transform: translateY(100vh) rotate(720deg); opacity: 0; } }
+
+        /* Result Screen */
+        .score-circle {
+            width: 150px; height: 150px; border-radius: 50%;
+            background: rgba(255,255,255,0.1);
+            border: 5px solid white;
+            display: flex; justify-content: center; align-items: center; flex-direction: column;
+            margin-bottom: 20px; box-shadow: 0 0 30px rgba(255,255,255,0.2);
+        }
+        .final-score { font-size: 3rem; font-weight: bold; }
+        .total-q { font-size: 1rem; color: #ccc; }
+        .result-msg { font-size: 1.4rem; margin-bottom: 20px; text-align: center; color: #ffd700; text-shadow: 0 0 10px rgba(255, 215, 0, 0.5); }
+
+        /* Mobile tweaks */
+        @media (max-width: 480px) {
+            .quiz-container { padding: 20px; min-height: 400px; }
+            h1 { font-size: 1.5rem; }
+            .q-text-en { font-size: 1.1rem; }
+            .btn { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="quiz-container">
+    <div class="progress-bar-container">
+        <div class="progress-bar" id="progressBar"></div>
+    </div>
+
+    <div class="screen active" id="startScreen">
+        <h1>Pollution Quiz<br><span style="font-size: 1rem; color:#ccc;">पर्यावरण प्रदूषण प्रश्नोत्तरी</span></h1>
+        
+        <div class="input-group">
+            <label>Timer per Question (Seconds)</label>
+            <input type="number" id="timerInput" placeholder="Empty = No Timer" min="5">
+        </div>
+
+        <div class="toggle-container">
+            <label>Shuffle Questions</label>
+            <label class="switch">
+                <input type="checkbox" id="shuffleToggle">
+                <span class="slider"></span>
+            </label>
+        </div>
+
+        <button class="btn" onclick="startQuiz()">Start Quiz</button>
+    </div>
+
+    <div class="screen" id="quizScreen">
+        <div class="header-info">
+            <span id="questionCounter">Q: 01/50</span>
+            <div class="timer-badge" id="timerContainer">
+                <span id="timerIcon">⏱</span> <span id="timerDisplay">--</span>
+            </div>
+            <span id="scoreDisplay">Score: 0</span>
+        </div>
+
+        <div class="question-box">
+            <div class="q-text-en" id="qEn">Question English</div>
+            <div class="q-text-hi" id="qHi">Question Hindi</div>
+        </div>
+
+        <div class="options-grid" id="optionsContainer">
+            </div>
+
+        <div class="feedback-emoji" id="sadEmoji">😢</div>
+        
+        <button class="btn btn-finish" onclick="endQuiz()">Finish & Show Results</button>
+    </div>
+
+    <div class="screen" id="resultScreen">
+        <h1>Quiz Completed!</h1>
+        <div class="score-circle">
+            <span class="final-score" id="finalScoreVal">0</span>
+            <span class="total-q" id="finalTotalVal">/ 50</span>
+        </div>
+        <div class="result-msg" id="resultMessage">Message</div>
+        <p style="margin-bottom: 20px; text-align: center; color: #ddd;" id="percentageDisplay"></p>
+        <button class="btn" onclick="location.reload()">Restart Quiz</button>
+    </div>
+</div>
+
+<script>
+    /* --- Data: 50 Questions extracted from provided images --- */
+    const questionData = [
+        {
+            en: "Undesirable change in physical, chemical or biological characteristics of air, water and soil is called?",
+            hi: "पर्यावरण के अजैविक घटक (वायु, जल, मृदा) के भौतिक, रासायनिक एवं जैविक लक्षणों में होने वाला अवांछनीय परिवर्तन क्या कहलाता है?",
+            options: [
+                {en: "Pollution", hi: "प्रदूषण"},
+                {en: "Pollutant", hi: "प्रदूषक"},
+                {en: "Environmental Crisis", hi: "पर्यावरण संकट"},
+                {en: "Bio-degradation", hi: "जैव-निम्नीकरण"}
+            ],
+            correct: 0
+        },
+        {
+            en: "Which of the following is NOT a biodegradable pollutant?",
+            hi: "निम्नलिखित में कौन सा एक जैव निम्नीकरणीय प्रदूषक नहीं है?",
+            options: [
+                {en: "Domestic waste", hi: "घरेलू कचड़ा"},
+                {en: "Sewage", hi: "सीवेज"},
+                {en: "Excreta", hi: "मल-मूत्र"},
+                {en: "Plastic", hi: "प्लास्टिक"}
+            ],
+            correct: 3
+        },
+        {
+            en: "Which of the following is a non-biodegradable pollutant?",
+            hi: "निम्नलिखित में कौन जैव-अनिम्नीकरणीय प्रदूषक है?",
+            options: [
+                {en: "Heavy Metals", hi: "भारी धातुएं"},
+                {en: "Radioactive elements", hi: "रेडियो सक्रिय तत्व"},
+                {en: "Lead", hi: "सीसा"},
+                {en: "All of these", hi: "इनमें से सभी"}
+            ],
+            correct: 3
+        },
+        {
+            en: "Which of the following is NOT a primary pollutant?",
+            hi: "निम्नलिखित में कौन सा एक प्राथमिक प्रदूषक नहीं है?",
+            options: [
+                {en: "PAN", hi: "PAN"},
+                {en: "CO2", hi: "CO2"},
+                {en: "CO", hi: "CO"},
+                {en: "DDT", hi: "DDT"}
+            ],
+            correct: 0
+        },
+        {
+            en: "Main source of Fly Ash emission is?",
+            hi: "फ्लाई ऐश (Fly Ash) का मुख्य उत्सर्जन किसके द्वारा होता है?",
+            options: [
+                {en: "Coal Mines", hi: "कोयला के खानो से"},
+                {en: "Coal based thermal power plant", hi: "कोयला आधारित ताप विद्युत गृह से"},
+                {en: "Rubber Industry", hi: "रबड़-उद्योग से"},
+                {en: "Textile Mills", hi: "कपड़ा-मिल से"}
+            ],
+            correct: 1
+        },
+        {
+            en: "The Bhopal Gas Tragedy (1985) was caused by the leakage of which gas?",
+            hi: "भोपाल गैस त्रासदी (1985) किस गैस के रिसने के कारण हुआ था?",
+            options: [
+                {en: "Methyl Isocyanate", hi: "मिथाइल आइसोसाइनेट"},
+                {en: "Sulphur Dioxide", hi: "सल्फर डाइऑक्साइड"},
+                {en: "Nitrogen Oxide", hi: "नाइट्रोजन ऑक्साइड"},
+                {en: "Carbon Monoxide", hi: "कार्बन मोनोऑक्साइड"}
+            ],
+            correct: 0
+        },
+        {
+            en: "Micro particles of size 1 to 10 microns found in the atmosphere are called?",
+            hi: "वायुमंडल में पाये जाने वाले 1 माइक्रोन से 10 माइक्रोन तक के सूक्ष्म कणों को क्या कहा जाता है?",
+            options: [
+                {en: "Aerosol", hi: "एरोसोल"},
+                {en: "Dust", hi: "धूल"},
+                {en: "Smog", hi: "स्मॉग"},
+                {en: "Fume", hi: "धूम"}
+            ],
+            correct: 0
+        },
+        {
+            en: "Solid particles larger than aerosols are called?",
+            hi: "एरोसोल से बड़े आकार वाले ठोस कणों को क्या कहा जाता है?",
+            options: [
+                {en: "Dust", hi: "धूल"},
+                {en: "Smoke", hi: "धुआं"},
+                {en: "Mist", hi: "कोहरा"},
+                {en: "None", hi: "कोई नहीं"}
+            ],
+            correct: 0
+        },
+        {
+            en: "In which year was the Central Pollution Control Board (CPCB) established?",
+            hi: "केंद्रीय प्रदूषण नियंत्रण बोर्ड की स्थापना किस वर्ष हुई?",
+            options: [
+                {en: "1971", hi: "1971"},
+                {en: "1972", hi: "1972"},
+                {en: "1973", hi: "1973"},
+                {en: "1974", hi: "1974"}
+            ],
+            correct: 3
+        },
+        {
+            en: "How many pollutants are included in the National Air Quality Index (NAQI) by CPCB?",
+            hi: "केंद्रीय प्रदूषण नियंत्रण बोर्ड ने राष्ट्रीय व्यापक वायु गुणवत्ता मापदंड में कितने प्रदूषकों को शामिल किया है?",
+            options: [
+                {en: "5", hi: "5"},
+                {en: "6", hi: "6"},
+                {en: "8", hi: "8"},
+                {en: "12", hi: "12"}
+            ],
+            correct: 3
+        },
+        {
+            en: "Which gas naturally maintains the earth warm and habitable?",
+            hi: "वायुमंडल में प्राकृतिक रूप से पाये जाने वाले ग्रीन हाउस गैसे पृथ्वी के सतह को गर्म एवं रहने योग्य बनाती है।",
+            options: [
+                {en: "Water Vapor", hi: "जलवाष्प"},
+                {en: "Nitrogen", hi: "नाइट्रोजन"},
+                {en: "Oxygen", hi: "ऑक्सीजन"},
+                {en: "Argon", hi: "आर्गन"}
+            ],
+            correct: 0
+        },
+        {
+            en: "Which anthropogenic greenhouse gas is mainly responsible for global warming?",
+            hi: "मानवजनित ग्रीन हाउस गैसों का उत्सर्जन ग्लोबल वार्मिंग हेतु जिम्मेदार है। मुख्य गैस कौन सी है?",
+            options: [
+                {en: "CO2", hi: "CO2"},
+                {en: "CH4", hi: "CH4"},
+                {en: "N2O", hi: "N2O"},
+                {en: "CFC", hi: "CFC"}
+            ],
+            correct: 0
+        },
+        {
+            en: "Correct order of relative contribution of gases to Global Warming?",
+            hi: "ग्लोबल वार्मिंग के प्रति आपेक्षिक योगदान का सही क्रम है-",
+            options: [
+                {en: "CO2 > CH4 > CFC > N2O", hi: "CO2 > CH4 > CFC > N2O"},
+                {en: "CO2 > CH4 > N2O > CFC", hi: "CO2 > CH4 > N2O > CFC"},
+                {en: "CO2 > CFC > CH4 > N2O", hi: "CO2 > CFC > CH4 > N2O"},
+                {en: "CO2 > N2O > CH4 > CFC", hi: "CO2 > N2O > CH4 > CFC"}
+            ],
+            correct: 0
+        },
+        {
+            en: "Which of the following is NOT a greenhouse gas?",
+            hi: "निम्नलिखित में कौन एक ग्रीन हाउस गैस नहीं है?",
+            options: [
+                {en: "CFC", hi: "क्लोरोफ्लोरो कार्बन"},
+                {en: "Water Vapor", hi: "जलवाष्प"},
+                {en: "Nitrogen", hi: "नाइट्रोजन"},
+                {en: "Methane", hi: "मीथेन"}
+            ],
+            correct: 2
+        },
+        {
+            en: "Carbon stored in coastal and marine ecosystems is known as?",
+            hi: "वायुमंडलीय कार्बन जब तटीय एवं समुद्री परितंत्रों में जमा हो जाते है तो उस कार्बन को किस नाम से जाना जाता है?",
+            options: [
+                {en: "Black Carbon", hi: "काला कार्बन"},
+                {en: "Blue Carbon", hi: "ब्लू कार्बन"},
+                {en: "Green Carbon", hi: "ग्रीन कार्बन"},
+                {en: "Blue Carbon", hi: "ब्लू कार्बन"}
+            ],
+            correct: 1
+        },
+        {
+            en: "Which statement is true regarding Black Carbon and Green Carbon?",
+            hi: "काला कार्बन तथा ग्रीन कार्बन के संदर्भ में सत्य कथन चुनें।",
+            options: [
+                {en: "Black Carbon absorbs light/heat", hi: "काला कार्बन प्रकाश का अवशोषण कर वैश्विक तापन में सहयोग देता है"},
+                {en: "Green carbon helps reduce GHG", hi: "ग्रीन कार्बन वातावरण से ग्रीन हाउस गैस को कम करने में मदद करता है"},
+                {en: "Both 1 and 2", hi: "1 तथा 2 दोनों"},
+                {en: "Neither 1 nor 2", hi: "न तो 1 न ही 2"}
+            ],
+            correct: 2
+        },
+        {
+            en: "What measure should be taken to control Global Warming?",
+            hi: "हरित ग्रह प्रभाव तथा ग्लोबल वार्मिंग को नियंत्रित करने के लिये कौन सा उपाय किया जाना चाहिये?",
+            options: [
+                {en: "Reduce fossil fuel use", hi: "जीवाश्म ईंधन का कम से कम प्रयोग"},
+                {en: "Increase afforestation", hi: "वृक्षारोपण में वृद्धि तथा वनोन्मूलन में कमी"},
+                {en: "Improve energy efficiency", hi: "ऊर्जा दक्षता में सुधार"},
+                {en: "All of these", hi: "इनमें से सभी"}
+            ],
+            correct: 3
+        },
+        {
+            en: "A Carbon Credit is a tradable certificate giving the right to emit how much CO2?",
+            hi: "कार्बन क्रेडिट एक व्यापार योग्य प्रमाण पत्र है जो धारक को कितना कार्बन-डाइऑक्साइड के उत्सर्जन का अधिकार देता है?",
+            options: [
+                {en: "1 Ton", hi: "1 टन"},
+                {en: "2 Tons", hi: "2 टन"},
+                {en: "3 Tons", hi: "3 टन"},
+                {en: "5 Tons", hi: "5 टन"}
+            ],
+            correct: 0
+        },
+        {
+            en: "Atmospheric temperature rises due to CO2 because CO2:",
+            hi: "वायु में कार्बन डाइऑक्साइड की बढ़ती हुई मात्रा से वायुमंडल का तापमान धीरे-धीरे बढ़ रहा है, क्योंकि कार्बन डाइऑक्साइड-",
+            options: [
+                {en: "Absorbs UV rays", hi: "सौर विकिरण के पराबैंगनी अंश को अवशोषित करती है"},
+                {en: "Absorbs solar moisture", hi: "वायु में उपस्थित जलवाष्प को अवशोषित कर उसकी उष्मा को संचित करती है"},
+                {en: "Absorbs all solar radiation", hi: "संपूर्ण सौर विकिरण को अवशोषित करती है"},
+                {en: "Absorbs infrared radiation", hi: "सौर विकिरण के अवरक्त (Infrared) अंश को अवशोषित करती है"}
+            ],
+            correct: 3
+        },
+        {
+            en: "Greenhouse gases act as a blanket for which type of wavelength?",
+            hi: "हरित गृह गैसें किस तरंगदैर्ध्य के लिए एक आवरण का काम करती हैं?",
+            options: [
+                {en: "Long Wavelength (Infrared)", hi: "दीर्घ तरंग (Long wave)"},
+                {en: "Short Wavelength", hi: "लघु तरंग (Short wave)"},
+                {en: "Both", hi: "दोनों"},
+                {en: "None", hi: "कोई नहीं"}
+            ],
+            correct: 0
+        },
+        {
+            en: "In which year was it discovered that CFC concentration is declining?",
+            hi: "किस वर्ष यह प्रकाश में आया कि क्लोरो-फ्लोरोकार्बन (CFC) समताप मंडल के ओजोन के औसत सांद्रण में कमी ला रहे हैं?",
+            options: [
+                {en: "1974", hi: "1974"},
+                {en: "1982", hi: "1982"},
+                {en: "1985", hi: "1985"},
+                {en: "1978", hi: "1978"}
+            ],
+            correct: 0
+        },
+        {
+            en: "When was the ozone hole over Antarctica detected?",
+            hi: "अंटार्कटिका के ऊपर बने ओजोन छिद्र का पता लगा था?",
+            options: [
+                {en: "1974", hi: "1974 में"},
+                {en: "1982", hi: "1982 में"},
+                {en: "1985", hi: "1985 में"},
+                {en: "1978", hi: "1978 में"}
+            ],
+            correct: 2
+        },
+        {
+            en: "Which team first detected the ozone hole over Antarctica?",
+            hi: "वैज्ञानिको की टीमों में किसने सर्वप्रथम अंटार्कटिका के ऊपर ओजोन छिद्र का पता लगाया?",
+            options: [
+                {en: "German Team", hi: "जर्मन टीम"},
+                {en: "Russian Team", hi: "रूसी टीम"},
+                {en: "American Team", hi: "अमेरिकन टीम"},
+                {en: "British Team", hi: "ब्रिटिश टीम"}
+            ],
+            correct: 3
+        },
+        {
+            en: "One Dobson Unit is equal to what thickness of pure ozone?",
+            hi: "एक डॉबसन यूनिट शुद्ध ओजोन के कितने मोटाई के बराबर होते है?",
+            options: [
+                {en: "0.01 mm", hi: "0.01 mm"},
+                {en: "0.1 mm", hi: "0.1 mm"},
+                {en: "0.05 mm", hi: "0.05 mm"},
+                {en: "0.5 mm", hi: "0.5 mm"}
+            ],
+            correct: 0
+        },
+        {
+            en: "The ozone layer protects us from which dangerous solar radiation?",
+            hi: "वायुमंडल में उपस्थित ओजोन परत सूर्य से आनेवाले किस प्रकार के खतरनाक विकिरण को रोक लेता है?",
+            options: [
+                {en: "UV-A", hi: "पराबैंगनी A"},
+                {en: "UV-B & C", hi: "पराबैंगनी B और C"},
+                {en: "Infrared", hi: "अवरक्त"},
+                {en: "Microwaves", hi: "सूक्ष्म तरंगें"}
+            ],
+            correct: 1
+        },
+        {
+            en: "Regarding 'Ozone Hole', which statement is true?",
+            hi: "ओजोन छिद्र वास्तव में कोई छिद्र (Hole) नहीं है। यह ओजोन परत के क्षरण (Thinning) को दर्शाता है।",
+            options: [
+                {en: "True", hi: "सत्य"},
+                {en: "False", hi: "असत्य"},
+                {en: "Partially True", hi: "आंशिक सत्य"},
+                {en: "None", hi: "कोई नहीं"}
+            ],
+            correct: 0
+        },
+        {
+            en: "Correct order of Ozone Depleting Potential?",
+            hi: "ओजोन विघटनकारी क्षमता के आधार पर पदार्थों का सही क्रम है-",
+            options: [
+                {en: "CFC > HCFC > Halons", hi: "CFC > HCFC > हैलॉन्स"},
+                {en: "CFC > Halons > HCFC", hi: "CFC > हैलॉन्स > HCFC"},
+                {en: "Halons > CFC > HCFC", hi: "हैलॉन्स > CFC > HCFC"},
+                {en: "HCFC > CFC > Halons", hi: "HCFC > CFC > हैलॉन्स"}
+            ],
+            correct: 2
+        },
+        {
+            en: "Main reason for maximum ozone depletion over Antarctica?",
+            hi: "अंटार्कटिका के ऊपर सर्वाधिक ओजोन क्षरण अथवा ओजोन छिद्र बनने का क्या कारण है?",
+            options: [
+                {en: "Polar Vortex", hi: "ध्रुवीय भँवर"},
+                {en: "Polar Stratospheric Clouds", hi: "ध्रुवीय समतापमंडलीय बादल"},
+                {en: "Chlorine", hi: "क्लोरीन"},
+                {en: "All of the above", hi: "इनमें से सभी"}
+            ],
+            correct: 3
+        },
+        {
+            en: "Identify the group of substances that are both Ozone Depleting and Greenhouse Gases.",
+            hi: "पदार्थों के उस समूह की पहचान करें जिसमें प्रत्येक में ओजोन विघटनकारी पदार्थ एवं हरितगृह गैसिय पदार्थ दोनों का गुण हो?",
+            options: [
+                {en: "CFC, Halons", hi: "क्लोरोफ्लोरो कार्बन, हैलॉन्स"},
+                {en: "CFC, CO2", hi: "CFC, कार्बन डाइऑक्साइड"},
+                {en: "HCFC, Halons, CFC", hi: "हाइड्रो क्लोरोफ्लोरो कार्बन, हैलॉन्स एवं CFC"},
+                {en: "Only Halons", hi: "केवल हैलॉन्स"}
+            ],
+            correct: 2
+        },
+        {
+            en: "Which protocol/agreement is related to controlling Ozone Depletion?",
+            hi: "निम्नलिखित में कौन सा समझौता/संधि ओजोन क्षरण को नियंत्रित करने से संबंधित है?",
+            options: [
+                {en: "Vienna Convention", hi: "वियना कन्वेंशन-1985"},
+                {en: "Montreal Protocol", hi: "मॉन्ट्रियल प्रोटोकॉल-1987"},
+                {en: "Kigali Agreement", hi: "किगाली समझौता-2016"},
+                {en: "All of these", hi: "इनमें से सभी"}
+            ],
+            correct: 3
+        },
+        {
+            en: "Acid Rain is caused by which pollutants?",
+            hi: "अम्ल वर्षा किनके द्वारा होने वाले पर्यावरण प्रदूषण के कारण होती है?",
+            options: [
+                {en: "CO and CO2", hi: "कार्बन मोनोऑक्साइड तथा कार्बन डाइऑक्साइड"},
+                {en: "Ozone and CO2", hi: "ओजोन तथा कार्बन डाइऑक्साइड"},
+                {en: "CO2 and Nitrogen", hi: "कार्बन डाइऑक्साइड और नाइट्रोजन"},
+                {en: "Nitrous Oxide and SO2", hi: "नाइट्रस ऑक्साइड और सल्फर डाइऑक्साइड"}
+            ],
+            correct: 3
+        },
+        {
+            en: "Gases responsible for Acid Rain are:",
+            hi: "अम्ल वर्षा हेतु जिम्मेदार गैसे है-",
+            options: [
+                {en: "Sulfur Dioxide", hi: "सल्फर डाइऑक्साइड"},
+                {en: "Nitrogen Oxide", hi: "नाइट्रोजन ऑक्साइड"},
+                {en: "Formic Acid", hi: "फार्मिक अम्ल"},
+                {en: "All of these", hi: "इनमें से सभी"}
+            ],
+            correct: 3
+        },
+        {
+            en: "Formic Acid responsible for acid rain comes from?",
+            hi: "अम्ल वर्षा हेतु जिम्मेदार फार्मिक अम्ल का निर्माण किससे होता है?",
+            options: [
+                {en: "Biomass Burning", hi: "जंगल की आग से बायोमास का दहन"},
+                {en: "Decomposition", hi: "अपघटन क्रियाएँ"},
+                {en: "Smoking", hi: "धूम्रपान"},
+                {en: "Lightning", hi: "आकाशीय विद्युत"}
+            ],
+            correct: 0
+        },
+        {
+            en: "Acid Rain is defined when pH of rain water is less than?",
+            hi: "वर्षा जल का pH मान कितना से कम होने पर उसे अम्ल वर्षा कहा जाता है?",
+            options: [
+                {en: "6", hi: "6 से कम"},
+                {en: "5.6", hi: "5.6 से कम"},
+                {en: "4", hi: "4 से कम"},
+                {en: "7", hi: "7 से कम"}
+            ],
+            correct: 1
+        },
+        {
+            en: "Largest source of Sulfur emission?",
+            hi: "सल्फर के उत्सर्जन का सबसे बड़ा स्रोत कौन है?",
+            options: [
+                {en: "Petroleum Burning", hi: "पेट्रोलियम पदार्थों का दहन"},
+                {en: "Coal Burning", hi: "कोयला दहन"},
+                {en: "Volcanoes", hi: "ज्वालामुखी उद्गार"},
+                {en: "Refineries", hi: "धातुशोधन"}
+            ],
+            correct: 1
+        },
+        {
+            en: "Which acid is found in maximum quantity in Acid Rain?",
+            hi: "निम्नलिखित में किस अम्ल की मात्रा अम्ल वर्षा में सर्वाधिक होती है?",
+            options: [
+                {en: "HNO3", hi: "HNO3"},
+                {en: "H2SO4", hi: "H2SO4"},
+                {en: "H2CO3", hi: "H2CO3"},
+                {en: "HCL", hi: "HCL"}
+            ],
+            correct: 1
+        },
+        {
+            en: "Decrease in ocean pH due to Global Warming is caused by?",
+            hi: "भूमंडलीय तापन (Global warming) के कारण समुद्री जल के pH मान में निरंतर कमी हो रही है। इसका क्या कारण है?",
+            options: [
+                {en: "Higher CO2 absorption by ocean", hi: "समुद्री जल द्वारा CO2 का अपेक्षाकृत अधिक उदग्रहण"},
+                {en: "Less CO2 absorption", hi: "समुद्री जल द्वारा CO2 का अपेक्षाकृत कम उदग्रहण"},
+                {en: "Nitrogen absorption", hi: "समुद्री जल द्वारा वायुमंडलीय नाइट्रोजन का अपेक्षाकृत कम उदग्रहण"},
+                {en: "None", hi: "कोई नहीं"}
+            ],
+            correct: 0
+        },
+        {
+            en: "Acid rain typically includes rain with pH less than 5.6.",
+            hi: "ऐसी वर्षा जिसका pH मान 5.6 से कम हो अम्ल वर्षा कहलाती है।",
+            options: [
+                {en: "True", hi: "सत्य"},
+                {en: "False", hi: "असत्य"},
+                {en: "Not Defined", hi: "परिभाषित नहीं"},
+                {en: "None", hi: "कोई नहीं"}
+            ],
+            correct: 0
+        },
+        {
+            en: "Helsinki Protocol is related to?",
+            hi: "अंतर्राष्ट्रीय स्तर पर हेलसिंकी प्रोटोकॉल का संबंध किससे है?",
+            options: [
+                {en: "Sulfur Emission", hi: "सल्फर उत्सर्जन"},
+                {en: "Nitrogen Emission", hi: "नाइट्रोजन ऑक्साइड उत्सर्जन"},
+                {en: "CFC Emission", hi: "CFC उत्सर्जन"},
+                {en: "All of these", hi: "इनमें से सभी"}
+            ],
+            correct: 0
+        },
+        {
+            en: "Human diseases caused by Acid Rain?",
+            hi: "अम्ल वर्षा से होने वाले मानवीय बीमारियों एवं समस्याओं में से सही का चयन करें?",
+            options: [
+                {en: "Cancer", hi: "केंसर"},
+                {en: "Kidney Problems", hi: "किडनी समस्या"},
+                {en: "Lung/Respiratory", hi: "श्वसन रोग"},
+                {en: "All of these", hi: "उपरोक्त सभी"}
+            ],
+            correct: 3
+        },
+        {
+            en: "Which is the deadliest Chlorofluorocarbon (CFC)?",
+            hi: "सबसे घातक क्लोरोफ्लोरो कार्बन कौन है जो ओजोन से प्रतिक्रिया कर उसका अवश्य करता है?",
+            options: [
+                {en: "CH3-Cl", hi: "CH3-Cl"},
+                {en: "CH2-Cl2", hi: "CH2-Cl2"},
+                {en: "CHCl2F", hi: "CHCl2F"},
+                {en: "CCl2F2", hi: "CCl2F2"}
+            ],
+            correct: 3
+        },
+        {
+            en: "Effect of Acid Rain on plants?",
+            hi: "पौधों की पत्तियों पर अम्ल वर्षा गिरने से प्रकाशसंश्लेषण की क्रिया मंद पड़ जाती है।",
+            options: [
+                {en: "True", hi: "सत्य"},
+                {en: "False", hi: "असत्य"},
+                {en: "No effect", hi: "कोई प्रभाव नहीं"},
+                {en: "Increases photosynthesis", hi: "प्रकाशसंश्लेषण बढ़ता है"}
+            ],
+            correct: 0
+        },
+        {
+            en: "When did the Montreal Protocol come into effect?",
+            hi: "ओजोन अवक्षय को रोकने हेतु अंतर्राष्ट्रीय संधि मॉन्ट्रियल प्रोटोकॉल कब प्रभावी हुआ?",
+            options: [
+                {en: "Jan 1, 1987", hi: "1 जनवरी 1987"},
+                {en: "Jan 1, 1989", hi: "1 जनवरी 1989"},
+                {en: "Jan 1, 1988", hi: "1 जनवरी 1988"},
+                {en: "Jan 1, 2001", hi: "1 जनवरी 2001"}
+            ],
+            correct: 1
+        },
+        {
+            en: "Biological Oxygen Demand (BOD) is a standard measure for?",
+            hi: "जैव ऑक्सीजन माँग (BOD) किसके लिये मानक मापदंड है?",
+            options: [
+                {en: "Oxygen in High Altitude", hi: "उच्च तुंगता क्षेत्रों में ऑक्सीजन"},
+                {en: "Oxygen in Aquatic Ecosystems", hi: "जलीय पारिस्थितिकी तंत्रों में प्रदूषण के आमापन के लिये"},
+                {en: "Blood Oxygen", hi: "रक्त में ऑक्सीजन स्तर"},
+                {en: "Forest Oxygen", hi: "वन पारिस्थितिकी तंत्रों में"}
+            ],
+            correct: 1
+        },
+        {
+            en: "How far around hospitals/schools is considered a 'Silence Zone'?",
+            hi: "ध्वनि प्रदूषण के संदर्भ में शांत क्षेत्र के अंतर्गत अस्पताल शिक्षा संस्थान, न्यायालय आदि के चारों तरफ कितने दूरी तक का क्षेत्र सम्मिलित है?",
+            options: [
+                {en: "50 m", hi: "50 m"},
+                {en: "100 m", hi: "100 m"},
+                {en: "200 m", hi: "200 m"},
+                {en: "500 m", hi: "500 m"}
+            ],
+            correct: 1
+        },
+        {
+            en: "Which is a biodegradable pollutant?",
+            hi: "निम्नलिखित में कौन जैव अपघटनीय प्रदूषक है?",
+            options: [
+                {en: "Polythene", hi: "पॉलीथीन"},
+                {en: "Plastic", hi: "प्लास्टिक"},
+                {en: "Asbestos", hi: "एस्बेस्टस"},
+                {en: "Sewage", hi: "सीवेज"}
+            ],
+            correct: 3
+        },
+        {
+            en: "Which radiation causes maximum harm?",
+            hi: "निम्नलिखित में कौन सा रेडिएशन सर्वाधिक नुकसान देह है?",
+            options: [
+                {en: "Alpha", hi: "अल्फा-कण"},
+                {en: "Beta", hi: "बीटा-कण"},
+                {en: "Gamma", hi: "गामा-कण"},
+                {en: "Neutron", hi: "न्यूट्रॉन"}
+            ],
+            correct: 2
+        },
+        {
+            en: "Which is NOT a secondary pollutant?",
+            hi: "निम्नलिखित में कौन द्वितीयक प्रदूषक नहीं है?",
+            options: [
+                {en: "PAN", hi: "PAN"},
+                {en: "Smog", hi: "स्मॉग"},
+                {en: "Ozone", hi: "ओजोन"},
+                {en: "Sulfur Dioxide", hi: "सल्फर डाइऑक्साइड"}
+            ],
+            correct: 3
+        },
+        {
+            en: "Which plant absorbs Arsenic?",
+            hi: "निम्नलिखित में कौन-सा पादप आर्सेनिक को अवशोषित करता है?",
+            options: [
+                {en: "Fern", hi: "फर्न"},
+                {en: "Indian Mustard", hi: "भारतीय सरसों"},
+                {en: "Water Hyssop", hi: "ब्राह्मी"},
+                {en: "All/Fern", hi: "फर्न"}
+            ],
+            correct: 0
+        },
+        {
+            en: "Arrange fuels by air pollution mass caused by burning 1kg (High to Low).",
+            hi: "ईंधनों को, उनमें से प्रत्येक के एक किलोग्राम के ज्वलन द्वारा कारित वायु प्रदूषण के द्रव्यमान अनुक्रम में व्यवस्थित कीजिए-",
+            options: [
+                {en: "Diesel > Petrol > CNG", hi: "डीजल > पेट्रोल > CNG"},
+                {en: "CNG > Petrol > Diesel", hi: "CNG > पेट्रोल > डीजल"},
+                {en: "Petrol > Diesel > CNG", hi: "पेट्रोल > डीजल > CNG"},
+                {en: "Diesel > CNG > Petrol", hi: "डीजल > CNG > पेट्रोल"}
+            ],
+            correct: 0
+        }
+    ];
+
+    /* --- Logic --- */
+    let currentQuestionIndex = 0;
+    let score = 0;
+    let timerInterval;
+    let timerValue = 0;
+    let timerEnabled = false;
+    let shuffledQuestions = [];
+    let isFinished = false;
+
+    // Elements
+    const startScreen = document.getElementById('startScreen');
+    const quizScreen = document.getElementById('quizScreen');
+    const resultScreen = document.getElementById('resultScreen');
+    const timerInput = document.getElementById('timerInput');
+    const shuffleToggle = document.getElementById('shuffleToggle');
+    const progressBar = document.getElementById('progressBar');
+    const timerDisplay = document.getElementById('timerDisplay');
+    const scoreDisplay = document.getElementById('scoreDisplay');
+    const questionCounter = document.getElementById('questionCounter');
+    const qEn = document.getElementById('qEn');
+    const qHi = document.getElementById('qHi');
+    const optionsContainer = document.getElementById('optionsContainer');
+    const sadEmoji = document.getElementById('sadEmoji');
+    const timerContainer = document.getElementById('timerContainer');
+
+    // Audio Context
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    
+    function playSound(type) {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        osc.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+
+        const now = audioCtx.currentTime;
+        
+        if (type === 'correct') {
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(600, now);
+            osc.frequency.exponentialRampToValueAtTime(1200, now + 0.1);
+            gainNode.gain.setValueAtTime(0.3, now);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+            osc.start(now);
+            osc.stop(now + 0.3);
+        } else if (type === 'wrong') {
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(150, now);
+            osc.frequency.linearRampToValueAtTime(100, now + 0.3);
+            gainNode.gain.setValueAtTime(0.3, now);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+            osc.start(now);
+            osc.stop(now + 0.3);
+        }
+    }
+
+    // Confetti
+    function triggerConfetti() {
+        for(let i=0; i<30; i++) {
+            const el = document.createElement('div');
+            el.classList.add('confetti');
+            el.style.left = Math.random() * 100 + 'vw';
+            el.style.backgroundColor = `hsl(${Math.random()*360}, 100%, 50%)`;
+            el.style.animationDuration = (Math.random() * 2 + 1) + 's';
+            document.body.appendChild(el);
+            setTimeout(() => el.remove(), 3000);
+        }
+    }
+
+    function startQuiz() {
+        // Settings
+        const tVal = parseInt(timerInput.value);
+        if (tVal && tVal > 0) {
+            timerValue = tVal;
+            timerEnabled = true;
+            timerDisplay.innerText = tVal;
+        } else {
+            timerEnabled = false;
+            timerContainer.style.display = 'none';
+        }
+
+        // Shuffle logic
+        if (shuffleToggle.checked) {
+            shuffledQuestions = [...questionData].sort(() => Math.random() - 0.5);
+        } else {
+            shuffledQuestions = [...questionData];
+        }
+
+        currentQuestionIndex = 0;
+        score = 0;
+        isFinished = false;
+
+        // UI Transition
+        startScreen.classList.remove('active');
+        quizScreen.classList.add('active');
+        loadQuestion();
+    }
+
+    function loadQuestion() {
+        if (isFinished) return;
+        
+        // Reset state
+        clearInterval(timerInterval);
+        sadEmoji.style.display = 'none';
+        optionsContainer.innerHTML = '';
+        timerDisplay.classList.remove('pulse-red');
+        
+        // Check end
+        if (currentQuestionIndex >= shuffledQuestions.length) {
+            endQuiz();
+            return;
+        }
+
+        // Update UI info
+        const q = shuffledQuestions[currentQuestionIndex];
+        questionCounter.innerText = `Q: ${(currentQuestionIndex + 1).toString().padStart(2, '0')}/${shuffledQuestions.length}`;
+        scoreDisplay.innerText = `Score: ${score}`;
+        const progressPercent = ((currentQuestionIndex) / shuffledQuestions.length) * 100;
+        progressBar.style.width = `${progressPercent}%`;
+
+        // Render Text
+        qEn.innerText = q.en;
+        qHi.innerText = q.hi;
+
+        // Render Options
+        q.options.forEach((opt, index) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerHTML = `<span class="opt-en">${opt.en}</span><span class="opt-hi">${opt.hi}</span>`;
+            btn.onclick = () => checkAnswer(index, q.correct, btn);
+            optionsContainer.appendChild(btn);
+        });
+
+        // Timer Logic
+        if (timerEnabled) {
+            let timeLeft = timerValue;
+            timerDisplay.innerText = timeLeft;
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                timerDisplay.innerText = timeLeft;
+                
+                if (timeLeft < 5) timerDisplay.classList.add('pulse-red');
+                else timerDisplay.classList.remove('pulse-red');
+
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    autoMove(false); // Time out counts as wrong/skip
+                }
+            }, 1000);
+        }
+    }
+
+    function checkAnswer(selectedIndex, correctIndex, btnElement) {
+        clearInterval(timerInterval); // Stop timer
+        const buttons = document.querySelectorAll('.option-btn');
+        buttons.forEach(b => b.disabled = true); // Disable click
+
+        if (selectedIndex === correctIndex) {
+            // Correct
+            btnElement.classList.add('correct');
+            score++;
+            scoreDisplay.innerText = `Score: ${score}`;
+            playSound('correct');
+            triggerConfetti();
+        } else {
+            // Wrong
+            btnElement.classList.add('wrong');
+            buttons[correctIndex].classList.add('correct'); // Show correct one
+            playSound('wrong');
+            sadEmoji.style.display = 'block';
+        }
+
+        setTimeout(() => autoMove(true), 1500);
+    }
+
+    function autoMove(answered) {
+        currentQuestionIndex++;
+        loadQuestion();
+    }
+
+    function endQuiz() {
+        isFinished = true;
+        clearInterval(timerInterval);
+        quizScreen.classList.remove('active');
+        resultScreen.classList.add('active');
+
+        // Logic for Early Exit: Results based on questions ANSWERED so far? 
+        // Or total questions? The prompt says "based on questions answered so far".
+        // However, usually quizzes show Total Score out of Total Questions.
+        // I will show Score obtained vs Total Questions in the quiz to be accurate.
+        
+        const total = shuffledQuestions.length;
+        const percentage = Math.round((score / total) * 100);
+
+        document.getElementById('finalScoreVal').innerText = score;
+        document.getElementById('finalTotalVal').innerText = '/ ' + total;
+        document.getElementById('percentageDisplay').innerText = `${percentage}% Accuracy`;
+
+        const msgEl = document.getElementById('resultMessage');
+        if (percentage >= 80) msgEl.innerText = "🏆 Outstanding Performance!";
+        else if (percentage >= 50) msgEl.innerText = "👏 Well Done! Keep it up.";
+        else msgEl.innerText = "📚 Practice makes perfect! Try again.";
+    }
+</script>
+
+</body>
+</html>

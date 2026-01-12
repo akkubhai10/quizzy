@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Biology Quiz - Glassmorphism Edition</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6e45e2;
+            --secondary: #88d3ce;
+            --correct: #2ecc71;
+            --wrong: #e74c3c;
+            --glass: rgba(255, 255, 255, 0.1);
+            --border: rgba(255, 255, 255, 0.2);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #6e45e2 0%, #88d3ce 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow-x: hidden;
+            padding: 20px;
+        }
+
+        #bg-mesh {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1;
+            background: 
+                radial-gradient(at 0% 0%, rgba(255, 0, 255, 0.3) 0, transparent 50%),
+                radial-gradient(at 100% 0%, rgba(0, 255, 255, 0.3) 0, transparent 50%),
+                radial-gradient(at 50% 100%, rgba(255, 255, 0, 0.2) 0, transparent 50%);
+        }
+
+        .container {
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            border-radius: 25px;
+            width: 100%;
+            max-width: 700px;
+            padding: 30px;
+            color: white;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            position: relative;
+        }
+
+        /* Screens */
+        .screen { display: none; }
+        .active { display: block; animation: fadeIn 0.5s ease; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Progress Bar */
+        #progress-container {
+            position: absolute; top: 0; left: 0; width: 100%; height: 6px;
+            background: rgba(255,255,255,0.05); border-radius: 25px 25px 0 0; overflow: hidden;
+        }
+        #progress-bar { width: 0%; height: 100%; background: var(--secondary); box-shadow: 0 0 10px var(--secondary); transition: 0.4s; }
+
+        /* Typography */
+        h1 { text-align: center; margin-bottom: 20px; font-weight: 700; }
+        .q-text-en { font-weight: 700; font-size: 1.2rem; margin-bottom: 5px; color: white; }
+        .q-text-hi { font-size: 1rem; color: #ddd; margin-bottom: 20px; }
+
+        /* Inputs & Buttons */
+        .settings { margin: 20px 0; }
+        .setting-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        input[type="number"] { background: var(--glass); border: 1px solid var(--border); color: white; padding: 5px 10px; border-radius: 8px; width: 80px; }
+        
+        .btn {
+            width: 100%; padding: 15px; margin: 10px 0; border: 1px solid var(--border);
+            border-radius: 15px; background: var(--glass); color: white; cursor: pointer;
+            transition: 0.3s; font-size: 1rem; text-align: left;
+        }
+        .btn:hover { transform: scale(1.02); background: rgba(255,255,255,0.2); }
+        .btn-start { background: var(--secondary); color: #222; font-weight: 700; text-align: center; border: none; }
+        
+        .opt-hi { font-size: 0.85rem; color: #ccc; display: block; }
+        
+        /* Quiz HUD */
+        .hud { display: flex; justify-content: space-between; margin-bottom: 20px; font-weight: 600; font-size: 0.9rem; }
+        #timer { font-family: monospace; font-size: 1.2rem; }
+        .pulse-red { color: var(--wrong); animation: pulse 1s infinite; }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+
+        /* Feedback */
+        .correct { background: var(--correct) !important; border-color: #fff; }
+        .wrong { background: var(--wrong) !important; border-color: #fff; }
+        #emoji-overlay {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 100px; display: none; z-index: 100;
+        }
+        .shake { animation: shake 0.5s; }
+        @keyframes shake { 0%, 100% { transform: translate(-50%, -50%) rotate(0deg); } 25% { transform: translate(-55%, -50%) rotate(-5deg); } 75% { transform: translate(-45%, -50%) rotate(5deg); } }
+
+        /* Confetti */
+        .confetti { position: fixed; width: 10px; height: 10px; z-index: 9999; }
+
+        /* Result */
+        .score-display { font-size: 3rem; text-align: center; font-weight: 700; margin: 20px 0; }
+    </style>
+</head>
+<body>
+    <div id="bg-mesh"></div>
+    <div id="emoji-overlay">😢</div>
+
+    <div class="container">
+        <div id="progress-container"><div id="progress-bar"></div></div>
+
+        <div id="screen-start" class="screen active">
+            <h1>Biology Quiz<br><span style="font-size: 0.6em; font-weight: 400;">Reproduction & Botany</span></h1>
+            <div class="settings">
+                <div class="setting-item">
+                    <span>Timer (seconds per question):</span>
+                    <input type="number" id="input-timer" value="30" min="0">
+                </div>
+                <div class="setting-item">
+                    <span>Shuffle Questions:</span>
+                    <input type="checkbox" id="input-shuffle" checked>
+                </div>
+            </div>
+            <button class="btn btn-start" onclick="startQuiz()">START QUIZ</button>
+        </div>
+
+        <div id="screen-quiz" class="screen">
+            <div class="hud">
+                <span id="hud-counter">Question: 0/0</span>
+                <span id="timer"></span>
+                <span id="hud-score">Score: 0</span>
+            </div>
+            <div id="question-box">
+                <div class="q-text-en" id="q-en"></div>
+                <div class="q-text-hi" id="q-hi"></div>
+            </div>
+            <div id="options-box"></div>
+            <button class="btn" style="text-align:center; margin-top:30px; background: rgba(255,0,0,0.2)" onclick="endQuiz()">Finish & Show Results</button>
+        </div>
+
+        <div id="screen-result" class="screen">
+            <h1>Quiz Results</h1>
+            <div class="score-display" id="final-score"></div>
+            <p id="result-msg" style="text-align:center; font-size: 1.2rem; margin-bottom: 20px;"></p>
+            <button class="btn btn-start" onclick="location.reload()">Restart Quiz</button>
+        </div>
+    </div>
+
+    <script>
+        const quizData = [
+            {
+                en: "51. When pollen of a flower reaches the stigma of the same flower or another flower of the same plant, what is it called?",
+                hi: "51. जब एक ही पुष्प के परागकण उसी पुष्प के वर्तिकाग्र पर पहुँचता है या उसी पौधे के अन्य पुष्प के वर्तिकाग्र पर पहुँचता है, तो इस परागण को क्या कहते हैं ?",
+                opts: [
+                    { en: "Self-pollination", hi: "स्व परागण" },
+                    { en: "Cross-pollination", hi: "पर परागण" },
+                    { en: "Cross-fertilization", hi: "पर-निषेचन परागण" },
+                    { en: "None of these", hi: "इनमें से कोई नहीं" }
+                ],
+                ans: 0
+            },
+            {
+                en: "52. Consider the following: 1. Self-pollination occurs only in bisexual flowers. 2. Cross-pollination occurs in both unisexual and bisexual flowers. Which is correct?",
+                hi: "52. निम्नलिखित कथनों पर विचार कीजिए- 1. स्व परागण केवल उभयलिंगी पुष्पों में ही होता है। 2. पर परागण एकलिंगी पुष्पों के साथ-साथ उभयलिंगी पुष्पों में भी होता है। उपर्युक्त में कौन-सा/से कथन सही है/हैं ?",
+                opts: [
+                    { en: "Only 1", hi: "केवल 1" },
+                    { en: "Only 2", hi: "केवल 2" },
+                    { en: "Both 1 and 2", hi: "1 तथा 2 दोनों" },
+                    { en: "Neither 1 nor 2", hi: "न तो 1 न ही 2" }
+                ],
+                ans: 2
+            },
+            {
+                en: "53. What are the natural barriers between the anther and stigma of some flowers that make pollination difficult or impossible?",
+                hi: "53. कुछ पुष्पों के परागकोष एवं वर्तिकाग्र के बीच कुछ प्राकृतिक रोध होते हैं जिनके कारण परागण मुश्किल होता है या होता ही नहीं, उन्हें क्या कहते हैं ?",
+                opts: [
+                    { en: "Gogamy", hi: "गेगीमी" },
+                    { en: "Herkogamy", hi: "हरकोगैमी" },
+                    { en: "Self-sterility", hi: "स्वयं बंध्यता" },
+                    { en: "Heterostyly", hi: "हेटेरोस्टाइली" }
+                ],
+                ans: 1
+            },
+            {
+                en: "54. The transfer of pollen from the anther of one flower to the stigma of another flower on the same plant is called?",
+                hi: "54. एक ही पौधे के एक पुष्प के परागकोष से परागकण का उसी पौधे के दूसरे पुष्प की वर्तिकाग्र में स्थानांतरण कहलाता है-",
+                opts: [
+                    { en: "Autogamy", hi: "स्व युग्मन" },
+                    { en: "Cross-pollination", hi: "पर-परागण" },
+                    { en: "Geitonogamy", hi: "सजातपुष्पी परागण" },
+                    { en: "All of these", hi: "इनमें से सभी" }
+                ],
+                ans: 2
+            },
+            {
+                en: "55. What is the pollination that occurs in closed flowers called?",
+                hi: "55. जो परागण बन्द पुष्पों में होता है, उसे क्या कहते हैं ?",
+                opts: [
+                    { en: "Allogamy", hi: "एलोगैमी" },
+                    { en: "Cleistogamy", hi: "क्लीस्टोगैमी" },
+                    { en: "Autogamy", hi: "ऑटोगैमी" },
+                    { en: "None of these", hi: "उपर्युक्त में कोई नहीं" }
+                ],
+                ans: 1
+            },
+            {
+                en: "56. What is the process of pollination by birds called?",
+                hi: "56. पक्षियों द्वारा परागण की प्रक्रिया को क्या कहा जाता है?",
+                opts: [
+                    { en: "Entomophily", hi: "एन्टोमोफिली" },
+                    { en: "Autogamy", hi: "ऑटोगैमी" },
+                    { en: "Anemophily", hi: "एनिमोफिली" },
+                    { en: "Ornithophily", hi: "ऑर्निथोफिली" }
+                ],
+                ans: 3
+            },
+            {
+                en: "57. Which of the following options is NOT correctly matched?",
+                hi: "57. निम्नलिखित में कौन-सा विकल्प सही सुमेलित नहीं है ?",
+                opts: [
+                    { en: "Insects : Entomophily", hi: "कीट : Entomophily" },
+                    { en: "Animals : Animophily", hi: "जानवर : Animophily" },
+                    { en: "Water : Hydrophily", hi: "जल : Hydrophily" },
+                    { en: "Wind : Anemophily", hi: "वायु : Anemophily" }
+                ],
+                ans: 1
+            },
+            {
+                en: "58. Which of the following features is found in insect-pollinated flowers?",
+                hi: "58. कीट परागित पुष्पों में निम्नलिखित में कौन-सी विशेषता पायी जाती है ?",
+                opts: [
+                    { en: "Flower is large, colorful and pollen is large", hi: "पुष्प बड़ा, रंगीन होता है तथा उसके परागण बड़े आकार के होते हैं।" },
+                    { en: "Flowers are fragrant and contain nectar", hi: "पुष्प सुगंधित होते हैं तथा उनमें पर्याप्त मात्रा में मकरंद पाये जाते हैं।" },
+                    { en: "Stigma surface is smooth or sticky", hi: "वर्तिकाग्र की सतह चिकना, रूक्ष तथा चिपचिपा होता है।" },
+                    { en: "All of these", hi: "इनमें से सभी" }
+                ],
+                ans: 3
+            },
+            {
+                en: "59. What is cross-pollination by bats called?",
+                hi: "59. चमगादड़ के द्वारा होने वाले पर-परागण को क्या कहते हैं ?",
+                opts: [
+                    { en: "Chiropterophily", hi: "Cheiropterophily" },
+                    { en: "Malacophily", hi: "Malacophily" },
+                    { en: "Anemophily", hi: "Anemophily" },
+                    { en: "Zoophily", hi: "Zoophily" }
+                ],
+                ans: 0
+            },
+            {
+                en: "60. What is the medium of pollination in Semal and Kadamba trees?",
+                hi: "60. सेमल तथा कदंब के पेड़ में परागण का माध्यम है-",
+                opts: [
+                    { en: "Bats", hi: "चमगादड़" },
+                    { en: "Birds", hi: "पक्षी" },
+                    { en: "Water", hi: "जल" },
+                    { en: "Air", hi: "वायु" }
+                ],
+                ans: 1
+            },
+            {
+                en: "61. Malacophilous flowers are those in which pollination occurs by-",
+                hi: "61. मैलेकोफिल्लस पुष्प वह हैं जिनमें परागण-",
+                opts: [
+                    { en: "Bats", hi: "चमगादड़ द्वारा होता है" },
+                    { en: "Snails, Slugs, etc.", hi: "घोंघा, गिलहरी, सांप आदि के द्वारा होता है" },
+                    { en: "Birds", hi: "पक्षियों के द्वारा होता है" },
+                    { en: "Air", hi: "वायु द्वारा होता है" }
+                ],
+                ans: 1
+            },
+            {
+                en: "62. Consider: 1. Self-pollination causes offspring to become weak. 2. Cross-pollination causes offspring to be healthier. Which is correct?",
+                hi: "62. निम्नलिखित पर विचार कीजिए- 1. स्व परागण के फलस्वरूप संतान दुर्बल हो जाती है 2. पर परागण के फल स्वरूप उत्पन्न संतान अधिक स्वस्थ होती है। उपर्युक्त में कौन-सा/से सही है/हैं ?",
+                opts: [
+                    { en: "Only 1", hi: "केवल 1" },
+                    { en: "Only 2", hi: "केवल 2" },
+                    { en: "Both 1 and 2", hi: "1 तथा 2 दोनों" },
+                    { en: "Neither 1 nor 2", hi: "न तो 1 न ही 2" }
+                ],
+                ans: 2
+            },
+            {
+                en: "63. The maximum number of pollen grains are found in-",
+                hi: "63. परागकणों की सर्वाधिक संख्या होती है-",
+                opts: [
+                    { en: "Insect-pollinated flowers", hi: "कीट परागित पुष्पों में" },
+                    { en: "Wind-pollinated flowers", hi: "वायु परागित पुष्पों में" },
+                    { en: "Bird-pollinated flowers", hi: "पक्षी परागित पुष्पों में" },
+                    { en: "Water-pollinated flowers", hi: "जल परागित पुष्पों में" }
+                ],
+                ans: 1
+            },
+            {
+                en: "64. In which of the following aquatic plants does water pollination NOT occur?",
+                hi: "64. निम्नलिखित में कौन जलीय पौधा में जल परागण नहीं होता है ?",
+                opts: [
+                    { en: "Lotus", hi: "कमल" },
+                    { en: "Hydrilla", hi: "हाइड्रिला" },
+                    { en: "Vallisneria", hi: "वेलिसनेरिया" },
+                    { en: "None of these", hi: "इनमें से कोई नहीं" }
+                ],
+                ans: 0
+            },
+            {
+                en: "65. Wind-pollinated flowers are usually-",
+                hi: "65. वायु परागित पुष्प सामान्यतः होते हैं-",
+                opts: [
+                    { en: "Small", hi: "छोटे" },
+                    { en: "Colorless", hi: "रंगहीन" },
+                    { en: "Lack fragrance", hi: "सुगंध का अभाव" },
+                    { en: "All of these", hi: "इनमें से सभी" }
+                ],
+                ans: 3
+            },
+            {
+                en: "66. What is pollination by ants called?",
+                hi: "66. चीटियों द्वारा परागण को क्या कहते हैं-",
+                opts: [
+                    { en: "Malacophily", hi: "मैलेकोफिली" },
+                    { en: "Chiropterophily", hi: "काप्रोटीरोफिली" },
+                    { en: "Myrmecophily", hi: "मार्मीकोफिली" },
+                    { en: "Ornithophily", hi: "ऑर्निथोफिली" }
+                ],
+                ans: 2
+            },
+            {
+                en: "67. What are the advantages of cross-pollination?",
+                hi: "67. पर-परागण होने के क्या लाभ हैं-",
+                opts: [
+                    { en: "Offspring are healthier due to fusion of different lineages", hi: "इस विधि में दो भिन्न वंशानुक्रम का मेल होने से उत्पन्न संतान अधिक स्वस्थ होते हैं" },
+                    { en: "New varieties can be produced", hi: "पर-परागण के माध्यम से पौधों की नई किस्में पैदा की जा सकती है" },
+                    { en: "Seeds are more viable", hi: "पर-परागणित पुष्पों से उत्पन्न बीज अधिक जीवनक्षम होते हैं" },
+                    { en: "All of these", hi: "इनमें से सभी" }
+                ],
+                ans: 3
+            },
+            {
+                en: "68. In plants, fertilization occurs during sexual reproduction-",
+                hi: "68. पौधों में लैंगिक जनन के दौरान निषेचन होता है-",
+                opts: [
+                    { en: "Before pollination", hi: "परागण के पहले" },
+                    { en: "After pollination", hi: "परागण के बाद" },
+                    { en: "When pollination doesn't occur", hi: "परागण नहीं होने पर" },
+                    { en: "None of these", hi: "इनमें से कोई नहीं" }
+                ],
+                ans: 1
+            },
+            {
+                en: "69. What is fertilization?",
+                hi: "69. निषेचन क्या है-",
+                opts: [
+                    { en: "Fusion of egg and male nucleus", hi: "अंडा तथा नर न्यूक्लियस का संयोजन" },
+                    { en: "Fusion of egg and secondary nucleus", hi: "अण्ड तथा सेकण्डरी न्यूक्लियस का संयोजन" },
+                    { en: "Fusion of egg and synergid", hi: "अंडा तथा सिनरजीड का संयोजन" },
+                    { en: "None of these", hi: "इनमें से कोई नहीं" }
+                ],
+                ans: 0
+            },
+            {
+                en: "70. Where does the Pollen Tube develop after pollination?",
+                hi: "70. परागण के उपरांत पराग नली (Pollen Tube) का विकास होता है-",
+                opts: [
+                    { en: "From Stigma", hi: "वर्तिकाग्र से" },
+                    { en: "From Style", hi: "वर्तिका से" },
+                    { en: "From Pollen Grain", hi: "परागकण से" },
+                    { en: "From Ovary", hi: "अंडाशय से" }
+                ],
+                ans: 0
+            },
+            {
+                en: "71. From what does the Fruit develop after fertilization?",
+                hi: "71. निषेचन के उपरांत फल का विकास किससे होता है ?",
+                opts: [
+                    { en: "Ovary", hi: "अंडाशय से" },
+                    { en: "Ovule", hi: "बीजांड से" },
+                    { en: "Stigma and Style", hi: "वर्तिका तथा वर्तिकाग्र से" },
+                    { en: "None of these", hi: "इनमें से कोई नहीं" }
+                ],
+                ans: 0
+            },
+            {
+                en: "72. From what do the Seeds develop after fertilization?",
+                hi: "72. निषेचन के उपरांत बीजों का विकास किससे होता है ?",
+                opts: [
+                    { en: "Ovary", hi: "अंडाशय से" },
+                    { en: "Ovule", hi: "बीजांड से" },
+                    { en: "Stigma and Style", hi: "वर्तिका तथा वर्तिकाग्र से" },
+                    { en: "None of these", hi: "इनमें से कोई नहीं" }
+                ],
+                ans: 1
+            },
+            {
+                en: "73. In which is the embryo found?",
+                hi: "73. भ्रूण किसमें मिलता है-",
+                opts: [
+                    { en: "Flower", hi: "फूल" },
+                    { en: "Seed", hi: "बीज" },
+                    { en: "Bud", hi: "कली" },
+                    { en: "Leaf", hi: "पत्ती" }
+                ],
+                ans: 1
+            },
+            {
+                en: "74. If androecium and gynoecium in a bisexual flower mature at different times, the process is called?",
+                hi: "74. किसी द्विलिंगी या उभयलिंगी पुष्प में यदि पुमंग एवं जायांग अलग-अलग समय पर वयस्क बनते हैं, तो इस प्रक्रिया को कहा जाता है-",
+                opts: [
+                    { en: "Monogamy", hi: "मोनोगेमी" },
+                    { en: "Dichogamy", hi: "डिकोगेमी" },
+                    { en: "Heterogamy", hi: "हेटरोमी" },
+                    { en: "Herkogamy", hi: "हकोगेमी" }
+                ],
+                ans: 1
+            },
+            {
+                en: "75. What is the correct sequence of events during sexual reproduction in plants?",
+                hi: "75. पौधों में लैंगिक जनन के दौरान घटनाओं का सही अनुक्रम निम्नलिखित में कौन-सा होता है ?",
+                opts: [
+                    { en: "Plant, Embryo, Pollination, Fertilization, Zygote division", hi: "पौध (नवोदभिद), भ्रूण का बनना, परागण, निषेचन, युग्मनज का विभाजन" },
+                    { en: "Plant, Embryo formation, Zygote division, Pollination, Fertilization", hi: "पौध, भ्रूण का बनना, युग्मनज का विभाजन, परागण, निषेचन" },
+                    { en: "Pollination, Fertilization, Zygote division, Embryo formation, Plant", hi: "परागण, निषेचन, युग्मनज का विभाजन, भ्रूण का बनना, पौध" },
+                    { en: "Embryo formation, Plant, Pollination, Fertilization, Zygote division", hi: "भ्रूण का बनना, पौध, परागण, निषेचन, युग्मनज का विभाजन" }
+                ],
+                ans: 2
+            },
+            {
+                en: "76. In plants, what does the egg cell form after fertilization?",
+                hi: "76. पौधों में निषेचन के उपरांत अंडकोशिका (egg cell) किसका निर्माण करता है ?",
+                opts: [
+                    { en: "Zygote", hi: "युग्मनज (Zygote)" },
+                    { en: "Embryo", hi: "भ्रूण (Embryo)" },
+                    { en: "Xenia", hi: "जानिया (Xenia)" },
+                    { en: "Endosperm", hi: "भ्रूणपोष (Endosperm)" }
+                ],
+                ans: 0
+            },
+            {
+                en: "77. What is it called when a fruit is formed in plants without fertilization?",
+                hi: "77. पौधों में बिना निषेचन के जब फल का निर्माण हो जाता है, तो इसे क्या कहते हैं ?",
+                opts: [
+                    { en: "False Fruit", hi: "असत्य फल" },
+                    { en: "Parthenocarpy", hi: "अनिषेक फलन" },
+                    { en: "Parthenogenesis", hi: "पार्थिनोकाप" },
+                    { en: "Both b and c", hi: "b तथा c" }
+                ],
+                ans: 3
+            },
+            {
+                en: "78. Which of the following is a Parthenocarpic fruit?",
+                hi: "78. निम्नलिखित में कौन-सा अनिषेकफल (Parthenocarpy) है-",
+                opts: [
+                    { en: "Banana", hi: "केला" },
+                    { en: "Orange", hi: "संतरा" },
+                    { en: "Grapes", hi: "अंगूर" },
+                    { en: "All of these", hi: "इनमें से सभी" }
+                ],
+                ans: 3
+            },
+            {
+                en: "79. If the ovary develops into fruit without fertilization, it is called?",
+                hi: "79. पौधों में बिना निषेचन के ही अण्डाशय फल में परिवर्तित हो जाए तो इसे कहते हैं-",
+                opts: [
+                    { en: "Apospory", hi: "एपोसपोरी" },
+                    { en: "Apogamy", hi: "एपीगेमी" },
+                    { en: "Syngamy", hi: "सिनजनिसिस" },
+                    { en: "Parthenocarpy", hi: "पार्थिनोकॉपी" }
+                ],
+                ans: 3
+            },
+            {
+                en: "80. The process where seeds are produced without fertilization is called?",
+                hi: "80. वह प्रक्रिया, जिसमें पौधों में निषेचन क्रिया के बाद बीजों का निर्माण शुरू होता है, परन्तु पौधे बिना निषेचन सम्पन्न हुए ही बीज पैदा कर लेते हैं, उसे निम्न में से कहा जाता है-",
+                opts: [
+                    { en: "Parthenocarpy", hi: "अनिषेक फलन" },
+                    { en: "Apomixis", hi: "असंग जनन" },
+                    { en: "Vegetative reproduction", hi: "कायिक जनन" },
+                    { en: "None of these", hi: "इनमें से कोई नहीं" }
+                ],
+                ans: 1
+            },
+            {
+                en: "81. Consider: 1. Multiple embryos in a seed is Polyembryony. 2. More common in Angiosperms than Gymnosperms. 3. Discovered by Leeuwenhoek. Correct?",
+                hi: "81. निम्नलिखित कथनों पर विचार कीजिए- 1. जब एक बीज के अंदर एक से अधिक भ्रूण हो तो इसे बहुभ्रूणता (Polyembryony) कहा जाता है। 2. बहुभ्रूणता आवृतबीजी पौधों में ज्यादा पायी जाती है तथा अनावृतबीजी में कम पायी जाती है। 3. बहुभ्रूणता की खोज ल्यूवेनहॉक ने किया था। सही है?",
+                opts: [
+                    { en: "Only 1", hi: "केवल 1" },
+                    { en: "Only 2", hi: "केवल 2" },
+                    { en: "1 and 2", hi: "1 और 2" },
+                    { en: "1 and 3", hi: "1 और 3" }
+                ],
+                ans: 3
+            },
+            {
+                en: "82. Double fertilization occurs in-",
+                hi: "82. द्विनिषेचन (Double fertilization) होता है-",
+                opts: [
+                    { en: "Angiosperms", hi: "आवृतबीजी" },
+                    { en: "Gymnosperms", hi: "अनावृतबीजी" },
+                    { en: "Thallophyta", hi: "थैलोफाइटा" },
+                    { en: "Bryophyta", hi: "ब्रायोफाइटा" }
+                ],
+                ans: 0
+            },
+            {
+                en: "83. What is Double Fertilization?",
+                hi: "83. द्विनिषेचन क्या है-",
+                opts: [
+                    { en: "Fusion of two eggs", hi: "दो अण्ड (Egg) का संयोजन" },
+                    { en: "Fusion of egg and two pollen nuclei", hi: "अण्ड तथा दो परागकणों के परागकण केन्द्रकों का संलयन" },
+                    { en: "Fusion of one male gamete with egg and another with synergids", hi: "एक नर युग्मक का अंड से तथा दूसरे नर युग्मक का सिनरगीड से संलयन" },
+                    { en: "Fusion of one male gamete with egg and another with secondary nucleus", hi: "एक नर युग्मक का अंड से तथा दूसरे नर युग्मक का द्वितीयक केंद्रक से संलयन" }
+                ],
+                ans: 3
+            },
+            {
+                en: "84. The Zygote formed after fertilization is-",
+                hi: "84. निषेचन के बाद बने युग्मनज (Zygote) होता है-",
+                opts: [
+                    { en: "Haploid", hi: "अगुणित" },
+                    { en: "Diploid", hi: "द्विगुणित" },
+                    { en: "Triploid", hi: "त्रिगुणित" },
+                    { en: "All of these", hi: "इनमें से सभी" }
+                ],
+                ans: 1
+            },
+            {
+                en: "85. Who discovered Double Fertilization?",
+                hi: "85. द्विनिषेचन की खोज किसने की-",
+                opts: [
+                    { en: "Leeuwenhoek", hi: "ल्यूवेनहॉक ने" },
+                    { en: "Nawaschin", hi: "नवाश्चीन ने" },
+                    { en: "Strasburger", hi: "स्ट्रासबर्गर ने" },
+                    { en: "Robert Hooke", hi: "रॉबर्ट हुक ने" }
+                ],
+                ans: 1
+            },
+            {
+                en: "86. Consider: 1. Ovary developing into fruit is True Fruit. 2. Fruit developing from parts other than ovary is False Fruit. Correct?",
+                hi: "86. निम्नलिखित कथनों पर विचार कीजिए- 1. जब फूल के अंडाशय फल के रूप में विकसित होता है, तो ऐसे फल को सत्य फल कहते हैं। 2. जब फल का विकास अण्डाशय के अतिरिक्त किसी अन्य भाग से होता है, तो उसे असत्य फल कहते हैं। सही है?",
+                opts: [
+                    { en: "Only 1", hi: "केवल 1" },
+                    { en: "Only 2", hi: "केवल 2" },
+                    { en: "Both 1 and 2", hi: "1 तथा 2 दोनों" },
+                    { en: "Neither 1 nor 2", hi: "न तो 1 न ही 2" }
+                ],
+                ans: 2
+            },
+            {
+                en: "87. Which of the following is a False Fruit?",
+                hi: "87. निम्नलिखित में कौन असत्य फल है ?",
+                opts: [
+                    { en: "Apple", hi: "सेब" },
+                    { en: "Cashew", hi: "काजू" },
+                    { en: "Walnut", hi: "अखरोट" },
+                    { en: "All of these", hi: "इनमें से सभी" }
+                ],
+                ans: 3
+            },
+            {
+                en: "88. Which is a False Fruit?",
+                hi: "88. निम्नलिखित में कौन एक असत्य फल है-",
+                opts: [
+                    { en: "Mango", hi: "आम" },
+                    { en: "Dates", hi: "खजूर" },
+                    { en: "Strawberry", hi: "स्ट्रॉबेरी" },
+                    { en: "Chiku", hi: "चिक्कू" }
+                ],
+                ans: 2
+            },
+            {
+                en: "89. Consider: 1. One ovary has one or more ovules. 2. A fruit has one or more seeds. Correct?",
+                hi: "89. निम्नलिखित कथनों पर विचार कीजिए- 1. एक अंडाशय में एक या एक से अधिक बीजांड होते हैं। 2. एक फल में एक भी बीज होता है तथा एक से अधिक बीज भी। सही है?",
+                opts: [
+                    { en: "Only 1", hi: "केवल 1" },
+                    { en: "Only 2", hi: "केवल 2" },
+                    { en: "Both 1 and 2", hi: "1 तथा 2 दोनों" },
+                    { en: "Neither 1 nor 2", hi: "न तो 1 न ही 2" }
+                ],
+                ans: 2
+            },
+            {
+                en: "90. After fertilization, the ovary wall becomes-",
+                hi: "90. पौधों में निषेचन के उपरांत अंडाशय की भित्ति बन जाती है-",
+                opts: [
+                    { en: "Seed", hi: "बीज" },
+                    { en: "Fruit wall (Pericarp)", hi: "फल भित्ति" },
+                    { en: "Dries up and falls", hi: "सूख कर गिर जाती है" },
+                    { en: "None of these", hi: "इनमें से कोई नहीं" }
+                ],
+                ans: 1
+            },
+            {
+                en: "91. Edible part of Apple and Pear is-",
+                hi: "91. सेब तथा नाशपाती का खाने योग्य भाग है ?",
+                opts: [
+                    { en: "Mesocarp", hi: "मध्य फलभित्ति" },
+                    { en: "Thalamus", hi: "पुष्पासन" },
+                    { en: "Aril", hi: "एरिल" },
+                    { en: "Endosperm", hi: "भ्रूणपोष" }
+                ],
+                ans: 1
+            },
+            {
+                en: "92. Which is NOT correctly matched? (Fruit : Edible Part)",
+                hi: "92. निम्नलिखित में कौन-सा एक सही सुमेलित नहीं है ? (फल : खाने योग्य भाग)",
+                opts: [
+                    { en: "Mango : Mesocarp", hi: "आम : मध्यफल भित्ति" },
+                    { en: "Litchi : Aril", hi: "लीची : एरिल" },
+                    { en: "Coconut : Endosperm", hi: "नारियल : भ्रूणपोष" },
+                    { en: "Pomegranate : Cotyledon", hi: "अनार : बीजपत्र" }
+                ],
+                ans: 3
+            },
+            {
+                en: "93. Aril is the edible part of-",
+                hi: "93. एरिल या बीजचोल (Aril) खाने योग्य भाग है-",
+                opts: [
+                    { en: "Litchi", hi: "लीची" },
+                    { en: "Nutmeg", hi: "जायफल" },
+                    { en: "Custard Apple", hi: "शरीफा" },
+                    { en: "All of these", hi: "इनमें सभी" }
+                ],
+                ans: 3
+            },
+            {
+                en: "94. Edible part of Cauliflower is-",
+                hi: "94. फूलगोभी का खाने योग्य भाग है-",
+                opts: [
+                    { en: "Underground stem", hi: "भूमिगत डंक" },
+                    { en: "Root", hi: "जड़" },
+                    { en: "Leaves", hi: "पत्ते" },
+                    { en: "Flower", hi: "फूल" }
+                ],
+                ans: 3
+            },
+            {
+                en: "95. Edible part of Jackfruit is-",
+                hi: "95. कटहल के खाने योग्य भाग है-",
+                opts: [
+                    { en: "Pericarp", hi: "फलभित्ति" },
+                    { en: "Bracts and Perianth", hi: "परिदलपुंज" },
+                    { en: "Thalamus", hi: "पुष्पासन" },
+                    { en: "Juicy hairs", hi: "रसीले रोम" }
+                ],
+                ans: 1
+            },
+            {
+                en: "96. Which of the following is NOT a Composite fruit?",
+                hi: "96. निम्नलिखित में कौन-सा फल संग्रहित फल (Composite fruit) नहीं है ?",
+                opts: [
+                    { en: "Pineapple", hi: "अन्नानास" },
+                    { en: "Guava", hi: "अमरूद" },
+                    { en: "Mulberry", hi: "शहतूत" },
+                    { en: "Jackfruit", hi: "कटहल" }
+                ],
+                ans: 1
+            },
+            {
+                en: "97. Which of the following are Aggregate fruits?",
+                hi: "97. निम्नलिखित में कौन-सा फल पुंज या समूह फल (Aggregate fruits) है ?",
+                opts: [
+                    { en: "Strawberry", hi: "स्ट्रॉबेरी" },
+                    { en: "Custard Apple", hi: "शरीफा" },
+                    { en: "Raspberry", hi: "रसभरी" },
+                    { en: "All of these", hi: "इनमें से सभी" }
+                ],
+                ans: 3
+            },
+            {
+                en: "98. Mango, Coconut, Betel nut and Plum are-",
+                hi: "98. आम, नारियल, सुपारी तथा बेर होते हैं-",
+                opts: [
+                    { en: "Drupe", hi: "अष्ठिल (Drupe)" },
+                    { en: "Pome", hi: "पोम (Pome)" },
+                    { en: "Pepo", hi: "पीपो (Pepo)" },
+                    { en: "Berry", hi: "बेरी (Berry)" }
+                ],
+                ans: 0
+            },
+            {
+                en: "99. What type of fruit are Apple and Pear?",
+                hi: "99. सेब तथा नाशपाती किस प्रकार का फल है ?",
+                opts: [
+                    { en: "Berry", hi: "बेरी" },
+                    { en: "Pome", hi: "पोम" },
+                    { en: "Nut", hi: "नट" },
+                    { en: "Balausta", hi: "बैलस्टा" }
+                ],
+                ans: 1
+            },
+            {
+                en: "100. Which pair is correctly matched?",
+                hi: "100. निम्नलिखित में कौन-सा युग्म सुमेलित है ?",
+                opts: [
+                    { en: "Mango - Berry", hi: "आम - बेरी" },
+                    { en: "Tomato - Pome", hi: "टमाटर - पोम" },
+                    { en: "Apple - Drupe", hi: "सेब - ड्रूप" },
+                    { en: "Banana - Berry", hi: "केला - बेरी" }
+                ],
+                ans: 3
+            }
+        ];
+
+        let currentQuestions = [];
+        let currentIdx = 0;
+        let score = 0;
+        let timer;
+        let timeLeft = 0;
+        let audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        // Audio Synthesis
+        function playSound(freq, type = 'sine', duration = 0.2) {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + duration);
+        }
+
+        function startQuiz() {
+            const shuffle = document.getElementById('input-shuffle').checked;
+            currentQuestions = shuffle ? [...quizData].sort(() => Math.random() - 0.5) : [...quizData];
+            currentIdx = 0;
+            score = 0;
+            
+            showScreen('screen-quiz');
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            if (currentIdx >= currentQuestions.length) return endQuiz();
+            
+            const q = currentQuestions[currentIdx];
+            document.getElementById('q-en').innerText = q.en;
+            document.getElementById('q-hi').innerText = q.hi;
+            document.getElementById('hud-counter').innerText = `Question: ${currentIdx + 1}/${currentQuestions.length}`;
+            document.getElementById('hud-score').innerText = `Score: ${score}`;
+            document.getElementById('progress-bar').style.width = `${((currentIdx) / currentQuestions.length) * 100}%`;
+
+            const optionsBox = document.getElementById('options-box');
+            optionsBox.innerHTML = '';
+            
+            q.opts.forEach((opt, i) => {
+                const btn = document.createElement('button');
+                btn.className = 'btn';
+                btn.innerHTML = `<div>${opt.en}</div><span class="opt-hi">${opt.hi}</span>`;
+                btn.onclick = () => checkAnswer(i);
+                optionsBox.appendChild(btn);
+            });
+
+            startTimer();
+        }
+
+        function startTimer() {
+            clearInterval(timer);
+            const limit = parseInt(document.getElementById('input-timer').value);
+            const timerEl = document.getElementById('timer');
+            
+            if (limit <= 0) {
+                timerEl.innerText = "";
+                return;
+            }
+
+            timeLeft = limit;
+            timerEl.innerText = `⏳ ${timeLeft}s`;
+            timerEl.classList.remove('pulse-red');
+
+            timer = setInterval(() => {
+                timeLeft--;
+                timerEl.innerText = `⏳ ${timeLeft}s`;
+                if (timeLeft <= 5) timerEl.classList.add('pulse-red');
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    checkAnswer(-1); // Timeout
+                }
+            }, 1000);
+        }
+
+        function checkAnswer(selectedIdx) {
+            clearInterval(timer);
+            const q = currentQuestions[currentIdx];
+            const buttons = document.getElementById('options-box').children;
+            
+            // Disable buttons
+            for (let b of buttons) b.disabled = true;
+
+            if (selectedIdx === q.ans) {
+                buttons[selectedIdx].classList.add('correct');
+                score++;
+                playSound(800, 'sine', 0.1);
+                createConfetti();
+            } else {
+                if (selectedIdx !== -1) buttons[selectedIdx].classList.add('wrong');
+                buttons[q.ans].classList.add('correct');
+                playSound(200, 'sawtooth', 0.3);
+                showSadEmoji();
+            }
+
+            setTimeout(() => {
+                currentIdx++;
+                loadQuestion();
+            }, 1500);
+        }
+
+        function showSadEmoji() {
+            const el = document.getElementById('emoji-overlay');
+            el.style.display = 'block';
+            el.classList.add('shake');
+            setTimeout(() => {
+                el.style.display = 'none';
+                el.classList.remove('shake');
+            }, 1000);
+        }
+
+        function createConfetti() {
+            for (let i = 0; i < 30; i++) {
+                const c = document.createElement('div');
+                c.className = 'confetti';
+                c.style.left = Math.random() * 100 + 'vw';
+                c.style.top = '-10px';
+                c.style.backgroundColor = `hsl(${Math.random() * 360}, 100%, 50%)`;
+                c.style.transform = `rotate(${Math.random() * 360}deg)`;
+                document.body.appendChild(c);
+                
+                const anim = c.animate([
+                    { transform: `translate(0, 0) rotate(0)`, opacity: 1 },
+                    { transform: `translate(${Math.random() * 100 - 50}px, 100vh) rotate(720deg)`, opacity: 0 }
+                ], { duration: 2000, easing: 'ease-out' });
+                
+                anim.onfinish = () => c.remove();
+            }
+        }
+
+        function endQuiz() {
+            clearInterval(timer);
+            showScreen('screen-result');
+            const pct = Math.round((score / currentQuestions.length) * 100);
+            document.getElementById('final-score').innerText = `${score}/${currentQuestions.length} (${pct}%)`;
+            
+            let msg = "";
+            if (pct >= 80) msg = "🏆 Outstanding Performance!";
+            else if (pct >= 50) msg = "👏 Well Done! Keep it up.";
+            else msg = "📚 Practice makes perfect! Try again.";
+            
+            document.getElementById('result-msg').innerText = msg;
+            document.getElementById('progress-bar').style.width = "100%";
+        }
+
+        function showScreen(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+        }
+    </script>
+</body>
+</html>

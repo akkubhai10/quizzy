@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Histology Mastery Quiz | Part 3</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --primary-text: #ffffff;
+            --hindi-text: #dddddd;
+            --correct: #2ecc71;
+            --wrong: #e74c3c;
+            --pulse-red: #ff3e3e;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #ff6b6b 100%);
+            display: flex; justify-content: center; align-items: center;
+            padding: 15px; overflow-x: hidden;
+        }
+
+        /* Glass Container */
+        .quiz-container {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 25px;
+            width: 100%; max-width: 700px;
+            padding: 35px; box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            position: relative; z-index: 5;
+        }
+
+        /* Progress Bar */
+        .progress-wrapper {
+            position: absolute; top: 0; left: 0; width: 100%;
+            height: 6px; background: rgba(255,255,255,0.05);
+            border-radius: 25px 25px 0 0; overflow: hidden;
+        }
+        #progress-bar {
+            height: 100%; width: 0%; background: var(--correct);
+            box-shadow: 0 0 10px var(--correct); transition: width 0.4s ease;
+        }
+
+        /* Header Area */
+        .header-stats {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 25px; font-weight: 600; color: var(--primary-text);
+        }
+        .timer-icon { display: flex; align-items: center; gap: 8px; }
+        .pulse-timer { color: var(--pulse-red); animation: timerPulse 0.5s infinite alternate; }
+        @keyframes timerPulse { from { transform: scale(1); } to { transform: scale(1.1); } }
+
+        /* Question & Options */
+        .question-box { margin-bottom: 25px; }
+        .en-txt { font-size: 1.25rem; font-weight: 700; line-height: 1.4; color: var(--primary-text); }
+        .hi-txt { font-size: 0.95rem; color: var(--hindi-text); margin-top: 5px; font-weight: 400; }
+
+        .options-list { display: grid; gap: 12px; }
+        .opt-btn {
+            background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border);
+            padding: 16px; border-radius: 15px; cursor: pointer; text-align: left;
+            transition: 0.2s; color: var(--primary-text); width: 100%;
+        }
+        .opt-btn:hover:not(:disabled) { background: rgba(255,255,255,0.15); transform: translateY(-2px); }
+        .opt-btn.correct { background: var(--correct) !important; border-color: #fff; }
+        .opt-btn.wrong { background: var(--wrong) !important; border-color: #fff; }
+        .opt-hi { display: block; font-size: 0.8rem; opacity: 0.85; margin-top: 3px; }
+
+        /* Feedback Layer */
+        #emoji-layer {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 8rem; pointer-events: none; z-index: 1000; display: none;
+        }
+        .shake { animation: shakeEffect 0.5s ease-in-out; }
+        @keyframes shakeEffect {
+            0%, 100% { transform: translate(-50%, -50%); }
+            25% { transform: translate(-55%, -50%) rotate(-5deg); }
+            75% { transform: translate(-45%, -50%) rotate(5deg); }
+        }
+
+        /* Controls */
+        .start-ui, .result-ui { text-align: center; }
+        .input-field {
+            background: rgba(255,255,255,0.1); border: 1px solid var(--glass-border);
+            padding: 12px; border-radius: 10px; color: #white; width: 80px; text-align: center; margin: 15px 0;
+        }
+        .main-btn {
+            background: #fff; color: #333; border: none; padding: 14px 40px;
+            border-radius: 50px; font-weight: 700; cursor: pointer; transition: 0.3s; margin-top: 20px;
+        }
+        .main-btn:hover { transform: scale(1.08); box-shadow: 0 5px 20px rgba(255,255,255,0.3); }
+        .exit-btn {
+            background: transparent; border: 1px solid rgba(255,255,255,0.5);
+            color: #fff; margin-top: 30px; font-size: 0.8rem; padding: 8px 20px; border-radius: 5px;
+        }
+
+        #canvas-confetti { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; }
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+    <canvas id="canvas-confetti"></canvas>
+    <div id="emoji-layer">😢</div>
+
+    <div class="quiz-container">
+        <div class="progress-wrapper"><div id="progress-bar"></div></div>
+
+        <div id="start-screen" class="start-ui">
+            <h1 style="color: #fff; margin-bottom: 10px;">Histology Quiz Final</h1>
+            <p style="color: #ddd; margin-bottom: 25px;">Questions 101 - 140 | Animal Tissues</p>
+            
+            <div style="margin: 20px 0;">
+                <label style="color: #fff; display: block;">Timer (Sec per question):</label>
+                <input type="number" id="timer-val" value="15" min="0" class="input-field">
+                <br>
+                <label style="color: #fff; cursor: pointer; font-size: 0.9rem;">
+                    <input type="checkbox" id="shuffle-on"> Shuffle Questions
+                </label>
+            </div>
+            
+            <button class="main-btn" onclick="beginQuiz()">Launch Quiz</button>
+        </div>
+
+        <div id="quiz-screen" class="hidden">
+            <div class="header-stats">
+                <div id="q-idx">01/40</div>
+                <div class="timer-icon">⏳ <span id="clock">--</span>s</div>
+                <div id="score-val">Score: 0</div>
+            </div>
+
+            <div class="question-box">
+                <div class="en-txt" id="en-text"></div>
+                <div class="hi-txt" id="hi-text"></div>
+            </div>
+
+            <div class="options-list" id="opt-container"></div>
+
+            <button class="exit-btn" onclick="endQuiz(true)">Finish & Show Results</button>
+        </div>
+
+        <div id="result-screen" class="hidden result-ui">
+            <h1 id="score-big" style="color: #fff; font-size: 3.5rem; margin-bottom: 10px;">0%</h1>
+            <h2 id="msg-text" style="color: #fff; margin-bottom: 15px;"></h2>
+            <p id="stats-text" style="color: #ddd; margin-bottom: 30px;"></p>
+            <button class="main-btn" onclick="location.reload()">Try Again</button>
+        </div>
+    </div>
+
+    <script>
+        const quizData = [
+            { en: "Tendon is formed from -", hi: "टेंडन का निर्माण होता है-", options: [
+                { en: "White fibrous tissue", hi: "श्वेत तंतुमय उत्तक से", correct: true },
+                { en: "Yellow fibrous tissue", hi: "पीला तंतुमय उत्तक से", correct: false },
+                { en: "Areolar tissue", hi: "जलावत संयोजी उत्तक से", correct: false },
+                { en: "Skeletal tissue", hi: "कंकाल संयोजी उत्तक से", correct: false }
+            ]},
+            { en: "Ligament is formed from -", hi: "लिगामेंट का निर्माण होता है-", options: [
+                { en: "White fibrous tissue", hi: "श्वेत तंतुमय उत्तक से", correct: false },
+                { en: "Yellow fibrous tissue", hi: "पीला तंतुमय उत्तक से", correct: true },
+                { en: "Areolar tissue", hi: "जलावत संयोजी उत्तक से", correct: false },
+                { en: "Skeletal tissue", hi: "कंकाल उत्तक से", correct: false }
+            ]},
+            { en: "Tendon and Ligament are which type of tissue?", hi: "टेंडन तथा लिगामेंट किस प्रकार के उत्तक हैं-", options: [
+                { en: "Connective tissue", hi: "संयोजी उत्तक", correct: true },
+                { en: "Muscular tissue", hi: "पेशी उत्तक", correct: false },
+                { en: "Nervous tissue", hi: "तंत्रिका उत्तक", correct: false },
+                { en: "Fluid tissue", hi: "तरल उत्तक", correct: false }
+            ]},
+            { en: "Consider: 1. Tendon connects muscle to bone. 2. Ligament connects bone to bone.", hi: "कथनों पर विचार कीजिए- 1. टेंडन मांसपेशी को अस्थि से जोड़ता है। 2. लिगामेंट हड्डियों को हड्डियों से जोड़ने का कार्य करते हैं।", options: [
+                { en: "Only 1", hi: "केवल 1", correct: false },
+                { en: "Only 2", hi: "केवल 2", correct: false },
+                { en: "Both 1 and 2", hi: "1 तथा 2 दोनों", correct: true },
+                { en: "Neither 1 nor 2", hi: "न तो 1 न ही 2", correct: false }
+            ]},
+            { en: "Where are Sebaceous glands found?", hi: "सैबेसियस ग्रंथियाँ कहाँ पायी जाती है ?", options: [
+                { en: "Epidermis of mammalian skin", hi: "स्तनियों की त्वचा के एपिडर्मिस में", correct: false },
+                { en: "Dermis of mammalian skin", hi: "स्तनियों की त्वचा के डर्मिस में", correct: true },
+                { en: "Stomach epithelium", hi: "अमाशय की एपिथीलियम में", correct: false },
+                { en: "Intestine epithelium", hi: "आंत की एपिथीलियम में", correct: false }
+            ]},
+            { en: "What does the Lacrimal gland secrete?", hi: "लैक्राइमल ग्रंथि क्या स्रावित करती है ?", options: [
+                { en: "Sebum", hi: "सीबम", correct: false },
+                { en: "Sweat", hi: "पसीना", correct: false },
+                { en: "Mucus", hi: "म्यूकस", correct: false },
+                { en: "Tears", hi: "आंसू", correct: true }
+            ]},
+            { en: "What tissue makes up palms, hooves and horns?", hi: "किस उत्तक से तलवे, खुर और सींग बने होते हैं ?", options: [
+                { en: "Fluid", hi: "फ्लूइड के", correct: false },
+                { en: "Chitin", hi: "काइटीन के", correct: false },
+                { en: "Keratin", hi: "किरैटीन के", correct: true },
+                { en: "Tunicin", hi: "ट्यूनिसिन के", correct: false }
+            ]},
+            { en: "Osteoblast cells are present in -", hi: "ऑस्टियोब्लास्ट नामक कोशिका उपस्थित रहती है ?", options: [
+                { en: "Bone", hi: "अस्थि में", correct: true },
+                { en: "Cartilage", hi: "उपास्थि में", correct: false },
+                { en: "Blood", hi: "रूधिर में", correct: false },
+                { en: "Epithelium", hi: "एपिथीलियम में", correct: false }
+            ]},
+            { en: "Chondrioblast cells are found in -", hi: "कॉण्ड्रियोब्लास्ट नामक कोशिका पायी जाती है-", options: [
+                { en: "Bone", hi: "अस्थि में", correct: false },
+                { en: "Cartilage", hi: "उपास्थि में", correct: true },
+                { en: "Blood", hi: "रूधिर में", correct: false },
+                { en: "Epithelium", hi: "एपिथीलियम में", correct: false }
+            ]},
+            { en: "Where are Mast cells found?", hi: "मास्ट कोशिकाएँ पायी जाती हैं-", options: [
+                { en: "Connective tissue", hi: "संयोजी उत्तक में", correct: true },
+                { en: "Muscular tissue", hi: "पेशी उत्तक में", correct: false },
+                { en: "Nervous tissue", hi: "तंत्रिका उत्तक में", correct: false },
+                { en: "Blood tissue", hi: "रूधिर उत्तक में", correct: false }
+            ]},
+            { en: "Which cell in areolar tissue secretes Histamine to dilate blood vessels?", hi: "एरिओलर उत्तक में पाए जाने वाले निम्नलिखित कोशिकाओं में कौन रूधिर वाहिनियों को फैलाने के लिये प्रोटीन हिस्टामीन स्त्रावित करता है ?", options: [
+                { en: "Plasma cells", hi: "प्लाज्मा कोशिकाएँ", correct: false },
+                { en: "Mast cells", hi: "मास्ट कोशिकाएँ", correct: true },
+                { en: "Fibroblasts", hi: "फाइब्रोब्लास्ट", correct: false },
+                { en: "Histiocytes", hi: "हिस्टीयोसाइट्स", correct: false }
+            ]},
+            { en: "Which is found in spleen, liver and bone marrow?", hi: "निम्नलिखित में कौन प्लीहा, यकृत तथा अस्थिमज्जा में पाया जाता है ?", options: [
+                { en: "Yellow fibrous tissue", hi: "पीला तंतुमय उत्तक", correct: false },
+                { en: "White fibrous tissue", hi: "श्वेत तंतुमय उत्तक", correct: false },
+                { en: "Reticular connective tissue", hi: "जालवत संयोजी उत्तक", correct: true },
+                { en: "Cartilage tissue", hi: "उपास्थि उत्तक", correct: false }
+            ]},
+            { en: "Human skin is thickest at -", hi: "मनुष्य की त्वचा सबसे मोटी होती है-", options: [
+                { en: "Palm", hi: "हथेली पर", correct: false },
+                { en: "Sole", hi: "तलवे पर", correct: true },
+                { en: "Torso", hi: "धड़ पर", correct: false },
+                { en: "Head", hi: "सिर पर", correct: false }
+            ]},
+            { en: "Human skin is thinnest at -", hi: "मनुष्य की त्वचा सबसे पतली होती है-", options: [
+                { en: "Palm", hi: "हथेली पर", correct: false },
+                { en: "Sole", hi: "तलवे पर", correct: false },
+                { en: "Eyelids", hi: "आँखों के पलक पर", correct: true },
+                { en: "Head", hi: "सिर पर", correct: false }
+            ]},
+            { en: "The cause of wrinkles in skin during old age is -", hi: "वृद्धावस्था में त्वचा में झुर्रियाँ पड़ जाती हैं, इसका कारण है-", options: [
+                { en: "Low blood circulation", hi: "त्वचा में रूधिर का संचरण कम होने के कारण", correct: false },
+                { en: "Reduced elasticity in dermis", hi: "उपचर्मीय स्तर में लचीलापन कम होने के कारण", correct: true },
+                { en: "Lack of adipose tissue", hi: "चर्म में वसा उत्तक की कमी के कारण", correct: false },
+                { en: "Excess melanin", hi: "त्वचा में मेलानिन तथा मेलेनोसाइट्स की अधिकता के कारण", correct: false }
+            ]},
+            { en: "Umbilical cord is -", hi: "नाभि रज्जू (Umbilical cord) है-", options: [
+                { en: "Mucoid connective tissue", hi: "श्लेष्मल संयोजी उत्तक", correct: true },
+                { en: "Fibrous connective tissue", hi: "रेशेदार संयोजी उत्तक", correct: false },
+                { en: "Mature connective tissue", hi: "प्रौढ़ संयोजी उत्तक", correct: false },
+                { en: "Embryonic connective tissue", hi: "भ्रूणीय संयोजी उत्तक", correct: false }
+            ]},
+            { en: "Haversian system is found in -", hi: "हैवरसियन तंत्र पाया जाता है-", options: [
+                { en: "Fish bones", hi: "मत्स्यों की अस्थियों में", correct: false },
+                { en: "Bird bones", hi: "पक्षियों की अस्थियों में", correct: false },
+                { en: "Reptile bones", hi: "सरीसृपों की अस्थियों में", correct: false },
+                { en: "Mammal bones", hi: "स्तनियों की अस्थियों में", correct: true }
+            ]},
+            { en: "Histamine is a type of protein that participates in -", hi: "हिस्टामीन एक प्रकार का प्रोटीन है जो भाग लेती है-", options: [
+                { en: "Blood clotting", hi: "रक्त को जमाने में", correct: false },
+                { en: "Allergic reactions", hi: "एलर्जी प्रतिक्रियाओं में", correct: true },
+                { en: "Phagocytosis", hi: "रोगणुओं के भक्षण में", correct: false },
+                { en: "None", hi: "किसी में नहीं", correct: false }
+            ]},
+            { en: "Collagen fibers make up what portion of total body protein?", hi: "कॉलीजन फाइबर शरीर में पाये जाने वाले कुल प्रोटीन का-", options: [
+                { en: "Two-thirds", hi: "दो-तिहाई भाग है", correct: false },
+                { en: "One-third", hi: "एक-तिहाई भाग है", correct: true },
+                { en: "Half", hi: "आधा भाग है", correct: false },
+                { en: "20 percent", hi: "20 प्रतिशत भाग है", correct: false }
+            ]},
+            { en: "Most of the protein in connective tissue is -", hi: "संयोजी उत्तक का अधिकांश प्रोटीन है-", options: [
+                { en: "Myosin", hi: "मायोसिन", correct: false },
+                { en: "Melanin", hi: "मेलानिन", correct: false },
+                { en: "Collagen", hi: "कॉलीजन", correct: true },
+                { en: "Keratin", hi: "किरैटीन", correct: false }
+            ]},
+            { en: "The internal skeleton found in the external ear is -", hi: "बाह्यकर्ण में पाये जाने वाले अंतः कंकाल है ?", options: [
+                { en: "Cartilage", hi: "उपास्थि", correct: true },
+                { en: "Bone", hi: "अस्थि", correct: false },
+                { en: "Vascular tissue", hi: "संवहनीय उत्तक", correct: false },
+                { en: "Osteoblast", hi: "ऑस्टियोब्लास्ट", correct: false }
+            ]},
+            { en: "Tissue responsible for movement of body parts -", hi: "शारीरिक अंगो में गति के लिये जिम्मेदार उत्तक है-", options: [
+                { en: "Connective", hi: "संयोजी उत्तक", correct: false },
+                { en: "Muscular", hi: "पेशी उत्तक", correct: true },
+                { en: "Epithelial", hi: "एपिथीलियम उत्तक", correct: false },
+                { en: "Nervous", hi: "तंत्रिका उत्तक", correct: false }
+            ]},
+            { en: "Sarcoplasm fluid is found in -", hi: "साकोप्लाज्म (Sarcoplasm) नामक तरल पाया जाता है ?", options: [
+                { en: "Connective tissue", hi: "संयोजी उत्तक में", correct: false },
+                { en: "Muscular tissue", hi: "पेशी उत्तक में", correct: true },
+                { en: "Nervous tissue", hi: "तंत्रिका उत्तक में", correct: false },
+                { en: "Epithelial tissue", hi: "एपिथीलियम उत्तक में", correct: false }
+            ]},
+            { en: "Unstriated and Striated tissues are basically -", hi: "अरेखित तथा रेखित उत्तक मूल रूप से किस प्रकार के उत्तक हैं-", options: [
+                { en: "Connective", hi: "संयोजी उत्तक", correct: false },
+                { en: "Muscular", hi: "पेशी उत्तक", correct: true },
+                { en: "Nervous", hi: "तंत्रिका उत्तक", correct: false },
+                { en: "Fluid", hi: "तरल उत्तक", correct: false }
+            ]},
+            { en: "Tissue found in the iris of the eye is -", hi: "नेत्र के आइरिस में पाये जाने वाला उत्तक है ?", options: [
+                { en: "Cardiac muscle", hi: "कार्डियक पेशी", correct: false },
+                { en: "Unstriated muscle", hi: "अरेखित पेशी", correct: true },
+                { en: "Striated muscle", hi: "रेखित पेशी", correct: false },
+                { en: "Skeletal muscle", hi: "कंकाल पेशी", correct: false }
+            ]},
+            { en: "Intercalated discs are present in -", hi: "इन्टरकॅलेटेड डिस्क उपस्थित होते हैं ?", options: [
+                { en: "Striated muscle", hi: "रेखित पेशी में", correct: false },
+                { en: "Unstriated muscle", hi: "अरेखित पेशी में", correct: false },
+                { en: "Cardiac muscle", hi: "हृदयक पेशी में", correct: true },
+                { en: "All of these", hi: "इनमें सभी में", correct: false }
+            ]},
+            { en: "Which muscle is a voluntary muscle?", hi: "निम्नलिखित में कौन सी पेशी ऐच्छिक पेशी है-", options: [
+                { en: "Unstriated", hi: "अरेखित पेशी", correct: false },
+                { en: "Striated", hi: "रेखित पेशी", correct: true },
+                { en: "Cardiac", hi: "हृदयक पेशी", correct: false },
+                { en: "All of these", hi: "इनमें सभी", correct: false }
+            ]},
+            { en: "Movement of food in the digestive tract is due to contraction of which muscle?", hi: "आहारनाल के एक भाग से दूसरे भाग में भोजन का प्रवाह किस पेशी के संकुचन एवं प्रसार के कारण होता है ?", options: [
+                { en: "Striated", hi: "रेखित पेशी", correct: false },
+                { en: "Unstriated", hi: "अरेखित पेशी", correct: true },
+                { en: "Cardiac", hi: "हृदयक पेशी", correct: false },
+                { en: "All of these", hi: "इनमें से सभी", correct: false }
+            ]},
+            { en: "Myofibrils are found in which tissue?", hi: "मायोफाइब्रिल (Myofibril) नामक रचना किस उत्तक में पायी जाती है ?", options: [
+                { en: "Muscular tissue", hi: "पेशी उत्तक में", correct: true },
+                { en: "Connective tissue", hi: "संयोजी उत्तक में", correct: false },
+                { en: "Epithelial tissue", hi: "एपिथीलियम उत्तक में", correct: false },
+                { en: "All of these", hi: "इनमें से सभी में", correct: false }
+            ]},
+            { en: "Which muscle does not get fatigued?", hi: "निम्नलिखित में किस पेशी में थकान उत्पन्न नहीं होता है ?", options: [
+                { en: "Striated", hi: "रेखित पेशी में", correct: false },
+                { en: "Unstriated", hi: "अरेखित पेशी में", correct: false },
+                { en: "Cardiac", hi: "कार्डियक पेशी में", correct: true },
+                { en: "All of these", hi: "इनमें से सभी में", correct: false }
+            ]},
+            { en: "About 50 percent of total body weight is -", hi: "शरीर के कुल भार का लगभग 50 प्रतिशत भार होता है ?", options: [
+                { en: "Striated muscle", hi: "रेखित पेशी का", correct: true },
+                { en: "Unstriated muscle", hi: "अरेखित पेशी का", correct: false },
+                { en: "Bone", hi: "अस्थि का", correct: false },
+                { en: "Cartilage", hi: "उपास्थि का", correct: false }
+            ]},
+            { en: "Conduction of sensation from one part to another is by -", hi: "संवेदना का चालन शरीर के एक भाग से दूसरे भाग में होता है-", options: [
+                { en: "Muscular tissue", hi: "पेशी उत्तक से", correct: false },
+                { en: "Nervous tissue", hi: "तंत्रिका उत्तक से", correct: true },
+                { en: "Connective tissue", hi: "संयोजी उत्तक से", correct: false },
+                { en: "Epithelial tissue", hi: "एपिथीलियम उत्तक से", correct: false }
+            ]},
+            { en: "The unit of nervous tissue is -", hi: "तंत्रिका उत्तक की इकाई है-", options: [
+                { en: "Cyton", hi: "साइटन", correct: false },
+                { en: "Axon", hi: "ऐक्सॉन", correct: false },
+                { en: "Neuron", hi: "न्यूरॉन", correct: true },
+                { en: "Dendron", hi: "डेंड्रन", correct: false }
+            ]},
+            { en: "The longest cell in the human body is -", hi: "मनुष्य के शरीर में सबसे लम्बी कोशिका होती है-", options: [
+                { en: "Hand cell", hi: "हाथ की कोशिका", correct: false },
+                { en: "Leg cell", hi: "पैर की कोशिका", correct: false },
+                { en: "Nerve cell", hi: "तंत्रिका का कोशिका", correct: true },
+                { en: "None", hi: "इनमें से कोई नहीं", correct: false }
+            ]},
+            { en: "In which tissue does cell division not occur after birth?", hi: "जन्म के बाद मानव के किस उत्तक में कोई कोशिका विभाजन नहीं होता है ?", options: [
+                { en: "Skeletal", hi: "कंकाल", correct: false },
+                { en: "Nervous", hi: "तंत्रिका", correct: true },
+                { en: "Connective", hi: "संयोजी", correct: false },
+                { en: "Reproductive", hi: "जनन", correct: false }
+            ]},
+            { en: "The thin branches coming out from the dendron of a neuron are called -", hi: "न्यूरॉन के डेंड्रन से निकलने वाली पतली-पतली शाखाएँ क्या कहलाती हैं ?", options: [
+                { en: "Axon", hi: "ऐक्सॉन", correct: false },
+                { en: "Node of Ranvier", hi: "रैनबियर का नोड", correct: false },
+                { en: "Dendrites", hi: "डेंड्राइट्स", correct: true },
+                { en: "Basophil", hi: "बेसोफिल", correct: false }
+            ]},
+            { en: "Where are Nodes of Ranvier found?", hi: "रैनबियर का नोड कहाँ पायी जाती है ?", options: [
+                { en: "Skeletal", hi: "कंकाल में", correct: false },
+                { en: "Connective tissue", hi: "संयोजी उत्तक में", correct: false },
+                { en: "Nervous tissue", hi: "तंत्रिका में", correct: true },
+                { en: "Muscular tissue", hi: "पेशी में", correct: false }
+            ]},
+            { en: "What is the junction between two neurons called?", hi: "दो न्यूरॉन के जोड़ को क्या कहते हैं ?", options: [
+                { en: "Ganglia", hi: "गुच्छिका (Langlia)", correct: false },
+                { en: "Synapse", hi: "सिनेप्स (Synapse)", correct: true },
+                { en: "Nerves", hi: "तंत्रिका (Nerves)", correct: false },
+                { en: "Node", hi: "नोड (Node)", correct: false }
+            ]},
+            { en: "How is sensation transmitted in a nerve cell?", hi: "न्यूरॉन कोशिका में संवेदना का संचार कैसे होता है ?", options: [
+                { en: "Axon of one to dendrites of another", hi: "एक न्यूरॉन के ऐक्सॉन से दूसरे न्यूरॉन के डेंड्राइट्स में", correct: true },
+                { en: "Dendrites of one to axon of another", hi: "एक न्यूरॉन के डेंड्राइट्स से दूसरे न्यूरॉन के ऐक्सॉन में", correct: false },
+                { en: "Both A and B", hi: "A तथा B दोनों", correct: false },
+                { en: "Neither A nor B", hi: "न तो A न ही B", correct: false }
+            ]},
+            { en: "Biopsy is related to -", hi: "बायोप्सी (Biopsy) सम्बन्धित है-", options: [
+                { en: "Post-mortem for cause of death", hi: "मृत्यु का कारण जानने के लिये शव विच्छेदन करने से", correct: false },
+                { en: "Testing under anesthesia", hi: "बेहोशी की स्थिति में परीक्षण करने से", correct: false },
+                { en: "Separating tissue for testing", hi: "परीक्षण के लिये उत्तको को शरीर से अलग करने से", correct: true },
+                { en: "Treatment of hydrophobia", hi: "हाइड्रोफोबिया के उपचार से", correct: false }
+            ]}
+        ];
+
+        let currentQSet = [];
+        let curIdx = 0;
+        let score = 0;
+        let timerId;
+        let timeRem = 0;
+        let baseTime = 15;
+        const aCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playTone(freq, type) {
+            const osc = aCtx.createOscillator();
+            const gain = aCtx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, aCtx.currentTime);
+            gain.gain.setValueAtTime(0.1, aCtx.currentTime);
+            osc.connect(gain);
+            gain.connect(aCtx.destination);
+            osc.start();
+            osc.stop(aCtx.currentTime + 0.2);
+        }
+
+        function beginQuiz() {
+            baseTime = parseInt(document.getElementById('timer-val').value) || 0;
+            const shuffle = document.getElementById('shuffle-on').checked;
+            currentQSet = shuffle ? [...quizData].sort(() => Math.random() - 0.5) : [...quizData];
+            
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('quiz-screen').classList.remove('hidden');
+            loadNext();
+        }
+
+        function loadNext() {
+            if (curIdx >= currentQSet.length) return endQuiz();
+            
+            const q = currentQSet[curIdx];
+            document.getElementById('en-text').innerText = q.en;
+            document.getElementById('hi-text').innerText = q.hi;
+            document.getElementById('q-idx').innerText = `${String(curIdx + 1).padStart(2, '0')}/${currentQSet.length}`;
+            document.getElementById('progress-bar').style.width = `${(curIdx / currentQSet.length) * 100}%`;
+
+            const opts = document.getElementById('opt-container');
+            opts.innerHTML = '';
+            q.options.forEach((opt, i) => {
+                const b = document.createElement('button');
+                b.className = 'opt-btn';
+                b.innerHTML = `${opt.en} <span class="opt-hi">${opt.hi}</span>`;
+                b.onclick = () => checkAns(i, b);
+                opts.appendChild(b);
+            });
+
+            if (baseTime > 0) runClock();
+            else document.querySelector('.timer-icon').classList.add('hidden');
+        }
+
+        function runClock() {
+            clearInterval(timerId);
+            timeRem = baseTime;
+            const ui = document.getElementById('clock');
+            ui.innerText = timeRem;
+            ui.parentElement.classList.remove('pulse-timer');
+
+            timerId = setInterval(() => {
+                timeRem--;
+                ui.innerText = timeRem;
+                if (timeRem <= 5) ui.parentElement.classList.add('pulse-timer');
+                if (timeRem <= 0) {
+                    clearInterval(timerId);
+                    checkAns(-1);
+                }
+            }, 1000);
+        }
+
+        function checkAns(idx, btn) {
+            clearInterval(timerId);
+            const q = currentQSet[curIdx];
+            const all = document.querySelectorAll('.opt-btn');
+            all.forEach(b => b.disabled = true);
+
+            if (idx !== -1 && q.options[idx].correct) {
+                btn.classList.add('correct');
+                score++;
+                playTone(600, 'sine');
+                triggerConfetti();
+            } else {
+                if (btn) btn.classList.add('wrong');
+                all.forEach((b, i) => { if (q.options[i].correct) b.classList.add('correct'); });
+                playTone(150, 'sawtooth');
+                triggerSad();
+            }
+
+            document.getElementById('score-val').innerText = `Score: ${score}`;
+            setTimeout(() => {
+                curIdx++;
+                loadNext();
+            }, 1500);
+        }
+
+        function triggerSad() {
+            const e = document.getElementById('emoji-layer');
+            e.style.display = 'block';
+            e.classList.add('shake');
+            setTimeout(() => {
+                e.style.display = 'none';
+                e.classList.remove('shake');
+            }, 1000);
+        }
+
+        function endQuiz(exit = false) {
+            clearInterval(timerId);
+            const count = exit ? curIdx : currentQSet.length;
+            const perc = count === 0 ? 0 : Math.round((score / count) * 100);
+            
+            document.getElementById('quiz-screen').classList.add('hidden');
+            document.getElementById('result-screen').classList.remove('hidden');
+
+            document.getElementById('score-big').innerText = `${perc}%`;
+            document.getElementById('stats-text').innerText = `Completed ${score} correct out of ${count} questions.`;
+
+            let msg = perc >= 80 ? "🏆 Outstanding Performance!" : (perc >= 50 ? "👏 Well Done! Keep it up." : "📚 Practice makes perfect! Try again.");
+            document.getElementById('msg-text').innerText = msg;
+        }
+
+        // CONFETTI
+        const canv = document.getElementById('canvas-confetti');
+        const ctx = canv.getContext('2d');
+        let parts = [];
+        function triggerConfetti() {
+            parts = [];
+            for (let i = 0; i < 80; i++) {
+                parts.push({
+                    x: Math.random() * canv.width, y: Math.random() * canv.height,
+                    r: Math.random() * 5 + 2, d: Math.random() * 10,
+                    color: `hsl(${Math.random() * 360}, 80%, 60%)`, t: Math.random() * 10 - 5
+                });
+            }
+            requestAnimationFrame(renderConfetti);
+        }
+        function renderConfetti() {
+            ctx.clearRect(0, 0, canv.width, canv.height);
+            parts.forEach((p, i) => {
+                ctx.beginPath(); ctx.fillStyle = p.color;
+                ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fill();
+                p.y += Math.cos(p.d) + 2 + p.r / 2; p.x += Math.sin(p.d);
+                if (p.y > canv.height) parts.splice(i, 1);
+            });
+            if (parts.length > 0) requestAnimationFrame(renderConfetti);
+        }
+        window.onresize = () => { canv.width = window.innerWidth; canv.height = window.innerHeight; };
+        window.onresize();
+    </script>
+</body>
+</html>

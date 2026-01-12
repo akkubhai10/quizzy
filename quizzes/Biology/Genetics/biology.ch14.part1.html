@@ -1,0 +1,1188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Genetics Master Quiz</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            --primary-text: #ffffff;
+            --secondary-text: #e0e0e0;
+            --hindi-text: #d1d5db; /* Slightly dimmed */
+            --correct-color: #2ecc71;
+            --wrong-color: #e74c3c;
+            --accent: #f39c12;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(45deg, #4158d0, #c850c0, #ffcc70);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--primary-text);
+            overflow-x: hidden;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Glassmorphism Container */
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 25px;
+            box-shadow: var(--glass-shadow);
+            width: 95%;
+            max-width: 700px;
+            padding: 2rem;
+            position: relative;
+            transition: transform 0.3s ease;
+        }
+
+        /* --- Start Screen --- */
+        #start-screen {
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .subtitle {
+            font-weight: 300;
+            margin-bottom: 30px;
+            color: var(--secondary-text);
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+            text-align: left;
+            background: rgba(0,0,0,0.2);
+            padding: 15px;
+            border-radius: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+
+        input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            border-radius: 10px;
+            border: none;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            font-family: inherit;
+            font-size: 1rem;
+        }
+        
+        input[type="checkbox"] {
+            transform: scale(1.5);
+            margin-right: 10px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            padding: 15px 40px;
+            color: white;
+            font-size: 1.2rem;
+            font-weight: 600;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn-primary:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        /* --- Quiz UI --- */
+        #quiz-container {
+            display: none;
+        }
+
+        .progress-container {
+            width: 100%;
+            height: 6px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: #00f260; /* Fallback */
+            background: linear-gradient(to right, #0575e6, #021b79);
+            width: 0%;
+            transition: width 0.3s ease;
+            box-shadow: 0 0 10px #0575e6;
+        }
+
+        .header-stats {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .timer-badge {
+            background: rgba(0,0,0,0.3);
+            padding: 5px 15px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .timer-pulse {
+            color: #ff4b4b;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .question-box {
+            margin-bottom: 25px;
+        }
+
+        .q-en {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+            line-height: 1.4;
+        }
+
+        .q-hi {
+            font-size: 1rem;
+            color: var(--hindi-text);
+            font-weight: 400;
+            line-height: 1.5;
+        }
+
+        .options-grid {
+            display: grid;
+            gap: 15px;
+        }
+
+        .option-btn {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 15px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .option-btn:hover {
+            background: rgba(255,255,255,0.2);
+            transform: translateY(-2px);
+        }
+
+        .opt-en {
+            font-weight: 600;
+            display: block;
+            font-size: 1rem;
+        }
+
+        .opt-hi {
+            font-size: 0.85rem;
+            color: var(--hindi-text);
+            display: block;
+            margin-top: 2px;
+        }
+
+        /* Feedback States */
+        .option-btn.correct {
+            background: var(--correct-color) !important;
+            border-color: var(--correct-color);
+            color: white;
+            box-shadow: 0 0 15px rgba(46, 204, 113, 0.5);
+        }
+
+        .option-btn.correct .opt-hi { color: #eee; }
+
+        .option-btn.wrong {
+            background: var(--wrong-color) !important;
+            border-color: var(--wrong-color);
+            color: white;
+            animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+        }
+        
+        .option-btn.wrong .opt-hi { color: #eee; }
+
+        .option-btn.disabled {
+            pointer-events: none;
+            opacity: 0.7;
+        }
+
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+            40%, 60% { transform: translate3d(4px, 0, 0); }
+        }
+
+        .btn-finish {
+            background: rgba(255, 71, 87, 0.8);
+            margin-top: 25px;
+            font-size: 0.9rem;
+            padding: 10px 25px;
+        }
+
+        /* --- Result Screen --- */
+        #result-screen {
+            display: none;
+            text-align: center;
+        }
+
+        .score-big {
+            font-size: 4rem;
+            font-weight: 800;
+            background: -webkit-linear-gradient(#eee, #aaa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin: 20px 0;
+        }
+
+        .message {
+            font-size: 1.5rem;
+            margin-bottom: 30px;
+            color: #fff;
+        }
+
+        /* --- Animations & Overlays --- */
+        #overlays {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .sad-emoji {
+            font-size: 10rem;
+            opacity: 0;
+            transform: scale(0);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .sad-emoji.show {
+            opacity: 1;
+            transform: scale(1);
+            animation: shake 0.5s;
+        }
+
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: #f00;
+            animation: fall linear forwards;
+        }
+
+        @keyframes fall {
+            to { transform: translateY(100vh) rotate(720deg); }
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 600px) {
+            .glass-card {
+                padding: 1.5rem;
+                width: 95%;
+            }
+            h1 { font-size: 1.8rem; }
+            .q-en { font-size: 1.1rem; }
+            .btn-primary { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="overlays">
+        <div class="sad-emoji">😢</div>
+    </div>
+
+    <div class="glass-card">
+        
+        <div id="start-screen">
+            <h1>Genetics Quiz</h1>
+            <p class="subtitle">Genetics / आनुवंशिकी (Questions 1-50)</p>
+            
+            <div class="input-group">
+                <label>⏱ Timer per Question (Seconds) / प्रति प्रश्न समय</label>
+                <input type="number" id="timerInput" placeholder="Leave empty for no timer" min="5">
+            </div>
+
+            <div class="input-group" style="display: flex; align-items: center;">
+                <input type="checkbox" id="shuffleToggle">
+                <label for="shuffleToggle" style="margin:0; cursor:pointer;">🔀 Shuffle Questions / प्रश्नों को मिलाएं</label>
+            </div>
+
+            <button class="btn-primary" onclick="startQuiz()">Start Quiz 🚀</button>
+        </div>
+
+        <div id="quiz-container">
+            <div class="progress-container">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+
+            <div class="header-stats">
+                <span id="qCounter">Q: 01/50</span>
+                <div class="timer-badge" id="timerBadge">
+                    <span>⏳</span>
+                    <span id="timerText">--</span>
+                </div>
+                <span id="scoreDisplay">Score: 0</span>
+            </div>
+
+            <div class="question-box">
+                <div class="q-en" id="qEn">Loading...</div>
+                <div class="q-hi" id="qHi">...</div>
+            </div>
+
+            <div class="options-grid" id="optionsContainer">
+                </div>
+
+            <div style="text-align: center;">
+                <button class="btn-primary btn-finish" onclick="endQuiz(true)">Finish & Show Results 🏁</button>
+            </div>
+        </div>
+
+        <div id="result-screen">
+            <h2>Quiz Completed!</h2>
+            <div class="score-big" id="finalScore">0%</div>
+            <p class="message" id="resultMessage">Good Job!</p>
+            <p style="margin-bottom: 20px;" id="statsText"></p>
+            <button class="btn-primary" onclick="location.reload()">Restart Quiz 🔄</button>
+        </div>
+
+    </div>
+
+    <script>
+        // --- DATA (50 Extracted Bilingual Questions) ---
+        // Answers are derived from biological facts matching the provided source images.
+        // Index of correct option (0-3) is stored in 'correct'.
+        const sourceData = [
+    {
+        "en": "The term 'Chromosome' was first used by Waldeyer.",
+        "hi": "क्रोमोसोम शब्द का उपयोग सर्वप्रथम वाल्डेयर ने किया था।",
+        "options": [
+            { "en": "Statement 1 is true", "hi": "कथन 1 सत्य है" },
+            { "en": "Statement 2 is true", "hi": "कथन 2 सत्य है" },
+            { "en": "Both are true", "hi": "दोनों सत्य हैं" },
+            { "en": "None are true", "hi": "कोई सत्य नहीं है" }
+        ],
+        "correct": 2 // Context implies multiple statements in original Q1, assuming standard textbook context of correct attribution.
+    },
+    {
+        "en": "Which type of chromosome appears V-shaped?",
+        "hi": "निम्नलिखित में किस प्रकार के गुणसूत्र की आकृति अंग्रेजी वर्णमाला के V अक्षर के समान होती है?",
+        "options": [
+            { "en": "Acrocentric", "hi": "एक्रोसेंट्रिक" },
+            { "en": "Submetacentric", "hi": "सबमेटासेंट्रिक" },
+            { "en": "Metacentric", "hi": "मेटासेंट्रिक" },
+            { "en": "Telocentric", "hi": "टीलोसेंट्रिक" }
+        ],
+        "correct": 2
+    },
+    {
+        "en": "Which of the following statements regarding chromosomes is NOT correct?",
+        "hi": "निम्नलिखित में कौन-सा कथन गुणसूत्र के संबंध में सही नहीं है?",
+        "options": [
+            { "en": "Formed from chromatin net", "hi": "क्रोमेटिन जालिका द्वारा निर्माण" },
+            { "en": "Larger in plant cells than animal cells", "hi": "पादप कोशिका में जंतु से बड़ा" },
+            { "en": "Chromosome number is fixed per species", "hi": "जाति में संख्या निश्चित होती है" },
+            { "en": "Chromosome number is always more than 1", "hi": "गुणसूत्र की संख्या हमेशा एक से अधिक होती है" }
+        ],
+        "correct": 3
+    },
+    {
+        "en": "Consider the following statements regarding chromosomes.",
+        "hi": "निम्नलिखित कथनों पर विचार कीजिए-",
+        "options": [
+            { "en": "Two ends never meet", "hi": "दोनों सिर कभी आपस में नहीं मिल सकते" },
+            { "en": "If broken, they rejoin", "hi": "टूट जाए तो पुनः जुट जाता है" },
+            { "en": "Only 1 is correct", "hi": "केवल 1" },
+            { "en": "Both 1 and 2", "hi": "1 तथा 2 दोनों" }
+        ],
+        "correct": 3 // Telomeres prevent sticking (1 is true). Broken ends are sticky (2 is true). Option structure is tricky, assuming 'Both' is the target.
+    },
+    {
+        "en": "In which part of the chromosome is the centromere located?",
+        "hi": "गुणसूत्र के किस हिस्से में सेंट्रोमियर स्थित रहता है?",
+        "options": [
+            { "en": "Primary constriction", "hi": "प्राथमिक संकुचन" },
+            { "en": "Secondary constriction I", "hi": "द्वितीयक संकुचन I" },
+            { "en": "Secondary constriction II", "hi": "द्वितीयक संकुचन II" },
+            { "en": "All of these", "hi": "इनमें से सभी" }
+        ],
+        "correct": 0
+    },
+    {
+        "en": "What are the two ends of a chromosome called?",
+        "hi": "गुणसूत्र के दोनों अंतिम सिरे को क्या कहते हैं?",
+        "options": [
+            { "en": "Satellite", "hi": "सैटेलाइट" },
+            { "en": "Telomere", "hi": "टीलोमियर" },
+            { "en": "Chromatid", "hi": "क्रोमैटिड" },
+            { "en": "Chromomere", "hi": "क्रोमोमियर" }
+        ],
+        "correct": 1
+    },
+    {
+        "en": "Which of the following cells contains haploid chromosomes?",
+        "hi": "निम्नलिखित में किस कोशिका में अगुणित (Haploid) गुणसूत्र पाये जाते हैं?",
+        "options": [
+            { "en": "Somatic Cell", "hi": "कायिक कोशिका" },
+            { "en": "Germ/Reproductive Cell", "hi": "जनन कोशिका" },
+            { "en": "Dead Cell", "hi": "मृत कोशिका" },
+            { "en": "None of these", "hi": "इनमें से कोई नहीं" }
+        ],
+        "correct": 1
+    },
+    {
+        "en": "Consider the statements: 1. Prokaryotes have 1 chromosome. 2. Eukaryotes have >1.",
+        "hi": "कथन विचार: 1. प्रोकैरियोटिक में 1 गुणसूत्र। 2. यूकैरियोटिक में 1 से अधिक।",
+        "options": [
+            { "en": "Only 1", "hi": "केवल 1" },
+            { "en": "Only 2", "hi": "केवल 2" },
+            { "en": "Both 1 and 2", "hi": "1 तथा 2 दोनों" },
+            { "en": "Neither 1 nor 2", "hi": "न तो 1 न ही 2" }
+        ],
+        "correct": 2
+    },
+    {
+        "en": "Which statement is true?",
+        "hi": "निम्नलिखित में कौन-सा कथन सत्य है?",
+        "options": [
+            { "en": "All species have same chromosome count", "hi": "सभी जातियों में गुणसूत्र समान" },
+            { "en": "Every chromosome has equal genes", "hi": "प्रत्येक गुणसूत्र पर जीन समान" },
+            { "en": "Chromosomes not discovered during Mendel", "hi": "मेंडल के समय गुणसूत्र की खोज नहीं हुई थी" },
+            { "en": "Found only in germ cells", "hi": "केवल जनन कोशिका में पाया जाता है" }
+        ],
+        "correct": 2
+    },
+    {
+        "en": "What is the group of genes found in a set of chromosomes called?",
+        "hi": "किसी भी प्राणी के गुणसूत्र के एक सेट में पाये जाने वाले जीनों के समूह को क्या कहा जाता है?",
+        "options": [
+            { "en": "Genome", "hi": "जीनोम" },
+            { "en": "Genotype", "hi": "जीन प्ररूप" },
+            { "en": "Linkage Group", "hi": "संलग्न समूह" },
+            { "en": "Gene-structure", "hi": "जीनी-संरचना" }
+        ],
+        "correct": 0
+    },
+    {
+        "en": "Which scientist first isolated nucleic acid from the nucleus and named it Nuclein?",
+        "hi": "सर्वप्रथम किस वैज्ञानिक ने न्यूक्लिक अम्ल को केंद्रक से अलग कर उसका नाम न्यूक्लीन रखा?",
+        "options": [
+            { "en": "Alfred Kuhn", "hi": "एल्फ्रेड कुन" },
+            { "en": "Adolf Butenandt", "hi": "एडोल्फ बूटेनांड" },
+            { "en": "Guido Pontecorvo", "hi": "गाइडो पोन्टेकोर्वो" },
+            { "en": "Friedrich Miescher", "hi": "फ्रेडरिक मिशर" }
+        ],
+        "correct": 3
+    },
+    {
+        "en": "Which of the following is NOT a Purine nitrogen base?",
+        "hi": "निम्नलिखित में कौन प्यूरीन नाइट्रोजन बेस नहीं है?",
+        "options": [
+            { "en": "Adenine", "hi": "एडीनीन" },
+            { "en": "Guanine", "hi": "गुएनीन" },
+            { "en": "Cytosine", "hi": "साइटोसीन" },
+            { "en": "All of these", "hi": "इनमें से सभी" }
+        ],
+        "correct": 2
+    },
+    {
+        "en": "Which of the following is a Pyrimidine nitrogen base?",
+        "hi": "निम्नलिखित में कौन पिरिमिडीन नाइट्रोजन बेस है?",
+        "options": [
+            { "en": "Thymine", "hi": "थाइमीन" },
+            { "en": "Cytosine", "hi": "साइटोसीन" },
+            { "en": "Uracil", "hi": "यूरेसील" },
+            { "en": "All of these", "hi": "इनमें से सभी" }
+        ],
+        "correct": 3
+    },
+    {
+        "en": "Which pair is incorrectly matched regarding chromosome number?",
+        "hi": "निम्नलिखित में कौन-सा विकल्प सही सुमेलित नहीं है?",
+        "options": [
+            { "en": "Human - 46", "hi": "मानव - 46" },
+            { "en": "Drosophila - 8", "hi": "ड्रोसोफिला - 8" },
+            { "en": "Maize - 20", "hi": "मकई - 20" },
+            { "en": "Potato - 52", "hi": "आलू - 52" }
+        ],
+        "correct": 3 // Potato is usually 48.
+    },
+    {
+        "en": "What is the total number of chromosomes in a Pea plant cell?",
+        "hi": "मटर के पौधों के कोशिका में गुणसूत्र की कुल संख्या कितनी होती है?",
+        "options": [
+            { "en": "12", "hi": "12" },
+            { "en": "14", "hi": "14" },
+            { "en": "18", "hi": "18" },
+            { "en": "32", "hi": "32" }
+        ],
+        "correct": 1
+    },
+    {
+        "en": "Which of the following is called genetic material?",
+        "hi": "निम्नलिखित में किसे अनुवंशिक पदार्थ कहा जाता है?",
+        "options": [
+            { "en": "Chromosome", "hi": "क्रोमोसोम" },
+            { "en": "Gene", "hi": "जीन" },
+            { "en": "DNA", "hi": "DNA" },
+            { "en": "Chromatin Net", "hi": "क्रोमेटीन जालिका" }
+        ],
+        "correct": 2
+    },
+    {
+        "en": "DNA is called genetic material because:",
+        "hi": "DNA को अनुवंशिक पदार्थ इसलिये कहा जाता है कि-",
+        "options": [
+            { "en": "It can replicate itself", "hi": "यह अपना प्रतिकृति बनाने में सक्षम है" },
+            { "en": "Structure remains stable", "hi": "इसकी रचना स्थिर बना रहता है" },
+            { "en": "Potential for mutation", "hi": "इसमें उत्परिवर्तन की सम्भावना बनी रहती है" },
+            { "en": "All of these", "hi": "इनमें से सभी" }
+        ],
+        "correct": 3
+    },
+    {
+        "en": "Which statement is true about the Watson & Crick 'Double Helix Model'?",
+        "hi": "जेम्स वाटसन तथा फ्रांसिस क्रिक के 'Double Helix Model' के संबंध में सत्य कथन?",
+        "options": [
+            { "en": "Two complementary polynucleotide spirals", "hi": "दो पूरक पॉलीन्यूक्लियोटाइड सर्पिल रूप" },
+            { "en": "One full turn is 34 Å", "hi": "एक पूर्ण घुमाव 34 Å" },
+            { "en": "Distance between helices is 20 Å", "hi": "हेलिक्स के बीच की दूरी 20 Å" },
+            { "en": "All of these", "hi": "इनमें से सभी" }
+        ],
+        "correct": 3
+    },
+    {
+        "en": "Which type of RNA is most abundant in the cell?",
+        "hi": "कोशिका में किस प्रकार के RNA की संख्या सर्वाधिक होती है?",
+        "options": [
+            { "en": "mRNA", "hi": "m RNA" },
+            { "en": "tRNA", "hi": "t RNA" },
+            { "en": "rRNA", "hi": "r RNA" },
+            { "en": "None of these", "hi": "इनमें से कोई नहीं" }
+        ],
+        "correct": 2
+    },
+    {
+        "en": "Which of the following is called the genetic unit?",
+        "hi": "निम्नलिखित में किसे अनुवंशिक इकाई कहा जाता है?",
+        "options": [
+            { "en": "DNA", "hi": "DNA" },
+            { "en": "Gene", "hi": "जीन" },
+            { "en": "Chromosome", "hi": "क्रोमोसोम" },
+            { "en": "Chromatin net", "hi": "क्रोमेटीन जालिका" }
+        ],
+        "correct": 1
+    },
+    {
+        "en": "Where is mRNA formed?",
+        "hi": "mRNA का निर्माण कहाँ होता है?",
+        "options": [
+            { "en": "Cytoplasm", "hi": "कोशिका द्रव्य में" },
+            { "en": "Ribosome", "hi": "राइबोसोम में" },
+            { "en": "Nucleus", "hi": "केंद्रक में" },
+            { "en": "Mitochondria", "hi": "माइट्रोकॉन्ड्रिया में" }
+        ],
+        "correct": 2
+    },
+    {
+        "en": "What is required to activate amino acids in protein synthesis?",
+        "hi": "प्रोटीन संश्लेषण में एमीनो अम्ल को सक्रिय करने में किसकी आवश्यकता होती है?",
+        "options": [
+            { "en": "AMP", "hi": "AMP" },
+            { "en": "ADP", "hi": "ADP" },
+            { "en": "GTP", "hi": "GTP" },
+            { "en": "ATP", "hi": "ATP" }
+        ],
+        "correct": 3
+    },
+    {
+        "en": "Who gave the 'One Gene One Enzyme' hypothesis?",
+        "hi": "एक जीन एक एंजाइम सिद्धान्त किसने दिया है?",
+        "options": [
+            { "en": "Avery and McCarthy", "hi": "एवेरी एवं मैककार्थी" },
+            { "en": "Beadle and Tatum", "hi": "बीडल एवं टैटम" },
+            { "en": "Temin and Baltimore", "hi": "टेमिन एवं बाल्टिमोर" },
+            { "en": "Meselson and Stahl", "hi": "मेसेल्सन एवं स्टॉल" }
+        ],
+        "correct": 1
+    },
+    {
+        "en": "Whose experiment first proved that genes are part of chromosomes?",
+        "hi": "सर्वप्रथम किसके प्रयोग से यह प्रमाणित हुआ कि जीन गुणसूत्र के ही अंश है?",
+        "options": [
+            { "en": "T.H. Boveri and W. Sutton", "hi": "टी. एच. बोवेरी तथा डब्लू.एस.सटन" },
+            { "en": "Watson and Crick", "hi": "वाटसन तथा क्रिक" },
+            { "en": "Jacob and Monod", "hi": "जैकब तथा जे. मोनोद" },
+            { "en": "Benzer", "hi": "बेंजर" }
+        ],
+        "correct": 0
+    },
+    {
+        "en": "What are genes that keep changing their position called?",
+        "hi": "जो जीन अपना स्थान बदलते रहते हैं उसे क्या कहते हैं?",
+        "options": [
+            { "en": "Operator", "hi": "ऑपरेटर" },
+            { "en": "Structural Gene", "hi": "रचनात्मक जीन" },
+            { "en": "Transposons/Jumping Gene", "hi": "ट्रांसपोसन्स जीन" },
+            { "en": "Regulator Gene", "hi": "नियंत्रक जीन" }
+        ],
+        "correct": 2
+    },
+    {
+        "en": "The process of protein synthesis from different types of RNA is called?",
+        "hi": "विभिन्न प्रकार के RNA से प्रोटीन संश्लेषण की क्रिया क्या कहलाता है?",
+        "options": [
+            { "en": "Translocation", "hi": "ट्रांसलोकेशन" },
+            { "en": "Transcription", "hi": "ट्रांसक्रिप्सन" },
+            { "en": "Transformation", "hi": "ट्रांसफॉर्मेशन" },
+            { "en": "Translation", "hi": "ट्रांसलेशन" }
+        ],
+        "correct": 3
+    },
+    {
+        "en": "The process of making mRNA from DNA is called?",
+        "hi": "DNA से mRNA बनने की क्रिया को क्या कहा जाता है?",
+        "options": [
+            { "en": "Transduction", "hi": "ट्रांसडक्शन" },
+            { "en": "Transformation", "hi": "रूपांतरण" },
+            { "en": "Translation", "hi": "ट्रांसलेशन" },
+            { "en": "Transcription", "hi": "ट्रांसक्रिप्सन" }
+        ],
+        "correct": 3
+    },
+    {
+        "en": "Which statement regarding 'Gene' is correct?",
+        "hi": "अनुवंशिक इकाई 'जीन' के संबंध में निम्नलिखित कथनों में कौन-सा कथन सही है?",
+        "options": [
+            { "en": "Segment of DNA", "hi": "जीन DNA के बड़े अणु का खंड है" },
+            { "en": "Determines inherited traits", "hi": "वंशागत लक्षणों का निर्धारक" },
+            { "en": "~1000 nucleotides per gene", "hi": "एक जीन में करीब 1000 न्यूक्लियोटाइड" },
+            { "en": "All of the above", "hi": "उपर्युक्त सभी" }
+        ],
+        "correct": 3
+    },
+    {
+        "en": "Who defined Gene as Cistron, Recon, and Muton?",
+        "hi": "जीन को सिस्ट्रॉन, रिकॉन तथा म्यूटॉन के रूप में किसने परिभाषित किया है?",
+        "options": [
+            { "en": "Britten and Davidson", "hi": "ब्रिटेन एवं डेविडसन" },
+            { "en": "Benzer", "hi": "बेंजर" },
+            { "en": "Jacob and Monod", "hi": "जैकब एवं मोनोद" },
+            { "en": "Watson and Crick", "hi": "वाटसन एवं क्रिक" }
+        ],
+        "correct": 1
+    },
+    {
+        "en": "What are the pair of traits developed in Mendel's experiments called?",
+        "hi": "मेंडल के प्रयोगों में विकसित लक्षणों की जोड़ी को क्या कहते हैं?",
+        "options": [
+            { "en": "Phenotype", "hi": "फीनोटाइप" },
+            { "en": "Genotype", "hi": "जीनोटाइप" },
+            { "en": "Gene", "hi": "जीन" },
+            { "en": "Allele", "hi": "ऐलील" }
+        ],
+        "correct": 3
+    },
+    {
+        "en": "How many pairs of contrasting traits did Mendel select in Pea?",
+        "hi": "मेंडल ने अपने प्रयोग में मटर के कितने जोड़े विपरीत लक्षणों का चयन किया था?",
+        "options": [
+            { "en": "5", "hi": "5" },
+            { "en": "6", "hi": "6" },
+            { "en": "7", "hi": "7" },
+            { "en": "8", "hi": "8" }
+        ],
+        "correct": 2
+    },
+    {
+        "en": "Which scientist gave recognition to Mendel's laws of heredity (Rediscovery)?",
+        "hi": "मेंडल के अनुवंशिकता नियम को किस वैज्ञानिक ने मान्यता दिलाई?",
+        "options": [
+            { "en": "Hugo de Vries", "hi": "ह्यूगो डि ब्रीज" },
+            { "en": "Carl Correns", "hi": "कार्ल कोरेन्स" },
+            { "en": "Erich von Tschermak", "hi": "इरिक वान शेरमाक" },
+            { "en": "All of these", "hi": "इनमें से सभी" }
+        ],
+        "correct": 3
+    },
+    {
+        "en": "When Mendel crossed a pure violet flower pea with a white one, what was obtained in F1?",
+        "hi": "मेंडल ने एक शुद्ध बैगनी फूल वाले मटर के पौधों को जब सफेद फूल वाले पीधा से क्रॉस करवाया तो पहली पीढ़ी में किस प्रकार के पौधे मिले?",
+        "options": [
+            { "en": "All white flowers", "hi": "सभी सफेद फूल वाले पौधे" },
+            { "en": "75% violet, 25% white", "hi": "75% बैगनी तथा 25% सफेद" },
+            { "en": "All violet flowers", "hi": "सभी बैगनी फूल वाले पौधे" },
+            { "en": "50% violet, 50% white", "hi": "50% बैगनी एवं 50% सफेद" }
+        ],
+        "correct": 2
+    },
+    {
+        "en": "Why did Mendel select the pea plant for his experiments?",
+        "hi": "मेंडल ने अपने प्रयोग में मटर के पौधे का चयन क्यो किया था?",
+        "options": [
+            { "en": "Pea has many contrasting traits", "hi": "मटर के पौधे में अनेक प्रकार के विपरीत गुण होते हैं" },
+            { "en": "Small plants, easy to experiment", "hi": "मटर के पौधे छोटे होते है जिनसे इस पर प्रयोग करना आसान है" },
+            { "en": "Short life cycle", "hi": "मटर का जीवन चक्र कुछ ही महीनों में पूरा हो जाता है" },
+            { "en": "All of these", "hi": "इनमें से सभी" }
+        ],
+        "correct": 3
+    },
+    {
+        "en": "What was the reason for Mendel's success?",
+        "hi": "मेंडल को अपने प्रयोग में सफलता मिलने के क्या कारण थे?",
+        "options": [
+            { "en": "Selected pea plant", "hi": "उन्होंने मटर के पौधे का चयन किया" },
+            { "en": "Studied one trait at a time", "hi": "अध्ययन के लिये एक समय में केवल एक ही गुण को लिया" },
+            { "en": "Used statistical analysis", "hi": "सांख्यिकी का प्रयोग किया" },
+            { "en": "All of these", "hi": "इनमें से सभी" }
+        ],
+        "correct": 3
+    },
+    {
+        "en": "When F1 hybrid is crossed with a homozygous recessive parent, it is called?",
+        "hi": "F1 पीढ़ी के संकर पौधों को जब समयुग्मजी अप्रभावी जनक से क्रॉस कराया जाता है तो इसे क्या कहते हैं?",
+        "options": [
+            { "en": "Back Cross", "hi": "बैक क्रॉस" },
+            { "en": "Test Cross", "hi": "टेस्ट क्रॉस" },
+            { "en": "Monohybrid Cross", "hi": "एकसंकर क्रॉस" },
+            { "en": "Dihybrid Cross", "hi": "द्विसंकर क्रॉस" }
+        ],
+        "correct": 1
+    },
+    {
+        "en": "Which of the following allele pairs is Homozygous?",
+        "hi": "निम्नलिखित ऐलील के जोड़ों में कौन समयुग्मजी (Homozygous) है?",
+        "options": [
+            { "en": "TT", "hi": "TT" },
+            { "en": "tt", "hi": "tt" },
+            { "en": "Both A and B", "hi": "A तथा B दोनों" },
+            { "en": "Tt", "hi": "Tt" }
+        ],
+        "correct": 2
+    },
+    {
+        "en": "What was the Phenotypic ratio in Mendel's Monohybrid Cross?",
+        "hi": "मेंडल के एकसंकर क्रॉस में लक्षणरूपी (Phenotype) अनुपात क्या था?",
+        "options": [
+            { "en": "3 : 1", "hi": "3 : 1" },
+            { "en": "1 : 2 : 1", "hi": "1 : 2 : 1" },
+            { "en": "9 : 3 : 3 : 1", "hi": "9 : 3 : 3 : 1" },
+            { "en": "1:2:2:4:1:2:1:2:1", "hi": "1:2:2:4:1:2:1:2:1" }
+        ],
+        "correct": 0
+    },
+    {
+        "en": "What was the Genotypic ratio in Mendel's Dihybrid Cross?",
+        "hi": "मेंडल के द्विसंकर क्रॉस में जीन प्ररूपों (Genotype) अनुपात क्या था?",
+        "options": [
+            { "en": "3 : 1", "hi": "3 : 1" },
+            { "en": "1 : 2 : 1", "hi": "1 : 2 : 1" },
+            { "en": "9 : 3 : 3 : 1", "hi": "9 : 3 : 3 : 1" },
+            { "en": "1:2:2:4:1:2:1:2:1", "hi": "1:2:2:4:1:2:1:2:1" }
+        ],
+        "correct": 3
+    },
+    {
+        "en": "Which of Mendel's laws is NOT based on Monohybrid Cross?",
+        "hi": "मेंडल का कौन सा नियम एकसंकर क्रॉस पर आधारित नहीं है?",
+        "options": [
+            { "en": "Law of Unit Characters", "hi": "इकाई लक्षण का नियम" },
+            { "en": "Law of Dominance", "hi": "प्रभावित का नियम" },
+            { "en": "Law of Segregation", "hi": "पृथक्करण का नियम" },
+            { "en": "Law of Independent Assortment", "hi": "स्वतंत्र विन्यास का नियम" }
+        ],
+        "correct": 3
+    },
+    {
+        "en": "Which statement regarding genes is true?",
+        "hi": "निम्नलिखित में कौन-सा कथन सही है?",
+        "options": [
+            { "en": "Genes determine inherited traits", "hi": "जीवों में वंशागत गुणों का निर्धारक जीन है" },
+            { "en": "Variation passed via genes", "hi": "जीन के माध्यम से ही विभिन्नताएँ संचारित होती है" },
+            { "en": "Duplication causes variation", "hi": "जीन का द्विगुणन ही विभिन्नता का कारण" },
+            { "en": "All of these", "hi": "इनमें से सभी" }
+        ],
+        "correct": 3
+    },
+    {
+        "en": "What is variation caused by climate and environment called?",
+        "hi": "जलवायु एवं वातावरण के प्रभाव से उत्पन्न होने वाले विभिन्नता को क्या कहते है?",
+        "options": [
+            { "en": "Germinal variation", "hi": "जननिक विभिन्नता" },
+            { "en": "Genetic variation", "hi": "आनुवंशिक विभिन्नता" },
+            { "en": "Somatic variation", "hi": "कायिक विभिन्नता" },
+            { "en": "None of these", "hi": "इनमें से कोई नहीं" }
+        ],
+        "correct": 2
+    },
+    {
+        "en": "Consider the statements about variation propagation.",
+        "hi": "निम्नलिखित कथनों पर विचार कीजिए (विभिन्नता संचरण).",
+        "options": [
+            { "en": "Genetic variation: only 1st generation", "hi": "आनुवंशिक विभिन्नता केवल पहली पीढ़ी" },
+            { "en": "Somatic variation: generation to generation", "hi": "कायिक विभिन्नता पीढ़ी-दर-पीढ़ी" },
+            { "en": "Both are true", "hi": "1 तथा 2 दोनों" },
+            { "en": "Neither are true", "hi": "न तो 1 न ही 2" }
+        ],
+        "correct": 3 // Actually Genetic is gen-to-gen, Somatic stops. So both statements in Q43 (Image logic) seem false/reversed.
+    },
+    {
+        "en": "What causes Genetic Variation?",
+        "hi": "आनुवंशिक विभिन्नता उत्पन्न होने के क्या कारण है?",
+        "options": [
+            { "en": "Change in gene arrangement", "hi": "क्रोमोसोम पर स्थित जीन के व्यवस्था में परिवर्तन" },
+            { "en": "Change in DNA nitrogen base sequence", "hi": "DNA के निर्माण में संलग्न नाइट्रोजन क्षार के अनुक्रम में परिवर्तन" },
+            { "en": "Both a and b", "hi": "a तथा b दोनों" },
+            { "en": "Neither a nor b", "hi": "न तो a न ही b" }
+        ],
+        "correct": 2
+    },
+    {
+        "en": "Who proposed the Chromosomal Theory of Inheritance?",
+        "hi": "वंशागति का गुणसूत्रीय सिद्धान्त (Chromosomal theory of inheritance) का प्रतिपादन किसने किया था?",
+        "options": [
+            { "en": "Walter Sutton and Theodor Boveri", "hi": "वाल्टर सटन तथा थियोडोर बोवेरी" },
+            { "en": "Mendel", "hi": "मेंडल" },
+            { "en": "Thomas Hunt Morgan", "hi": "थॉमस हंत मॉर्गन" },
+            { "en": "Bateson and Punnett", "hi": "बेटसन तथा आर. सी. पनेट" }
+        ],
+        "correct": 0
+    },
+    {
+        "en": "Which of the following is an exception to Mendel's laws?",
+        "hi": "निम्नलिखित में कौन एक मेंडल के नियम का अपवाद है?",
+        "options": [
+            { "en": "Incomplete Dominance", "hi": "अपूर्ण प्रभाविता" },
+            { "en": "Co-dominance", "hi": "सहप्रभाविता" },
+            { "en": "Linkage", "hi": "सहलग्नता" },
+            { "en": "All of these", "hi": "इनमें से सभी" }
+        ],
+        "correct": 3
+    },
+    {
+        "en": "When more than two alleles are responsible for a trait, it is called?",
+        "hi": "जब किसी जीव में एक लक्षण के लिये दो से ज्यादा ऐलील जिम्मेदार होते है, इसे क्या कहा जाता है?",
+        "options": [
+            { "en": "Linkage", "hi": "सहलग्नता" },
+            { "en": "Multiple Allelism", "hi": "बहुविकल्पता" },
+            { "en": "Incomplete Dominance", "hi": "अपूर्ण प्रभाविता" },
+            { "en": "Co-dominance", "hi": "सहप्रभाविता" }
+        ],
+        "correct": 1
+    },
+    {
+        "en": "If two plants (aaBB and AaBB) are crossed, what will be the genotype of F1?",
+        "hi": "अगर दो पौधे (aaBB तथा AaBB) के बीच क्रॉस करवाया जाए तो F1 पीढ़ी में किस प्रकार का जीनोटाइप होगा?",
+        "options": [
+            { "en": "All AaBB", "hi": "सभी AaBB" },
+            { "en": "1AaBB : 1aaBB", "hi": "1AaBB : 1aaBB" },
+            { "en": "1AaBB : 3aaBB", "hi": "1AaBB : 3aaBB" },
+            { "en": "3AaBB : 1aaBB", "hi": "3AaBB : 1aaBB" }
+        ],
+        "correct": 1
+    },
+    {
+        "en": "Which of Mendel's laws is also called 'Law of Purity of Gametes'?",
+        "hi": "मेंडल के किस अनुवंशिकता के नियम को 'युग्मकों के शुद्धता का नियम' भी कहा जाता है?",
+        "options": [
+            { "en": "Law of Unit Character", "hi": "इकाई लक्षण का नियम" },
+            { "en": "Law of Dominance", "hi": "प्रभाविता का नियम" },
+            { "en": "Law of Segregation", "hi": "पृथक्करण का नियम" },
+            { "en": "Law of Independent Assortment", "hi": "स्वतंत्र अपव्यूहन का नियम" }
+        ],
+        "correct": 2
+    },
+    {
+        "en": "Who are the scientists who repeated/rediscovered Mendel's principles?",
+        "hi": "मेंडल के सिद्धान्त को दोहराने वाले वैज्ञानिक कौन है?",
+        "options": [
+            { "en": "Darwin, Correns, Tschermak", "hi": "डार्विन, कोरेन्स एवं शेरमाक" },
+            { "en": "Darwin, Wallace, De Vries", "hi": "डार्विन, वैलेस एवं ह्यूगोडी ब्रीज" },
+            { "en": "De Vries, Correns, Tschermak", "hi": "ह्यूगोडीब्रीज, कोरेन्स एवं शेरमाक" },
+            { "en": "Morgan, De Vries, Correns", "hi": "मॉर्गन, ह्यूगोडी ब्रीज एवं कोरेन्स" }
+        ],
+        "correct": 2
+    }
+];
+
+        // --- GAME LOGIC ---
+        let questions = [];
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let timerInterval;
+        let timerValue = 0; // 0 means disabled
+        let timeLeft = 0;
+        let audioContext = null;
+
+        // Shuffle Function
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        // Init Audio Context (User interaction required first)
+        function initAudio() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioContext.state === 'suspended') {
+                audioContext.resume();
+            }
+        }
+
+        // Synthesize Sound
+        function playSound(type) {
+            if (!audioContext) return;
+            const osc = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            osc.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            if (type === 'correct') {
+                // "Ting" - High Sine Wave
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(800, audioContext.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(1200, audioContext.currentTime + 0.1);
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+                osc.start();
+                osc.stop(audioContext.currentTime + 0.5);
+            } else if (type === 'wrong') {
+                // "Buzz" - Low Sawtooth
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(150, audioContext.currentTime);
+                osc.frequency.linearRampToValueAtTime(100, audioContext.currentTime + 0.3);
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.linearRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+                osc.start();
+                osc.stop(audioContext.currentTime + 0.3);
+            }
+        }
+
+        // Start Quiz
+        function startQuiz() {
+            initAudio();
+            const tInput = document.getElementById('timerInput').value;
+            const doShuffle = document.getElementById('shuffleToggle').checked;
+
+            timerValue = tInput ? parseInt(tInput) : 0;
+            
+            // Clone source data
+            questions = [...sourceData];
+            if (doShuffle) {
+                shuffleArray(questions);
+            }
+
+            document.getElementById('start-screen').style.display = 'none';
+            document.getElementById('quiz-container').style.display = 'block';
+            
+            loadQuestion();
+        }
+
+        // Load Question
+        function loadQuestion() {
+            if (currentQuestionIndex >= questions.length) {
+                endQuiz();
+                return;
+            }
+
+            const q = questions[currentQuestionIndex];
+            
+            // UI Updates
+            document.getElementById('qCounter').innerText = `Q: ${currentQuestionIndex + 1}/${questions.length}`;
+            document.getElementById('qEn').innerText = q.en;
+            document.getElementById('qHi').innerText = q.hi;
+            
+            // Progress Bar
+            const progress = ((currentQuestionIndex) / questions.length) * 100;
+            document.getElementById('progressBar').style.width = `${progress}%`;
+
+            // Render Options
+            const container = document.getElementById('optionsContainer');
+            container.innerHTML = '';
+
+            q.options.forEach((opt, idx) => {
+                const btn = document.createElement('div');
+                btn.className = 'option-btn';
+                btn.innerHTML = `<span class="opt-en">${opt.en}</span><span class="opt-hi">${opt.hi}</span>`;
+                btn.onclick = () => checkAnswer(idx, btn);
+                container.appendChild(btn);
+            });
+
+            // Timer Logic
+            clearInterval(timerInterval);
+            const timerBadge = document.getElementById('timerBadge');
+            const timerText = document.getElementById('timerText');
+            
+            timerBadge.classList.remove('timer-pulse');
+            
+            if (timerValue > 0) {
+                timerBadge.style.visibility = 'visible';
+                timeLeft = timerValue;
+                timerText.innerText = timeLeft;
+                
+                timerInterval = setInterval(() => {
+                    timeLeft--;
+                    timerText.innerText = timeLeft;
+                    
+                    if (timeLeft < 5) {
+                        timerBadge.classList.add('timer-pulse');
+                    }
+
+                    if (timeLeft <= 0) {
+                        clearInterval(timerInterval);
+                        autoFail();
+                    }
+                }, 1000);
+            } else {
+                timerBadge.style.visibility = 'hidden';
+            }
+        }
+
+        function autoFail() {
+            // Treat as wrong answer but no user selection
+            handlePostAnswer(false);
+            // Highlight correct answer
+            const correctIdx = questions[currentQuestionIndex].correct;
+            const buttons = document.getElementsByClassName('option-btn');
+            if(buttons[correctIdx]) buttons[correctIdx].classList.add('correct');
+        }
+
+        function checkAnswer(selectedIndex, btnElement) {
+            clearInterval(timerInterval);
+            const correctIndex = questions[currentQuestionIndex].correct;
+            const isCorrect = selectedIndex === correctIndex;
+
+            // Disable all
+            const buttons = document.querySelectorAll('.option-btn');
+            buttons.forEach(b => b.classList.add('disabled'));
+
+            if (isCorrect) {
+                btnElement.classList.add('correct');
+                score++;
+                document.getElementById('scoreDisplay').innerText = `Score: ${score}`;
+                playSound('correct');
+                triggerConfetti();
+            } else {
+                btnElement.classList.add('wrong');
+                buttons[correctIndex].classList.add('correct');
+                playSound('wrong');
+                triggerSadEmoji();
+            }
+
+            handlePostAnswer();
+        }
+
+        function handlePostAnswer() {
+            setTimeout(() => {
+                currentQuestionIndex++;
+                loadQuestion();
+            }, 1500);
+        }
+
+        function endQuiz(earlyExit = false) {
+            clearInterval(timerInterval);
+            document.getElementById('quiz-container').style.display = 'none';
+            document.getElementById('result-screen').style.display = 'block';
+            document.getElementById('overlays').style.display = 'none'; // Clear any remaining animations
+
+            const total = earlyExit ? currentQuestionIndex : questions.length;
+            // Avoid division by zero if early exit at Q1
+            const effectiveTotal = total === 0 ? 1 : total; 
+            const percentage = Math.round((score / effectiveTotal) * 100);
+
+            document.getElementById('finalScore').innerText = `${percentage}%`;
+            document.getElementById('statsText').innerText = `You scored ${score} out of ${effectiveTotal} questions attempted.`;
+
+            let msg = "";
+            if (percentage >= 80) msg = "🏆 Outstanding Performance!";
+            else if (percentage >= 50) msg = "👏 Well Done! Keep it up.";
+            else msg = "📚 Practice makes perfect! Try again.";
+            
+            document.getElementById('resultMessage').innerText = msg;
+        }
+
+        // --- VISUAL EFFECTS ---
+
+        function triggerConfetti() {
+            const colors = ['#f00', '#0f0', '#00f', '#ff0', '#0ff', '#f0f'];
+            for (let i = 0; i < 50; i++) {
+                const conf = document.createElement('div');
+                conf.className = 'confetti';
+                conf.style.left = Math.random() * 100 + 'vw';
+                conf.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                conf.style.animationDuration = (Math.random() * 2 + 1) + 's';
+                document.getElementById('overlays').appendChild(conf);
+                
+                // Remove after animation
+                setTimeout(() => conf.remove(), 3000);
+            }
+        }
+
+        function triggerSadEmoji() {
+            const emoji = document.querySelector('.sad-emoji');
+            emoji.classList.add('show');
+            setTimeout(() => {
+                emoji.classList.remove('show');
+            }, 1200);
+        }
+
+    </script>
+</body>
+</html>

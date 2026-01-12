@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Respiration Quiz | Gyan Bindu Academy</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --glass: rgba(255, 255, 255, 0.1);
+            --border: rgba(255, 255, 255, 0.2);
+            --correct: #4caf50;
+            --wrong: #f44336;
+            --primary: #fff;
+            --secondary: #ddd;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(45deg, #6a11cb, #2575fc, #e91e63);
+            background-size: 400% 400%;
+            animation: gradient 15s ease infinite;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            overflow-x: hidden;
+        }
+
+        @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        #progress-bar {
+            position: fixed;
+            top: 0; left: 0;
+            height: 6px;
+            background: linear-gradient(to right, #00f2fe, #4facfe);
+            width: 0%;
+            transition: width 0.4s ease;
+            box-shadow: 0 0 10px rgba(79, 172, 254, 0.8);
+            z-index: 1000;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 700px;
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            border-radius: 25px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            text-align: center;
+            position: relative;
+        }
+
+        /* Start Screen Styles */
+        .settings-group {
+            margin: 20px 0;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            align-items: center;
+        }
+
+        input[type="number"] {
+            padding: 10px;
+            border-radius: 10px;
+            border: none;
+            width: 150px;
+            text-align: center;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            outline: none;
+        }
+
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+        }
+
+        /* Quiz UI */
+        .quiz-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            font-weight: 300;
+        }
+
+        .timer {
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .timer.pulse {
+            color: #ff4d4d;
+            animation: pulse 0.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .question-text {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 25px;
+            line-height: 1.5;
+        }
+
+        .hindi-text {
+            display: block;
+            font-size: 1rem;
+            color: var(--secondary);
+            font-weight: 400;
+            margin-top: 5px;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+            margin-bottom: 25px;
+        }
+
+        .option-btn {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border);
+            padding: 15px;
+            border-radius: 12px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: left;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            background: rgba(255,255,255,0.2);
+            transform: translateX(5px);
+        }
+
+        .option-btn.correct { background: var(--correct) !important; border-color: var(--correct); }
+        .option-btn.wrong { background: var(--wrong) !important; border-color: var(--wrong); }
+
+        .btn-main {
+            padding: 12px 30px;
+            border-radius: 50px;
+            border: none;
+            background: white;
+            color: #2575fc;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-main:hover { transform: scale(1.05); box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+
+        .finish-btn {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 0.8rem;
+            margin-top: 10px;
+            border: 1px solid var(--border);
+        }
+
+        /* Animations */
+        #feedback-emoji {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 80px;
+            display: none;
+            z-index: 100;
+        }
+
+        .shake { animation: shake 0.5s; }
+        @keyframes shake {
+            0%, 100% { transform: translate(-50%, -50%); }
+            25% { transform: translate(-55%, -50%); }
+            75% { transform: translate(-45%, -50%); }
+        }
+
+        .confetti {
+            position: fixed;
+            width: 10px; height: 10px;
+            background-color: #f2d74e;
+            top: -10px;
+            z-index: 9999;
+            animation: fall 3s linear forwards;
+        }
+
+        @keyframes fall {
+            to { transform: translateY(100vh) rotate(360deg); }
+        }
+
+        .hidden { display: none !important; }
+
+        @media (max-width: 600px) {
+            .container { padding: 20px; width: 95%; }
+            .question-text { font-size: 1rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="progress-bar"></div>
+
+    <div class="container" id="game-container">
+        <div id="start-screen">
+            <h1 style="margin-bottom: 10px;">Respiration Quiz</h1>
+            <p>Plant & Human System | पादप और मानव श्वसन</p>
+            <div class="settings-group">
+                <label>Timer (sec per question, 0 to disable):</label>
+                <input type="number" id="timer-input" value="15" min="0">
+                <label class="toggle-container">
+                    <input type="checkbox" id="shuffle-check" checked> Shuffle Questions
+                </label>
+            </div>
+            <button class="btn-main" onclick="startQuiz()">Start Quiz</button>
+        </div>
+
+        <div id="quiz-screen" class="hidden">
+            <div class="quiz-header">
+                <span id="q-counter">Question 01/50</span>
+                <div class="timer" id="timer-display">15s</div>
+                <span id="score-display">Score: 0</span>
+            </div>
+            
+            <div class="question-box">
+                <p class="question-text" id="question-text">
+                    Question loading...
+                    <span class="hindi-text" id="hindi-question">प्रश्न लोड हो रहा है...</span>
+                </p>
+                <div class="options-grid" id="options-container"></div>
+            </div>
+
+            <button class="btn-main finish-btn" onclick="endQuiz()">Finish & Show Results</button>
+        </div>
+
+        <div id="result-screen" class="hidden">
+            <h2 id="result-title">Result</h2>
+            <div style="font-size: 3rem; margin: 20px 0;" id="final-score">0/50</div>
+            <p id="result-msg" style="margin-bottom: 30px;"></p>
+            <button class="btn-main" onclick="location.reload()">Restart Quiz</button>
+        </div>
+
+        <div id="feedback-emoji">😢</div>
+    </div>
+
+    <script>
+        const questions = [
+            { q: "What is the process of releasing energy from food called?", h: "भोजन से ऊर्जा निर्मुक्त करने की प्रक्रिया है-", options: ["Respiration (श्वसन)", "Nutrition (पोषण)", "Excretion (उत्सर्जन)", "All of these (इनमें से सभी)"], correct: 0 },
+            { q: "In what form is the energy produced in cells stored?", h: "श्वसन के दौरान कोशिका में उत्पन्न ऊर्जा किस रूप में संचित होती है?", options: ["ADP", "ATP", "Inorganic Phosphate (अकार्बनिक फॉस्फेट)", "All of these (इनमें से सभी)"], correct: 1 },
+            { q: "Which statement is true? 1. Respiration is essential for life. 2. Virus does not respire.", h: "कौन-सा कथन सही है? 1. जीवन के लिये श्वसन परमावश्यक है। 2. विषाणु (Virus) में श्वसन नहीं होता है।", options: ["Only 1", "Only 2", "Both 1 and 2", "Neither 1 nor 2"], correct: 2 },
+            { q: "Which of the following is NOT true about respiration?", h: "निम्नलिखित में कौन-सा एक सही नहीं है?", options: ["Energy is produced", "It occurs in every cell", "Possible only in presence of O2", "Energy is stored as ATP"], correct: 2 },
+            { q: "What type of reaction is respiration?", h: "श्वसन किस प्रकार की अभिक्रिया है?", options: ["Synthesis (संश्लेषण)", "Digestion (पाचन)", "Oxidation (ऑक्सीकरण)", "None of these"], correct: 2 },
+            { q: "Universal Carrier of chemical energy in all living cells is:", h: "सभी जीवित कोशिकाओं में रासायनिक ऊर्जा का सार्वजनिक वाहक है-", options: ["Glucose", "ATP", "ADP", "Amino Acid"], correct: 1 },
+            { q: "Where does Glycolysis take place?", h: "ग्लाइकोलाइसिस कहाँ सम्पन्न होता है?", options: ["Ribosome", "Chloroplast", "Cytoplasm (कोशिका द्रव्य)", "Mitochondria"], correct: 2 },
+            { q: "Where does the Krebs Cycle occur?", h: "क्रेब्स चक्र कहाँ होता है?", options: ["Cytoplasm", "Nucleus", "Chloroplast", "Mitochondria"], correct: 3 },
+            { q: "What is formed as a result of incomplete breakdown of glucose in anaerobic respiration?", h: "अनॉक्सी श्वसन में ग्लूकोज के अपूर्ण विघटन के फलस्वरूप क्या बनता है?", options: ["H2O and CO2", "Fructose and H2O", "Alcohol and CO2", "Glucose and CO2"], correct: 2 },
+            { q: "The end product of Glycolysis is:", h: "ग्लाइकोलाइसिस का अन्तिम उत्पाद होता है?", options: ["Glucose", "Pyruvic Acid", "Ethyl Alcohol", "CO2"], correct: 1 },
+            { q: "The Krebs cycle is also known as:", h: "क्रेब्स चक्र को अन्य किस नाम से जाना जाता है?", options: ["Citric Acid Cycle", "TCA Cycle", "Tricarboxylic Acid Cycle", "All of the above"], correct: 3 },
+            { q: "Where is the center of aerobic respiration in the cell?", h: "कोशिका के अंदर वायवीय श्वसन का केंद्र है-", options: ["Ribosome", "Cytoplasm", "Golgi Body", "Mitochondria"], correct: 3 },
+            { q: "How many ATP molecules are produced from one glucose molecule during anaerobic respiration?", h: "अवायवीय श्वसन के दौरान एक ग्लूकोज अणु से कितने ATP अणुओं का निर्माण होता है?", options: ["2 ATP", "36 ATP", "38 ATP", "46 ATP"], correct: 0 },
+            { q: "What causes muscle cramps during intense physical activity?", h: "तीव्र शारीरिक क्रिया के दौरान पेशियों में उत्पन्न होने वाले ऐंठन का क्या कारण है?", options: ["CO2", "Ethanol", "Lactic Acid", "None of these"], correct: 2 },
+            { q: "The first step of aerobic respiration occurs in:", h: "वायवीय श्वसन का प्रथम चरण कहाँ पूरा होता है?", options: ["Mitochondria", "Cytoplasm", "Nucleus", "Ribosome"], correct: 1 },
+            { q: "Total ATP produced in aerobic respiration from one glucose molecule is:", h: "एक ग्लूकोज अणु के पूर्ण ऑक्सीकरण से कितने ATP बनते हैं?", options: ["2", "28", "38", "48"], correct: 2 },
+            { q: "Stomata are used for exchange of gases in:", h: "पौधों में गैसों के आदान-प्रदान के लिये रहते हैं-", options: ["Stomata (रंध्र)", "Roots", "Stem", "Twigs"], correct: 0 },
+            { q: "Lenticels are found in which part of the plant?", h: "वातरंध्र (Lenticels) पौधे के किस भाग में पाये जाते हैं?", options: ["Roots", "Stem (तना)", "Leaf", "Whole plant"], correct: 1 },
+            { q: "How do unicellular organisms exchange gases?", h: "एक कोशिकीय जीवों में श्वसन गैसों का आदान-प्रदान किस प्रकार होता है?", options: ["Diffusion (विसरण)", "Mitochondria", "RBC", "None"], correct: 0 },
+            { q: "In insects, respiration occurs through:", h: "कीटों में श्वसन किसके द्वारा होता है?", options: ["Gills", "Trachea (ट्रेकिया)", "Lungs", "Skin"], correct: 1 },
+            { q: "Structural and functional unit of lungs is:", h: "फेफड़े की संरचनात्मक तथा क्रियात्मक इकाई है-", options: ["Trachea", "Alveoli (वायुकोष)", "Blood", "Pharynx"], correct: 1 },
+            { q: "Why are the walls of the Trachea flat/c-shaped?", h: "श्वसन नली (Trachea) की दीवार चपटी क्यों होती है?", options: ["Due to air", "Due to bone rings", "Due to thickness", "Due to cartilaginous rings (उपस्थि युक्त छल्ले)"], correct: 3 },
+            { q: "Approximately how many alveoli are found in human lungs?", h: "मनुष्य के दोनों फेफड़ों में लगभग कितने वायुकोष पाये जाते हैं?", options: ["2 x 10^8", "3 x 10^8", "4 x 10^8", "5 x 10^8"], correct: 3 },
+            { q: "Which is the sound-producing organ (Sound Box) in humans?", h: "मानव शरीर का ध्वनि उत्पादक यंत्र (Sound-Box) है?", options: ["Larynx (लैरिक्स)", "Pharynx", "Glottis", "Trachea"], correct: 0 },
+            { q: "The covering of the lungs is called:", h: "फेफड़ों को ढकने वाला आवरण कहलाता है?", options: ["Pericardium", "Pleura (प्लुरा)", "Peritoneum", "Capsule"], correct: 1 },
+            { q: "What is included in Breathing?", h: "श्वोसोच्छवास (Breathing) के अंतर्गत आते हैं-", options: ["Inhalation", "Exhalation", "Both Inhalation & Exhalation", "None"], correct: 2 },
+            { q: "Respiratory Pigment in humans is called:", h: "श्वसन वर्णक (Respiratory Pigment) किसे कहा जाता है?", options: ["Alveoli", "Hemoglobin (हीमोग्लोबिन)", "RBC", "Neutrophil"], correct: 1 },
+            { q: "Average breathing rate of an adult at rest is:", h: "किसी सामान्य वयस्क व्यक्ति की विश्राम अवस्था में औसत श्वसन-दर होती है-", options: ["9-12 / min", "15-18 / min", "21-24 / min", "30-33 / min"], correct: 1 },
+            { q: "By which process do gases enter and leave the blood during respiration?", h: "किस प्रक्रिया द्वारा श्वसन के दौरान गैसें रुधिर में प्रवेश करती हैं?", options: ["Active transport", "Diffusion (विसरण)", "Osmosis", "Effusion"], correct: 1 },
+            { q: "How is oxygen transported during respiration?", h: "श्वसन के दौरान ऑक्सीजन का परिवहन किसके द्वारा होता है?", options: ["Hemoglobin in blood", "Plasma", "Lymphocytes", "Neutrophils"], correct: 0 },
+            { q: "What percentage of CO2 is transported by hemoglobin?", h: "कितने प्रतिशत कार्बन डाइऑक्साइड का परिवहन हीमोग्लोबिन के द्वारा होता है?", options: ["10-20%", "20-25%", "70-80%", "1-2%"], correct: 1 },
+            { q: "In which part of lung does gaseous exchange occur?", h: "फेफड़े के किस भाग में गैसीय आदान-प्रदान होता है?", options: ["Nose", "Alveoli (वायुकोष)", "Bronchi", "None"], correct: 1 },
+            { q: "Percentage of oxygen in inhaled and exhaled air respectively:", h: "अंत: श्वसित वायु तथा उच्छवसित वायु में ऑक्सीजन का प्रतिशत कितना होता है?", options: ["21% and 16.4%", "16.4% and 21%", "48% and 24%", "None"], correct: 0 },
+            { q: "Color of deoxygenated hemoglobin is:", h: "डी ऑक्सीजेनेटेड हीमोग्लोबिन युक्त रक्त का रंग होता है?", options: ["Bright Red", "Purple (बैंगनी)", "Black", "Colorless"], correct: 1 },
+            { q: "Hypoxia is a condition when:", h: "हाइपोक्सिया (Hypoxia) उस स्थिति को कहते हैं, जब-", options: ["O2 concentration in blood decreases", "O2 concentration increases", "Blood cannot carry O2", "Hemoglobin decreases"], correct: 0 },
+            { q: "Vital Capacity of lungs is approx:", h: "श्वसन की जैविक क्षमता (Vital Capacity) होती है-", options: ["1500 mL", "3400-4800 mL", "500 mL", "6000 mL"], correct: 1 },
+            { q: "What is Tidal Volume (air inhaled/exhaled in one breath)?", h: "एक श्वोसोच्छवास में ली गई तथा बाहर निकाली गई हवा का आयतन क्या कहलाता है?", options: ["Residual Volume", "Tidal Volume (टाइडल आयतन)", "Vital Capacity", "Total Capacity"], correct: 1 },
+            { q: "Residual Volume of lungs is approximately:", h: "फेफड़े का अवशिष्ट आयतन (Residual Volume) कितना होता है?", options: ["5.4 to 6 L", "4 L", "500 mL", "1200-1500 mL"], correct: 3 },
+            { q: "Which muscles are found between ribs?", h: "मनुष्य के पसलियों के बीच कौन सी मांसपेशियाँ पाई जाती हैं?", options: ["Protector", "Adductor", "Radial", "Intercostal (इंटरकोस्टल)"], correct: 3 },
+            { q: "Cardiac Notch is found in which lung?", h: "हृदयी खाँच (Cardiac Notch) पाया जाता है-", options: ["Right Lung", "Left Lung (बाँये फेफड़ा में)", "Both", "Abdomen"], correct: 1 },
+            { q: "The start of the human respiratory passage is:", h: "मनुष्य में श्वसन मार्ग का प्रारंभ कहाँ से होता है?", options: ["Nasal Chambers", "Nostrils (नासिका छिद्र)", "Pharynx", "Trachea"], correct: 1 },
+            { q: "The front part of the Nasal Chamber is called:", h: "नासिका वेश्म (Nasal Chamber) का छोटा अग्र भाग कहलाता है-", options: ["Vestibule (प्रकोष्ठ)", "Olfactory region", "Nasal Septum", "Respiratory region"], correct: 0 },
+            { q: "Approximate length of human Trachea is:", h: "मानव के श्वसन पथ में ट्रेकिया की लंबाई लगभग कितनी होती है?", options: ["9 cm", "11 cm", "18 cm", "25 cm"], correct: 1 },
+            { q: "What separates the Thoracic cavity from the Abdominal cavity?", h: "कौन-सी रचना वक्ष गुहा को उदरगुहा से अलग करती है?", options: ["Ribs", "Diaphragm (डायाफ्राम)", "Heart", "Trachea"], correct: 1 },
+            { q: "During inhalation, the diaphragm moves:", h: "अंत: श्वसन के समय डायाफ्राम होता है-", options: ["Upward", "Flattened/Downward (चपटा)", "No change", "None"], correct: 1 },
+            { q: "Pyruvate is broken down into CO2, H2O and Energy in:", h: "पायरूवेट का विखंडन CO2, जल और ऊर्जा में कहाँ होता है?", options: ["Cytoplasm", "Mitochondria", "Nucleus", "Chloroplast"], correct: 1 },
+            { q: "In absence of oxygen, pyruvate in yeast converts to:", h: "ऑक्सीजन के अभाव में पायरूवेट का एथिल अल्कोहल एवं CO2 में परिवर्तन कहाँ होता है?", options: ["Mitochondria", "Cytoplasm", "In Yeast (यीस्ट में)", "Muscle cells"], correct: 2 },
+            { q: "The universal energy currency of the cell is:", h: "कोशिका का ऊर्जा मुद्रा (Energy Currency) किसे कहा जाता है?", options: ["Glucose", "ATP", "Pyruvate", "ADP"], correct: 1 },
+            { q: "Which organism respires through its skin?", h: "निम्न में से कौन सा जीव त्वचा से श्वसन करता है?", options: ["Fish", "Human", "Earthworm (केचुआ)", "Bird"], correct: 2 },
+            { q: "Maximum ATP is generated in which stage of respiration?", h: "श्वसन के किस चरण में सर्वाधिक ATP का निर्माण होता है?", options: ["Glycolysis", "Krebs Cycle", "Diffusion", "Fermentation"], correct: 1 }
+        ];
+
+        let currentQuestions = [];
+        let currentIndex = 0;
+        let score = 0;
+        let timerInterval;
+        let timeLeft = 0;
+        let audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        // Sound Synthesis
+        function playSound(type) {
+            let osc = audioCtx.createOscillator();
+            let gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            if (type === 'correct') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(880, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.1);
+                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.3);
+            } else {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.3);
+            }
+        }
+
+        function createConfetti() {
+            for(let i=0; i<50; i++) {
+                let c = document.createElement('div');
+                c.className = 'confetti';
+                c.style.left = Math.random() * 100 + 'vw';
+                c.style.backgroundColor = `hsl(${Math.random()*360}, 70%, 50%)`;
+                c.style.animationDuration = (Math.random() * 2 + 1) + 's';
+                document.body.appendChild(c);
+                setTimeout(() => c.remove(), 3000);
+            }
+        }
+
+        function startQuiz() {
+            const shuffle = document.getElementById('shuffle-check').checked;
+            currentQuestions = shuffle ? [...questions].sort(() => Math.random() - 0.5) : [...questions];
+            
+            currentIndex = 0;
+            score = 0;
+            
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('quiz-screen').classList.remove('hidden');
+            document.getElementById('result-screen').classList.add('hidden');
+            
+            showQuestion();
+        }
+
+        function showQuestion() {
+            clearInterval(timerInterval);
+            const q = currentQuestions[currentIndex];
+            const timerVal = parseInt(document.getElementById('timer-input').value) || 0;
+            
+            // UI Updates
+            document.getElementById('q-counter').innerText = `Question ${String(currentIndex + 1).padStart(2, '0')}/${currentQuestions.length}`;
+            document.getElementById('score-display').innerText = `Score: ${score}`;
+            document.getElementById('question-text').innerHTML = `${q.q}<span class="hindi-text">${q.h}</span>`;
+            document.getElementById('progress-bar').style.width = ((currentIndex) / currentQuestions.length * 100) + "%";
+
+            const container = document.getElementById('options-container');
+            container.innerHTML = '';
+
+            q.options.forEach((opt, i) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerHTML = opt;
+                btn.onclick = () => handleAnswer(i, btn);
+                container.appendChild(btn);
+            });
+
+            // Timer Logic
+            if (timerVal > 0) {
+                timeLeft = timerVal;
+                const display = document.getElementById('timer-display');
+                display.classList.remove('hidden');
+                display.innerText = timeLeft + 's';
+                display.classList.remove('pulse');
+                
+                timerInterval = setInterval(() => {
+                    timeLeft--;
+                    display.innerText = timeLeft + 's';
+                    if (timeLeft < 5) display.classList.add('pulse');
+                    if (timeLeft <= 0) {
+                        clearInterval(timerInterval);
+                        handleAnswer(-1); // Timeout
+                    }
+                }, 1000);
+            } else {
+                document.getElementById('timer-display').classList.add('hidden');
+            }
+        }
+
+        function handleAnswer(choiceIndex, clickedBtn) {
+            clearInterval(timerInterval);
+            const q = currentQuestions[currentIndex];
+            const buttons = document.querySelectorAll('.option-btn');
+            buttons.forEach(b => b.disabled = true);
+
+            if (choiceIndex === q.correct) {
+                score++;
+                clickedBtn.classList.add('correct');
+                playSound('correct');
+                createConfetti();
+            } else {
+                if (clickedBtn) clickedBtn.classList.add('wrong');
+                buttons[q.correct].classList.add('correct');
+                playSound('wrong');
+                const emoji = document.getElementById('feedback-emoji');
+                emoji.style.display = 'block';
+                emoji.classList.add('shake');
+                setTimeout(() => {
+                    emoji.style.display = 'none';
+                    emoji.classList.remove('shake');
+                }, 1000);
+            }
+
+            setTimeout(() => {
+                currentIndex++;
+                if (currentIndex < currentQuestions.length) {
+                    showQuestion();
+                } else {
+                    endQuiz();
+                }
+            }, 1500);
+        }
+
+        function endQuiz() {
+            clearInterval(timerInterval);
+            document.getElementById('quiz-screen').classList.add('hidden');
+            document.getElementById('result-screen').classList.remove('hidden');
+            document.getElementById('progress-bar').style.width = "100%";
+
+            const percent = (score / currentQuestions.length) * 100;
+            document.getElementById('final-score').innerText = `${score}/${currentQuestions.length}`;
+            
+            let msg = "";
+            if(percent >= 80) msg = "🏆 Outstanding Performance!";
+            else if(percent >= 50) msg = "👏 Well Done! Keep it up.";
+            else msg = "📚 Practice makes perfect! Try again.";
+            
+            document.getElementById('result-msg').innerText = msg;
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Micro-Organism Pro Quiz (151-200)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-bg: linear-gradient(45deg, #6a11cb 0%, #2575fc 50%, #ff00ea 100%);
+            --glass: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --correct: #2ecc71;
+            --wrong: #e74c3c;
+            --hindi-color: #ddd;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+
+        body {
+            background: var(--primary-bg);
+            background-attachment: fixed;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            overflow-x: hidden;
+        }
+
+        /* Glassmorphism Card */
+        .quiz-container {
+            width: 90%;
+            max-width: 700px;
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 25px;
+            padding: 30px;
+            position: relative;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        }
+
+        #progress-bar {
+            position: absolute; top: 0; left: 0; height: 6px;
+            background: linear-gradient(to right, #00f2fe, #4facfe);
+            width: 0%; border-radius: 25px 0 0 0;
+            transition: width 0.4s ease; box-shadow: 0 0 10px #4facfe;
+        }
+
+        .screen { display: none; flex-direction: column; align-items: center; text-align: center; }
+        .active { display: flex; }
+
+        h1 { font-weight: 700; margin-bottom: 20px; }
+        .setup-item { width: 100%; margin: 15px 0; text-align: left; }
+        input[type="number"] {
+            width: 100%; padding: 12px; border-radius: 12px; border: none;
+            background: rgba(255,255,255,0.2); color: white; outline: none;
+        }
+
+        .primary-btn {
+            background: white; color: #2575fc; border: none;
+            padding: 15px 40px; border-radius: 50px; font-weight: 700;
+            cursor: pointer; transition: transform 0.2s ease; margin-top: 20px;
+        }
+        .primary-btn:hover { transform: scale(1.05); }
+
+        /* Quiz UI */
+        .quiz-header { width: 100%; display: flex; justify-content: space-between; margin-bottom: 20px; font-weight: 600; }
+        .timer { font-size: 1.2rem; }
+        .pulse-red { color: #ff3e3e; animation: pulse 0.5s infinite alternate; }
+        @keyframes pulse { from { opacity: 1; } to { opacity: 0.5; } }
+
+        .question-box { width: 100%; text-align: left; margin-bottom: 25px; }
+        .q-en { font-weight: 700; font-size: 1.2rem; display: block; }
+        .q-hi { color: var(--hindi-color); font-size: 0.95rem; display: block; margin-top: 5px; }
+
+        .options-grid { width: 100%; display: grid; gap: 12px; }
+        .option {
+            background: rgba(255,255,255,0.08); border: 1px solid var(--glass-border);
+            padding: 15px; border-radius: 15px; cursor: pointer; text-align: left;
+            transition: all 0.2s; display: flex; flex-direction: column;
+        }
+        .option:hover { background: rgba(255,255,255,0.15); }
+        .opt-hi { font-size: 0.85rem; color: var(--hindi-color); margin-top: 3px; }
+
+        .correct { background: var(--correct) !important; border-color: #fff; }
+        .wrong { background: var(--wrong) !important; border-color: #fff; }
+        .disabled { pointer-events: none; }
+
+        #emoji-feedback {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 100px; display: none; z-index: 1000;
+        }
+        .shake { animation: shake 0.5s; }
+        @keyframes shake {
+            0%, 100% { transform: translate(-50%, -50%); }
+            25% { transform: translate(-55%, -50%); }
+            75% { transform: translate(-45%, -50%); }
+        }
+
+        #confetti-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; }
+        .finish-btn { background: transparent; color: white; border: 1px solid var(--glass-border); padding: 8px 20px; border-radius: 10px; margin-top: 20px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<canvas id="confetti-canvas"></canvas>
+<div id="emoji-feedback">😢</div>
+
+<div class="quiz-container">
+    <div id="progress-bar"></div>
+
+    <div id="start-screen" class="screen active">
+        <h1>Micro-Biology Quiz</h1>
+        <p>Advanced Series: Questions 151 - 200</p>
+        <div class="setup-item">
+            <label>Timer per Question (Seconds):</label>
+            <input type="number" id="timer-input" placeholder="0 = No Timer">
+        </div>
+        <div class="setup-item">
+            <label style="cursor: pointer;"><input type="checkbox" id="shuffle-input"> Shuffle Questions</label>
+        </div>
+        <button class="primary-btn" onclick="startQuiz()">Start Quiz</button>
+    </div>
+
+    <div id="quiz-screen" class="screen">
+        <div class="quiz-header">
+            <div id="q-counter">Q 00/00</div>
+            <div id="timer-display" class="timer"></div>
+            <div id="score-display">Score: 0</div>
+        </div>
+        <div class="question-box">
+            <span class="q-en" id="q-en"></span>
+            <span class="q-hi" id="q-hi"></span>
+        </div>
+        <div class="options-grid" id="options-grid"></div>
+        <button class="finish-btn" onclick="endQuiz()">Finish & Show Results</button>
+    </div>
+
+    <div id="result-screen" class="screen">
+        <h1>Performance Report</h1>
+        <div id="final-score" style="font-size: 4rem; font-weight: 700; margin: 20px 0;">0%</div>
+        <p id="result-msg" style="font-size: 1.2rem; margin-bottom: 30px;"></p>
+        <button class="primary-btn" onclick="location.reload()">Restart Quiz</button>
+    </div>
+</div>
+
+<script>
+    // DATA SOURCE: Questions 151-200
+    const questions = [
+        {en: "Which group of bacteria is used in the production of Bio-gas?", hi: "जैव गैस के उत्पादन में प्रयुक्त होने वाले जीवाणुओं के समूह है?", opts: [{en: "Methanotrophs", hi: "मीथेनोट्रॉफ"}, {en: "Organotrophs", hi: "आर्गनोट्रॉफ"}, {en: "Eubacteria", hi: "यूबैक्टिरिया"}, {en: "Methanogens", hi: "मीथेनोजेन"}], ans: 3},
+        {en: "Groups of bacteria that form web-like structures with fungal filaments are called?", hi: "वैसे जीवाणुओं के समूह जो फफूंदी के तंतुओं से जुड़कर जाल जैसी संरचना बनाते है, कहलाते है?", opts: [{en: "Flocs", hi: "फ्लॉक्स"}, {en: "Methanogens", hi: "मिथेनोजेन"}, {en: "Plasminogen", hi: "प्लास्मिनोजेन"}, {en: "None", hi: "इनमें से कोई नहीं"}], ans: 0},
+        {en: "Fermenting bacteria used for Retting of Jute is?", hi: "जूट की रेटिंग के लिये किण्वनकारी सूक्ष्मजीव बैक्टीरिया है?", opts: [{en: "Methanophilic", hi: "मीथेनोफिलिक"}, {en: "Butyric Acid Bacteria", hi: "ब्यूटइरिक एसिड बैक्टीरिया"}, {en: "Helicobacter pylori", hi: "हेलिकोबैक्टर पाइलोरी"}, {en: "Clostridium acetobutylicum", hi: "क्लोस्ट्रीडियम एसीटोब्यूटइलिकम"}], ans: 1},
+        {en: "Bacteria participating in making Yogurt (Yogurt) is?", hi: "योगहर्ट बनाने में भाग लेने वाले बैक्टीरिया-", opts: [{en: "Lactobacillus bulgaricus", hi: "लैक्टोबैसिलस बल्गेरिकस"}, {en: "Lactobacillus thermophilus", hi: "लैक्टोबैसिलस थर्माफिलस"}, {en: "Streptococcus thermophilus", hi: "स्ट्रेप्टोकोकस थर्माफिलस"}, {en: "Both A and C", hi: "A तथा C दोनों"}], ans: 3},
+        {en: "Actinomycetes class includes?", hi: "एक्टीनोमाइसिटीज वर्ग में आते है-", opts: [{en: "Virus", hi: "विषाणु"}, {en: "Bacteria", hi: "जीवाणु"}, {en: "Fungi", hi: "कवक"}, {en: "Protozoa", hi: "प्रोटोजोआ"}], ans: 1},
+        {en: "Who first discovered 'Mycoplasma'?", hi: "'माइकोप्लाज्म' की खोज सर्वप्रथम किसने किया?", opts: [{en: "W.H. Stanley", hi: "डब्ल्यू.एच.स्टैनली"}, {en: "Robert Koch", hi: "रॉबर्ट कोच"}, {en: "E. Nocard and E.R. Roux", hi: "ई. नोकार्ड तथा ई.आर.रॉक्स"}, {en: "Leeuwenhoek", hi: "ल्यूवेनहॉक"}], ans: 2},
+        {en: "Which of the following diseases is caused by bacteria?", hi: "निम्नलिखित में कौन-सा रोग जीवाणु के कारण होते है?", opts: [{en: "Diphtheria", hi: "डिप्थीरिया"}, {en: "Tuberculosis", hi: "क्षयरोग या तपेदिक"}, {en: "Plague", hi: "प्लेग"}, {en: "All of these", hi: "इनमें से सभी"}], ans: 3},
+        {en: "At what age is B.C.G vaccine administered?", hi: "बी.सी.जी. (B.C.G.) का टीका कितनी उम्र में लगाया जाता है?", opts: [{en: "Within 2-3 years", hi: "2-3 वर्ष के भीतर"}, {en: "In 10 years", hi: "10 वर्ष में"}, {en: "At birth", hi: "नवजात"}, {en: "Within 15 days", hi: "15 दिन के भीतर"}], ans: 2},
+        {en: "Which of the following is NOT caused by bacteria?", hi: "निम्नलिखित में कौन-सा रोग जीवाणुओं के कारण नहीं होता है?", opts: [{en: "Syphilis", hi: "सिफलिस"}, {en: "Smallpox", hi: "चेचक"}, {en: "Pneumonia", hi: "निमोनिया"}, {en: "Tetanus", hi: "टिटेनस या लॉक जा"}], ans: 1},
+        {en: "D.P.T. vaccine is given to protect children from which disease?", hi: "बच्चो को किस रोग से प्रतिरक्षित करने के लिये डी.पी.टी. का टीका दिया जाता है?", opts: [{en: "Rabies", hi: "रेबीज"}, {en: "Cancer", hi: "कैंसर"}, {en: "Whooping Cough", hi: "कुकुरखांसी"}, {en: "Diabetes", hi: "मधुमेह"}], ans: 2},
+        {en: "Which of the following is caused by bacteria?", hi: "निम्नलिखित में किस रोग का कारण जीवाणु है?", opts: [{en: "Typhoid", hi: "टाइफॉइड"}, {en: "Gonorrhea", hi: "सुजाक (गोनोरिया)"}, {en: "Whooping Cough", hi: "कुकुरखांसी"}, {en: "All of these", hi: "इनमें से सभी"}], ans: 3},
+        {en: "Leprosy is caused by which microorganism?", hi: "कुष्ठ रोग किस सूक्ष्मजीव के कारण होते है-", opts: [{en: "Bacteria", hi: "जीवाणु"}, {en: "Virus", hi: "विषाणु"}, {en: "Protozoa", hi: "प्रोटोजोआ"}, {en: "Fungi", hi: "कवक"}], ans: 0},
+        {en: "MDT (Multi Drug Therapy) protects against whose infection?", hi: "बहुऔषधि चिकित्सा (MDT) किसके संक्रमण से सुरक्षा प्रदान करता है?", opts: [{en: "AIDS", hi: "एड्स"}, {en: "Leprosy", hi: "कोढ़"}, {en: "Cholera", hi: "हैजा"}, {en: "Diarrhea", hi: "अतिसार"}], ans: 1},
+        {en: "What is the cause of Cholera?", hi: "हैजा का क्या कारण है-", opts: [{en: "Bacteria", hi: "जीवाणु"}, {en: "Virus", hi: "विषाणु"}, {en: "Fungi", hi: "फफूँद"}, {en: "Algae", hi: "शैवाल"}], ans: 0},
+        {en: "Which of the following is a water-borne disease?", hi: "निम्नलिखित में कौन जल जनित रोग है?", opts: [{en: "Smallpox", hi: "चेचक"}, {en: "Malaria", hi: "मलेरिया"}, {en: "Cholera", hi: "हैजा"}, {en: "Tuberculosis", hi: "तपेदिक"}], ans: 2},
+        {en: "What is the cause of Meningitis or stiff neck fever?", hi: "मेनिनजाइटिस या गर्दन तोड़ बुखार का कारण है-", opts: [{en: "Virus", hi: "विषाणु"}, {en: "Bacteria", hi: "जीवाणु"}, {en: "Fungi", hi: "कवक"}, {en: "Protozoa", hi: "प्रोटोजोआ"}], ans: 1},
+        {en: "Whose identification can be done by Widal test?", hi: "निम्नलिखित में किसकी पहचान विडाल परीक्षण से की जा सकती है?", opts: [{en: "Cancer", hi: "कैंसर"}, {en: "AIDS", hi: "एड्स"}, {en: "Typhoid", hi: "टाइफॉइड"}, {en: "Tuberculosis", hi: "क्षयमा"}], ans: 2},
+        {en: "What is called 'Black Death'?", hi: "काली मौत (Black Death) किसे कहते है?", opts: [{en: "Cancer", hi: "कैंसर"}, {en: "AIDS", hi: "एड्स"}, {en: "Malaria", hi: "मलेरिया"}, {en: "Plague", hi: "प्लेग"}], ans: 3},
+        {en: "Canker disease in Lemon and Tomato is caused by which microbe?", hi: "नींबू तथा टमाटर में केंकर (Canker) रोग किस सूक्ष्मजीव के कारण होता है?", opts: [{en: "Bacteria", hi: "जीवाणु"}, {en: "Virus", hi: "विषाणु"}, {en: "Protozoa", hi: "प्रोटोजोआ"}, {en: "Fungi", hi: "फफूँद"}], ans: 0},
+        {en: "Cause of Fire blight disease in Apple and Pear is?", hi: "सेब और नाशपाती में होने वाला नीरजा रोग (Fire blight) का कारण है-", opts: [{en: "Virus", hi: "विषाणु"}, {en: "Fungi", hi: "कवक"}, {en: "Protozoa", hi: "प्रोटोजोआ"}, {en: "Bacteria", hi: "जीवाणु"}], ans: 3},
+        {en: "From which of the following does Tetanus occur?", hi: "निम्नलिखित में किससे धनुस्तम्भ (Tetanus) होता है?", opts: [{en: "Virus", hi: "विषाणु"}, {en: "Bacteria", hi: "जीवाणु"}, {en: "Fungi", hi: "फफूँदी"}, {en: "Protozoa", hi: "प्रोटोजोआ"}], ans: 1},
+        {en: "Which produces 'Anthrax' disease in cattle?", hi: "निम्नलिखित में कौन मवेशियों में एन्थ्रैक्स नामक बीमारी उत्पन्न करता है?", opts: [{en: "Virus", hi: "वाइरस"}, {en: "Bacteria", hi: "बैक्टीरिया"}, {en: "Mycoplasma", hi: "माइकोप्लाज्म"}, {en: "Algae", hi: "एल्गी"}], ans: 1},
+        {en: "Tuberculosis (T.B) is produced by?", hi: "ट्यूबरकुलोसिस (T.B) उत्पन्न होता है-", opts: [{en: "Cryobacteria", hi: "क्रायोबैक्टीरिया द्वारा"}, {en: "Mycobacteria", hi: "माइक्रोबैक्टीरिया द्वारा"}, {en: "Diplococcus", hi: "डिप्लोकोकस द्वारा"}, {en: "Spirochetes", hi: "स्पाइरोकीट"}], ans: 1},
+        {en: "Organisms under prokaryotes that lack cell walls are?", hi: "प्रोकैरियोट के अंतर्गत आने वाले वे जीव कौन है जिनमें कोशिका भित्ति नहीं होती है?", opts: [{en: "Actinomycetes", hi: "एक्टीनोमाइसिटीज"}, {en: "Cyanobacteria", hi: "साइनोबैक्टीरिया"}, {en: "Mycoplasma", hi: "माइकोप्लाज्म"}, {en: "Bacteria", hi: "बैक्टीरिया"}], ans: 2},
+        {en: "Which of the following is NOT a contagious disease?", hi: "निम्नलिखित में कौन एक संक्रामक रोग नहीं है?", opts: [{en: "Diabetes", hi: "मधुमेह"}, {en: "Tuberculosis (T.B)", hi: "यक्ष्मा (T.B)"}, {en: "Smallpox", hi: "चेचक"}, {en: "Cholera", hi: "हैजा"}], ans: 0},
+        {en: "Which of the following is a contagious disease?", hi: "निम्नलिखित में कौन संक्रामक रोग है?", opts: [{en: "Diphtheria", hi: "डिप्थीरिया"}, {en: "Rabies", hi: "रेबीज"}, {en: "Kala-azar", hi: "कालाजार"}, {en: "All of these", hi: "इनमें से सभी"}], ans: 3},
+        {en: "Which disease can be controlled by TAB vaccine?", hi: "TAB के टीके द्वारा निम्नलिखित में किस रोग का नियंत्रण किया जा सकता है?", opts: [{en: "Typhoid", hi: "टाइफॉइड का"}, {en: "Diarrhea", hi: "डायरिया का"}, {en: "Tuberculosis", hi: "क्षयरोग का"}, {en: "Rabies", hi: "रेबीज का"}], ans: 0},
+        {en: "Tuberculosis (T.B) infection occurs mainly through?", hi: "क्षय रोग (T.B) का संक्रमण मुख्यत: होता है?", opts: [{en: "Through Air", hi: "हवा द्वारा"}, {en: "Through Water", hi: "जल द्वारा"}, {en: "Through Insects", hi: "कीटो द्वारा"}, {en: "Through Contact", hi: "सम्पर्क द्वारा"}], ans: 0},
+        {en: "Vaccination protects a person from disease because?", hi: "टीकाकरण एक व्यक्ति को रोग से बचाता है, क्योंकि वह-", opts: [{en: "Helps digestion", hi: "पाचन को अच्छा करने में सहायता करता है"}, {en: "Produces antibodies", hi: "प्रतिरक्षी पदार्थ उत्पन्न करता है"}, {en: "Increases RBC count", hi: "RBC की संख्या को बढ़ाता है"}, {en: "Keeps body temp normal", hi: "शरीर के उष्मा तंत्र को सही रखता है"}], ans: 1},
+        {en: "Triple antigen vaccine is NOT useful for which disease?", hi: "ट्रीपल एन्टीजन टीका किस रोग में उपयोगी नहीं होता है?", opts: [{en: "Diphtheria", hi: "डिप्थीरिया में"}, {en: "Pertussis", hi: "पर्टयुसिस में"}, {en: "Typhoid", hi: "टाइफाइड में"}, {en: "Tetanus", hi: "टिटेनस में"}], ans: 2},
+        {en: "Syndrome means?", hi: "सिन्ड्रोम का अर्थ होता है-", opts: [{en: "Condition of disease", hi: "रोग का अवस्था"}, {en: "Severity of infection", hi: "संक्रमणकारी की उग्रता"}, {en: "Malignancy", hi: "मैलिग्नैंसी"}, {en: "Group of symptoms", hi: "लक्षणों का समूह"}], ans: 3},
+        {en: "At what months is the 1.5, 2.5 and 3.5 month vaccine given?", hi: "निम्नलिखित में कौन सा टीका 1.5, 2.5 तथा 3.5 माह में दिया जाता है?", opts: [{en: "DPT-Hib and Polio", hi: "DPT-Hib और पोलियो"}, {en: "BCG and Hepatitis-B", hi: "BCG और हेपेटाइसिस-बी"}, {en: "BCG and DPT-Hib", hi: "BCG और DPT-Hib"}, {en: "Polio and BCG", hi: "पोलियो और BCG"}], ans: 0},
+        {en: "Pneumonia is caused by which microbe, affecting lungs?", hi: "न्यूमोनिया किस सूक्ष्मजीव के कारण होता है, जो मुख्यत: फेफड़ो को प्रभावित करता है?", opts: [{en: "Streptococcus pneumoniae", hi: "स्ट्रेप्टोकोकस न्यूमोनी जीवाणु"}, {en: "Haemophilus influenzae", hi: "हीमोफिलस इन्फ्लुएन्जी जीवाणु"}, {en: "Vibrio cholerae", hi: "विब्रियो कोलेरी"}, {en: "Both A and B", hi: "A तथा B दोनों"}], ans: 3},
+        {en: "Erythromycin antibiotic is useful in which disease?", hi: "एरीथ्रोमायसीन एन्टीबायोटिक औषधि किस रोग में उपयोगी है?", opts: [{en: "Leprosy", hi: "लेप्रोसी"}, {en: "Whooping Cough", hi: "काली खाँसी"}, {en: "Cholera", hi: "हैजा"}, {en: "Diarrhea", hi: "डायरिया"}], ans: 1},
+        {en: "Which of the following is related to Corona Virus?", hi: "निम्नलिखित में कौन सी बीमारी कोरोना वायरस से संबंधित है?", opts: [{en: "MERS", hi: "एमईआरएस (मर्स)"}, {en: "SARS", hi: "एस ए आर एस (सार्स)"}, {en: "Covid-19", hi: "Covid-19"}, {en: "All of these", hi: "उपर्युक्त सभी"}], ans: 2},
+        {en: "Which of the following disease occurs due to bacteria?", hi: "निम्नलिखित में कौनसा जीवाणु के कारण होने वाला रोग है?", opts: [{en: "Wilt in Potato", hi: "आलू में विल्ट"}, {en: "Ergot in Wheat", hi: "गेहूँ में किलगन"}, {en: "Leaf blight of Rice", hi: "चावल की अंगमारी"}, {en: "All of these", hi: "इनमें से सभी"}], ans: 3},
+        {en: "Which of the following are water-borne contagious diseases?", hi: "निम्नलिखित में से कौन से जल संक्रामक है?", opts: [{en: "1 and 2", hi: "1 और 2"}, {en: "1 and 3", hi: "1 और 3"}, {en: "1 and 4", hi: "1 और 4"}, {en: "2 and 4", hi: "2 और 4"}], ans: 2},
+        {en: "What is a vaccine?", hi: "टीका (Vaccine) क्या है?", opts: [{en: "Natural acquired immunity", hi: "प्राकृतिक उपार्जित प्रतिरक्षा"}, {en: "Artificial active acquired immunity", hi: "कृत्रिम सक्रिय उपार्जित प्रतिरक्षा"}, {en: "Innate immunity", hi: "सहज निष्क्रिय प्रतिरक्षा"}, {en: "Artificial passive acquired immunity", hi: "कृत्रिम निष्क्रिय उपार्जित प्रतिरक्षा"}], ans: 1},
+        {en: "Main symptom of Diphtheria is?", hi: "डिप्थीरिया का मुख्य लक्षण है-", opts: [{en: "Unconsciousness", hi: "बेहोशी"}, {en: "Suffocation", hi: "गला घुटना"}, {en: "Blood discharge", hi: "रूधिर-स्त्राव"}, {en: "High fever", hi: "तेज ज्वर"}], ans: 1},
+        {en: "Antibiotics are mostly obtained from?", hi: "प्रतिजैविक (एन्टीबायोटिक) अधिकांशतया प्राप्त होते है-", opts: [{en: "Fungi", hi: "कवकों से"}, {en: "Viruses", hi: "विषाणुओं से"}, {en: "Bacteria", hi: "जीवाणुओं से"}, {en: "Plants", hi: "पौधों से"}], ans: 2},
+        {en: "Specific aroma comes in Cheese from?", hi: "पनीर में विशेष सुगंध आती है-", opts: [{en: "Yeast", hi: "यीस्ट से"}, {en: "Fungi", hi: "कवक से"}, {en: "Bacteria", hi: "जीवाणु से"}, {en: "Virus", hi: "विषाणु से"}], ans: 2},
+        {en: "What is mainly needed for secondary treatment of sewage water?", hi: "वाहितमल जल के द्वितीयक उपचार में मुख्यत: किसकी आवश्यकता होती है?", opts: [{en: "Yeast", hi: "यीस्ट की"}, {en: "Virus", hi: "विषाणु की"}, {en: "Fungi", hi: "कवक की"}, {en: "Bacteria", hi: "जीवाणु की"}], ans: 3},
+        {en: "Which of the following is NOT a nitrogen-fixing bacteria?", hi: "निम्नलिखित में कौन सा नाइट्रोजन स्थिरिकारक जीवाणु नहीं है?", opts: [{en: "Clostridium", hi: "क्लॉस्ट्रीडियम"}, {en: "Azolla", hi: "अजोला"}, {en: "Bacillus thuringiensis", hi: "बैसिलस थुरिन्जिएन्सिस"}, {en: "Azotobacter", hi: "ओजोटोबैक्टर"}], ans: 2},
+        {en: "Bacteria involved in making Yogurt is?", hi: "योगहर्ट बनाने में भाग लेने वाला बैक्टीरिया है-", opts: [{en: "Lactobacillus thermophilus", hi: "लैक्टोबैसिलस थर्माफिल्लस"}, {en: "Lactobacillus bulgaricus", hi: "लैक्टोबैसिलस बल्गेरिकस"}, {en: "Streptococcus thermophilus", hi: "स्ट्रेप्टोकोकस थर्माफिल्लस"}, {en: "Both B and C", hi: "B तथा C दोनों"}], ans: 3},
+        {en: "In which of the following is the 'nif' gene found?", hi: "नीफ (nif) जीन किसमें पाया जाता है?", opts: [{en: "Penicillium", hi: "पेनीसीलियम में"}, {en: "Rhizobium", hi: "राइजोबियम में"}, {en: "Aspergillus", hi: "एस्पर जिलस में"}, {en: "Streptococcus", hi: "स्ट्रेप्टोकोकस में"}], ans: 1},
+        {en: "Known as Green Protozoa?", hi: "हरा प्रोटोजोआ के नाम से जाना जाता है-", opts: [{en: "Paramecium", hi: "पैरामैशियम"}, {en: "Amoeba", hi: "अमीबा"}, {en: "Leishmania", hi: "लिशमैनिया"}, {en: "Euglena", hi: "यूग्लीना"}], ans: 3},
+        {en: "In which kingdom is Euglena placed in Whittaker's five kingdom classification?", hi: "ह्विटेकर के पाँच जगत वर्गीकरण में यूग्लीना को किस जगत में रखा गया है?", opts: [{en: "Monera", hi: "मोनेरा"}, {en: "Protista", hi: "प्रोटिस्टा"}, {en: "Plantae", hi: "प्लान्टी"}, {en: "Fungi", hi: "फंगी"}], ans: 1},
+        {en: "The connecting link between plants and animals is?", hi: "पौधा तथा जन्तु के बीच योजक कड़ी है-", opts: [{en: "Amoeba", hi: "अमीबा"}, {en: "Paramecium", hi: "पैरामैशियम"}, {en: "Euglena", hi: "यूग्लीना"}, {en: "Plasmodium", hi: "प्लाज्मोडियम"}], ans: 2},
+        {en: "The locomotory organ of Euglena is?", hi: "यूग्लीना का प्रचलन अंग है-", opts: [{en: "Cilia", hi: "सीलिया"}, {en: "Flagella", hi: "फ्लैजिला"}, {en: "Pseudopodia", hi: "कूटपाद"}, {en: "Tentacles", hi: "टेन्टेकिल्स"}], ans: 1},
+        {en: "What is the number of flagella in Euglena?", hi: "यूग्लीना में फ्लैजिला की संख्या कितनी होती है?", opts: [{en: "One", hi: "एक"}, {en: "Two", hi: "दो"}, {en: "Many", hi: "कई"}, {en: "None", hi: "इनमें से कोई नहीं"}], ans: 1}
+    ];
+
+    let currentQuestions = [];
+    let currentIdx = 0;
+    let score = 0;
+    let timerId = null;
+    let audioCtx = null;
+
+    // --- Audio System ---
+    function initAudio() {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+
+    function playSound(type) {
+        if (!audioCtx) return;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        
+        if (type === 'correct') {
+            osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(1000, audioCtx.currentTime + 0.1);
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+        } else {
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+        }
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.3);
+    }
+
+    // --- Confetti System ---
+    function fireConfetti() {
+        const canvas = document.getElementById('confetti-canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        let particles = Array.from({length: 100}, () => ({
+            x: Math.random() * canvas.width,
+            y: -20,
+            r: Math.random() * 6 + 2,
+            v: Math.random() * 5 + 2,
+            color: `hsl(${Math.random() * 360}, 100%, 50%)`
+        }));
+        function animate() {
+            ctx.clearRect(0,0, canvas.width, canvas.height);
+            particles.forEach(p => {
+                p.y += p.v;
+                ctx.fillStyle = p.color;
+                ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); ctx.fill();
+            });
+            if (particles.some(p => p.y < canvas.height)) requestAnimationFrame(animate);
+        }
+        animate();
+    }
+
+    // --- Logic ---
+    function startQuiz() {
+        initAudio();
+        const shuffle = document.getElementById('shuffle-input').checked;
+        currentQuestions = [...questions];
+        if (shuffle) currentQuestions.sort(() => Math.random() - 0.5);
+        
+        document.getElementById('start-screen').classList.remove('active');
+        document.getElementById('quiz-screen').classList.add('active');
+        loadQuestion();
+    }
+
+    function loadQuestion() {
+        if (currentIdx >= currentQuestions.length) return endQuiz();
+        const q = currentQuestions[currentIdx];
+        document.getElementById('q-en').innerText = q.en;
+        document.getElementById('q-hi').innerText = q.hi;
+        document.getElementById('q-counter').innerText = `Q ${currentIdx+1}/${currentQuestions.length}`;
+        document.getElementById('progress-bar').style.width = `${(currentIdx / currentQuestions.length) * 100}%`;
+        
+        const grid = document.getElementById('options-grid');
+        grid.innerHTML = '';
+        q.opts.forEach((opt, i) => {
+            const div = document.createElement('div');
+            div.className = 'option';
+            div.innerHTML = `<span>${opt.en}</span><span class="opt-hi">${opt.hi}</span>`;
+            div.onclick = () => selectOption(i, div);
+            grid.appendChild(div);
+        });
+        startTimer();
+    }
+
+    function startTimer() {
+        clearInterval(timerId);
+        const limit = parseInt(document.getElementById('timer-input').value) || 0;
+        if (limit <= 0) {
+            document.getElementById('timer-display').innerText = '';
+            return;
+        }
+        let time = limit;
+        const display = document.getElementById('timer-display');
+        display.innerText = `⏱ ${time}s`;
+        display.classList.remove('pulse-red');
+        timerId = setInterval(() => {
+            time--;
+            display.innerText = `⏱ ${time}s`;
+            if (time <= 5) display.classList.add('pulse-red');
+            if (time <= 0) { clearInterval(timerId); selectOption(-1); }
+        }, 1000);
+    }
+
+    function selectOption(idx, el) {
+        clearInterval(timerId);
+        const correctIdx = currentQuestions[currentIdx].ans;
+        const options = document.querySelectorAll('.option');
+        options.forEach(o => o.classList.add('disabled'));
+
+        if (idx === correctIdx) {
+            score++;
+            el.classList.add('correct');
+            playSound('correct');
+            fireConfetti();
+        } else {
+            if (el) el.classList.add('wrong');
+            options[correctIdx].classList.add('correct');
+            playSound('wrong');
+            const feedback = document.getElementById('emoji-feedback');
+            feedback.style.display = 'block';
+            feedback.classList.add('shake');
+            setTimeout(() => { feedback.style.display = 'none'; feedback.classList.remove('shake'); }, 1000);
+        }
+        document.getElementById('score-display').innerText = `Score: ${score}`;
+        setTimeout(() => { currentIdx++; loadQuestion(); }, 1500);
+    }
+
+    function endQuiz() {
+        clearInterval(timerId);
+        document.getElementById('quiz-screen').classList.remove('active');
+        document.getElementById('result-screen').classList.add('active');
+        document.getElementById('progress-bar').style.width = '100%';
+        const percent = Math.round((score / currentQuestions.length) * 100);
+        document.getElementById('final-score').innerText = percent + "%";
+        let msg = percent >= 80 ? "🏆 Outstanding Performance!" : (percent >= 50 ? "👏 Well Done! Keep it up." : "📚 Practice makes perfect! Try again.");
+        document.getElementById('result-msg').innerText = msg;
+    }
+</script>
+</body>
+</html>

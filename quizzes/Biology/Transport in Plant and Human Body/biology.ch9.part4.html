@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bilingual Biology Quiz: Transport Systems</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; }
+        
+        body {
+            min-height: 100vh;
+            background: linear-gradient(45deg, #6a11cb, #2575fc, #ff00cc);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            padding: 20px;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 25px;
+            width: 100%;
+            max-width: 650px;
+            padding: 40px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            position: relative;
+            z-index: 10;
+        }
+
+        .progress-container {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 25px 25px 0 0;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%; width: 0%;
+            background: #00e676;
+            box-shadow: 0 0 10px #00e676;
+            transition: width 0.4s ease;
+        }
+
+        .header { display: flex; justify-content: space-between; color: white; margin-bottom: 20px; font-weight: 600; font-size: 0.9rem; }
+        
+        .timer { font-size: 1.2rem; display: flex; align-items: center; gap: 5px; }
+        .pulse-red { color: #ff1744; animation: pulse 1s infinite; }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+
+        .question-box { margin-bottom: 30px; }
+        .q-en { color: white; font-weight: 700; font-size: 1.2rem; margin-bottom: 5px; }
+        .q-hi { color: #ddd; font-weight: 400; font-size: 0.95rem; }
+
+        .options-grid { display: grid; gap: 15px; }
+        .option-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 15px 20px;
+            border-radius: 15px;
+            color: white;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            flex-direction: column;
+        }
+        .option-btn:hover:not(:disabled) { background: rgba(255, 255, 255, 0.15); transform: scale(1.02); }
+        .opt-hi { font-size: 0.85rem; color: #ccc; }
+
+        .correct { background: #00e676 !important; color: #1a1a1a !important; font-weight: 700; border-color: #00e676; }
+        .wrong { background: #ff1744 !important; border-color: #ff1744; animation: shake 0.4s; }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-8px); }
+            75% { transform: translateX(8px); }
+        }
+
+        .start-btn {
+            background: #fff; color: #2575fc; padding: 15px 40px; border-radius: 50px;
+            border: none; font-weight: 700; cursor: pointer; transition: 0.3s;
+            margin-top: 20px; font-size: 1.1rem;
+        }
+        .start-btn:hover { transform: scale(1.1); box-shadow: 0 0 20px rgba(255,255,255,0.4); }
+
+        input[type="number"] {
+            background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white; padding: 10px; border-radius: 10px; width: 100px; text-align: center;
+        }
+
+        #sad-emoji { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 8rem; display: none; z-index: 1000; }
+        #canvas-confetti { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; }
+        
+        .hidden { display: none; }
+        .screen { text-align: center; color: white; }
+    </style>
+</head>
+<body>
+
+<canvas id="canvas-confetti"></canvas>
+<div id="sad-emoji">😢</div>
+
+<div class="glass-card">
+    <div class="progress-container"><div class="progress-bar" id="progress"></div></div>
+
+    <div id="screen-start" class="screen">
+        <h1 style="margin-bottom: 10px;">Biology Master Quiz</h1>
+        <p style="margin-bottom: 30px; opacity: 0.8;">Section: Human Blood & RBC (Q 151-200)</p>
+        
+        <div style="margin-bottom: 20px;">
+            <label style="display: block; margin-bottom: 10px;">Timer per Question (Seconds)</label>
+            <input type="number" id="input-timer" value="15" min="0" placeholder="0 = No Timer">
+        </div>
+        
+        <div style="margin-bottom: 30px;">
+            <label style="cursor: pointer;"><input type="checkbox" id="check-shuffle"> Shuffle Questions</label>
+        </div>
+
+        <button class="start-btn" onclick="quiz.start()">Start Quiz</button>
+    </div>
+
+    <div id="screen-quiz" class="hidden">
+        <div class="header">
+            <div id="label-counter">Question 01/50</div>
+            <div id="label-timer" class="timer">⏱️ <span>15</span>s</div>
+            <div id="label-score">Score: 0</div>
+        </div>
+
+        <div class="question-box">
+            <div class="q-en" id="text-q-en">English Question Text?</div>
+            <div class="q-hi" id="text-q-hi">हिंदी प्रश्न का पाठ?</div>
+        </div>
+
+        <div class="options-grid" id="grid-options"></div>
+
+        <button class="start-btn" style="background: rgba(255,255,255,0.1); color: #fff; width: 100%; margin-top: 30px; font-size: 0.9rem;" onclick="quiz.finish()">Finish & Show Results</button>
+    </div>
+
+    <div id="screen-result" class="screen hidden">
+        <h2 id="result-title" style="font-size: 2rem; margin-bottom: 10px;">Result</h2>
+        <div id="result-score" style="font-size: 4rem; font-weight: 700; margin-bottom: 10px;">0/50</div>
+        <p id="result-msg" style="margin-bottom: 30px; opacity: 0.9;"></p>
+        <button class="start-btn" onclick="location.reload()">Restart Quiz</button>
+    </div>
+</div>
+
+<script>
+/** * QUESTION DATA (151-200) 
+ * Extracted from provided source materials
+ */
+const questions = [
+    { en: "In high altitude (mountainous) areas, the number of RBCs...?", hi: "उच्च उनतांश (अधिक ऊँचाई) पर जाने पर RBCs की संख्या में-", opt: [{en:"Increases", hi:"वृद्धि होती है"}, {en:"Decreases", hi:"कमी होती है"}, {en:"No change", hi:"कोई परिवर्तन नहीं होता"}, {en:"None", hi:"इनमें से कोई नहीं"}], ans: 0 },
+    { en: "Red color of blood is due to?", hi: "रक्त में लाल रंग निम्न में किसके कारण होता है?", opt: [{en:"Plasma", hi:"प्लाज्मा"}, {en:"Hemoglobin", hi:"हीमोग्लोबिन"}, {en:"RBC", hi:"RBC"}, {en:"WBC", hi:"WBC"}], ans: 1 },
+    { en: "Hemoglobin contains which metal?", hi: "हीमोग्लोबिन में होता है-", opt: [{en:"Iron", hi:"लोहा"}, {en:"Copper", hi:"ताँबा"}, {en:"Magnesium", hi:"मैग्नीज"}, {en:"Zinc", hi:"जस्ता"}], ans: 0 },
+    { en: "The main function of Hemoglobin in the body is?", hi: "शरीर में हीमोग्लोबिन का कार्य है-", opt: [{en:"Prevention of anemia", hi:"रक्ताल्पता का निवारण"}, {en:"Destruction of bacteria", hi:"जीवाणुओं का नाश"}, {en:"Oxygen transport", hi:"ऑक्सीजन का परिवहन"}, {en:"All of these", hi:"इनमें से सभी"}], ans: 2 },
+    { en: "The primary function of Red Blood Cells (RBC) is?", hi: "लाल रक्त कण (RBC) का मुख्य कार्य है-", opt: [{en:"Helping in blood clotting", hi:"रक्त का थक्का बनाने में मदद करना"}, {en:"Protecting from infection", hi:"शरीर को रोगों के संक्रमण से बचाना"}, {en:"Carrying oxygen to every cell", hi:"शरीर के प्रत्येक कोशिका में ऑक्सीजन पहुँचाना"}, {en:"All of these", hi:"इनमें से सभी"}], ans: 2 },
+    { en: "When a foreign substance enters the human blood system, which starts the reaction?", hi: "जब कोई बाहरी पदार्थ मानव रूधिर प्रणाली में प्रवेश होता है तो प्रतिक्रिया कौन आरम्भ करता है?", opt: [{en:"RBC", hi:"RBC"}, {en:"WBC", hi:"WBC"}, {en:"Platelets", hi:"प्लेटलेट्स"}, {en:"Plasma", hi:"प्लाज्मा"}], ans: 1 },
+    { en: "Which of the following take part in blood clotting?", hi: "रूधिर को थक्का बनाने में भाग लेते हैं?", opt: [{en:"Platelets", hi:"प्लेटलेट्स"}, {en:"RBC", hi:"RBC"}, {en:"WBC", hi:"WBC"}, {en:"All of these", hi:"इनमें से सभी"}], ans: 0 },
+    { en: "Which type of White Blood Cells is most numerous in humans?", hi: "मनुष्य के रक्त में श्वेत रक्त कणिकाओं में कौन सी किस्म अधिक होती है?", opt: [{en:"Eosinophils", hi:"इयोसिनोफिल्स"}, {en:"Basophils", hi:"बेसोफिल्स"}, {en:"Lymphocytes", hi:"लिम्फोसाइट"}, {en:"Neutrophils", hi:"न्यूट्रोफिल्स"}], ans: 3 },
+    { en: "Which type of WBC is found in the lowest amount?", hi: "श्वेत रूधिर कणिकाओं (WBC) में कौन-सी किस्म सबसे कम होती है?", opt: [{en:"Eosinophils", hi:"इयोसिनोफिल्स"}, {en:"Basophils", hi:"बेसोफिल्स"}, {en:"Lymphocytes", hi:"लिम्फोसाइट"}, {en:"Neutrophils", hi:"न्यूट्रोफिल्स"}], ans: 1 },
+    { en: "Which WBCs destroy harmful microorganisms?", hi: "इनमें कौन से श्वेत रक्त कण हानिकारक सूक्ष्मजीव का भक्षण करती है?", opt: [{en:"Acidophils and Basophils", hi:"एसीडोफील तथा बेसोफील"}, {en:"Basophils and Neutrophils", hi:"बेसोफील व न्यूट्रोफील"}, {en:"Neutrophils and Monocytes", hi:"न्यूट्रोफील तथा मोनोसाइट"}, {en:"Monocytes and Lymphocytes", hi:"मोनोसाइट तथा लिम्फोसाइट"}], ans: 2 },
+    { en: "Which WBC produces antibodies to destroy pathogens?", hi: "निम्नलिखित में कौन सा श्वेत रक्त कण एंटीबॉडी बनाकर रोगाणुओं को नष्ट करता है?", opt: [{en:"Neutrophils", hi:"न्यूट्रोफील"}, {en:"Monocytes", hi:"मोनोसाइट"}, {en:"Eosinophils", hi:"एसिडोफील"}, {en:"Lymphocytes", hi:"लिम्फोसाइट"}], ans: 3 },
+    { en: "In allergic reactions, the number of which WBC increases?", hi: "एलर्जी युक्त प्रतिक्रियाओं में शरीर में कौन सी श्वेत रक्त कण की संख्या बढ़ जाती है?", opt: [{en:"Neutrophils", hi:"न्यूट्रोफील"}, {en:"Eosinophils", hi:"एसिडोफील"}, {en:"Basophils", hi:"बेसोफील"}, {en:"Lymphocytes", hi:"लिम्फोसाइट"}], ans: 1 },
+    { en: "Hemoglobin is an important component of which blood cell?", hi: "हीमोग्लोबिन किस रक्त-कण का महत्वपूर्ण घटक हैं?", opt: [{en:"RBC", hi:"RBC"}, {en:"WBC", hi:"WBC"}, {en:"Platelets", hi:"पट्टीकाणु"}, {en:"All of these", hi:"इनमें से सभी"}], ans: 0 },
+    { en: "What should be the normal Hemoglobin amount in an adult male per 100 ml?", hi: "एक वयस्क पुरुष के लिये सामान्य हीमोग्लोबिन की मात्रा प्रति 100 ml रक्त में होना चाहिए?", opt: [{en:"11.5g", hi:"11.5 ग्राम"}, {en:"12.5g", hi:"12.5 ग्राम"}, {en:"13.5g", hi:"13.5 ग्राम"}, {en:"14.5g", hi:"14.5 ग्राम"}], ans: 3 },
+    { en: "What is the Hemoglobin range in a healthy person per 100 ml?", hi: "एक स्वस्थ मनुष्य में प्रति 100 ml रक्त में हीमोग्लोबिन की मात्रा कितनी होती है-", opt: [{en:"12 to 16g", hi:"12 से 16 ग्राम"}, {en:"16 to 20g", hi:"16 से 20 ग्राम"}, {en:"20 to 24g", hi:"20 से 24 ग्राम"}, {en:"24 to 30g", hi:"24 से 30 ग्राम"}], ans: 0 },
+    { en: "Which blood cell count is lowest in blood?", hi: "रक्त में किस कोशिका (Blood corpuscles) की संख्या सबसे कम होती है?", opt: [{en:"RBC", hi:"RBC"}, {en:"WBC", hi:"WBC"}, {en:"Platelets", hi:"Platelets"}, {en:"All are equal", hi:"इनमें से सभी संख्या समान होती है"}], ans: 1 },
+    { en: "Which type of WBC secretes Histamine, Serotonin, and Heparin?", hi: "श्वेत रक्त कण (WBC) की कौन सी किस्म हिस्टामीन, सिरोटोनिन व हिपेरीन का स्राव करती है?", opt: [{en:"Neutrophils", hi:"न्यूट्रोफील"}, {en:"Acidophils", hi:"एसिडोफील"}, {en:"Basophils", hi:"बेसोफील"}, {en:"Monocytes", hi:"मोनोसाइट"}], ans: 2 },
+    { en: "Prothrombin is related to which bodily process?", hi: "किस शारीरिक प्रक्रम से प्रोथ्रोम्बिन का संबंध है-", opt: [{en:"Excretion", hi:"उत्सर्जन"}, {en:"Reproduction", hi:"प्रजनन"}, {en:"Circulation", hi:"परिवहन"}, {en:"Blood Clotting", hi:"रक्त-जमाव"}], ans: 3 },
+    { en: "Which vitamin helps in blood clotting?", hi: "निम्नलिखित में कौन एक विटामिन रक्त को थक्का बनाने में सहायक होता है?", opt: [{en:"Vitamin A", hi:"विटामिन A"}, {en:"Vitamin B1", hi:"विटामिन B1"}, {en:"Vitamin E", hi:"विटामिन E"}, {en:"Vitamin K", hi:"विटामिन K"}], ans: 3 },
+    { en: "What is the normal temperature of human body?", hi: "मानव शरीर का सामान्य तापक्रम होता है-", opt: [{en:"40.5°C", hi:"40.5°C"}, {en:"310°C", hi:"310°C"}, {en:"39.6°C", hi:"39.6°C"}, {en:"36.9°C", hi:"36.9°C"}], ans: 3 },
+    { en: "What are the functions of human blood?", hi: "मानव रूधिर के कार्य हैं-", opt: [{en:"Oxygen transport", hi:"O2, CO2 तथा अपशिष्टों का परिवहन"}, {en:"Temperature control", hi:"शरीर के ताप का नियंत्रण"}, {en:"Protection from infection", hi:"संक्रमण से बचाना"}, {en:"All of these", hi:"इनमें से सभी"}], ans: 3 },
+    { en: "Oxygen is carried in the blood with the help of?", hi: "निम्नलिखित में किसकी सहायता से रक्त द्वारा ऑक्सीजन ले जाया जाता है?", opt: [{en:"Erythrocytes", hi:"लोहित कोशिका"}, {en:"Platelets", hi:"बिम्बाणु"}, {en:"Lymphocytes", hi:"लिम्फोसाइट"}, {en:"Leukocytes", hi:"ल्यूकोसाइट"}], ans: 0 },
+    { en: "Red Blood Cells (RBC) are also known as?", hi: "लाल रक्त कण (RBC) किस नाम से जानी जाती है?", opt: [{en:"Erythrocytes", hi:"Erythrocytes"}, {en:"Leukocytes", hi:"Leucocytes"}, {en:"Thrombocytes", hi:"Thrombocytes"}, {en:"Lymphocytes", hi:"Lymphocytes"}], ans: 0 },
+    { en: "Blood Platelets are also known as?", hi: "रक्त बिम्बाणु (Blood Platelets) किस नाम से जानी जाती है?", opt: [{en:"Erythrocytes", hi:"Erythrocytes"}, {en:"Leukocytes", hi:"Leucocytes"}, {en:"Thrombocytes", hi:"Thrombocytes"}, {en:"Lymphocytes", hi:"Lymphocytes"}], ans: 2 },
+    { en: "Blood does not clot inside the body due to?", hi: "किसकी मौजूदगी के कारण शरीर के भीतर रक्त जमता है?", opt: [{en:"Fibrin", hi:"फाइब्रीन"}, {en:"Plasma", hi:"प्लाज्मा"}, {en:"Hemoglobin", hi:"हीमोग्लोबिन"}, {en:"Heparin", hi:"हिपेरीन"}], ans: 3 },
+    { en: "Which anti-clotting chemical is found in Leeches?", hi: "जोंक में कौन सा थक्का विरोधी रसायन पाया जाता है?", opt: [{en:"Heparin", hi:"हिपेरीन"}, {en:"Hirudin", hi:"हिरूडीन"}, {en:"Hemophil", hi:"हीमोफील"}, {en:"Thrombin", hi:"थ्रोम्बिन"}], ans: 1 },
+    { en: "Blood corpuscles are formed in?", hi: "रूधिर-कणिकाओं का निर्माण होता है-", opt: [{en:"Spleen", hi:"प्लीहा में"}, {en:"Bone Marrow", hi:"अस्थिमज्जा"}, {en:"Kidney", hi:"किडनी में"}, {en:"Lungs", hi:"फेफड़ा में"}], ans: 1 },
+    { en: "What is called the Blood Bank of the human body?", hi: "मानव शरीर का रक्त बैंक (Blood Bank) किसे कहा जाता है?", opt: [{en:"Liver", hi:"यकृत"}, {en:"Heart", hi:"हृदय"}, {en:"Spleen", hi:"प्लीहा"}, {en:"Kidney", hi:"किडनी"}], ans: 2 },
+    { en: "Where are Red Blood Corpuscles produced?", hi: "लाल रूधिर-कणिकाओं का निर्माण कहाँ होता है-", opt: [{en:"Liver", hi:"यकृत"}, {en:"Endocrine glands", hi:"अन्तः स्रावी ग्रंथि"}, {en:"Heart", hi:"हृदय"}, {en:"Bone Marrow", hi:"अस्थिमज्जा"}], ans: 3 },
+    { en: "Which of the following is called the graveyard of RBC?", hi: "निम्न में से किसको RBC का कब्रिस्तान कहा जाता है?", opt: [{en:"Liver", hi:"यकृत"}, {en:"Bone Marrow", hi:"अस्थिमज्जा"}, {en:"Spleen", hi:"प्लीहा"}, {en:"Endocrine glands", hi:"अन्तः स्रावी ग्रंथि"}], ans: 2 },
+    { en: "Human bleeding and clotting time are respectively?", hi: "सामान्य मानव का खून बहने का समय और जमने का समय क्रमशः... होता है?", opt: [{en:"2-3 and 4-6 min", hi:"2-3 और 4-6 मिनट"}, {en:"2-10 and 5-15 min", hi:"2-10 और 5-15 मिनट"}, {en:"2-7 and 3-10 min", hi:"2-7 और 3-10 मिनट"}, {en:"5-15 and 10-20 min", hi:"5-15 और 10-20 मिनट"}], ans: 2 },
+    { en: "Platelets release... which helps in clotting?", hi: "मानव रक्त प्लेटलेट्स... छोड़ते है जो रक्त के थक्के बनाने में मदद करता है?", opt: [{en:"Prothrombin", hi:"प्रोथ्रोम्बिन"}, {en:"Thrombokinase", hi:"थ्रोम्ब्रोकाइनेस"}, {en:"Thromboplastin", hi:"थ्रोम्ब्रोप्लैस्टिन"}, {en:"Thrombin", hi:"थ्रोम्बिन"}], ans: 2 },
+    { en: "Fibrinogen is converted into Fibrin by?", hi: "फाइब्रिनोजेन किसके द्वारा फाइब्रिन में परिवर्तित होता है?", opt: [{en:"Prothrombin", hi:"प्रोथ्रोम्बिन"}, {en:"Thrombin", hi:"थ्रोम्बिन"}, {en:"Thromboplastin", hi:"थ्रोम्ब्रोप्लैस्टिन"}, {en:"Thrombokinase", hi:"थ्रोम्ब्रोकाइनेस"}], ans: 1 },
+    { en: "Where do Neutrophils and Lymphocytes originate?", hi: "न्यूट्रोफिल तथा लिम्फोसाइटस का उद्गम कहाँ होता है?", opt: [{en:"Kidney tubule", hi:"वृक्कीय नलिका से"}, {en:"Spleen", hi:"तिल्ली से"}, {en:"Lymph node", hi:"लसीका पर्व से"}, {en:"Bone Marrow", hi:"अस्थिमज्जा से"}], ans: 3 },
+    { en: "Consider Hemoglobin: 1. Carries O2. 2. Iron compound. 3. Provides immunity. 4. Provides red color. Which are true?", hi: "हीमोग्लोबिन: 1. ऑक्सीजन का संचार। 2. लौह युक्त यौगिक। 3. प्रतिरक्षा प्रदान। 4. लाल रंग प्रदान।", opt: [{en:"1, 2 and 3", hi:"1, 2 और 3"}, {en:"1, 3 and 4", hi:"1, 3 और 4"}, {en:"1, 2 and 4", hi:"1, 2 और 4"}, {en:"2, 3 and 4", hi:"2, 3 और 4"}], ans: 2 },
+    { en: "Which ion is NOT present in blood plasma?", hi: "वह आयन जो रूधिर प्लाज्मा में उपस्थित नहीं होता है-", opt: [{en:"Cu+", hi:"Cu+"}, {en:"Mg+", hi:"Mg+"}, {en:"Na+", hi:"Na+"}, {en:"Ca+", hi:"Ca+"}], ans: 0 },
+    { en: "How many types of WBCs are there?", hi: "श्वेत रक्त कणिकाएँ (WBCs) कितने प्रकार की होती है?", opt: [{en:"3", hi:"3"}, {en:"4", hi:"4"}, {en:"5", hi:"5"}, {en:"6", hi:"6"}], ans: 2 },
+    { en: "What is true about Platelets?", hi: "रक्त बिम्बाणु (Blood Platelets) के सम्बन्ध में क्या सही है?", opt: [{en:"Also called thrombocytes", hi:"उन्हें थ्रोम्बोसाइट भी कहते हैं"}, {en:"They have central nucleus", hi:"उनमें प्रमुख अभिकेंद्रक होते हैं"}, {en:"Involved in phagocytosis", hi:"ये फेगोसाइटोसिस में निहित रहते हैं"}, {en:"Contain hemoglobin", hi:"उनमें हीमोग्लोबिन नामक वर्णक होता है"}], ans: 0 },
+    { en: "Which blood cells die inside the blood itself?", hi: "निम्नलिखित में किस रक्त कणिकाओं की मृत्यु रक्त में ही हो जाती है?", opt: [{en:"RBCs", hi:"RBCs"}, {en:"WBCs", hi:"WBCs"}, {en:"Platelets", hi:"Blood-Platelets"}, {en:"All of these", hi:"इनमें से सभी"}], ans: 1 },
+    { en: "The main function of white blood cells is?", hi: "सफेद रक्त कण का मुख्य कार्य है-", opt: [{en:"Transport of CO2", hi:"CO2 का परिवहन"}, {en:"Transport of O2", hi:"O2 का परिवहन"}, {en:"Immunity protection", hi:"रोग-प्रतिरोधक क्षमता धारण करना"}, {en:"None", hi:"इनमें से कोई नहीं"}], ans: 2 },
+    { en: "Which help in clotting of blood?", hi: "रक्त-स्कंदन (clotting of Blood) में सहायक होते हैं-", opt: [{en:"Platelets & Prothrombin", hi:"1 और 2"}, {en:"Vit K & Ca ion", hi:"3 और 4"}, {en:"All of these", hi:"उपर्युक्त सभी"}, {en:"None", hi:"कोई नहीं"}], ans: 2 },
+    { en: "Pacemaker is related to which organ?", hi: "गति प्रेरक का संबंध है-", opt: [{en:"Kidney", hi:"किडनी से"}, {en:"Brain", hi:"मस्तिष्क से"}, {en:"Lungs", hi:"फेफड़ा से"}, {en:"Heart", hi:"हृदय से"}], ans: 3 },
+    { en: "What is the function of a Pacemaker?", hi: "पेसमेकर का कार्य है-", opt: [{en:"Control digestion", hi:"पाचन क्रिया का नियमन"}, {en:"Control urine formation", hi:"मूत्र-निर्माण क्रिया का नियमन"}, {en:"Start heart beat", hi:"दिल की धड़कन को प्रारंभ करना"}, {en:"Start respiration", hi:"श्वसन-क्रिया का प्रारंभ करना"}], ans: 2 },
+    { en: "If blood vessel radius decreases, BP will?", hi: "यदि किसी व्यक्ति की रूधिर वाहिकाओं की त्रिज्या कम हो जाए, तो उसका रक्त दाब-", opt: [{en:"Increase", hi:"बढ़ेगा"}, {en:"Decrease", hi:"घटेगा"}, {en:"Constant", hi:"अपरिवर्तित रहेगा"}, {en:"Increase in women", hi:"महिलाओं में बढ़ेगा"}], ans: 0 },
+    { en: "Where does blood purification occur?", hi: "रक्त का शुद्धिकरण कहाँ पर होता है?", opt: [{en:"Lungs", hi:"फेफड़ा"}, {en:"Kidney", hi:"किडनी"}, {en:"Liver", hi:"यकृत"}, {en:"All of these", hi:"इनमें से सभी"}], ans: 3 },
+    { en: "The normal level of cholesterol in blood is?", hi: "मान रूधिर में कोलेस्ट्रॉल का सामान्य स्तर होता है-", opt: [{en:"80-120 mg", hi:"80-120 mg"}, {en:"120-140 mg", hi:"120-140 mg"}, {en:"140-180 mg", hi:"140-180 mg"}, {en:"180-200 mg", hi:"180-200 mg"}], ans: 3 },
+    { en: "Normal fasting blood sugar level per 100 ml?", hi: "मनुष्य में सामान्य निरन्न (fasting) के दौरान रूधिर-शर्करा का स्तर प्रति 100 ml रूधिर में कितना होता है?", opt: [{en:"50-70 mg", hi:"50-70 mg"}, {en:"20-50 mg", hi:"20-50 mg"}, {en:"80-100 mg", hi:"80-100 mg"}, {en:"120-140 mg", hi:"120-140 mg"}], ans: 2 },
+    { en: "Normal Glucose is 80-120, Cholesterol 150-200, Urea 18-38. Which are correct?", hi: "ग्लूकोज 80-120, कोलेस्ट्रॉल 150-200, यूरिया 18-38. सही कथन है?", opt: [{en:"Only 1", hi:"केवल 1"}, {en:"1 and 2", hi:"1 और 2"}, {en:"1 and 3", hi:"1 और 3"}, {en:"All of these", hi:"उपर्युक्त सभी"}], ans: 3 },
+    { en: "Blood clotting time after bleeding is usually?", hi: "सामान्यतः रक्त-स्राव के कितने समय बाद रक्त का थक्का बन जाता है-", opt: [{en:"2-5 min", hi:"2-5 मिनट"}, {en:"5-10 min", hi:"5-10 मिनट"}, {en:"10-15 min", hi:"10-15 मिनट"}, {en:"15-20 min", hi:"15-20 मिनट"}], ans: 0 },
+    { en: "Metal found in blood is?", hi: "रक्त में पायी जाने वाली धातु है-", opt: [{en:"Calcium", hi:"कैल्सियम"}, {en:"Zinc", hi:"जिंक"}, {en:"Iron", hi:"लोहा"}, {en:"Sodium", hi:"सोडियम"}], ans: 2 }
+];
+
+const quiz = {
+    data: [],
+    index: 0,
+    score: 0,
+    timer: null,
+    time: 0,
+    ctx: new (window.AudioContext || window.webkitAudioContext)(),
+
+    start() {
+        const shuffle = document.getElementById('check-shuffle').checked;
+        const timeLimit = parseInt(document.getElementById('input-timer').value);
+        this.time = timeLimit > 0 ? timeLimit : 0;
+        this.data = shuffle ? [...questions].sort(() => Math.random() - 0.5) : [...questions];
+        
+        document.getElementById('screen-start').classList.add('hidden');
+        document.getElementById('screen-quiz').classList.remove('hidden');
+        this.load();
+    },
+
+    load() {
+        const q = this.data[this.index];
+        document.getElementById('text-q-en').innerText = q.en;
+        document.getElementById('text-q-hi').innerText = q.hi;
+        document.getElementById('label-counter').innerText = `Question ${this.index + 1}/${this.data.length}`;
+        document.getElementById('progress').style.width = `${(this.index / this.data.length) * 100}%`;
+        
+        const grid = document.getElementById('grid-options');
+        grid.innerHTML = '';
+        q.opt.forEach((o, i) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerHTML = `<span>${o.en}</span><span class="opt-hi">${o.hi}</span>`;
+            btn.onclick = () => this.check(i, btn);
+            grid.appendChild(btn);
+        });
+
+        this.startTimer();
+    },
+
+    startTimer() {
+        clearInterval(this.timer);
+        if (this.time === 0) {
+            document.getElementById('label-timer').classList.add('hidden');
+            return;
+        }
+        document.getElementById('label-timer').classList.remove('hidden');
+        let current = this.time;
+        const display = document.querySelector('#label-timer span');
+        const badge = document.getElementById('label-timer');
+        display.innerText = current;
+        badge.classList.remove('pulse-red');
+
+        this.timer = setInterval(() => {
+            current--;
+            display.innerText = current;
+            if (current < 5) badge.classList.add('pulse-red');
+            if (current <= 0) {
+                clearInterval(this.timer);
+                this.next();
+            }
+        }, 1000);
+    },
+
+    check(idx, btn) {
+        clearInterval(this.timer);
+        const q = this.data[this.index];
+        const buttons = document.querySelectorAll('.option-btn');
+        buttons.forEach(b => b.disabled = true);
+
+        if (idx === q.ans) {
+            this.score++;
+            btn.classList.add('correct');
+            this.sound(880, 0.1, 0.1); // "Ting"
+            this.confetti();
+        } else {
+            btn.classList.add('wrong');
+            buttons[q.ans].classList.add('correct');
+            this.sound(110, 0.3, 0.3); // "Buzz"
+            this.showSad();
+        }
+
+        document.getElementById('label-score').innerText = `Score: ${this.score}`;
+        setTimeout(() => this.next(), 1500);
+    },
+
+    next() {
+        this.index++;
+        if (this.index < this.data.length) {
+            this.load();
+        } else {
+            this.finish();
+        }
+    },
+
+    finish() {
+        clearInterval(this.timer);
+        document.getElementById('screen-quiz').classList.add('hidden');
+        document.getElementById('screen-result').classList.remove('hidden');
+        document.getElementById('progress').style.width = '100%';
+        
+        const pct = (this.score / this.data.length) * 100;
+        const title = document.getElementById('result-title');
+        const score = document.getElementById('result-score');
+        const msg = document.getElementById('result-msg');
+
+        score.innerText = `${this.score}/${this.data.length}`;
+        
+        if (pct >= 80) {
+            title.innerText = "🏆 Outstanding Performance!";
+            msg.innerText = "Excellent! You have a great grasp of biology.";
+            this.confetti();
+        } else if (pct >= 50) {
+            title.innerText = "👏 Well Done! Keep it up.";
+            msg.innerText = "Good job! A little more study and you'll be perfect.";
+        } else {
+            title.innerText = "📚 Practice makes perfect!";
+            msg.innerText = "Don't give up. Try again and focus on your mistakes.";
+        }
+    },
+
+    sound(freq, vol, dur) {
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(vol, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + dur);
+        osc.start();
+        osc.stop(this.ctx.currentTime + dur);
+    },
+
+    showSad() {
+        const emoji = document.getElementById('sad-emoji');
+        emoji.style.display = 'block';
+        setTimeout(() => emoji.style.display = 'none', 1000);
+    },
+
+    confetti() {
+        const canvas = document.getElementById('canvas-confetti');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        const particles = Array.from({length: 100}, () => ({
+            x: Math.random() * canvas.width,
+            y: -10,
+            s: Math.random() * 3 + 2,
+            v: Math.random() * 3 + 2,
+            c: `hsl(${Math.random() * 360}, 100%, 50%)`
+        }));
+
+        const run = () => {
+            ctx.clearRect(0,0, canvas.width, canvas.height);
+            particles.forEach(p => {
+                p.y += p.v;
+                ctx.fillStyle = p.c;
+                ctx.fillRect(p.x, p.y, p.s, p.s);
+            });
+            if (particles.some(p => p.y < canvas.height)) requestAnimationFrame(run);
+        }
+        run();
+    }
+};
+</script>
+</body>
+</html>

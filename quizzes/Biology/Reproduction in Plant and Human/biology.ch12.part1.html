@@ -1,0 +1,1184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Biology Reproduction Quiz | जीव विज्ञान प्रश्नोत्तरी</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --text-main: #ffffff;
+            --text-sub: #dddddd;
+            --accent-green: #00e676;
+            --accent-red: #ff1744;
+            --accent-blue: #2979ff;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: radial-gradient(circle at top left, #4a148c, #311b92),
+                        radial-gradient(circle at bottom right, #880e4f, #1a237e);
+            background-size: cover;
+            background-attachment: fixed;
+            min-height: 100vh;
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow-x: hidden;
+        }
+
+        /* Glassmorphism Container */
+        .glass-container {
+            width: 95%;
+            max-width: 700px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 25px;
+            padding: 20px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            position: relative;
+            transition: all 0.3s ease;
+            max-height: 95vh;
+            overflow-y: auto;
+        }
+
+        /* Screens */
+        .screen {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+        }
+
+        .screen.active {
+            display: flex;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Start Screen */
+        h1 {
+            font-size: 2rem;
+            text-align: center;
+            margin-bottom: 10px;
+            background: linear-gradient(to right, #fff, #b39ddb);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .sub-header {
+            text-align: center;
+            font-size: 1rem;
+            color: var(--text-sub);
+            margin-bottom: 30px;
+        }
+
+        .settings-group {
+            width: 100%;
+            margin-bottom: 20px;
+            background: rgba(0,0,0,0.2);
+            padding: 15px;
+            border-radius: 15px;
+        }
+
+        .setting-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        input[type="number"] {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid var(--glass-border);
+            color: white;
+            padding: 8px;
+            border-radius: 8px;
+            width: 80px;
+            text-align: center;
+        }
+
+        /* Toggle Switch */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider { background-color: var(--accent-blue); }
+        input:checked + .slider:before { transform: translateX(26px); }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            padding: 15px 40px;
+            color: white;
+            font-size: 1.2rem;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            font-family: inherit;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+
+        .btn-primary:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(118, 75, 162, 0.6);
+        }
+
+        /* Quiz Screen */
+        .quiz-header {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .progress-container {
+            width: 100%;
+            height: 6px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: var(--accent-green);
+            width: 0%;
+            transition: width 0.3s ease;
+            box-shadow: 0 0 10px var(--accent-green);
+        }
+
+        .timer {
+            font-size: 1.2rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .timer.danger {
+            color: var(--accent-red);
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .question-card {
+            background: rgba(0,0,0,0.2);
+            padding: 20px;
+            border-radius: 15px;
+            width: 100%;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .q-en {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 5px;
+            line-height: 1.4;
+        }
+
+        .q-hi {
+            font-size: 1rem;
+            color: var(--text-sub);
+            font-weight: 400;
+            line-height: 1.4;
+        }
+
+        .options-grid {
+            width: 100%;
+            display: grid;
+            gap: 12px;
+        }
+
+        .option-btn {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--glass-border);
+            padding: 12px 15px;
+            border-radius: 12px;
+            color: white;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            background: rgba(255,255,255,0.15);
+        }
+
+        .option-btn:disabled {
+            cursor: default;
+        }
+
+        .opt-en { font-size: 0.95rem; font-weight: 600; }
+        .opt-hi { font-size: 0.85rem; color: #ccc; margin-top: 2px; }
+
+        .option-btn.correct {
+            background: rgba(0, 230, 118, 0.2);
+            border-color: var(--accent-green);
+            box-shadow: 0 0 15px rgba(0, 230, 118, 0.3);
+        }
+
+        .option-btn.wrong {
+            background: rgba(255, 23, 68, 0.2);
+            border-color: var(--accent-red);
+        }
+
+        .feedback-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 4rem;
+            z-index: 10;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        
+        .feedback-overlay.show { opacity: 1; }
+        .shake { animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both; }
+
+        @keyframes shake {
+            10%, 90% { transform: translate(-52%, -50%); }
+            20%, 80% { transform: translate(-48%, -50%); }
+            30%, 50%, 70% { transform: translate(-54%, -50%); }
+            40%, 60% { transform: translate(-46%, -50%); }
+        }
+
+        .early-exit-btn {
+            margin-top: 20px;
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.3);
+            color: #ddd;
+            padding: 8px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        .early-exit-btn:hover { background: rgba(255,255,255,0.1); }
+
+        /* Result Screen */
+        .score-circle {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background: rgba(0,0,0,0.3);
+            border: 4px solid var(--accent-blue);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin: 20px 0;
+            box-shadow: 0 0 30px rgba(41, 121, 255, 0.4);
+        }
+
+        .result-msg { font-size: 1.3rem; margin-bottom: 20px; text-align: center; }
+
+        /* Confetti Canvas */
+        #confetti-canvas {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 9999;
+        }
+    </style>
+</head>
+<body>
+
+<canvas id="confetti-canvas"></canvas>
+
+<div class="glass-container">
+    <div id="start-screen" class="screen active">
+        <h1>Biology Quiz</h1>
+        <div class="sub-header">Reproduction in Plant & Human<br>पादप तथा मानव में जनन</div>
+        
+        <div class="settings-group">
+            <div class="setting-item">
+                <span>Timer per Question (Sec)<br><small style="color:#aaa">0 for unlimited</small></span>
+                <input type="number" id="timer-input" value="30" min="0">
+            </div>
+            <div class="setting-item">
+                <span>Shuffle Questions<br><small style="color:#aaa">Randomize order</small></span>
+                <label class="switch">
+                    <input type="checkbox" id="shuffle-input">
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </div>
+
+        <button class="btn-primary" onclick="startQuiz()">Start Quiz</button>
+    </div>
+
+    <div id="quiz-screen" class="screen">
+        <div class="progress-container">
+            <div class="progress-bar" id="progress-bar"></div>
+        </div>
+
+        <div class="quiz-header">
+            <span id="q-counter">Q: 01/50</span>
+            <div class="timer" id="timer-display">⏳ 30</div>
+            <span id="score-display">Score: 0</span>
+        </div>
+
+        <div class="question-card">
+            <div class="q-en" id="q-en">Question English</div>
+            <div class="q-hi" id="q-hi">Question Hindi</div>
+        </div>
+
+        <div class="options-grid" id="options-grid">
+            </div>
+
+        <div class="feedback-overlay" id="feedback-emoji">😢</div>
+
+        <button class="early-exit-btn" onclick="showResults()">Finish & Show Results</button>
+    </div>
+
+    <div id="result-screen" class="screen">
+        <h1>Quiz Completed!</h1>
+        <div class="score-circle" id="final-score">0%</div>
+        <div class="result-msg" id="result-msg">Message</div>
+        <p id="stats-text" style="color: #ddd; margin-bottom: 20px;">Correct: 0 | Wrong: 0 | Skipped: 0</p>
+        <button class="btn-primary" onclick="location.reload()">Restart Quiz</button>
+    </div>
+</div>
+
+<script>
+    // --- Data: 50 Questions (Extracted & Translated) ---
+    const rawQuestions = [
+        {
+            en: "1. Consider the following: 1. The process by which living beings increase their number is called reproduction. 2. Reproduction is not necessary for living beings to survive like nutrition and respiration. 3. Reproduction occurs in the same way in all living beings. Which statement(s) is/are correct?",
+            hi: "1. निम्नलिखित पर विचार कीजिए- 1. सजीव जिस विधि के द्वारा अपनी संख्या में वृद्धि करते हैं, उसे जनन कहते है 2. पोषण, श्वसन के तरह सजीवों को जीवित रहने के लिये जनन की आवश्यकता नहीं होती है। 3. सभी सजीवो में एक ही तरह से जनन सम्पन्न होता है। उपर्युक्त में कौन-सा/से सही है/हैं ?",
+            options: [
+                { en: "1 and 2", hi: "1 और 2" },
+                { en: "Only 1", hi: "केवल 1" },
+                { en: "1 and 3", hi: "1 और 3" },
+                { en: "All of the above", hi: "उपर्युक्त सभी" }
+            ],
+            correct: 0 
+        },
+        {
+            en: "2. When offspring is produced by a single parent, this method of reproduction is called-",
+            hi: "2. जब संतति की उत्पत्ति एकल व्यष्टि (Single Parent) के द्वारा होता है, तब जनन की इस विधि को कहते हैं-",
+            options: [
+                { en: "Sexual", hi: "लैंगिक" },
+                { en: "Asexual", hi: "अलैंगिक" },
+                { en: "Fertilization", hi: "निषेचन" },
+                { en: "Internal Fertilization", hi: "आंतरिक निषेचन" }
+            ],
+            correct: 1
+        },
+        {
+            en: "3. Which one of the following features is NOT found in asexual reproduction?",
+            hi: "3. अलैंगिक जनन में निम्न में कौन सी एक विशेषता नहीं पायी जाती है ?",
+            options: [
+                { en: "Only one individual is involved", hi: "इसमें जीवों की केवल एक व्यष्टि भाग लेता है" },
+                { en: "Gametes are not involved", hi: "इसमें युग्मक (gamits) भाग नहीं लेते है" },
+                { en: "Only mitotic or amitotic division occurs", hi: "इस प्रकार के जनन में समसूत्री (Mitosis) या असमसूत्री (Amitosis) कोशिका विभाजन ही होता है" },
+                { en: "Only external fertilization occurs", hi: "इस जनन में केवल बाह्य निषेचन ही होता है" }
+            ],
+            correct: 3
+        },
+        {
+            en: "4. In which type of reproduction does the process of Fertilization occur?",
+            hi: "4. निषेचन (Fertilization) की प्रक्रिया किस प्रकार के जनन में होता है ?",
+            options: [
+                { en: "Sexual", hi: "लैंगिक" },
+                { en: "Asexual", hi: "अलैंगिक" },
+                { en: "Both A and B", hi: "A तथा B दोनों में" },
+                { en: "Neither A nor B", hi: "न तो A में न ही B में" }
+            ],
+            correct: 0
+        },
+        {
+            en: "5. Which of the following is a method of asexual reproduction?",
+            hi: "5. निम्नलिखित में कौन-सा अलैंगिक जनन की विधि है ?",
+            options: [
+                { en: "Fission", hi: "विखंडन" },
+                { en: "Budding", hi: "मुकुलन" },
+                { en: "Sporulation", hi: "बीजाणुजनन" },
+                { en: "All of these", hi: "इनमें से सभी" }
+            ],
+            correct: 3
+        },
+        {
+            en: "6. In which type of reproduction does the body of the parent organism completely disappear?",
+            hi: "6. किस प्रकार के जनन में जनक जीव (Parent Organism) का शरीर बिल्कुल गायब हो जाता है ?",
+            options: [
+                { en: "Budding", hi: "मुकुलन" },
+                { en: "Fission", hi: "विखंडन" },
+                { en: "Regeneration", hi: "पुनर्जनन" },
+                { en: "Sporulation", hi: "बीजाणुजनन" }
+            ],
+            correct: 1
+        },
+        {
+            en: "7. Consider the following statements: 1. Under favorable conditions, unicellular organisms use Binary fission for reproduction. 2. Under unfavorable conditions, unicellular organisms reproduce by Multiple fission. Which is correct?",
+            hi: "7. निम्नलिखित कथनों पर विचार कीजिए- 1. अनुकूल परिस्थितियों में एककोशिकीय जीव जनन हेतु द्विखंडन (Binary fission) का सहारा लेते है। 2. प्रतिकूल परिस्थितियों में एककोशिकीय जीव बहुविखंडन (Multiplefission) द्वारा प्रजनन करते हैं। उपर्युक्त में कौन-सा/से कथन सही है/हैं ?",
+            options: [
+                { en: "Only 1", hi: "केवल 1" },
+                { en: "Only 2", hi: "केवल 2" },
+                { en: "Both 1 and 2", hi: "1 तथा 2 दोनों" },
+                { en: "Neither 1 nor 2", hi: "न तो 1 न ही 2" }
+            ],
+            correct: 2
+        },
+        {
+            en: "8. Asexual reproduction by Fission occurs in-",
+            hi: "8. विखंडन (Fission) द्वारा अलैंगिक जनन होता है-",
+            options: [
+                { en: "Monera", hi: "मोनेरा में" },
+                { en: "Protista", hi: "प्रोटिस्टा में" },
+                { en: "Both a and b", hi: "a तथा b दोनों" },
+                { en: "Plants", hi: "पौधा में" }
+            ],
+            correct: 2
+        },
+        {
+            en: "9. Reproduction by Budding occurs in whom?",
+            hi: "9. मुकुलन (Budding) द्वारा प्रजनन किसमें होता है ?",
+            options: [
+                { en: "Chlamydomonas", hi: "क्लैमाइडोमोनास में" },
+                { en: "Yeast", hi: "यीस्ट में" },
+                { en: "Penicillium", hi: "पेनिसिलियम में" },
+                { en: "All of these", hi: "इनमें से सभी में" }
+            ],
+            correct: 1
+        },
+        {
+            en: "10. Consider the following statements: 1. Reproduction by fission occurs only in unicellular organisms. 2. Reproduction by budding occurs in both unicellular and multicellular organisms. Which is correct?",
+            hi: "10. निम्नलिखित कथनों पर विचार कीजिए- 1. विखंडन द्वारा केवल एक कोशिकीय जीवों में ही प्रजनन होता है। 2. मुकुलन द्वारा एककोशिकीय तथा बहुकोशिकीय दोनों जीवों में प्रजनन होता है। उपर्युक्त में से कौन-सा/से कथन सही है/हैं ?",
+            options: [
+                { en: "Only 1", hi: "केवल 1" },
+                { en: "Only 2", hi: "केवल 2" },
+                { en: "Both 1 and 2", hi: "1 तथा 2 दोनों" },
+                { en: "Neither 1 nor 2", hi: "न तो 1 न ही 2" }
+            ],
+            correct: 2
+        },
+        {
+            en: "11. Vegetative reproduction happens in-",
+            hi: "11. कायिक जनन (Vegatative reproduction) होता है-",
+            options: [
+                { en: "Yeast", hi: "यीस्ट में" },
+                { en: "Hydra", hi: "हाइड्रा में" },
+                { en: "Sponges", hi: "स्पंज में" },
+                { en: "Plants", hi: "पौधे में" }
+            ],
+            correct: 3
+        },
+        {
+            en: "12. Which one of the following is NOT correct?",
+            hi: "12. निम्नलिखित में कौन-सा एक सही नहीं है ?",
+            options: [
+                { en: "Variation is not found in offspring from asexual reproduction.", hi: "अलैंगिक जनन से उत्पन्न संतानों में विभिन्नता नहीं पाया जाता है।" },
+                { en: "Variation is produced only by sexual reproduction.", hi: "विभिन्नता केवल लैंगिक जनन के द्वारा ही उत्पन्न होता है।" },
+                { en: "Gametes participate in sexual reproduction but fertilization does not occur.", hi: "लैंगिक जनन में युग्मक (gamits) भाग लेते हैं परन्तु निषेचन की क्रिया नहीं होती है।" },
+                { en: "Asexual reproduction is the main method in unicellular organisms.", hi: "एककोशिकीय जीवों में अलैंगिक जनन ही जनन की मुख्य विधि है।" }
+            ],
+            correct: 2
+        },
+        {
+            en: "13. In which type of reproduction does a Bud emerge from the parent's body?",
+            hi: "13. किस प्रकार के जनन में जनक के शरीर से कलिका (Bud) निकलती है ?",
+            options: [
+                { en: "Sporulation", hi: "बीजाणुजनन" },
+                { en: "Budding", hi: "मुकुलन" },
+                { en: "Fission", hi: "विखंडन" },
+                { en: "Multiple Fission", hi: "बहुविखंडन" }
+            ],
+            correct: 1
+        },
+        {
+            en: "14. Sporulation is the main method of asexual reproduction in-",
+            hi: "14. बीजाणु जनन अलैंगिक जनन की मुख्य विधि है-",
+            options: [
+                { en: "Fungi and Algae", hi: "कवकों तथा शैवालों में" },
+                { en: "Yeast", hi: "यीस्ट में" },
+                { en: "Hydra", hi: "हाइड्रा में" },
+                { en: "Sponges", hi: "स्पंज में" }
+            ],
+            correct: 0
+        },
+        {
+            en: "15. What type of cell division occurs during asexual reproduction?",
+            hi: "15. अलैंगिक जनन के दौरान किस प्रकार का कोशिका विभाजन होता है ?",
+            options: [
+                { en: "Mitosis", hi: "समसूत्री" },
+                { en: "Amitosis", hi: "असमसूत्री" },
+                { en: "Meiosis", hi: "अर्द्धसूत्री" },
+                { en: "Both a and b", hi: "a तथा b दोनों" }
+            ],
+            correct: 3
+        },
+        {
+            en: "16. The process of Torulation is related to which type of reproduction?",
+            hi: "16. टोरुलेशन (Torulation) की प्रक्रिया का संबंध किस प्रकार के जनन से है ?",
+            options: [
+                { en: "Sporulation", hi: "बीजाणुजनन" },
+                { en: "Budding", hi: "मुकुलन" },
+                { en: "Vegetative", hi: "कायिक जनन" },
+                { en: "Fission", hi: "विखण्डन" }
+            ],
+            correct: 1
+        },
+        {
+            en: "17. Asexual reproduction by Conidia occurs mainly in?",
+            hi: "17. कोनिडिया (Conidia) द्वारा अलैंगिक जनन मुख्यतः किसमें होता है ?",
+            options: [
+                { en: "Fungi", hi: "कवक में" },
+                { en: "Algae", hi: "शैवाल में" },
+                { en: "Fern", hi: "फर्न" },
+                { en: "Moss", hi: "मॉस में" }
+            ],
+            correct: 0
+        },
+        {
+            en: "18. From which part of the plant can we grow plants in vegetative reproduction?",
+            hi: "18. कायिक जनन की क्रिया में पौधे के किस भाग से पौधों को उगा सकते हैं ?",
+            options: [
+                { en: "Root", hi: "जड़" },
+                { en: "Stem", hi: "तना" },
+                { en: "Leaf", hi: "पत्ती" },
+                { en: "All of these", hi: "इनमें से सभी" }
+            ],
+            correct: 3
+        },
+        {
+            en: "19. Which of the following reproduces through the stem of the plant?",
+            hi: "19. निम्नलिखित में से कौन-सा पौधे के तने के माध्यम से प्रजनन करते हैं ?",
+            options: [
+                { en: "Bryophyllum", hi: "ब्रायोफिल्म" },
+                { en: "Tamarind", hi: "इमली" },
+                { en: "Rose", hi: "गुलाब" },
+                { en: "Bryophyte", hi: "ब्रायोफाइटा" }
+            ],
+            correct: 2
+        },
+        {
+            en: "20. Vegetative reproduction in Banana occurs by-",
+            hi: "20. केले में कायिक जनन होता है-",
+            options: [
+                { en: "Rhizome", hi: "प्रकन्द से" },
+                { en: "Tuber", hi: "कन्द से" },
+                { en: "Bulb", hi: "बल्ब से" },
+                { en: "Sucker", hi: "अतः भूस्तारी से" }
+            ],
+            correct: 0
+        },
+        {
+            en: "21. Which one of the following can be regenerated by Fragmentation?",
+            hi: "21. निम्नलिखित में किस एक को विखण्डन द्वारा पुनः उत्पन्न किये जा सकते हैं ?",
+            options: [
+                { en: "Spirogyra", hi: "स्पाइरोगाइरा" },
+                { en: "Planaria", hi: "प्लेनेरिया" },
+                { en: "Hydra", hi: "हाइड्रा" },
+                { en: "Yeast", hi: "यीस्ट" }
+            ],
+            correct: 0
+        },
+        {
+            en: "22. Which one of the following is NOT a method of asexual reproduction?",
+            hi: "22. निम्नलिखित में कौन-सा एक अलैंगिक प्रजनन की विधि नहीं है ?",
+            options: [
+                { en: "Budding", hi: "मुकुलन" },
+                { en: "Sowing Seeds", hi: "बीज बोना" },
+                { en: "Grafting", hi: "दाब लगाना" },
+                { en: "Layering", hi: "लेयरिंग" }
+            ],
+            correct: 1
+        },
+        {
+            en: "23. The bud emerging from the body of Yeast is of what type?",
+            hi: "23. यीस्ट के शरीर से निकलने वाला मुकुल किस प्रकार का होता है ?",
+            options: [
+                { en: "Unicellular", hi: "एककोशिकीय" },
+                { en: "Multicellular", hi: "बहुकोशिकीय" },
+                { en: "Unicellular or Multicellular", hi: "एककोशिकीय या बहुकोशिकीय" },
+                { en: "All of these", hi: "इनमें से सभी" }
+            ],
+            correct: 0
+        },
+        {
+            en: "24. In which type of reproduction is Callus formed?",
+            hi: "24. कैलस (Callus) का निर्माण किस प्रकार के जनन में होता है ?",
+            options: [
+                { en: "Sporulation", hi: "बीजाणुजनन" },
+                { en: "Budding", hi: "मुकुलन" },
+                { en: "Tissue Culture", hi: "उत्तक संवर्द्धन" },
+                { en: "Sexual Reproduction", hi: "लैंगिक जनन" }
+            ],
+            correct: 2
+        },
+        {
+            en: "25. Vegetative reproduction in Bryophyllum occurs through?",
+            hi: "25. अजूबा पौधा (ब्रायोफिलम) में कायिक जनन किसके द्वारा होता है ?",
+            options: [
+                { en: "Leaf", hi: "पत्ती" },
+                { en: "Root", hi: "जड़" },
+                { en: "Stem", hi: "तना" },
+                { en: "Flower", hi: "पुष्प" }
+            ],
+            correct: 0
+        },
+        {
+            en: "26. How do Bacteria and Protozoa reproduce in favorable conditions?",
+            hi: "26. बैक्टीरिया तथा प्रोटोजोआ जीव अनुकूलन परिस्थिति में किस प्रकार से प्रजनन करते हैं ?",
+            options: [
+                { en: "Binary Fission", hi: "समाद्विखण्डन" },
+                { en: "Sexual Reproduction", hi: "लैंगिक जनन" },
+                { en: "Sporulation", hi: "बीजाणुजनन" },
+                { en: "All of these", hi: "इनमें से सभी" }
+            ],
+            correct: 0
+        },
+        {
+            en: "27. Why do underground stems like Rhizome and Corm develop?",
+            hi: "27. राइजोम (Rhizome) और घकन्द (corm) जैसे भूमिगत तना क्यों विकसित होते हैं ?",
+            options: [
+                { en: "For food storage", hi: "भोजन के संचयन के लिए" },
+                { en: "For vegetative reproduction", hi: "वर्धी प्रजनन के लिए" },
+                { en: "For perennation", hi: "बहुवर्षिता के लिए" },
+                { en: "All of these", hi: "इनमें से सभी" }
+            ],
+            correct: 3
+        },
+        {
+            en: "28. The most important part of the plant from the point of view of life cycle is-",
+            hi: "28. जीवनचक्र की दृष्टि से पौधे का सबसे महत्वपूर्ण भाग है-",
+            options: [
+                { en: "Leaf", hi: "पत्ती" },
+                { en: "Flower", hi: "फूल" },
+                { en: "Stem", hi: "तना" },
+                { en: "Root", hi: "जड़" }
+            ],
+            correct: 1
+        },
+        {
+            en: "29. Which of the following are Hermaphrodite organisms?",
+            hi: "29. निम्नलिखित में कौन द्विलिंगी जीव (Hermaphrodite) के उदाहरण है-",
+            options: [
+                { en: "Sponge", hi: "स्पंज" },
+                { en: "Tapeworm", hi: "टेपवर्म" },
+                { en: "Leech", hi: "जोंक" },
+                { en: "All of these", hi: "इनमें से सभी" }
+            ],
+            correct: 3
+        },
+        {
+            en: "30. Consider the following: 1. A complete flower has four whorls. 2. Androecium is the female part of the flower. 3. Gynoecium is the male part of the flower. Which statement(s) is/are correct?",
+            hi: "30. निम्नलिखित कथनों पर विचार कीजिए- 1. एक पूर्ण पुष्प में चार चक्र होते हैं। 2. पुमंग पुष्प के मादा भाग है। 3. जायांग पुष्प के नर भाग है। उपर्युक्त में कौन-सा/से कथन सही है/हैं ?",
+            options: [
+                { en: "Only 1", hi: "केवल 1" },
+                { en: "Only 2", hi: "केवल 2" },
+                { en: "Only 3", hi: "केवल 3" },
+                { en: "1, 2 and 3", hi: "1, 2 और 3" }
+            ],
+            correct: 0
+        },
+        {
+            en: "31. The function of the flower is-",
+            hi: "31. फूल का कार्य है-",
+            options: [
+                { en: "Production of pollen and eggs", hi: "परागकण तथा अंडों का उत्पादन करना" },
+                { en: "Pollination and Fertilization", hi: "परागण तथा निषेचन करवाना" },
+                { en: "Formation of seeds and fruits", hi: "बीज तथा फलों का निर्माण करना" },
+                { en: "All of these", hi: "इनमें से सभी" }
+            ],
+            correct: 3
+        },
+        {
+            en: "32. Consider the following: 1. Calyx and Corolla are accessory parts. 2. Androecium and Gynoecium are essential parts. Which is correct?",
+            hi: "32. निम्नलिखित कथनों पर विचार कीजिए- 1. बाह्यदलपुंज तथा दलपुंज फूल के सहायक भाग हैं। 2. पुमंग तथा जायांग फूल के आवश्यक भाग है। उपर्युक्त में कौन-सा/से कथन सही है/हैं ?",
+            options: [
+                { en: "Only 1", hi: "केवल 1" },
+                { en: "Only 2", hi: "केवल 2" },
+                { en: "Both 1 and 2", hi: "1 तथा 2 दोनों" },
+                { en: "Neither 1 nor 2", hi: "न तो 1 न ही 2" }
+            ],
+            correct: 2
+        },
+        {
+            en: "33. Consider: 1. Asexual reproduction is the common method in Algae and Fungi. 2. They shift to sexual reproduction in adverse conditions. Which is correct?",
+            hi: "33. निम्नलिखित कथनों पर विचार कीजिए- 1. शैवाल तथा कवक में अलैंगिक जनन ही, जनन की सामान्य विधि है। 2. प्रतिकूल परिस्थिति उत्पन्न होने पर शैवाल तथा कवक में लैंगिक जनन होने लगता है। उपर्युक्त में कौन-सा/से कथन सही है/हैं ?",
+            options: [
+                { en: "Only 1", hi: "केवल 1" },
+                { en: "Only 2", hi: "केवल 2" },
+                { en: "Both 1 and 2", hi: "1 तथा 2 दोनों" },
+                { en: "Neither 1 nor 2", hi: "न तो 1 न ही 2" }
+            ],
+            correct: 2
+        },
+        {
+            en: "34. In which of the following do new plants develop from nodes?",
+            hi: "34. निम्नलिखित में किसमें पर्वसंधियों (nodes) द्वारा नये पौधे विकसित होते हैं ?",
+            options: [
+                { en: "Potato", hi: "आलू" },
+                { en: "Ginger", hi: "अदरख" },
+                { en: "Banana", hi: "केला" },
+                { en: "All of these", hi: "इनमें, से सभी" }
+            ],
+            correct: 3
+        },
+        {
+            en: "35. Clone is the result of-",
+            hi: "35. क्लोन (Clone) परिणाम है-",
+            options: [
+                { en: "Asexual reproduction", hi: "अलैंगिक जनन का" },
+                { en: "Sexual reproduction", hi: "लैंगिक जनन का" },
+                { en: "Both a and b", hi: "a तथा b दोनों" },
+                { en: "Neither a nor b", hi: "न तो a न ही b" }
+            ],
+            correct: 0
+        },
+        {
+            en: "36. Vegetative reproduction in Bamboo occurs through?",
+            hi: "36. बाँस में कायिक जनन किसके द्वारा होता है ?",
+            options: [
+                { en: "Rhizome", hi: "प्रकंद (Rhizome)" },
+                { en: "Tuber", hi: "कन्द (Tuber)" },
+                { en: "Sucker", hi: "सकर (Sucker)" },
+                { en: "Offset", hi: "भूस्तारिका (offset)" }
+            ],
+            correct: 0
+        },
+        {
+            en: "37. Which of the following is NOT a Dioecious plant?",
+            hi: "37. निम्नलिखित में कौन-सा एक एकलिंगाश्रयी (Dioecious) पौधा नहीं है ?",
+            options: [
+                { en: "Date Palm", hi: "खजूर" },
+                { en: "Mulberry", hi: "शहतूत" },
+                { en: "Papaya", hi: "पपीता" },
+                { en: "Coconut", hi: "नारियल" }
+            ],
+            correct: 3
+        },
+        {
+            en: "38. The lifespan of a Sequoia tree is-",
+            hi: "38. सिकोया (Sequoia) वृक्ष की आयु होती है-",
+            options: [
+                { en: "1000-2000 years", hi: "1000-2000 वर्ष" },
+                { en: "2000-3000 years", hi: "2000-3000 वर्ष" },
+                { en: "3000-4000 years", hi: "3000-4000 वर्ष" },
+                { en: "10,000 years", hi: "10,000 वर्ष" }
+            ],
+            correct: 2
+        },
+        {
+            en: "39. Pollen is produced in-",
+            hi: "39. पराग उत्पन्न होता है-",
+            options: [
+                { en: "Corolla", hi: "दलपुंज में" },
+                { en: "Style", hi: "वर्तिका में" },
+                { en: "Anther", hi: "परागकोष में" },
+                { en: "Stigma", hi: "वर्तिकाग्र में" }
+            ],
+            correct: 2
+        },
+        {
+            en: "40. Consider the following: 1. Unit of Gynoecium is called Carpels. 2. Unit of Androecium is called Stamen. Which is correct?",
+            hi: "40. निम्नलिखित पर विचार कीजिए- 1. पुमंग की इकाई को स्त्रीकेसर (Carpels) कहते है 2. जायांग की इकाई को पुंकेसर (Stamen) कहते है उपर्युक्त में कौन-सा/से सही है/हैं ?",
+            options: [
+                { en: "Only 1", hi: "केवल 1" },
+                { en: "Only 2", hi: "केवल 2" },
+                { en: "Both 1 and 2", hi: "1 तथा 2 दोनों" },
+                { en: "Neither 1 nor 2", hi: "न तो 1 न ही 2" }
+            ],
+            correct: 3
+        },
+        {
+            en: "41. Which is NOT a part of Carpels?",
+            hi: "41. निम्नलिखित में स्त्रीकेसर (Carpels) का भाग नहीं है ?",
+            options: [
+                { en: "Style", hi: "वर्तिका (Style)" },
+                { en: "Filament", hi: "तंतु (Filament)" },
+                { en: "Stigma", hi: "वर्तिकाग्र (Stigma)" },
+                { en: "Ovary", hi: "अंडाशय" }
+            ],
+            correct: 1
+        },
+        {
+            en: "42. Which is NOT a part of Stamen?",
+            hi: "42. निम्नलिखित में पुंकेसर (Stamen) का भाग नहीं है-",
+            options: [
+                { en: "Filament", hi: "तंतु (Filament)" },
+                { en: "Connective", hi: "योजी (Connective)" },
+                { en: "Anther", hi: "परागकोष (Anther)" },
+                { en: "Ovule", hi: "बीजांड (Ovule)" }
+            ],
+            correct: 3
+        },
+        {
+            en: "43. Which is NOT true about Anther?",
+            hi: "43. निम्नलिखित में कौन-सा परागकोष के बारे में सही नहीं है ?",
+            options: [
+                { en: "Anther is a tetragonal structure", hi: "परागकोष एक चतुष्कोणीय संरचना है" },
+                { en: "Pollen development occurs in Anther", hi: "परागकण का विकास परागकोष में होता है" },
+                { en: "Same type of pollen in different species", hi: "अलग-अलग प्रजातियों के पौधे में एक ही तरह के परागकण होते है" },
+                { en: "Pollen has two walls, Exine and Intine", hi: "परागकण में दो भित्ती होती है, बाहरी भित्ती को बाह्य चोल (exine) तथा भीतरी भित्ती को अंतश्चोल (in-tine) कहते हैं" }
+            ],
+            correct: 2
+        },
+        {
+            en: "44. Which of the following is correct?",
+            hi: "44. निम्नलिखित में कौन-सा सही है ?",
+            options: [
+                { en: "Ovule is inside Ovary", hi: "अंडाशय के भीतर बीजाण्ड (Ovule) रहते है" },
+                { en: "Embryosac is inside Ovule", hi: "बीजाण्ड के भीतर भ्रूणकोष (embryosac) रहता है" },
+                { en: "Female gamete (Ova) is protected in Embryosac", hi: "भ्रूणकोष में मादा युग्मक (Ova) सुरक्षित रहते है" },
+                { en: "All of these", hi: "इनमें सभी" }
+            ],
+            correct: 3
+        },
+        {
+            en: "45. The exine of pollen is made of which organic substance that no natural enzyme can degrade?",
+            hi: "45. परागकण का बाह्यचोल (exine) किस कार्बनिक पदार्थ से बना होता है जिसे कोई भी प्राकृतिक एंजाइम निम्नीकृत नहीं कर सकता है ?",
+            options: [
+                { en: "Sporopollenin", hi: "स्पोरोपोलेनिन" },
+                { en: "Pectocellulose", hi: "पेक्टोसेलुलोज" },
+                { en: "Pollenkit", hi: "पॉलेनकिट" },
+                { en: "Thiamine", hi: "थाइसमीन" }
+            ],
+            correct: 0
+        },
+        {
+            en: "46. Which one of the following is NOT correct?",
+            hi: "46. निम्नलिखित में कौन-सा एक सही नहीं है ?",
+            options: [
+                { en: "Pollen of many species cause allergies in humans", hi: "पौधों की कई प्रजातियों का परागकण मनुष्य में एलर्जी पैदा करते है" },
+                { en: "Pollen grains are rich in nutrients (Protein, Minerals, Vit-B)", hi: "परागकण पोषक तत्वों से भरपूर होते है इनमें प्रोटीन, खनिज लवण तथा विटामिन-B भरपूर मात्रा में पावे जाते है" },
+                { en: "Viability of pollen is same for all species", hi: "पुष्पी पौधे के सभी प्रजातियों के परागकणों की जीवन-क्षमता समान होती है।" },
+                { en: "Pollen can be preserved in liquid nitrogen", hi: "परागकणों को द्रव नाइट्रोजन में रखकर संरक्षित किया जाता है।" }
+            ],
+            correct: 2
+        },
+        {
+            en: "47. The basal part of Carpel attached to thalamus is called?",
+            hi: "47. स्त्रीकेसर (Carpel) का आधारीय भाग जो पुष्पासन से जुड़ा होता है, उसे क्या कहते हैं ?",
+            options: [
+                { en: "Ovary", hi: "अंडाशय" },
+                { en: "Ovule", hi: "बीजांड" },
+                { en: "Anther", hi: "परागकोष" },
+                { en: "Style", hi: "वर्तिका" }
+            ],
+            correct: 0
+        },
+        {
+            en: "48. What is Syncarpous Gynoecium?",
+            hi: "48. युक्तांडपी (Syncarpous) जायांग किसे कहते हैं ?",
+            options: [
+                { en: "Carpels are fused together", hi: "जायांग में स्त्रीकेसर एक-दूसरे से जुड़े रहते है।" },
+                { en: "Carpels are free", hi: "जायांग में स्त्रीकेसर स्वतंत्र होते हैं।" },
+                { en: "Only one carpel in Gynoecium", hi: "जायांग में एक ही स्त्रीकेसर होते हैं।" },
+                { en: "More than one carpel in Gynoecium", hi: "जायांग में एक से अधिक स्त्रीकेसर होते हैं।" }
+            ],
+            correct: 0
+        },
+        {
+            en: "49. The process of pollen reaching the stigma from the anther is called?",
+            hi: "49. परागकणों का परागकोष से निकलकर पुष्प के वर्तिकाग्र एक पहुँचने की क्रिया को क्या कहते है ?",
+            options: [
+                { en: "Fertilization", hi: "निषेचन" },
+                { en: "Pollination", hi: "परागण" },
+                { en: "Fission", hi: "विखंडन" },
+                { en: "Budding", hi: "मुकुलन" }
+            ],
+            correct: 1
+        },
+        {
+            en: "50. Pollination is-",
+            hi: "50. परागण (Pollination) है-",
+            options: [
+                { en: "Production of Pollen", hi: "पौधों में परागकण का उत्पादन" },
+                { en: "Transfer of pollen from anther to stigma", hi: "परागकोष से स्टिग्मा तक पराग का संचार" },
+                { en: "Communication of pollen from stigma to anther", hi: "स्टिग्मा से परागकोष तक पराग का संचार" },
+                { en: "Development of pollen tube in ovule", hi: "बीजाणु में परागनली का विकास" }
+            ],
+            correct: 1
+        }
+    ];
+
+    // --- State & Variables ---
+    let questions = [];
+    let currentQIndex = 0;
+    let score = 0;
+    let timerInterval;
+    let timerDuration = 30;
+    let isTimeLimited = true;
+
+    // --- Audio System (Web Audio API) ---
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    
+    function playSound(type) {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const oscillator = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        oscillator.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+
+        if (type === 'correct') {
+            // High pitched 'Ting'
+            oscillator.type = 'sine';
+            oscillator.frequency.setValueAtTime(800, audioCtx.currentTime);
+            oscillator.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.1);
+            gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+            oscillator.start();
+            oscillator.stop(audioCtx.currentTime + 0.5);
+        } else {
+            // Low pitched 'Buzz'
+            oscillator.type = 'sawtooth';
+            oscillator.frequency.setValueAtTime(150, audioCtx.currentTime);
+            oscillator.frequency.linearRampToValueAtTime(100, audioCtx.currentTime + 0.3);
+            gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            gainNode.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+            oscillator.start();
+            oscillator.stop(audioCtx.currentTime + 0.3);
+        }
+    }
+
+    // --- Confetti Logic (Canvas) ---
+    const canvas = document.getElementById('confetti-canvas');
+    const ctx = canvas.getContext('2d');
+    let particles = [];
+    
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    window.addEventListener('resize', () => {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    });
+
+    function createConfetti() {
+        for (let i = 0; i < 100; i++) {
+            particles.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height - canvas.height,
+                color: `hsl(${Math.random() * 360}, 100%, 50%)`,
+                size: Math.random() * 8 + 2,
+                velocity: Math.random() * 3 + 2,
+                angle: Math.random() * 6.28
+            });
+        }
+    }
+
+    function updateConfetti() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particles.forEach((p, index) => {
+            p.y += p.velocity;
+            p.x += Math.sin(p.angle) * 2;
+            ctx.fillStyle = p.color;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            ctx.fill();
+
+            if (p.y > canvas.height) particles.splice(index, 1);
+        });
+        if (particles.length > 0) requestAnimationFrame(updateConfetti);
+    }
+
+    function triggerConfetti() {
+        createConfetti();
+        updateConfetti();
+    }
+
+    // --- Quiz Logic ---
+    function startQuiz() {
+        // Settings
+        const timerVal = document.getElementById('timer-input').value;
+        const shuffleVal = document.getElementById('shuffle-input').checked;
+        
+        timerDuration = parseInt(timerVal);
+        isTimeLimited = timerDuration > 0;
+        
+        // Prepare questions
+        questions = [...rawQuestions];
+        if (shuffleVal) {
+            questions.sort(() => Math.random() - 0.5);
+        }
+
+        // Reset state
+        currentQIndex = 0;
+        score = 0;
+        document.getElementById('start-screen').classList.remove('active');
+        document.getElementById('quiz-screen').classList.add('active');
+        
+        loadQuestion();
+    }
+
+    function loadQuestion() {
+        clearInterval(timerInterval);
+        const q = questions[currentQIndex];
+        
+        // UI Updates
+        document.getElementById('q-counter').innerText = `Q: ${currentQIndex + 1}/${questions.length}`;
+        document.getElementById('score-display').innerText = `Score: ${score}`;
+        document.getElementById('progress-bar').style.width = `${((currentQIndex) / questions.length) * 100}%`;
+        
+        // Reset Feedback
+        document.getElementById('feedback-emoji').classList.remove('show', 'shake');
+        
+        // Render Text
+        document.getElementById('q-en').innerText = q.en;
+        document.getElementById('q-hi').innerText = q.hi;
+        
+        const grid = document.getElementById('options-grid');
+        grid.innerHTML = '';
+
+        q.options.forEach((opt, index) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerHTML = `<span class="opt-en">${opt.en}</span><span class="opt-hi">${opt.hi}</span>`;
+            btn.onclick = () => checkAnswer(index, btn);
+            grid.appendChild(btn);
+        });
+
+        // Timer
+        if (isTimeLimited) {
+            let timeLeft = timerDuration;
+            const timerDisplay = document.getElementById('timer-display');
+            timerDisplay.innerText = `⏳ ${timeLeft}`;
+            timerDisplay.classList.remove('danger');
+            timerDisplay.style.visibility = 'visible';
+
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                timerDisplay.innerText = `⏳ ${timeLeft}`;
+                if (timeLeft < 5) timerDisplay.classList.add('danger');
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    handleTimeout();
+                }
+            }, 1000);
+        } else {
+            document.getElementById('timer-display').style.visibility = 'hidden';
+        }
+    }
+
+    function checkAnswer(selectedIndex, btn) {
+        clearInterval(timerInterval);
+        const q = questions[currentQIndex];
+        const buttons = document.querySelectorAll('.option-btn');
+        
+        // Disable all
+        buttons.forEach(b => b.disabled = true);
+
+        if (selectedIndex === q.correct) {
+            // Correct
+            btn.classList.add('correct');
+            playSound('correct');
+            triggerConfetti();
+            score++;
+        } else {
+            // Wrong
+            btn.classList.add('wrong');
+            buttons[q.correct].classList.add('correct');
+            playSound('wrong');
+            
+            const emoji = document.getElementById('feedback-emoji');
+            emoji.classList.add('show', 'shake');
+            setTimeout(() => emoji.classList.remove('shake'), 500);
+        }
+
+        setTimeout(() => {
+            currentQIndex++;
+            if (currentQIndex < questions.length) {
+                loadQuestion();
+            } else {
+                showResults();
+            }
+        }, 1500);
+    }
+
+    function handleTimeout() {
+        const q = questions[currentQIndex];
+        const buttons = document.querySelectorAll('.option-btn');
+        buttons.forEach(b => b.disabled = true);
+        buttons[q.correct].classList.add('correct'); // Show correct answer
+        playSound('wrong'); // Time out is a "fail"
+        
+        setTimeout(() => {
+            currentQIndex++;
+            if (currentQIndex < questions.length) {
+                loadQuestion();
+            } else {
+                showResults();
+            }
+        }, 1500);
+    }
+
+    function showResults() {
+        clearInterval(timerInterval);
+        document.getElementById('quiz-screen').classList.remove('active');
+        document.getElementById('result-screen').classList.add('active');
+
+        const percentage = Math.round((score / currentQIndex) * 100) || 0; // Prevent NaN if index is 0
+        document.getElementById('final-score').innerText = `${percentage}%`;
+
+        let msg = "";
+        if (percentage >= 80) msg = "🏆 Outstanding Performance!";
+        else if (percentage >= 50) msg = "👏 Well Done! Keep it up.";
+        else msg = "📚 Practice makes perfect! Try again.";
+
+        document.getElementById('result-msg').innerText = msg;
+        document.getElementById('stats-text').innerText = `Answered: ${currentQIndex} | Correct: ${score}`;
+    }
+</script>
+
+</body>
+</html>

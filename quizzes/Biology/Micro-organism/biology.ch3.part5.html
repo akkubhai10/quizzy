@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Micro-Biology Quiz Pro (201-250)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-gradient: linear-gradient(45deg, #6a11cb 0%, #2575fc 50%, #ff00ea 100%);
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --correct: #2ecc71;
+            --wrong: #e74c3c;
+            --hindi-color: #ddd;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+
+        body {
+            background: var(--bg-gradient);
+            background-attachment: fixed;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            overflow-x: hidden;
+        }
+
+        .quiz-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 25px;
+            width: 90%;
+            max-width: 700px;
+            padding: 30px;
+            position: relative;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        }
+
+        #progress-bar {
+            position: absolute; top: 0; left: 0; height: 5px;
+            background: linear-gradient(to right, #00f2fe, #4facfe);
+            width: 0%; border-radius: 25px 0 0 0;
+            transition: width 0.3s ease; box-shadow: 0 0 10px #4facfe;
+        }
+
+        .screen { display: none; flex-direction: column; align-items: center; text-align: center; }
+        .active { display: flex; }
+
+        h1 { font-weight: 700; margin-bottom: 20px; }
+        .setup-group { width: 100%; margin: 15px 0; text-align: left; }
+        label { display: block; margin-bottom: 5px; font-size: 0.9rem; }
+        input[type="number"] {
+            width: 100%; padding: 12px; border-radius: 12px; border: none;
+            background: rgba(255,255,255,0.2); color: white; outline: none;
+        }
+
+        .primary-btn {
+            background: white; color: #2575fc; border: none;
+            padding: 15px 40px; border-radius: 50px; font-weight: 700;
+            cursor: pointer; transition: transform 0.2s ease; margin-top: 20px;
+        }
+        .primary-btn:hover { transform: scale(1.05); }
+
+        .quiz-header { width: 100%; display: flex; justify-content: space-between; margin-bottom: 20px; font-weight: 600; }
+        .timer { font-size: 1.2rem; }
+        .pulse-red { color: #ff3e3e; animation: pulse 0.5s infinite alternate; }
+        @keyframes pulse { from { opacity: 1; } to { opacity: 0.5; } }
+
+        .question-box { width: 100%; text-align: left; margin-bottom: 25px; }
+        .q-en { font-weight: 700; font-size: 1.1rem; display: block; }
+        .q-hi { color: var(--hindi-color); font-size: 0.9rem; display: block; margin-top: 5px; }
+
+        .options-grid { width: 100%; display: grid; gap: 12px; }
+        .option {
+            background: rgba(255,255,255,0.08); border: 1px solid var(--glass-border);
+            padding: 15px; border-radius: 15px; cursor: pointer; text-align: left;
+            transition: all 0.2s; display: flex; flex-direction: column;
+        }
+        .option:hover { background: rgba(255,255,255,0.15); }
+        .opt-hi { font-size: 0.8rem; color: var(--hindi-color); margin-top: 3px; }
+
+        .correct { background: var(--correct) !important; border-color: #fff; }
+        .wrong { background: var(--wrong) !important; border-color: #fff; }
+        .disabled { pointer-events: none; opacity: 0.8; }
+
+        #emoji-feedback {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 80px; display: none; z-index: 1000;
+        }
+        .shake { animation: shake 0.5s; }
+        @keyframes shake {
+            0%, 100% { transform: translate(-50%, -50%); }
+            25% { transform: translate(-55%, -50%); }
+            75% { transform: translate(-45%, -50%); }
+        }
+
+        #confetti-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; }
+        .finish-btn { background: transparent; color: white; border: 1px solid var(--glass-border); padding: 8px 15px; border-radius: 10px; margin-top: 20px; cursor: pointer; font-size: 0.8rem; }
+    </style>
+</head>
+<body>
+
+<canvas id="confetti-canvas"></canvas>
+<div id="emoji-feedback">😢</div>
+
+<div class="quiz-card">
+    <div id="progress-bar"></div>
+
+    <div id="start-screen" class="screen active">
+        <h1>Micro-Biology Quiz</h1>
+        <p>Advanced Module: Questions 201 - 250</p>
+        <div class="setup-group">
+            <label>Timer per Question (Seconds):</label>
+            <input type="number" id="timer-input" placeholder="0 = No Timer">
+        </div>
+        <div class="setup-group" style="display:flex; align-items:center; gap:10px;">
+            <input type="checkbox" id="shuffle-input" style="width:20px; height:20px;">
+            <label for="shuffle-input" style="margin:0; cursor:pointer;">Shuffle Question Order</label>
+        </div>
+        <button class="primary-btn" onclick="startQuiz()">Start Quiz</button>
+    </div>
+
+    <div id="quiz-screen" class="screen">
+        <div class="quiz-header">
+            <div id="q-counter">Q 00/00</div>
+            <div id="timer-display" class="timer"></div>
+            <div id="score-display">Score: 0</div>
+        </div>
+        <div class="question-box">
+            <span class="q-en" id="q-en"></span>
+            <span class="q-hi" id="q-hi"></span>
+        </div>
+        <div class="options-grid" id="options-grid"></div>
+        <button class="finish-btn" onclick="endQuiz()">Finish & Show Results</button>
+    </div>
+
+    <div id="result-screen" class="screen">
+        <h1>Final Score</h1>
+        <div id="final-percent" style="font-size: 3.5rem; font-weight: 700; margin: 15px 0;">0%</div>
+        <p id="result-msg" style="font-size: 1.1rem; margin-bottom: 25px;"></p>
+        <button class="primary-btn" onclick="location.reload()">Restart Quiz</button>
+    </div>
+</div>
+
+<script>
+    const questions = [
+        {en:"What is such a micro-organism called, in which symptoms of both animals and fungi are present?", hi:"ऐसे सूक्ष्मजीव को क्या कहते हैं, जिनमें जन्तुओं तथा कवक (फंजाई) दोनों वर्गों के लक्षण मौजूद हैं?", opts:[{en:"Euglena", hi:"यूग्लीना"},{en:"Slime Mold", hi:"स्लाइम मोल्ड"},{en:"Protozoa", hi:"प्रोटोजोआ"},{en:"Amoeba", hi:"अमीबा"}], ans:1},
+        {en:"In which kingdom is Slime Mold placed?", hi:"स्लाइम मोल्ड को किस जगत में रखा गया है?", opts:[{en:"Monera", hi:"मोनेरा"},{en:"Protista", hi:"प्रोटिस्टा"},{en:"Plantae", hi:"प्लान्टी"},{en:"Fungi", hi:"फंगी"}], ans:1},
+        {en:"Which animal has a slipper-like shape?", hi:"चप्पल की आकृति के जन्तु है-", opts:[{en:"Amoeba", hi:"अमीबा"},{en:"Trypanosoma", hi:"ट्रीपैनोसोमा"},{en:"Paramecium", hi:"पैरामैशियम"},{en:"Giardia", hi:"जियॉर्डिया"}], ans:2},
+        {en:"To which class of protozoa does Paramecium belong?", hi:"पैरामैशियम किस वर्ग के प्रोटोजोआ है-", opts:[{en:"Zooflagellata", hi:"जूफ्लैजिलेटा"},{en:"Sarcodina", hi:"सार्कोडीना"},{en:"Ciliata", hi:"सिलिएटा"},{en:"Sporozoa", hi:"स्पोरीजोआ"}], ans:2},
+        {en:"What is the locomotory organ of Paramecium?", hi:"पैरामैशियम का प्रचलन अंग है-", opts:[{en:"Cilia", hi:"सिलिया"},{en:"Flagella", hi:"फ्लैजिला"},{en:"Pseudopodia", hi:"स्यूडोपोडिया"},{en:"Gliding", hi:"ग्लाइडिंग"}], ans:0},
+        {en:"Which protozoon causes malaria fever?", hi:"मलेरिया बुखार पैदा करने वाला प्रोटोजोआ है-", opts:[{en:"Paramecium", hi:"पैरामैशियम"},{en:"Leishmania", hi:"लिशमैनिया"},{en:"Plasmodium", hi:"प्लाज्मोडियम"},{en:"Entamoeba", hi:"एण्ट अमीबा"}], ans:2},
+        {en:"The life cycle of Plasmodium is completed in?", hi:"प्लाज्मोडियम का जीवन चक्र पूरा होता है-", opts:[{en:"One host", hi:"एक पोषक में"},{en:"Two hosts", hi:"दो पोषक में"},{en:"Three hosts", hi:"तीन पोषक में"},{en:"It is free-living", hi:"यह स्वतंत्रजीवी है"}], ans:1},
+        {en:"Who discovered the life cycle of the malaria parasite in mosquitoes?", hi:"मच्छड़ में मलेरिया परजीवी का जीवन चक्र किसने खोजा?", opts:[{en:"Louis Pasteur", hi:"लुई पाश्चर ने"},{en:"Ronald Ross", hi:"रोनाल्ड रोस ने"},{en:"Mendel", hi:"मेण्डल ने"},{en:"Darwin", hi:"डार्विन ने"}], ans:1},
+        {en:"Which causes Malignant malaria fever?", hi:"मैलीग्नैण्ट मलेरिया बुखार उत्पन्न होते हैं?", opts:[{en:"Plasmodium vivax", hi:"प्लाज्मोडियम वाइवैक्स द्वारा"},{en:"Plasmodium falciparum", hi:"प्लाज्मोडियम फैल्सीपेरम द्वारा"},{en:"Plasmodium ovale", hi:"प्लाज्मोडियम ओवल द्वारा"},{en:"Plasmodium malariae", hi:"प्लाज्मोडियम मैलेरआई द्वारा"}], ans:1},
+        {en:"High fever with frequent shivering is a symptom of which disease?", hi:"बार-बार कंपकंपी के साथ तेज बुखार होना किस रोग का लक्षण है?", opts:[{en:"Malaria", hi:"मलेरिया"},{en:"Diarrhea", hi:"डायरिया"},{en:"Polio", hi:"पोलियो"},{en:"Rabies", hi:"रेबीज"}], ans:0},
+        {en:"What is the infectious stage of Plasmodium called?", hi:"प्लाज्मोडियम की संक्रमित अवस्था क्या कहलाती है?", opts:[{en:"Merozoite", hi:"मिरोज्वाइट"},{en:"Sporozoite", hi:"स्पोरोज्वाइट"},{en:"Both", hi:"दोनों"},{en:"None", hi:"कोई नहीं"}], ans:1},
+        {en:"Malaria is spread by female Anopheles. Who discovered this first?", hi:"मलेरिया मादा एनाफिलीज से फैलता है। इसकी खोज सबसे पहले किसने की थी?", opts:[{en:"Robert Koch", hi:"रॉबर्ट कोच"},{en:"Ronald Ross", hi:"रोनाल्ड रॉस"},{en:"Edward Jenner", hi:"एडवर्ड जेनर"},{en:"Louis Pasteur", hi:"लुई पाश्चर"}], ans:1},
+        {en:"Malaria is transmitted from one person to another by?", hi:"मलेरिया किसके द्वारा एक व्यक्ति से दूसरे व्यक्ति तक अंतरित किया जाता है?", opts:[{en:"Aedes mosquito", hi:"एडीस मच्छड़"},{en:"Culex mosquito", hi:"क्यूलेक्स मच्छड़"},{en:"Bat", hi:"चमगादड़"},{en:"Anopheles mosquito", hi:"एनोफिलीज मच्छड़"}], ans:3},
+        {en:"Which malaria parasite causes fatal malaria?", hi:"घातक मलेरिया फैलाने वाले मलेरिया परजीवी कौन हैं?", opts:[{en:"Plasmodium malariae", hi:"प्लाज्मोडियम मैलेरआई"},{en:"Plasmodium falciparum", hi:"प्लाज्मोडियम फैल्सीपेरम"},{en:"Plasmodium vivax", hi:"प्लाज्मोडियम वाइवैक्स"},{en:"Plasmodium ovale", hi:"प्लाज्मोडियम ओवल"}], ans:1},
+        {en:"Which organ is affected in Malaria?", hi:"मलेरिया में प्रभावित होने वाला अंग है-", opts:[{en:"Lungs", hi:"फेफड़ा"},{en:"Heart", hi:"हृदय"},{en:"Spleen", hi:"प्लीहा"},{en:"Kidney", hi:"गुर्दा"}], ans:2},
+        {en:"What is NOT a similarity between Malaria and Dengue?", hi:"मलेरिया तथा डेंगू में निम्नांकित में क्या समानता नहीं है?", opts:[{en:"Fever", hi:"ज्वर"},{en:"Mosquito bite", hi:"मच्छड़ की काट"},{en:"Human species", hi:"मानव प्रजाति"},{en:"Mosquito species", hi:"मच्छड़ प्रजाति"}], ans:3},
+        {en:"What are disease-spreading insects/mosquitoes called?", hi:"रोगों को फैलाने वाले कीटो/मच्छड़ों को क्या कहा जाता है?", opts:[{en:"Transmitter", hi:"ट्रांसमीटर"},{en:"Vector", hi:"वेक्टर"},{en:"Transporter", hi:"ट्रांसपोर्टर"},{en:"Lift", hi:"लिफ्ट"}], ans:1},
+        {en:"Which is a water-borne acute gastrointestinal infection?", hi:"निम्नलिखित में से कौन-सा तीव्र जठरान्त्र सम्बन्धी संक्रमण पैदा करने वाला एक जल जनित रोग है?", opts:[{en:"Cholera", hi:"हैजा"},{en:"Pneumonia", hi:"न्यूमोनिया"},{en:"Rabies", hi:"रेबीज"},{en:"Leprosy", hi:"कुष्ठ रोग"}], ans:0},
+        {en:"What is the most common treatment for bacterial infection in humans?", hi:"मानव में बैक्टीरिया के संक्रमण का सबसे आम इलाज क्या है?", opts:[{en:"Aspirin", hi:"एस्पिरिन"},{en:"Antigen", hi:"एण्टीजन"},{en:"Antibiotics", hi:"एण्टीबायोटिक्स"},{en:"Antibody", hi:"एण्टीबॉडी"}], ans:2},
+        {en:"Protozoon causing Kala-Azar is?", hi:"काला-आजार (Kala-Azar) उत्पन्न करने वाला प्रोटोजोआ है-", opts:[{en:"Entamoeba", hi:"एण्ट अमीबा"},{en:"Trypanosoma", hi:"ट्रीपैनोसोमा"},{en:"Trichomonas", hi:"ट्राइकोमोनास"},{en:"Leishmania", hi:"लिशमैनिया"}], ans:3},
+        {en:"Transmission of Leishmania donovani occurs through?", hi:"काला-आजार रोग के कारक लीशमैनिया-डोनोवानी प्रोटोजोआ का संक्रमण मनुष्य में किसके द्वारा होता है?", opts:[{en:"Anopheles mosquito", hi:"एनोफिलीज मच्छड़"},{en:"Sand fly", hi:"सैण्ड फ्लाई"},{en:"Aedes mosquito", hi:"एडीस मच्छड़"},{en:"Bat", hi:"चमगादड़"}], ans:1},
+        {en:"Which causes Sleeping Sickness?", hi:"निद्रा रोग (Sleeping Sickness) पैदा करता है-", opts:[{en:"Trichomonas", hi:"ट्राइकोमोनास"},{en:"Trypanosoma", hi:"ट्रीपैनोसोमा"},{en:"Leishmania", hi:"लिशमैनिया"},{en:"Plasmodium", hi:"प्लाज्मोडियम"}], ans:1},
+        {en:"Parasitic protozoon Trypanosoma gambiense spreads through?", hi:"परजीवी प्रोटोजोआ ट्रिपैनोसोमा गैम्बीसया एक मनुष्य से दूसरे मनुष्य में किसके द्वारा फैलता है?", opts:[{en:"Sand fly", hi:"सैण्ड फ्लाई"},{en:"Anopheles mosquito", hi:"एनोफिलीज मच्छड़"},{en:"Tse-tse fly", hi:"सी-सी मक्खी"},{en:"Aedes mosquito", hi:"एडीस मच्छड़"}], ans:2},
+        {en:"Which parasitic protozoon needs two hosts to complete its life cycle?", hi:"निम्नलिखित में किस परजीवी प्रोटोजोआ को जीवन चक्र पूरा करने हेतु दो पोषको (Host) की जरूरत होती है?", opts:[{en:"Plasmodium", hi:"प्लाज्मोडियम"},{en:"Trypanosoma", hi:"ट्रीपैनोसोमा"},{en:"Leishmania", hi:"लिशमैनिया"},{en:"All of these", hi:"इनमें से सभी"}], ans:3},
+        {en:"Where is Entamoeba histolytica found in the human body?", hi:"मनुष्य के शरीर में एण्ट अमीबा हिस्टोलिटिका कहाँ पाया जाता है?", opts:[{en:"Intestine", hi:"आंत"},{en:"Stomach", hi:"अमाशय"},{en:"Throat", hi:"गला"},{en:"Lungs", hi:"फेफड़ा"}], ans:0},
+        {en:"Responsible protozoon for Dysentery or Amoebiasis is?", hi:"पेचिश या अमीबॉयसिस के लिये उत्तरदायी प्रोटोजोआ निम्न में कौन सा है?", opts:[{en:"Amoeba", hi:"अमीबा"},{en:"Entamoeba", hi:"एण्ट अमीबा"},{en:"Paramecium", hi:"पैरामैशियम"},{en:"Trypanosoma", hi:"ट्रीपैनोसोमा"}], ans:1},
+        {en:"What is the infectious stage of Entamoeba histolytica called?", hi:"एण्टअमीबा हिस्टोलिटिका के संक्रमित अवस्था को क्या कहते हैं?", opts:[{en:"Trophozoite", hi:"ट्रोफोज्वाइंट"},{en:"Merozoite", hi:"मिरोज्वाइट"},{en:"Cystic", hi:"सिस्टिक"},{en:"Sporozoite", hi:"स्पोरोज्वाइट"}], ans:2},
+        {en:"Which lacks a fixed shape and changes every moment?", hi:"निम्नलिखित में से किसकी आकृति निश्चित नहीं होती है तथा आकृति पल-पल बदलते रहती है?", opts:[{en:"Paramecium", hi:"पैरामैशियम"},{en:"Amoeba", hi:"अमीबा"},{en:"Euglena", hi:"यूग्लीना"},{en:"Trypanosoma", hi:"ट्रीपैनोसोमा"}], ans:1},
+        {en:"Locomotory organ of Amoeba is?", hi:"अमीबा का प्रचलन अंग है-", opts:[{en:"Pseudopodia", hi:"कूटपाद"},{en:"Flagella", hi:"फ्लैजिला"},{en:"Cilia", hi:"सिलिया"},{en:"All of these", hi:"इनमें से सभी"}], ans:0},
+        {en:"Pseudopodia in Amoeba are important for?", hi:"अमीबा में कूटपाद (Pseudopodia) किस हेतु महत्वपूर्ण है?", opts:[{en:"Locomotion", hi:"प्रचलन के लिये"},{en:"Food ingestion", hi:"भोजन ग्रहण करने के लिये"},{en:"Both locomotion and ingestion", hi:"भोजन ग्रहण करने तथा प्रचलन के लिये"},{en:"Attacking other parasites", hi:"दूसरे परजीवी पर आक्रमण के लिये"}], ans:2},
+        {en:"In which category are malaria parasite and amoeba placed?", hi:"मलेरिया परजीवी तथा अमीबा को किस श्रेणी में रखा जाता है?", opts:[{en:"Protozoa", hi:"प्रोटोजोआ"},{en:"Porifera", hi:"पोरीफेरा"},{en:"Coelenterata", hi:"सीलेण्ट्रेटा"},{en:"Annelida", hi:"ऐनीलिडा"}], ans:0},
+        {en:"Unicellular non-pathogenic parasitic protozoon in human intestine is?", hi:"मनुष्य के आंत में रहने वाला एडकोशकीय अरोग-जनक परजीवी प्रोटोजोआ है-", opts:[{en:"E. coli", hi:"ई. कोलाई"},{en:"E. histolytica", hi:"ई. हिस्टोलिटिका"},{en:"E. gingivalis", hi:"ई. जिन्जीवैलीस"},{en:"Trypanosoma", hi:"ट्रीपैनोसोमा"}], ans:0},
+        {en:"Which protozoon produces light?", hi:"निम्नलिखित में कौन-सा प्रोटोजोआ प्रकाश उत्पन्न करता है?", opts:[{en:"Elphidium", hi:"एलफीडीयम"},{en:"Amoeba", hi:"अमीबा"},{en:"Noctiluca", hi:"नोक्टील्यूका"},{en:"Euglena", hi:"यूग्लीना"}], ans:2},
+        {en:"Which is a photosynthetic protist?", hi:"निम्नलिखित में कौन प्रकाश-संश्लेषी प्रोटिस्टा है?", opts:[{en:"Dinoflagellates", hi:"डायनोफ्लैजिलेट्स"},{en:"Diatom", hi:"डायटम"},{en:"Euglenoids", hi:"यूग्लीनायड"},{en:"All of these", hi:"इनमें से सभी"}], ans:3},
+        {en:"Function of Contractile Vacuole in protist cells is?", hi:"प्रोटिस्ट जीवों के कोशिका में पाये जाने वाले संकुचनशील रिक्तिका (contractile Vacoule) का क्या कार्य है?", opts:[{en:"Digestion", hi:"पाचन"},{en:"Excretion", hi:"उत्सर्जन"},{en:"Water-balance", hi:"जल-संतुलन"},{en:"Both B and C", hi:"B तथा C दोनों"}], ans:3},
+        {en:"Another name for photosynthetic protist Diatom is?", hi:"प्रकाश-संश्लेषी प्रोटिस्ट डायटम का दूसरा नाम है-", opts:[{en:"Blue green algae", hi:"ब्लूग्रीन एल्गी"},{en:"Red algae", hi:"रेड एल्गी"},{en:"Golden brown algae", hi:"गोल्डन ब्राउन एल्गी"},{en:"Green algae", hi:"ग्रीन एल्गी"}], ans:2},
+        {en:"Match: Anopheles, Culex, Sand-fly, Tse-tse fly with Diseases?", hi: "सूची-I को सूची-II के साथ सुमेलित कर कूट की सहायता से सही उत्तर चुनिए- (मच्छड़-मक्खी बनाम रोग)", opts:[{en:"A-4, B-3, C-1, D-2", hi:"A-4, B-3, C-1, D-2"},{en:"A-1, B-4, C-2, D-3", hi:"A-1, B-4, C-2, D-3"},{en:"A-3, B-2, C-1, D-4", hi:"A-3, B-2, C-1, D-4"},{en:"A-4, B-3, C-2, D-1", hi:"A-4, B-3, C-2, D-1"}], ans:0},
+        {en:"Widal test is used for which disease?", hi:"विडाल टेस्ट परीक्षण किस रोग के पहचान हेतु किया जाता है?", opts:[{en:"AIDS", hi:"एड्स"},{en:"Plague", hi:"प्लेग"},{en:"TB", hi:"टी.बी"},{en:"Typhoid", hi:"टाइफॉइड"}], ans:3},
+        {en:"Which organs are affected in Typhoid?", hi:"टाइफॉइड में कौन-से अंग प्रभावित होते हैं?", opts:[{en:"Brain", hi:"मस्तिष्क"},{en:"Skin", hi:"त्वचा"},{en:"Intestine", hi:"आंत"},{en:"Stomach", hi:"अमाशय"}], ans:2},
+        {en:"Microscopic unicellular organisms in water are called?", hi:"सूक्ष्म एककोशिकीय जीव जो पानी में पाये जाते हैं, उन्हें क्या कहते हैं?", opts:[{en:"Macrophytes", hi:"मैक्रोफाइटस"},{en:"Plankton", hi:"प्लैकटॉन"},{en:"Bacteria", hi:"बैक्टिरिया"},{en:"Virus", hi:"वाइरस"}], ans:1},
+        {en:"What is the study of fungi called?", hi:"कवक के अध्ययन को क्या कहते हैं?", opts:[{en:"Phycology", hi:"फाइकोलॉजी"},{en:"Herpetology", hi:"हर्पेटोलॉजी"},{en:"Virology", hi:"वाइरोलॉजी"},{en:"Mycology", hi:"माइकोलॉजी"}], ans:3},
+        {en:"Non-green heterotrophic plants of the plant kingdom are?", hi:"वनस्पति जगत के गैर-हरित विषम पोषित पौधे कौन से होते हैं?", opts:[{en:"Algae", hi:"एल्गी"},{en:"Fungi", hi:"कवक"},{en:"Moss", hi:"मॉस"},{en:"Fern", hi:"फर्न"}], ans:1},
+        {en:"What type of nutrition is in fungi?", hi:"कवक में किस तरह का पोषण होता है?", opts:[{en:"Autotrophic", hi:"स्वपोषी"},{en:"Heterotrophic", hi:"विषमपोषी"},{en:"Symbiosis", hi:"सहजीविता"},{en:"Autotrophic & Heterotrophic", hi:"स्वपोषी तथा विषमपोषी"}], ans:1},
+        {en:"All fungi are always?", hi:"सभी कवक सदैव होते हैं-", opts:[{en:"Autotrophic", hi:"स्वपोषी"},{en:"Parasitic", hi:"परजीवी"},{en:"Heterotrophic", hi:"विविधपोषी"},{en:"Saprophytic", hi:"मृतोपजीवी"}], ans:2},
+        {en:"Which statement is NOT correct?", hi:"निम्नलिखित में कौन-सा एक सही नहीं है?", opts:[{en:"Fungi are autotrophs", hi:"कवक स्वपोषी होते हैं"},{en:"Fungi are symbionts", hi:"कवक सहजीवी होते है"},{en:"Fungi are parasites", hi:"कवक परजीवी होते हैं"},{en:"Fungi are saprophytes", hi:"कवक मृतजीवी होते हैं"}], ans:0},
+        {en:"What is the food form in fungi?", hi:"कवक में भोजन का रूप क्या होता है?", opts:[{en:"Starch", hi:"स्टार्च"},{en:"Protein", hi:"प्रोटीन"},{en:"Glycogen", hi:"ग्लाइकोजेन"},{en:"Carbohydrate", hi:"कार्बोहाइड्रेट"}], ans:2},
+        {en:"In what form is food stored in fungi?", hi:"कवकों द्वारा रिजर्व भोज्य पदार्थ किस रूप में संचित रहते हैं?", opts:[{en:"Glycogen", hi:"ग्लाइकोजेन"},{en:"Fat", hi:"वसा"},{en:"Starch", hi:"स्टार्च"},{en:"Alcohol", hi:"ऐल्कोहॉल"}], ans:0},
+        {en:"What is the fungal cell wall made of?", hi:"कवकों की कोशिका भित्ति किसकी बनी होती है?", opts:[{en:"Lipid", hi:"लिपिड"},{en:"Cellulose", hi:"सेल्यूलोज"},{en:"Protein", hi:"प्रोटीन"},{en:"Chitin & Hemicellulose", hi:"काइटीन व हेमीसेल्यूलोज"}], ans:3},
+        {en:"What is the fungal cell wall NOT made of?", hi:"कवक की कोशिका भित्ति किस चीज की नहीं बनी होती है?", opts:[{en:"Chitin", hi:"काइटीन"},{en:"Cellulose", hi:"सेल्यूलोज"},{en:"Callose", hi:"कैल्लोज"},{en:"Pectin", hi:"पेक्टीन"}], ans:1},
+        {en:"Which is a unicellular fungus?", hi:"निम्नलिखित में कौन एककोशिकीय कवक है?", opts:[{en:"Mushroom", hi:"गोवरछत्ता"},{en:"Yeast", hi:"यीस्ट"},{en:"Mucor", hi:"म्यूकर"},{en:"Penicillium", hi:"पेनीसीलियम"}], ans:1}
+    ];
+
+    let currentQues = [];
+    let currentIdx = 0;
+    let score = 0;
+    let timerId = null;
+    let audioCtx = null;
+
+    function initAudio() {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+
+    function playSound(type) {
+        if(!audioCtx) return;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        if(type === 'correct') {
+            osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.1);
+        } else {
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+        }
+        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.2);
+    }
+
+    function fireConfetti() {
+        const canvas = document.getElementById('confetti-canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+        let particles = Array.from({length: 80}, () => ({
+            x: Math.random() * canvas.width, y: -20, r: Math.random() * 5 + 2,
+            v: Math.random() * 4 + 2, color: `hsl(${Math.random()*360}, 100%, 50%)`
+        }));
+        function animate() {
+            ctx.clearRect(0,0, canvas.width, canvas.height);
+            particles.forEach(p => {
+                p.y += p.v; ctx.fillStyle = p.color;
+                ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); ctx.fill();
+            });
+            if(particles.some(p => p.y < canvas.height)) requestAnimationFrame(animate);
+        }
+        animate();
+    }
+
+    function startQuiz() {
+        initAudio();
+        const shuffle = document.getElementById('shuffle-input').checked;
+        currentQues = [...questions];
+        if(shuffle) currentQues.sort(() => Math.random() - 0.5);
+        document.getElementById('start-screen').classList.remove('active');
+        document.getElementById('quiz-screen').classList.add('active');
+        loadQuestion();
+    }
+
+    function loadQuestion() {
+        if(currentIdx >= currentQues.length) return endQuiz();
+        const q = currentQues[currentIdx];
+        document.getElementById('q-en').innerText = q.en;
+        document.getElementById('q-hi').innerText = q.hi;
+        document.getElementById('q-counter').innerText = `Q ${currentIdx+1}/${currentQues.length}`;
+        document.getElementById('progress-bar').style.width = `${(currentIdx / currentQues.length) * 100}%`;
+        
+        const grid = document.getElementById('options-grid');
+        grid.innerHTML = '';
+        q.opts.forEach((opt, i) => {
+            const btn = document.createElement('div');
+            btn.className = 'option';
+            btn.innerHTML = `<span>${opt.en}</span><span class="opt-hi">${opt.hi}</span>`;
+            btn.onclick = () => selectOption(i, btn);
+            grid.appendChild(btn);
+        });
+        startTimer();
+    }
+
+    function startTimer() {
+        clearInterval(timerId);
+        const limit = parseInt(document.getElementById('timer-input').value) || 0;
+        if(limit <= 0) { document.getElementById('timer-display').innerText = ''; return; }
+        let time = limit;
+        const disp = document.getElementById('timer-display');
+        disp.innerText = `⏱ ${time}s`; disp.classList.remove('pulse-red');
+        timerId = setInterval(() => {
+            time--; disp.innerText = `⏱ ${time}s`;
+            if(time < 5) disp.classList.add('pulse-red');
+            if(time <= 0) { clearInterval(timerId); selectOption(-1); }
+        }, 1000);
+    }
+
+    function selectOption(idx, el) {
+        clearInterval(timerId);
+        const correct = currentQues[currentIdx].ans;
+        const opts = document.querySelectorAll('.option');
+        opts.forEach(o => o.classList.add('disabled'));
+
+        if(idx === correct) {
+            score++; el.classList.add('correct'); playSound('correct'); fireConfetti();
+        } else {
+            if(el) el.classList.add('wrong');
+            opts[correct].classList.add('correct'); playSound('wrong');
+            const fb = document.getElementById('emoji-feedback');
+            fb.style.display = 'block'; fb.classList.add('shake');
+            setTimeout(() => { fb.style.display = 'none'; fb.classList.remove('shake'); }, 1000);
+        }
+        document.getElementById('score-display').innerText = `Score: ${score}`;
+        setTimeout(() => { currentIdx++; loadQuestion(); }, 1500);
+    }
+
+    function endQuiz() {
+        clearInterval(timerId);
+        document.getElementById('quiz-screen').classList.remove('active');
+        document.getElementById('result-screen').classList.add('active');
+        document.getElementById('progress-bar').style.width = '100%';
+        const pc = Math.round((score / currentQues.length) * 100);
+        document.getElementById('final-percent').innerText = pc + "%";
+        let msg = pc >= 80 ? "🏆 Outstanding Performance!" : (pc >= 50 ? "👏 Well Done! Keep it up." : "📚 Practice makes perfect! Try again.");
+        document.getElementById('result-msg').innerText = msg;
+    }
+</script>
+</body>
+</html>

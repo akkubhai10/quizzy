@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Biodiversity Professional Quiz</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --glass: rgba(255, 255, 255, 0.1);
+            --border: rgba(255, 255, 255, 0.2);
+            --correct: #4caf50;
+            --wrong: #f44336;
+            --text-hi: #ddd;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(45deg, #6a11cb, #2575fc, #ff0080);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            overflow-x: hidden;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        #progress-bar {
+            position: fixed;
+            top: 0; left: 0; height: 6px;
+            background: linear-gradient(to right, #00f2fe, #4facfe);
+            box-shadow: 0 0 10px #4facfe;
+            width: 0%;
+            transition: width 0.4s ease;
+            z-index: 1000;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 700px;
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            border-radius: 25px;
+            padding: 30px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            position: relative;
+        }
+
+        .screen { display: none; }
+        .active { display: block; animation: fadeIn 0.5s ease; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        h1 { text-align: center; margin-bottom: 20px; font-weight: 700; }
+
+        .input-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-size: 0.9rem; }
+        input[type="number"] {
+            width: 100%; padding: 12px; border-radius: 12px; border: 1px solid var(--border);
+            background: rgba(0,0,0,0.2); color: white; outline: none;
+        }
+
+        .toggle-group { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+
+        .btn {
+            width: 100%; padding: 15px; border: none; border-radius: 15px;
+            background: white; color: #333; font-weight: 600; cursor: pointer;
+            transition: transform 0.2s, background 0.3s; margin-top: 10px;
+        }
+        .btn:hover { transform: scale(1.02); background: #f0f0f0; }
+
+        .stats { display: flex; justify-content: space-between; margin-bottom: 20px; font-weight: 600; }
+
+        .timer-red { color: #ff4d4d; animation: pulse 1s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+
+        .question-box { margin-bottom: 25px; }
+        .q-en { font-size: 1.2rem; font-weight: 600; display: block; }
+        .q-hi { font-size: 1rem; color: var(--text-hi); display: block; margin-top: 5px; }
+
+        .option-btn {
+            width: 100%; text-align: left; padding: 15px; margin-bottom: 12px;
+            background: rgba(255,255,255,0.05); border: 1px solid var(--border);
+            border-radius: 12px; color: white; cursor: pointer; transition: 0.3s;
+        }
+        .option-btn:disabled { cursor: not-allowed; }
+        .opt-en { display: block; font-weight: 500; }
+        .opt-hi { display: block; font-size: 0.85rem; color: var(--text-hi); }
+
+        .correct { background: var(--correct) !important; border-color: #fff; }
+        .wrong { background: var(--wrong) !important; border-color: #fff; }
+
+        #emoji-feedback {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 100px; display: none; z-index: 100;
+        }
+        .shake { animation: shake 0.5s; }
+        @keyframes shake {
+            0%, 100% { transform: translate(-50%, -50%) rotate(0); }
+            20%, 60% { transform: translate(-55%, -50%) rotate(-5deg); }
+            40%, 80% { transform: translate(-45%, -50%) rotate(5deg); }
+        }
+
+        .confetti {
+            position: fixed; width: 10px; height: 10px; z-index: 9999; pointer-events: none;
+        }
+
+        .finish-btn { background: rgba(255,255,255,0.15); color: white; margin-top: 20px; border: 1px solid var(--border); }
+
+        #result-screen { text-align: center; }
+        .score-circle {
+            width: 150px; height: 150px; border-radius: 50%; border: 5px solid #4facfe;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 2rem; font-weight: 700; margin: 20px auto;
+        }
+    </style>
+</head>
+<body>
+
+<div id="progress-bar"></div>
+
+<div class="container">
+    <div id="start-screen" class="screen active">
+        <h1>Biodiversity Quiz</h1>
+        <div class="input-group">
+            <label>Timer per Question (seconds, 0 for no timer):</label>
+            <input type="number" id="timer-input" placeholder="e.g. 15" min="0">
+        </div>
+        <div class="input-group">
+            <label class="toggle-group">
+                <input type="checkbox" id="shuffle-toggle"> Shuffle Questions
+            </label>
+        </div>
+        <button class="btn" onclick="startQuiz()">Start Quiz</button>
+    </div>
+
+    <div id="quiz-screen" class="screen">
+        <div class="stats">
+            <span id="q-counter">Question: 1/50</span>
+            <span id="timer-display"></span>
+            <span id="score-display">Score: 0</span>
+        </div>
+        <div id="question-container" class="question-box">
+            <span class="q-en" id="q-text-en"></span>
+            <span class="q-hi" id="q-text-hi"></span>
+        </div>
+        <div id="options-container"></div>
+        <button class="btn finish-btn" onclick="showResults()">Finish & Show Results</button>
+        <div id="emoji-feedback">😢</div>
+    </div>
+
+    <div id="result-screen" class="screen">
+        <h1>Quiz Completed!</h1>
+        <div class="score-circle" id="final-score">0/50</div>
+        <h2 id="result-msg"></h2>
+        <button class="btn" onclick="location.reload()">Restart Quiz</button>
+    </div>
+</div>
+
+<script>
+    const questions = [
+        { en: "Who first used the word 'Biodiversity'?", hi: "'जैव विविधता' शब्द का प्रयोग सर्वप्रथम किसके द्वारा किया गया था?", options: [ {en:"Tansley", hi:"टाँन्सले"}, {en:"Robert Hooke", hi:"रॉबर्ट हुक"}, {en:"Walter G. Rosen", hi:"वॉल्टर जी. रोजन"}, {en:"H. Reiter", hi:"एच. रेंटर"} ], correct: 2 },
+        { en: "Which of the following is NOT correct about Biodiversity?", hi: "निम्नलिखित में कौन-सा एक सही नहीं है?", options: [ {en:"Biodiversity increases from high to low latitudes", hi:"उच्च अक्षांश से निम्न अक्षांश की ओर जैव विविधता में वृद्धि होती है।"}, {en:"Tundra/Taiga have more biodiversity than tropical forests", hi:"टुंड्रा एवं टैगा जलवायु क्षेत्र में उष्ण कटिबंधीय वर्षा वन की तुलना में कम जैव विविधता है।"}, {en:"Biodiversity decreases as altitude increases in mountains", hi:"पर्वतीय क्षेत्रों में जैसे-जैसे ऊँचाई बढ़ती है जैव विविधता में कमी आती है।"}, {en:"Terrestrial areas have more biodiversity than aquatic ones", hi:"स्थलीय क्षेत्रों के तुलना में जलीय क्षेत्रों में ज्यादा जैव विविधता पायी जाती है।"} ], correct: 3 },
+        { en: "The diversity between one community and another is called?", hi: "एक समुदाय के जीव जंतु और दूसरे समुदाय के बीच पाई जाने वाली विविधता को क्या कहते हैं?", options: [ {en:"Genetic Diversity", hi:"अनुवांशिकता विविधता"}, {en:"Species Diversity", hi:"प्रजाति विविधता"}, {en:"Ecosystem Diversity", hi:"परितंत्र विविधता"}, {en:"None of these", hi:"इनमें से कोई नहीं"} ], correct: 2 },
+        { en: "Which group has the highest species diversity on Earth?", hi: "पृथ्वी पर सबसे अधिक प्रजाति विविधता किसमें पाई जाती है?", options: [ {en:"Arthropoda", hi:"ऑथ्रोपोडा"}, {en:"Mammals", hi:"स्तनधारी"}, {en:"Mollusca", hi:"मोलस्का"}, {en:"Amphibians", hi:"उभयचर"} ], correct: 0 },
+        { en: "What is the primary cause of biodiversity loss?", hi: "जैव विविधता के ह्रास का सबसे प्रमुख कारण क्या है?", options: [ {en:"Invasive Species", hi:"विदेशी जातियों का प्रवेश"}, {en:"Habitat Destruction", hi:"आवासों का विनाश"}, {en:"Pollution", hi:"प्रदूषण"}, {en:"Natural Disaster", hi:"प्राकृतिक आपदा"} ], correct: 1 },
+        { en: "What is the reason for continuous decline in biodiversity?", hi: "जैव विविधता में निरंतर आ रही कमी का क्या कारण है?", options: [ {en:"Habitat Fragmentation", hi:"आवासों का विखंडन"}, {en:"Overexploitation", hi:"प्राकृतिक संपदा का अत्यधिक दोहन"}, {en:"Invasive species", hi:"विदेशी जातियों का आक्रमण"}, {en:"All of these", hi:"इनमें से सभी"} ], correct: 3 },
+        { en: "What is the total genetic diversity in a population called?", hi: "एक जाति या इसकी एक समष्टि में कुल आनुवंशिक विविधता क्या कहलाती है?", options: [ {en:"Gene Pool", hi:"जीनपुल"}, {en:"DNA Pool", hi:"डीएनए पूल"}, {en:"Genetic Diversity", hi:"आनुवंशिक विविधता"}, {en:"Alpha Diversity", hi:"अल्फा विविधता"} ], correct: 0 },
+        { en: "Total species count in a single community is known by?", hi: "किसी एक समुदाय या परितंत्र में प्रजातियों की कुल संख्या का पता चलता है-", options: [ {en:"Alpha Diversity", hi:"अल्फा विविधता से"}, {en:"Beta Diversity", hi:"बीटा विविधता से"}, {en:"Gamma Diversity", hi:"गामा विविधता से"}, {en:"None of these", hi:"इनमें से कोई नहीं"} ], correct: 0 },
+        { en: "Change in species diversity from high to low latitudes is called?", hi: "उच्च अक्षांशों से निम्न अक्षांशों की ओर आने पर प्रजातियों की संख्या में आने वाले अंतर को कहते हैं-", options: [ {en:"Biodiversity Increase", hi:"जैव विविधता अर्धन"}, {en:"Biodiversity Gradient", hi:"जैव विविधता प्रवणता"}, {en:"Biodiversity Loss", hi:"जैव विविधता ह्रास"}, {en:"Biodiversity Bloom", hi:"जैव विविधता ब्लूम"} ], correct: 1 },
+        { en: "Most important aspect of biodiversity is?", hi: "जैव विविधता का सबसे महत्वपूर्ण पहलू है?", options: [ {en:"Medicine", hi:"औषधि"}, {en:"Food", hi:"भोजन"}, {en:"Ecosystem Maintenance", hi:"पारिस्थितिक तंत्र का निर्वहन"}, {en:"Industrial use", hi:"औद्योगिक उपयोग"} ], correct: 2 },
+        { en: "Which diversity contributed most to the Green Revolution in India?", hi: "भारत में हरित क्रांति की सफलता में किस विविधता का सर्वाधिक योगदान है?", options: [ {en:"Genetic Diversity", hi:"अनुवंशिक विविधता"}, {en:"Species Diversity", hi:"स्पीशीज विविधता"}, {en:"Ecosystem Diversity", hi:"पारिस्थितिक विविधता"}, {en:"None of these", hi:"इनमें से कोई नहीं"} ], correct: 0 },
+        { en: "Biodiversity found at the landscape level is called?", hi: "लैंडस्केप स्तर पर पाई जाने वाली विविधता को क्या कहा जाता है?", options: [ {en:"Alpha Diversity", hi:"अल्फा विविधता"}, {en:"Beta Diversity", hi:"बीटा विविधता"}, {en:"Gamma Diversity", hi:"गामा विविधता"}, {en:"All of these", hi:"इनमें से सभी"} ], correct: 2 },
+        { en: "Gene from Indonesian grass Saccharum Spontaneum cured which disease?", hi: "इंडोनेशिया में उगने वाली कांस घास में पाई जाने वाली जीन से किस रोग की रोकथाम की गई?", options: [ {en:"Rice Khaira disease", hi:"धान का खैरा रोग"}, {en:"Sugarcane Red Rot", hi:"गन्ना का लाल विगलन रोग"}, {en:"Cabbage Black Rot", hi:"बंदगोभी का काला विगलन रोग"}, {en:"Bajra Green Ear", hi:"बाजरे का हरित बाली रोग"} ], correct: 1 },
+        { en: "Why is biodiversity higher in tropical regions?", hi: "उष्ण कटिबंधीय क्षेत्रों में जैव विविधता क्यों अधिक पायी जाती है?", options: [ {en:"More Speciation", hi:"इन क्षेत्रों में जाति उद्भवन अधिक हुआ है।"}, {en:"Higher Solar Energy", hi:"इस क्षेत्र में सौर ऊर्जा अधिक उपलब्ध है।"}, {en:"Less Seasonal Change", hi:"इस क्षेत्र में कम मौसमी परिवर्तन होता है।"}, {en:"All of the above", hi:"इनमें से सभी"} ], correct: 3 },
+        { en: "What are the impacts of loss of biodiversity in an area?", hi: "किसी क्षेत्र में जैव विविधता की हानि से कौन-से प्रभाव पड़ते हैं?", options: [ {en:"Decreased plant productivity", hi:"पादप उत्पादकता घटती है"}, {en:"Reduced resistance to environmental stress", hi:"पर्यावरणीय समस्याओं के प्रति प्रतिरोध में कमी आती है।"}, {en:"Increased variability in water use/pest cycles", hi:"जल-उपयोग तथा रोग चक्रों की परिवर्तनशीलता बढ़ जाती है।"}, {en:"All of these", hi:"इनमें से सभी"} ], correct: 3 },
+        { en: "Which of these is an invasive/foreign species?", hi: "निम्नलिखित में कौन-सी विदेशी प्रजाति है?", options: [ {en:"Lantana Camara", hi:"लेंटाना कमारा"}, {en:"Water Hyacinth", hi:"जलकुंभी"}, {en:"Parthenium", hi:"गाजर घास"}, {en:"All of these", hi:"इनमें से सभी"} ], correct: 3 },
+        { en: "Who compared ecosystem species to rivets of an airplane?", hi: "किस पर्यावरणविद ने पारिस्थितिक तंत्र की तुलना एक हवाई जहाज से की?", options: [ {en:"Paul Ehrlich", hi:"पॉल एहरलिक"}, {en:"Robert May", hi:"रॉबर्ट मे"}, {en:"W.G. Rosen", hi:"डब्ल्यू. जी. रोजन"}, {en:"R.H. Whittaker", hi:"आर. एच. विटेकर"} ], correct: 0 },
+        { en: "Grassy Stunt Virus destroys which rice variety?", hi: "ग्रामी स्टंट वाइरस धान के किस किस्म को नष्ट कर देता है?", options: [ {en:"Oryza Sativa", hi:"ओराइजा सेटाइवा"}, {en:"Oryza Nivara", hi:"ओराइजा निवारा"}, {en:"Both 1 and 2", hi:"1 तथा 2 दोनों"}, {en:"Neither", hi:"न तो 1 न ही 2"} ], correct: 0 },
+        { en: "Where is the highest number of insect species found?", hi: "कीटों की सबसे अधिक प्रजातियाँ कहाँ पायी जाती हैं?", options: [ {en:"Desert", hi:"मरुस्थल में"}, {en:"Grasslands", hi:"घास-मैदान में"}, {en:"Forests", hi:"वन में"}, {en:"Water", hi:"जल में"} ], correct: 2 },
+        { en: "Which place is famous for endemic amphibian species?", hi: "उभयचरों के स्थानिक प्रजाति हेतु निम्नलिखित में कौन-सा प्रसिद्ध है?", options: [ {en:"Sundarbans", hi:"सुंदरवन"}, {en:"Gahirmatha", hi:"गहिरमाथा"}, {en:"Western Ghats", hi:"पश्चिमी घाट"}, {en:"Eastern Ghats", hi:"पूर्वी घाट"} ], correct: 2 },
+        { en: "Red Data Book lists species whose population decreased by?", hi: "रेड डाटा बुक में संकटग्रस्त प्रजाति वह है, जिसकी जनसंख्या में-", options: [ {en:"90% in 10 years", hi:"10 वर्षों में 90% की कमी"}, {en:"70% in 10 years", hi:"10 वर्षों में 70% की कमी"}, {en:"50% in 10 years", hi:"10 वर्षों में 50% की कमी"}, {en:"None of these", hi:"इनमें से कोई नहीं"} ], correct: 1 },
+        { en: "Which of these are Critically Endangered (CR)?", hi: "निम्नलिखित जीवों में कौन-सा घोर संकटग्रस्त (CR) श्रेणी में शामिल है?", options: [ {en:"Great Indian Bustard", hi:"ग्रेट इंडियन बस्टर्ड"}, {en:"Jerdon's Courser", hi:"जेर्डान कोर्सर"}, {en:"Siberian Crane", hi:"साइबेरियन क्रेन"}, {en:"All listed (1,2,5)", hi:"1, 2 और 5"} ], correct: 3 },
+        { en: "White-toothed Shrew and White-tailed Shrew are in which category?", hi: "अंडमान का सफेद दंतेदार छछूंदर तथा निकोबार का सफेद पूँछ वाला छछूंदर रेड डाटा के किस श्रेणी में है?", options: [ {en:"Critically Endangered (CR)", hi:"घोर संकटग्रस्त (CR)"}, {en:"Endangered (EN)", hi:"संकटग्रस्त (EN)"}, {en:"Vulnerable (VU)", hi:"सुभेद्य (VU)"}, {en:"Least Concern (LC)", hi:"संकटमुक्त (LC)"} ], correct: 0 },
+        { en: "Which Vulnerable (VU) animal no longer has a natural habitat in India?", hi: "रेड डाटा बुक के सुभेद्य (VU) श्रेणी में शामिल किस जीव का प्राकृतिक आवास अब भारत में नहीं है?", options: [ {en:"Leopard", hi:"तेंदुआ"}, {en:"Cheetah", hi:"चीता"}, {en:"One-horned Rhino", hi:"एक सींग वाला गेंडा"}, {en:"Sambar Deer", hi:"सांबर हिरण"} ], correct: 1 },
+        { en: "Only National Park in India where Flying Squirrel is found?", hi: "भारत के किस एक मात्र राष्ट्रीय उद्यान में उड़ने वाली गिलहरी पायी जाती है?", options: [ {en:"Keoladeo", hi:"केवलादेव"}, {en:"Namdapha", hi:"नामदफा"}, {en:"Dachigam", hi:"दाचीगाम"}, {en:"Keibul Lamjao", hi:"केबुल लामजाओ"} ], correct: 1 },
+        { en: "Which is NOT an In-Situ conservation method?", hi: "निम्नलिखित में कौन-सा स्वस्थाने संरक्षण नहीं है?", options: [ {en:"National Park", hi:"राष्ट्रीय उद्यान"}, {en:"Wildlife Sanctuary", hi:"वन्यजीव अभयारण्य"}, {en:"Biosphere Reserve", hi:"जैवमंडल आगार"}, {en:"Zoo", hi:"चिड़ियाघर"} ], correct: 3 },
+        { en: "What is conservation inside the natural habitat called?", hi: "जीव-जंतुओं एवं वनस्पतियों का उनके प्राकृतिक आवास में संरक्षण कहलाता है?", options: [ {en:"In-situ Conservation", hi:"स्वस्थाने संरक्षण"}, {en:"Ex-situ Conservation", hi:"बाह्य स्थाने संरक्षण"}, {en:"Both", hi:"दोनों"}, {en:"None", hi:"कोई नहीं"} ], correct: 0 },
+        { en: "Which is NOT an Ex-Situ conservation method?", hi: "निम्नलिखित में कौन जैव विविधता संरक्षण की बाह्य स्थाने विधि नहीं है?", options: [ {en:"Botanical Garden", hi:"वनस्पति उद्यान"}, {en:"Zoo", hi:"जंतु उद्यान"}, {en:"National Park", hi:"राष्ट्रीय उद्यान"}, {en:"Arboretum", hi:"वृक्ष उद्यान"} ], correct: 2 },
+        { en: "Biodiversity includes which of the following?", hi: "जैव विविधता के अंतर्गत निम्नलिखित में कौन सम्मिलित है?", options: [ {en:"Terrestrial Diversity", hi:"जमीनीय विविधता"}, {en:"Aquatic Diversity", hi:"जलीय विविधता"}, {en:"Ecosystem Diversity", hi:"पारिस्थितिकी विविधता"}, {en:"All of these", hi:"इनमें से सभी"} ], correct: 3 },
+        { en: "Which is true about Biosphere Reserves?", hi: "बायोस्फीयर रिजर्व के बारे में क्या सही है?", options: [ {en:"Human activity allowed in outer zone", hi:"बाहरी भाग में मानवों के बसने की अनुमति होती है।"}, {en:"No human activity in National Parks", hi:"राष्ट्रीय उद्यानों में किसी प्रकार की मानव गतिविधि की अनुमति नहीं होती।"}, {en:"Govt can convert sanctuary to park", hi:"राज्य सरकार अभयारण्य को राष्ट्रीय उद्यान में बदल सकती है।"}, {en:"All are correct", hi:"1, 2 और 3"} ], correct: 3 },
+        { en: "Which area has the world's highest biodiversity?", hi: "भू-मंडल का सबसे बड़ा जैव विविधता वाला क्षेत्र कौन है?", options: [ {en:"Eastern Himalayas", hi:"पूर्वी हिमालय"}, {en:"Western Himalayas", hi:"पश्चिमी हिमालय"}, {en:"Western Ghats", hi:"पश्चिमी घाट"}, {en:"Amazon Rainforest", hi:"अमेजन का वर्षा वन"} ], correct: 3 },
+        { en: "When did India start Project Tiger?", hi: "भारत ने बाघों को संरक्षित करने के लिए प्रोजेक्ट टाइगर कार्यक्रम की शुरुआत कब की?", options: [ {en:"1973", hi:"1973"}, {en:"1992", hi:"1992"}, {en:"1970", hi:"1970"}, {en:"1975", hi:"1975"} ], correct: 0 },
+        { en: "Main refuge for Rhinos in India?", hi: "भारत में गैंडों की मुख्य शरणस्थली है?", options: [ {en:"Manas Sanctuary", hi:"मानस अभ्रायण"}, {en:"Kaziranga Park", hi:"काजीरंगा उद्यान"}, {en:"Jaldapara Sanctuary", hi:"जल्दापाड़ा अभ्रायण"}, {en:"All of these", hi:"इनमें से सभी"} ], correct: 1 },
+        { en: "Red Panda (EN) is found in which hotspot?", hi: "भारत के किस हॉटस्पॉट वाले क्षेत्र में संकटग्रस्त लाल पांडा का निवास स्थल है?", options: [ {en:"Eastern Himalayas", hi:"पूर्वी हिमालय"}, {en:"Western Ghats", hi:"पश्चिमी घाट"}, {en:"Indo-Burma", hi:"इण्डो-वर्मा क्षेत्र"}, {en:"Sunda Land", hi:"सुण्डा लैंड"} ], correct: 0 },
+        { en: "Hotspot concept relates to?", hi: "हॉटस्पॉट अवधारणा का संबंध किससे है?", options: [ {en:"Terrestrial Ecosystems", hi:"स्थलीय परितंत्र से"}, {en:"Marine Ecosystems (Hope Spots)", hi:"सागरीय परितंत्र से (होपस्पॉट)"}, {en:"Both", hi:"1 तथा 2 दोनों"}, {en:"Neither", hi:"न तो 1 न ही 2"} ], correct: 2 },
+        { en: "Ecological diversity includes?", hi: "पारिस्थितिकी विविधता के अंतर्गत शामिल है-", options: [ {en:"Alpha Diversity", hi:"अल्फा विविधता"}, {en:"Beta Diversity", hi:"बीटा विविधता"}, {en:"Gamma Diversity", hi:"गामा विविधता"}, {en:"All of these", hi:"इनमें से सभी"} ], correct: 3 },
+        { en: "Who is included in the Red Data Book?", hi: "रेड डाटा बुक में किसे सम्मिलित किया जाता है?", options: [ {en:"Extinct plants", hi:"विलुप्त हो रहे पौधे"}, {en:"Rare plants", hi:"दुर्लभ पौधे"}, {en:"Endangered animals", hi:"आपत्तिग्रस्त प्राणियों"}, {en:"All of these", hi:"इनमें से सभी"} ], correct: 3 },
+        { en: "When was IUCN established?", hi: "IUCN की स्थापना कब हुई?", options: [ {en:"1948", hi:"1948"}, {en:"1972", hi:"1972"}, {en:"1992", hi:"1992"}, {en:"1986", hi:"1986"} ], correct: 0 },
+        { en: "How many species of plants are in Amazon forests?", hi: "अमेजन के वनों में पादपों की स्पीशीज की संख्या लगभग कितनी है?", options: [ {en:"1000", hi:"1000"}, {en:"40,000", hi:"40000"}, {en:"30,000", hi:"30000"}, {en:"20,000", hi:"20000"} ], correct: 1 },
+        { en: "Which species is extinct?", hi: "निम्नलिखित में कौन-सी प्रजाति विलुप्त है?", options: [ {en:"Dodo", hi:"डोडो"}, {en:"Steller's Sea Cow", hi:"स्टीलर्स सी काउ"}, {en:"Thylacine", hi:"थाइलेसीन"}, {en:"All of these", hi:"इनमें से सभी"} ], correct: 3 },
+        { en: "Biodiversity from poles to equator...", hi: "ध्रुवों से विषुवत रेखा की ओर जैव विविधता में-", options: [ {en:"Increases", hi:"वृद्धि होती है"}, {en:"Decreases", hi:"कमी आती है"}, {en:"Remains same", hi:"समान बना रहता है"}, {en:"None", hi:"इनमें से कोई"} ], correct: 0 },
+        { en: "Total global hotspots are?", hi: "विश्व में कुल हॉटस्पॉट की संख्या कितनी है?", options: [ {en:"35", hi:"35"}, {en:"36", hi:"36"}, {en:"25", hi:"25"}, {en:"34", hi:"34"} ], correct: 1 },
+        { en: "Wildlife Crime Control Bureau HQ is at?", hi: "वन्यजीव अपराध नियंत्रण ब्यूरो का मुख्यालय स्थित है-", options: [ {en:"New Delhi", hi:"नई दिल्ली"}, {en:"Kolkata", hi:"कोलकाता"}, {en:"Mumbai", hi:"मुंबई"}, {en:"Chennai", hi:"चेन्नई"} ], correct: 0 },
+        { en: "First Earth Summit year?", hi: "प्रथम पृथ्वी सम्मेलन किस वर्ष आयोजित हुआ था?", options: [ {en:"1972", hi:"1972"}, {en:"1992", hi:"1992"}, {en:"1998", hi:"1998"}, {en:"2005", hi:"2005"} ], correct: 1 },
+        { en: "Cartagena Protocol implemented in?", hi: "जैव विविधता से संबंधित कार्टाजोना प्रोटोकॉल समझौता किस वर्ष लागू किया गया?", options: [ {en:"2000", hi:"2000"}, {en:"2003", hi:"2003"}, {en:"2011", hi:"2011"}, {en:"2012", hi:"2012"} ], correct: 1 },
+        { en: "India's hotspot areas include?", hi: "भारत के हॉटस्पॉट क्षेत्र में शामिल हैं-", options: [ {en:"Eastern Himalayas", hi:"केवल पूर्वी हिमालय"}, {en:"Western Ghats", hi:"केवल पश्चिमी घाट"}, {en:"Both", hi:"पूर्वी हिमालय तथा पश्चिमी घाट"}, {en:"Rajasthan Desert", hi:"राजस्थान के रेगिस्तान"} ], correct: 2 },
+        { en: "Only park for European Reindeer (Hangul) in India?", hi: "यूरोपीय रेण्डियर प्रजाति का हिरण 'हंगुल' भारत के किस एकमात्र राष्ट्रीय उद्यान में पाया जाता है?", options: [ {en:"Periyar", hi:"पेरियार"}, {en:"Sanjay Gandhi", hi:"संजय गांधी"}, {en:"Keoladeo", hi:"केवलादेव"}, {en:"Dachigam", hi:"दाचीगाम"} ], correct: 3 },
+        { en: "Care of species outside natural habitat is?", hi: "जब संकटपन्न पादपों तथा जंतुओं को उनके प्राकृतिक आवास से अलग देखभाल की जाती है, उसे क्या कहते हैं?", options: [ {en:"In-situ", hi:"स्वस्थाने"}, {en:"Ex-situ", hi:"बाह्य स्थाने"}, {en:"Cryopreservation", hi:"क्रायोप्रिजर्वेशन"}, {en:"None", hi:"इनमें से कोई नहीं"} ], correct: 1 },
+        { en: "Which bird became endangered due to Diclofenac?", hi: "पशुओं को दी जाने वाली दर्द निवारक दवा 'डिकलोफेनेक' के कारण कौन-से जीव संकटग्रस्त हो गये हैं?", options: [ {en:"Snow Leopard", hi:"हिम तेंदुआ"}, {en:"Vulture", hi:"गिद्ध"}, {en:"Rhino", hi:"गैंडा"}, {en:"Crocodile", hi:"मगरमच्छ"} ], correct: 1 },
+        { en: "Animal Welfare Board of India HQ?", hi: "भारतीय पशु कल्याण बोर्ड (Animal welfare Board of India) का मुख्यालय स्थित है-", options: [ {en:"Jabalpur", hi:"जबलपुर"}, {en:"Chennai", hi:"चेन्नई"}, {en:"Mumbai", hi:"मुंबई"}, {en:"Kolkata", hi:"कोलकाता"} ], correct: 1 }
+    ];
+
+    let currentQuestions = [];
+    let currentIndex = 0;
+    let score = 0;
+    let timerValue = 0;
+    let timerInterval;
+    let audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    function playSound(freq, type, duration) {
+        let osc = audioCtx.createOscillator();
+        let gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + duration);
+        osc.stop(audioCtx.currentTime + duration);
+    }
+
+    function createConfetti() {
+        for(let i=0; i<50; i++) {
+            let div = document.createElement('div');
+            div.className = 'confetti';
+            div.style.left = Math.random() * 100 + 'vw';
+            div.style.top = '-10px';
+            div.style.backgroundColor = `hsl(${Math.random()*360}, 100%, 50%)`;
+            div.style.transform = `rotate(${Math.random()*360}deg)`;
+            document.body.appendChild(div);
+            
+            let animation = div.animate([
+                { transform: `translate3d(0,0,0) rotate(0deg)`, opacity: 1 },
+                { transform: `translate3d(${Math.random()*100 - 50}px, 100vh, 0) rotate(${Math.random()*360}deg)`, opacity: 0 }
+            ], { duration: 2000 + Math.random()*3000, easing: 'cubic-bezier(0,1,1,1)' });
+            
+            animation.onfinish = () => div.remove();
+        }
+    }
+
+    function startQuiz() {
+        const shuffle = document.getElementById('shuffle-toggle').checked;
+        timerValue = parseInt(document.getElementById('timer-input').value) || 0;
+        currentQuestions = shuffle ? [...questions].sort(() => Math.random() - 0.5) : [...questions];
+        
+        document.getElementById('start-screen').classList.remove('active');
+        document.getElementById('quiz-screen').classList.add('active');
+        showQuestion();
+    }
+
+    function showQuestion() {
+        if(currentIndex >= currentQuestions.length) return showResults();
+        
+        clearInterval(timerInterval);
+        const q = currentQuestions[currentIndex];
+        document.getElementById('q-counter').innerText = `Question: ${currentIndex + 1}/${currentQuestions.length}`;
+        document.getElementById('score-display').innerText = `Score: ${score}`;
+        document.getElementById('q-text-en').innerText = q.en;
+        document.getElementById('q-text-hi').innerText = q.hi;
+        
+        const optionsContainer = document.getElementById('options-container');
+        optionsContainer.innerHTML = '';
+        
+        q.options.forEach((opt, index) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerHTML = `<span class="opt-en">${opt.en}</span><span class="opt-hi">${opt.hi}</span>`;
+            btn.onclick = () => checkAnswer(index, btn);
+            optionsContainer.appendChild(btn);
+        });
+
+        document.getElementById('progress-bar').style.width = ((currentIndex) / currentQuestions.length * 100) + '%';
+        
+        if(timerValue > 0) startTimer();
+        else document.getElementById('timer-display').innerText = '';
+    }
+
+    function startTimer() {
+        let timeLeft = timerValue;
+        const display = document.getElementById('timer-display');
+        display.classList.remove('timer-red');
+        display.innerText = `Time: ${timeLeft}s`;
+
+        timerInterval = setInterval(() => {
+            timeLeft--;
+            display.innerText = `Time: ${timeLeft}s`;
+            if(timeLeft < 5) display.classList.add('timer-red');
+            if(timeLeft <= 0) {
+                clearInterval(timerInterval);
+                checkAnswer(-1); // Timeout
+            }
+        }, 1000);
+    }
+
+    function checkAnswer(selectedIndex, btn) {
+        clearInterval(timerInterval);
+        const q = currentQuestions[currentIndex];
+        const buttons = document.querySelectorAll('.option-btn');
+        buttons.forEach(b => b.disabled = true);
+
+        if(selectedIndex === q.correct) {
+            btn.classList.add('correct');
+            score++;
+            playSound(600, 'sine', 0.3);
+            setTimeout(() => playSound(800, 'sine', 0.5), 100);
+            createConfetti();
+        } else {
+            if(btn) btn.classList.add('wrong');
+            buttons[q.correct].classList.add('correct');
+            playSound(200, 'sawtooth', 0.5);
+            const emoji = document.getElementById('emoji-feedback');
+            emoji.style.display = 'block';
+            emoji.classList.add('shake');
+            setTimeout(() => { emoji.style.display = 'none'; emoji.classList.remove('shake'); }, 1000);
+        }
+
+        setTimeout(() => {
+            currentIndex++;
+            if(currentIndex < currentQuestions.length) showQuestion();
+            else showResults();
+        }, 1500);
+    }
+
+    function showResults() {
+        clearInterval(timerInterval);
+        document.getElementById('quiz-screen').classList.remove('active');
+        document.getElementById('result-screen').classList.add('active');
+        document.getElementById('progress-bar').style.width = '100%';
+        
+        const finalScore = document.getElementById('final-score');
+        finalScore.innerText = `${score}/${currentQuestions.length}`;
+        
+        const msg = document.getElementById('result-msg');
+        const percentage = (score / currentQuestions.length) * 100;
+        
+        if(percentage >= 80) msg.innerText = "🏆 Outstanding Performance!";
+        else if(percentage >= 50) msg.innerText = "👏 Well Done! Keep it up.";
+        else msg.innerText = "📚 Practice makes perfect! Try again.";
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Indian Economy Quiz (Bilingual)</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&family=Hind:wght@400;600&display=swap');
+
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: 1px solid rgba(255, 255, 255, 0.2);
+            --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            --primary-text: #ffffff;
+            --secondary-text: #e0e0e0;
+            --hindi-text: #d1d5db; /* Slightly dimmed for hierarchy */
+            --correct: #4caf50;
+            --wrong: #ff5252;
+            --btn-grad: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--primary-text);
+            overflow-x: hidden;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        #app {
+            width: 95%;
+            max-width: 900px;
+            min-height: 700px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 25px;
+            border: var(--glass-border);
+            box-shadow: var(--glass-shadow);
+            padding: 2rem;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Screens */
+        .screen {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .screen.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        /* Start Screen */
+        h1 { font-size: 2.5rem; text-align: center; margin-bottom: 0.5rem; text-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        .subtitle { font-size: 1.2rem; color: var(--secondary-text); margin-bottom: 2rem; text-align: center; }
+
+        .settings-group {
+            background: rgba(0,0,0,0.2);
+            padding: 1.5rem;
+            border-radius: 15px;
+            width: 100%;
+            max-width: 400px;
+            margin-bottom: 2rem;
+        }
+
+        .input-group { margin-bottom: 1rem; display: flex; flex-direction: column; gap: 0.5rem; }
+        input[type="number"] {
+            padding: 10px; border-radius: 8px; border: none; background: rgba(255,255,255,0.2);
+            color: white; font-size: 1rem; outline: none;
+        }
+
+        .switch { position: relative; display: inline-block; width: 60px; height: 34px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(255,255,255,0.2); transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 26px; width: 26px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: #2196F3; }
+        input:checked + .slider:before { transform: translateX(26px); }
+
+        .btn-main {
+            padding: 15px 40px; font-size: 1.2rem; font-weight: bold; color: white;
+            background: var(--btn-grad); border: none; border-radius: 50px; cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s; box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        .btn-main:hover { transform: scale(1.05); }
+
+        /* Quiz UI */
+        .header-bar { width: 100%; display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; font-weight: 600; }
+        
+        .progress-container { width: 100%; height: 6px; background: rgba(255,255,255,0.2); border-radius: 10px; margin-bottom: 1.5rem; overflow: hidden; }
+        .progress-bar { height: 100%; background: linear-gradient(to right, #0575E6, #00f260); width: 0%; transition: width 0.3s ease; }
+
+        .timer { font-variant-numeric: tabular-nums; font-size: 1.2rem; padding: 5px 15px; background: rgba(0,0,0,0.2); border-radius: 20px; }
+        .timer.pulse { color: #ff5252; animation: pulse 1s infinite; }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+
+        .question-box { width: 100%; margin-bottom: 1.5rem; }
+        
+        /* Bilingual Typography */
+        .q-en { font-size: 1.1rem; font-weight: 600; margin-bottom: 4px; color: var(--primary-text); display: block; }
+        .q-hi { font-size: 1rem; font-weight: 400; font-family: 'Hind', sans-serif; color: var(--hindi-text); display: block; line-height: 1.4; }
+
+        .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; width: 100%; }
+
+        .option-btn {
+            background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.1);
+            padding: 15px; border-radius: 15px; color: white; text-align: left;
+            cursor: pointer; transition: all 0.2s; position: relative; display: flex; flex-direction: column;
+        }
+        .option-btn:hover:not(:disabled) { background: rgba(255,255,255,0.3); transform: translateY(-2px); }
+        
+        .opt-en { font-size: 0.95rem; font-weight: 600; margin-bottom: 2px; }
+        .opt-hi { font-size: 0.85rem; font-family: 'Hind', sans-serif; color: var(--hindi-text); }
+
+        .option-btn.correct { background: var(--correct); border-color: var(--correct); box-shadow: 0 0 15px var(--correct); }
+        .option-btn.wrong { background: var(--wrong); border-color: var(--wrong); animation: shake 0.5s; }
+
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+
+        .early-exit-btn { margin-top: 2rem; padding: 10px 25px; background: rgba(255, 82, 82, 0.8); border: none; border-radius: 20px; color: white; cursor: pointer; font-size: 0.9rem; align-self: center; }
+        .early-exit-btn:hover { background: rgba(255, 82, 82, 1); }
+
+        /* Result Screen */
+        .result-card { text-align: center; background: rgba(0,0,0,0.2); padding: 2rem; border-radius: 20px; width: 100%; }
+        .score-display { font-size: 4rem; font-weight: 800; margin: 1rem 0; background: -webkit-linear-gradient(#eee, #333); -webkit-background-clip: text; }
+
+        /* Mobile */
+        @media (max-width: 700px) {
+            .options-grid { grid-template-columns: 1fr; }
+            #app { padding: 1rem; border-radius: 0; min-height: 100vh; width: 100%; max-width: 100%; }
+            .q-en { font-size: 1rem; }
+        }
+        
+        /* Feedback Overlay */
+        #feedback-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 9999; display: none; }
+        .emoji-feedback { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 6rem; animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .confetti { position: absolute; width: 10px; height: 10px; background: #fff; animation: fall linear forwards; }
+        @keyframes popIn { from { transform: translate(-50%, -50%) scale(0); } to { transform: translate(-50%, -50%) scale(1); } }
+        @keyframes fall { to { transform: translateY(100vh) rotate(720deg); opacity: 0; } }
+    </style>
+</head>
+<body>
+
+<div id="app">
+    <div id="feedback-overlay"></div>
+
+    <div id="start-screen" class="screen active">
+        <h1>Indian Economy</h1>
+        <p class="subtitle">Tax Structure (कर-संरचना)</p>
+        
+        <div class="settings-group">
+            <div class="input-group">
+                <label>Timer per Question (Sec)</label>
+                <input type="number" id="timerInput" placeholder="Empty = No Timer" min="0">
+            </div>
+            
+            <div class="toggle-group" style="display:flex; justify-content:space-between; align-items:center;">
+                <label>Shuffle Questions (प्रश्नों को मिलाएं)</label>
+                <label class="switch">
+                    <input type="checkbox" id="shuffleToggle">
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </div>
+
+        <button class="btn-main" onclick="startQuiz()">Start Quiz / प्रश्नोत्तरी शुरू करें</button>
+    </div>
+
+    <div id="quiz-screen" class="screen">
+        <div class="header-bar">
+            <span id="qCount">Q: 01/53</span>
+            <span class="timer" id="timerDisplay">--</span>
+            <span id="scoreCount">Score: 0</span>
+        </div>
+        
+        <div class="progress-container">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+
+        <div class="question-box">
+            <span class="q-en" id="qTextEn">Loading...</span>
+            <span class="q-hi" id="qTextHi">लोड हो रहा है...</span>
+        </div>
+
+        <div class="options-grid" id="optionsContainer">
+            </div>
+
+        <button class="early-exit-btn" onclick="finishQuiz()">Finish & Show Results</button>
+    </div>
+
+    <div id="result-screen" class="screen">
+        <h1>Result / परिणाम</h1>
+        <div class="result-card">
+            <p>Your Score</p>
+            <div class="score-display" id="finalScore">0%</div>
+            <p style="font-size: 1.2rem; margin-bottom: 1rem; color: #ffd700;" id="resultMessage"></p>
+            <p id="statsText" style="opacity: 0.8; margin-bottom: 2rem;"></p>
+            <button class="btn-main" onclick="resetQuiz()">Restart Quiz</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- BILINGUAL DATA ---
+    const rawQuestions = [
+        { 
+            q_en: "1. Consider the following statements: 1. In a Progressive tax system, the tax rate increases as income increases. 2. In a Regressive tax system, the tax percentage increases up to a limit and then remains constant. 3. In a Digressive tax system, the tax percentage decreases as income increases. 4. Regressive tax is prevalent in developing countries. Which of the above statements is NOT true?",
+            q_hi: "1. निम्न कथनों पर विचार करें: 1. प्रगतिशील कर प्रणाली में आय की दर बढ़ने के साथ-साथ कर की दर बढ़ती जाती है। 2. प्रतिगामी कर प्रणाली में एक सीमा तक आय बढ़ने से कर प्रतिशत में वृद्धि होती है तथा उसके बाद आय बढ़ने पर भी कर की दर समान ही रहती है। 3. अधोगामी कर प्रणाली में आय बढ़ने के साथ-साथ कर प्रतिशत में कमी आने लगती है। 4. प्रतिगामी कर विकासशील देशों में प्रचलित है। उपरोक्त में कौन सत्य कथन नहीं है?",
+            opts_en: ["1 and 2", "1, 3 and 4", "2 and 4", "2, 3 and 4"],
+            opts_hi: ["1 और 2", "1, 3 और 4", "2 और 4", "2, 3 और 4"],
+            answer: 3 
+        },
+        { 
+            q_en: "2. Which of the following taxes are levied by the Central Government? 1. Income Tax 2. Customs Duty 3. Central Excise Duty 4. Sales Tax",
+            q_hi: "2. निम्नलिखित में कौन-से कर केन्द्र सरकार द्वारा लगाए जाते हैं? 1. आयकर 2. सीमा कर 3. केन्द्रीय उत्पादन शुल्क 4. बिक्री कर",
+            opts_en: ["1 and 2", "1, 2 and 3", "1, 2 and 4", "All of these"],
+            opts_hi: ["1 और 2", "1, 2 और 3", "1, 2 और 4", "ये सभी"],
+            answer: 1 
+        },
+        { 
+            q_en: "3. Which of the following are the main sources of tax revenue for State Governments? 1. Land Revenue, Stamp, Registration Fee and Excise on Liquor 2. Commercial Tax 3. Income Tax 4. State's share in Central Taxes",
+            q_hi: "3. निम्नलिखित में से कौन-से राज्य सरकारों के कर राजस्व के मुख्य स्रोत हैं? 1. मालगुजारी, स्टाम्प, रजिस्ट्रेशन शुल्क और मादक पदार्थों पर उत्पादन कर। 2. वाणिज्यिक कर। 3. आयकर। 4. केन्द्रीय कर एवं राजस्व में राज्यों का भार।",
+            opts_en: ["1 and 2", "1, 2 and 3", "1, 2 and 4", "All of these"],
+            opts_hi: ["1 और 2", "1, 2 और 3", "1, 2 और 4", "ये सभी"],
+            answer: 2 
+        },
+        { 
+            q_en: "4. Consider the following statements regarding the Indian tax system: 1. Indian tax structure is not administratively efficient. 2. Multiplicity of taxes and lack of integration. 3. Inter-sectoral imbalance in tax structure. 4. Lack of transparency in the tax system.",
+            q_hi: "4. भारतीय कर व्यवस्था के सम्बन्ध में निम्नलिखित कथनों पर विचार करें: 1. भारतीय कर ढाँचा प्रशासनिक दृष्टि से कार्यकुशल नहीं है। 2. करों की अनेकता और एकीकरण का अभाव। 3. कर ढाँचे में अन्तर्क्षेत्रीय असन्तुलन। 4. कर प्रणाली में पारदर्शिता का अभाव।",
+            opts_en: ["1 and 2", "1, 2 and 3", "1, 2 and 4", "All of these"],
+            opts_hi: ["1 और 2", "1, 2 और 3", "1, 2 और 4", "ये सभी"],
+            answer: 3 
+        },
+        { 
+            q_en: "5. The fundamental problems in the sales tax system are: 1. Lack of transparency due to variety of rates and concessions. 2. Different rates of sales tax in different states. 3. Narrow base of sales tax. 4. High possibility of tax evasion in sales tax.",
+            q_hi: "5. निम्नलिखित में बिक्री कर व्यवस्था में बुनियादी समस्याएं हैं: 1. दरों की विविधता तथा विभिन्न रियायतों के कारण बिक्री कर प्रणाली में पारदर्शिता का अभाव होना। 2. विभिन्न राज्यों में बिक्री कर की दरों का अलग-अलग होना। 3. बिक्री कर का आधार संकुचित होना 4. बिक्री कर में कर चोरी की सम्भावना का अधिक होना।",
+            opts_en: ["1 and 2", "1, 2 and 3", "1, 2 and 4", "All of these"],
+            opts_hi: ["1 और 2", "1, 2 और 3", "1, 2 और 4", "ये सभी"],
+            answer: 3 
+        },
+        { 
+            q_en: "6. Which of the following is a recommendation of the Raja Chelliah Committee? 1. Reduce income tax rates. 2. Broaden the base of excise duty. 3. Increase reliance on indirect taxes. 4. Impose wealth tax only on non-productive assets.",
+            q_hi: "6. निम्नलिखित में कौन राजा चैलेया समिति की सिफारिश है? 1. आय करों की दरों में कमी करना। 2. उत्पादन शुल्क के आधार को और व्यापक बनाना। 3. अप्रत्यक्ष कर पर निर्भरता को बढ़ाना। 4. केवल अनुत्पादक सम्पत्ति पर सम्पत्ति कर लगाना।",
+            opts_en: ["1 and 2", "1, 2 and 3", "1, 2 and 4", "All of these"],
+            opts_hi: ["1 और 2", "1, 2 और 3", "1, 2 और 4", "ये सभी"],
+            answer: 0 
+        },
+        { 
+            q_en: "7. If the demand for money increases while the supply of money remains constant, then:",
+            q_hi: "7. द्रव्य की पूर्ति यथावत् रहने पर यदि द्रव्य की माँग में वृद्धि होती है, तो",
+            opts_en: ["Price level will fall", "Interest rate will increase", "Interest rate will decrease", "Level of income and employment will increase"],
+            opts_hi: ["कीमत-स्तर में गिरावट आ जाएगी", "ब्याज की दर में वृद्धि हो जाएगी", "ब्याज की दर में कमी हो जाएगी", "आय और रोजगार के स्तर में वृद्धि हो जाएगी"],
+            answer: 1 
+        },
+        { 
+            q_en: "8. In underdeveloped countries like India, direct tax increase is preferred over indirect tax increase, why?",
+            q_hi: "8. भारत जैसे अल्पविकसित देशों में परोक्ष कर वृद्धि की तुलना में प्रत्यक्ष कर वृद्धि को तरजीह दी जाती है, क्यों?",
+            opts_en: ["Direct taxes are easy to collect and evasion is not possible", "Responsibility for evading direct tax is easily fixed", "Direct taxes burden the wealthy, while indirect taxes burden common citizens", "Socialism can only be established by taxing the rich"],
+            opts_hi: ["प्रत्यक्ष करों को आसानी से जुटाया जा सकता है तथा कर चोरी सम्भव नहीं होती", "प्रत्यक्ष कर चुराने की जिम्मेदारी आसानी से तय की जा सकती है", "प्रत्यक्ष करों का बोझ अपेक्षाकृत सम्पन्न वर्ग को सहन करना पड़ता है जबकि परोक्ष कर का बोझ सामान्य नागरिक पर पड़ता है", "यदि धनी वर्ग से कर वसूला जाए तभी समाजवाद की स्थापना की जा सकती है"],
+            answer: 2 
+        },
+        { 
+            q_en: "9. Which of the following are included in the Direct Tax category in India? 1. Corporation Tax 2. Tax on Income 3. Wealth Tax 4. Customs Duty 5. Excise Duty",
+            q_hi: "9. निम्न में से किन्हें भारत में प्रत्यक्ष-कर संवर्ग में सम्मिलित किया गया है? 1. निगम-कर 2. आय पर कर 3. सम्पत्ति-कर 4. सीमा-शुल्क 5. उत्पाद-शुल्क",
+            opts_en: ["1, 2 and 3", "1, 2, 4 and 5", "2 and 3", "1, 3, 4 and 5"],
+            opts_hi: ["1, 2 और 3", "1, 2, 4 और 5", "2 और 3", "1, 3, 4 और 5"],
+            answer: 0 
+        },
+        { 
+            q_en: "10. MODVAT means:",
+            q_hi: "10. MODVAT का तात्पर्य है",
+            opts_en: ["System of levying excise on final goods", "System to give benefit to producers for tax paid", "System of levying excise at every stage", "None of the above"],
+            opts_hi: ["उत्पादन शुल्क अन्तिम वस्तुओं पर लगाने की व्यवस्था", "उत्पादकों को शुल्क चुकाने के लिए लाभ देने की व्यवस्था", "उत्पादन शुल्क प्रत्येक स्तर पर लगाने की व्यवस्था", "उपरोक्त में से कोई नहीं"],
+            answer: 1 
+        },
+        { 
+            q_en: "11. Which one of the following is NOT a source of tax revenue for the Central Government in India?",
+            q_hi: "11. निम्नलिखित में से कौन-सा एक, भारत में केन्द्रीय सरकार के कर राजस्व का स्रोत नहीं है?",
+            opts_en: ["Income Tax", "Customs Duty", "Service Tax", "Motor Vehicle Tax"],
+            opts_hi: ["आय कर", "सीमाशुल्क", "सेवा कर", "मोटरयान कर"],
+            answer: 3 
+        },
+        { 
+            q_en: "12. Corporation tax is levied on the income of a company. Which of the following items is NOT included in corporation tax?",
+            q_hi: "12. भारत में निगम कर किसी कम्पनी की आय पर लगाया जाता है। निम्नलिखित में से कौन-सा मद में निगम कर शामिल नहीं है?",
+            opts_en: ["Profit from business", "Capital gains", "Interest on securities", "Proceeds from sale of assets"],
+            opts_hi: ["व्यवसाय से लाभ", "पूँजीगत अभिलाभ", "प्रतिभूतियों पर ब्याज", "परिसम्पत्तियों की विक्रय प्राप्ति"],
+            answer: 3 
+        },
+        { 
+            q_en: "13. The objective of Long Term Fiscal Policy is to provide stability to:",
+            q_hi: "13. दीर्घकालीन वित्तीय नीति का उद्देश्य किसको स्थायित्व प्रदान करना है?",
+            opts_en: ["Direct Tax", "Indirect Tax", "Direct & Indirect Tax Revenue Ratio", "Tax Revenue and National Income"],
+            opts_hi: ["प्रत्यक्ष कर", "अप्रत्यक्ष कर", "प्रत्यक्ष व अप्रत्यक्ष कर राजस्व अनुपात", "कर राजस्व तथा राष्ट्रीय आय"],
+            answer: 3 
+        },
+        { 
+            q_en: "14. The main sources of income for State Governments are: 1. Share in Central Taxes 2. Economic Grants 3. Land & Entertainment Tax 4. Income Tax",
+            q_hi: "14. राज्य सरकारों की आय का प्रमुख स्रोत है: 1. केन्द्रीय करों में भाग 2. आर्थिक अनुदान 3. भूमि एवं मनोरंजन कर 4. आयकर",
+            opts_en: ["1 and 2", "1, 2 and 3", "1, 2 and 4", "All of these"],
+            opts_hi: ["1 और 2", "1, 2 और 3", "1, 2 और 4", "ये सभी"],
+            answer: 1 
+        },
+        { 
+            q_en: "15. The second major tax revenue source for the Central Government is:",
+            q_hi: "15. केन्द्रीय सरकार के लिए आगम की दृष्टि से दूसरा प्रमुख कर है",
+            opts_en: ["Social & Security Contribution", "Corporation Tax", "Domestic Tax on Goods & Services", "Tax on International Trade"],
+            opts_hi: ["सामाजिक एवं सुरक्षा अभिदान", "निगम कर", "वस्तुओं और सेवाओं पर घरेलू कर", "अन्तर्राष्ट्रीय व्यापार तथा लेन-देन पर कर"],
+            answer: 1 
+        },
+        { 
+            q_en: "16. Which of the following taxes can only be levied by State Governments?",
+            q_hi: "16. निम्नलिखित में से कौन-सा कर केवल राज्य सरकारें ही लगा सकती हैं?",
+            opts_en: ["Land Revenue", "Import-Export Tax", "Income Tax", "Wealth Tax"],
+            opts_hi: ["राजस्व कर (Land Revenue)", "आयात-निर्यात कर", "आयकर", "सम्पत्ति कर"],
+            answer: 0 
+        },
+        { 
+            q_en: "17. Select the correct answer regarding Proportional Tax System:",
+            q_hi: "17. आनुपातिक कर प्रणाली के सम्बन्ध में सही उत्तर का चयन करें",
+            opts_en: ["Tax is levied at a uniform rate at all income levels", "Tax rate increases at all income levels", "Tax rate decreases at all income levels", "All of the above"],
+            opts_hi: ["आय के सभी स्तरों पर समान दर, से कर लगाया जाता है", "आय के सभी स्तरों पर कर की दर बढ़ती जाती है", "आय के सभी स्तर पर कर की दर घटती जाती है", "उपरोक्त सभी"],
+            answer: 0 
+        },
+        { 
+            q_en: "18. Which one of the following represents a Progressive Tax structure?",
+            q_hi: "18. निम्नलिखित में से कौन-सा एक, प्रगामी कर संरचना को निरूपित करता है?",
+            opts_en: ["Tax rate is same for all incomes", "Tax rate increases as income increases", "Tax rate decreases as income increases", "Every family pays the same amount of tax"],
+            opts_hi: ["कर दर सभी आयों में समान है", "कर दर आय में बढ़ोत्तरी के साथ-साथ बढ़ती जाती है।", "कर दर आय में बढ़ोत्तरी के साथ-साथ घटती जाती है।", "प्रत्येक परिवार कर की समान राशि का भुगतान करता है।"],
+            answer: 1 
+        },
+        { 
+            q_en: "19. Consider the following statements: 1. Goods and Services Tax (GST) is a direct tax. 2. Cess is a temporary tax levied for a specific purpose. Which statement is correct?",
+            q_hi: "19. निम्नलिखित कथनों पर विचार कीजिए: 1. वस्तु एवं सेवा कर, जो कि केलकर टास्क फोर्स द्वारा अनुशंसित किया गया है, एक प्रत्यक्ष कर है। 2. उपकर एक अस्थायी कर है, जो किसी विशेष लक्ष्य को पाने के लिए लगाया जाता है और केवल प्रत्यक्ष कर पर ही लगाया जा सकता है।",
+            opts_en: ["Only 1", "Only 2", "Both 1 and 2", "Neither 1 nor 2"],
+            opts_hi: ["केवल 1", "केवल 2", "1 और 2 दोनों", "न तो 1 और न ही 2"],
+            answer: 3 
+        },
+        { 
+            q_en: "20. The sales tax you pay when buying toothpaste is which type of tax?",
+            q_hi: "20. विक्रय-कर जिसका भुगतान आप कोई टूथपेस्ट खरीदते समय करते हैं, निम्नलिखित में से किस प्रकार का कर है?",
+            opts_en: ["Levied by Central Govt", "Levied by Center, Collected by State", "Levied by State, Collected by Center", "Levied and Collected by State Govt"],
+            opts_hi: ["केन्द्र सरकार द्वारा आरोपित कर", "केन्द्र सरकार द्वारा आरोपित, किन्तु राज्य सरकार द्वारा संग्रहीत कर", "राज्य सरकार द्वारा आरोपित, किन्तु केन्द्र सरकार द्वारा संग्रहीत कर", "राज्य सरकार द्वारा आरोपित एवं संग्रहीत कर"],
+            answer: 3 
+        },
+        { 
+            q_en: "21. Regarding Income Tax, which statement is correct?",
+            q_hi: "21. आयकर के लगाने, उद्ग्रहण करने और वितरण करने के सम्बन्ध में निम्नलिखित कथनों में से कौन-सा एक सही है?",
+            opts_en: ["Union levies, collects and distributes between itself and states", "Union levies, collects and keeps it for itself", "Union levies and collects but all proceeds go to states", "Only surcharge on income tax is shared"],
+            opts_hi: ["संघ कर लगाता है, उद्ग्रहण करता है और कर प्राप्तियों का स्वयं और राज्यों के बीच वितरण करता है", "संघ कर लगाता है, उद्ग्रहण करता है और कर प्राप्तियों को अपने लिए रख लेता है", "संघ कर लगाता है और उद्ग्रहण करता है लेकिन सभी प्राप्तियाँ राज्यों में वितरित कर दी जाती", "केवल आयकर पर लगाया गया अधिभार ही संघ और राज्यों के बीच बाँटा जाता है"],
+            answer: 0 
+        },
+        { 
+            q_en: "22. Which one of the following is correctly matched?",
+            q_hi: "22. निम्नलिखित में से कौन-सा एक सही सुमेलित है?",
+            opts_en: ["Income Tax - Indirect Tax", "Customs Duty - Direct Tax", "Excise Duty - Center's max tax source (Historical)", "Entertainment Tax - State's max tax source"],
+            opts_hi: ["आयकर - अप्रत्यक्ष कर", "सीमा शुल्क - प्रत्यक्ष कर", "उत्पाद शुल्क - केन्द्र का अधिकतम कर आय स्रोत", "मनोरंजन कर - राज्यों का अधिकतम कर आय स्रोत"],
+            answer: 2 
+        },
+        { 
+            q_en: "23. Value Added Tax (VAT) is levied:",
+            q_hi: "23. मूल्य वर्द्धित टैक्स (वैट) लगाया जाता है",
+            opts_en: ["Directly on consumer", "At the final stage of production", "At the first stage of production", "At every stage from production to final sale"],
+            opts_hi: ["प्रत्यक्ष रूप से उपभोक्ता पर", "उत्पादन के अन्तिम स्तर पर", "उत्पादन के प्रथम स्तर पर", "उत्पादन के अन्तिम बिक्री तक प्रत्येक स्तर पर"],
+            answer: 3 
+        },
+        { 
+            q_en: "24. Which statement regarding Income Tax in India is true? 1. It is a progressive tax. 2. It is a direct tax. 3. It is collected by state governments. 4. It is a proportional tax.",
+            q_hi: "24. निम्नलिखित कथनों में से भारत में आयकर के सम्बन्ध में कौन-सा कथन सत्य है? 1. यह एक प्रगतिशील कर है। 2. यह एक प्रत्यक्ष कर है 3. यह राज्य सरकारों द्वारा एकत्रित किया जाता है। 4. यह एक आनुपातिक कर है।",
+            opts_en: ["Only 1", "1 and 2", "1, 2 and 3", "2, 3 and 4"],
+            opts_hi: ["केवल 1", "1 और 2", "1, 2 और 3", "2, 3 और 4"],
+            answer: 1 
+        },
+        { 
+            q_en: "25. Consider the following taxes: 1. Corporation Tax 2. Customs Duty 3. Wealth Tax 4. Excise Duty. Which of these are Indirect Taxes?",
+            q_hi: "25. निम्नलिखित करों पर विचार कीजिए: 1. कम्पनी कर 2. सीमा शुल्क 3. सम्पत्ति कर 4. उत्पाद शुल्क। इनमें से कौन-सा/से अप्रत्यक्ष कर है/हैं?",
+            opts_en: ["Only 1", "2 and 4", "1 and 3", "2 and 3"],
+            opts_hi: ["केवल 1", "2 और 4", "1 और 3", "2 और 3"],
+            answer: 1 
+        },
+        { 
+            q_en: "26. Consider the following: 1. Fringe Benefit Tax 2. Interest Tax 3. Securities Transaction Tax. Which of these are Direct Taxes?",
+            q_hi: "26. निम्नलिखित कथनों पर विचार कीजिए: 1. अनुषंगी लाभ कर 2. ब्याज कर 3. प्रतिभूति लेन-देन कर। उपरोक्त कथनों में से कौन-सा/से प्रत्यक्ष कर है/हैं?",
+            opts_en: ["Only 1", "1 and 3", "2 and 3", "All of these"],
+            opts_hi: ["केवल 1", "1 और 3", "2 और 3", "ये सभी"],
+            answer: 3 
+        },
+        { 
+            q_en: "27. Which of the following taxes is NOT levied by State Governments?",
+            q_hi: "27. निम्नलिखित करों में से राज्य सरकारों द्वारा कौन-सा कर नहीं लगाया जाता है?",
+            opts_en: ["Entertainment Tax", "State Excise Duty", "Agricultural Income Tax", "Corporation Tax"],
+            opts_hi: ["मनोरंजन कर", "राज्य उत्पादन शुल्क", "कृषि आयकर", "निगम कर (कॉर्पोरेशन टैक्स)"],
+            answer: 3 
+        },
+        { 
+            q_en: "28. All revenue received by the Union Government from taxes and other receipts is deposited in:",
+            q_hi: "28. करों और सरकारी कामकाज के निर्वाह में हुई अन्य प्राप्तियों से सघीय सरकार को प्राप्त हुआ समूचा राजस्व जमा होता है।",
+            opts_en: ["Contingency Fund of India", "Public Accounts", "Consolidated Fund of India", "Deposits and Advances Fund"],
+            opts_hi: ["भारत की आकस्मिकता निधि में", "लोक लेखा में", "भारत की संचित निधि में", "निक्षेप तथा अग्रिम निधि में"],
+            answer: 2 
+        },
+        { 
+            q_en: "29. Tax Information Network (TIN) was established in the context of which tax?",
+            q_hi: "29. निम्न में से किस एक के सन्दर्भ में कर सूचना नेटवर्क (Tax Information Network) की स्थापना की गई?",
+            opts_en: ["Income Tax", "Excise Duty", "Customs Duty", "State Level VAT"],
+            opts_hi: ["आयकर", "उत्पाद कर", "सीमा शुल्क", "राज्य स्तरीय वैट"],
+            answer: 0 
+        },
+        { 
+            q_en: "30. Which is NOT a characteristic of Value Added Tax (VAT)?",
+            q_hi: "30. निम्नलिखित में से कौन-सी 'मूल्य आधारित कर' (वैल्यू एडेड टैक्स) की विशेषता नहीं है?",
+            opts_en: ["It is a multi-point destination based tax", "It is levied on value addition at every stage", "Burden falls on final consumer", "It is fundamentally a Central subject and States have limited role"],
+            opts_hi: ["यह बहु-बिन्दु लक्ष्य आधारित कर (टैक्सेशन) प्रणाली है", "यह उत्पादन वितरण श्रृंखला में लेने-देन के हर चरण में हुए मूल्य-संवर्द्धन पर लगाया गया कर है।", "यह वस्तुओं तथा सेवाओं पर उपभोग के अन्तः उपभोक्ताओ को करता पड़ता है।", "यह मूलभूत रूप से केन्द्र सरकार का विषय है; और राज्य सरकारों की दायित्व इसे सफलता के साथ लागू करने तक सीमित है।"],
+            answer: 3 
+        },
+        { 
+            q_en: "31. In which Union Territory/State was Sales Tax not applicable (Historically)?",
+            q_hi: "31. किस राज्य/केन्द्रशासित क्षेत्र में बिक्री कर लागू नहीं है?",
+            opts_en: ["Andaman & Nicobar and Lakshadweep", "Puducherry", "Goa, Arunachal Pradesh", "Applicable in all"],
+            opts_hi: ["अण्डमान एवं निकोबार तथा लक्षद्वीप", "पाण्डिचेरी (पुदुचेरी)", "गोआ, अरुणाचल प्रदेश", "सभी राज्य एवं केन्द्रशासित क्षेत्रों में बिक्री कर लागू है"],
+            answer: 0 
+        },
+        { 
+            q_en: "32. Which one is the main source of Gross Tax Revenue (GTR) for Government of India?",
+            q_hi: "32. निम्न में से कौन-सा एक, भारत सरकार के सकल कर राजस्व (जीटीआर) का मुख्य स्रोत है?",
+            opts_en: ["Income Tax", "Corporation Tax", "Customs Duty", "Service Tax"],
+            opts_hi: ["आयकर", "निगम-कर", "सीमा-शुल्क", "सेवा-कर"],
+            answer: 1 
+        },
+        { 
+            q_en: "33. Which statement is true? 1. Surcharge is tax on tax. 2. Usually surcharge is on indirect tax. 3. Cess is levied on both direct and indirect taxes.",
+            q_hi: "33. निम्न में कौन से कथन सत्य है ? 1. अधिभार कर के ऊपर कर होता है। 2. सामान्यतः अधिभार अप्रत्यक्ष कर लगाया जाता है। 3. उपकर प्रत्यक्ष और अप्रत्यक्ष दोनों करों पर लगाया जाता है।",
+            opts_en: ["Only 1", "1 and 2", "2 and 3", "1 and 3"],
+            opts_hi: ["केवल 1", "1 और 2", "2 और 3", "1 और 3"],
+            answer: 3 
+        },
+        { 
+            q_en: "34. Which match is correct? (Committee - Subject)",
+            q_hi: "34. निम्न में कौन सुमेलित है? समिति (सम्बन्ध) 1. एल के झा समिति - अप्रत्यक्ष कर 2. नंजुनदप्पा समिति - प्रत्यक्ष कर 3. वांचू समिति - कर सुधार",
+            opts_en: ["Only 1", "Only 1 and 2", "1 and 3", "2 and 3"],
+            opts_hi: ["केवल 1", "केवल 12 (1&2)", "1 और 3", "2 और 3"],
+            answer: 3 
+        },
+        { 
+            q_en: "35. Which statement regarding 'Tax Haven Countries' is NOT true?",
+            q_hi: "35. 'टैक्स हेवेंस देश' से सम्बन्धित कौन से कथन सत्य नहीं है ?",
+            opts_en: ["No tax is paid in Tax Haven countries", "Used for depositing black money", "St. Kitts, Canary Islands, Malta are tax havens", "None of these"],
+            opts_hi: ["टैक्स हेवेंस देश में कोई कर अदा नहीं किया जाता है।", "काला धन जमा करना", "सेण्ट किट्स एवं नेविस, केनेरीद्वीप, माल्टा टैक्स हेवेंस देश है।", "इनमें से कोई नहीं"],
+            answer: 3 
+        },
+        { 
+            q_en: "36. Which statement is true?",
+            q_hi: "36. निम्न में से कौन से कथन सत्य है ?",
+            opts_en: ["Tax evasion is related to giving false information about income/investment", "Tax incidence falls on the person who actually bears the burden", "Both", "None"],
+            opts_hi: ["कर अपवंचन आय वा निवेश के सम्बन्ध में गलत सूचना देने से सम्बन्धित है।", "कर विवर्तन के अनुसार कर का वास्तविक भार उस व्यक्ति पर पड़ता है जिस पर कर लगाया जाता है।", "दोनों", "इनमें से कोई नहीं"],
+            answer: 0 
+        },
+        { 
+            q_en: "37. India receives maximum tax income from:",
+            q_hi: "37. भारत को अधिकतम कर आय प्राप्त होती है-",
+            opts_en: ["Corporation Tax", "Income Tax", "Import Duty", "Central Excise Duty"],
+            opts_hi: ["निगम कर से", "आय कर से", "आयात शुल्क से", "केन्द्रीय उत्पाद शुल्क से"],
+            answer: 0 
+        },
+        { 
+            q_en: "38. Maximum contribution to Government of India's total tax revenue comes from:",
+            q_hi: "38. भारत सरकार की कुल कर आय में सर्वाधिक योगदान होता है-",
+            opts_en: ["Income Tax", "Customs Duty", "Central Excise", "Wealth Tax"],
+            opts_hi: ["आय कर का", "प्रशुल्क कर का", "केन्द्रीय आबकारी कर का", "सम्पत्ति कर का"],
+            answer: 2 
+        },
+        { 
+            q_en: "39. Federal Budget receives maximum income from:",
+            q_hi: "39. संघीय बजट को अधिकतम आय प्राप्त होती है-",
+            opts_en: ["Income Tax", "Customs Duty", "Excise Duty", "Corporate Tax"],
+            opts_hi: ["आय कर से", "कस्टम ड्यूटी से", "एक्साइज ड्यूटी से", "कॉर्पोरेट कर से"],
+            answer: 3 
+        },
+        { 
+            q_en: "40. Which of the following is NOT a source for the Union Government?",
+            q_hi: "40. निम्नलिखित में से कौन-सा स्रोत संघ सरकार का स्रोत नहीं है?",
+            opts_en: ["Excise Duty", "Income Tax", "Trade Tax (Sales Tax)", "Corporate Tax"],
+            opts_hi: ["उत्पाद शुल्क", "आयकर", "व्यापार कर", "कॉर्पोरेट कर"],
+            answer: 2 
+        },
+        { 
+            q_en: "41. Which tax is NOT collected by the Union Government?",
+            q_hi: "41. संघ सरकार द्वारा किस कर की वसूली नहीं की जाती है?",
+            opts_en: ["Corporation Tax", "Tax on Agricultural Land", "Customs Duty", "Income Tax"],
+            opts_hi: ["निगम कर", "कृषि भूमि पर आय कर", "सीमा शुल्क", "आयकर"],
+            answer: 1 
+        },
+        { 
+            q_en: "42. Who introduced Income Tax in India?",
+            q_hi: "42. भारत में किसने आमदनी पर कर की शुरुआत की थी?",
+            opts_en: ["William Jones", "Lord Macaulay", "James Wilson", "Charles Wood"],
+            opts_hi: ["विलियम जोन्स", "लॉर्ड मैकाले", "जेम्स विल्सन", "चार्ल्स वुड"],
+            answer: 2 
+        },
+        { 
+            q_en: "43. The most important source of tax revenue for Union Government is:",
+            q_hi: "43. संघ सरकार के कर राजस्व में सबसे महत्त्वपूर्ण स्रोत है-",
+            opts_en: ["Income Tax", "Customs Duty", "Corporation Tax", "Union Excise Duty"],
+            opts_hi: ["आय कर", "सीमा शुल्क", "निगम कर", "संघ उत्पाद शुल्क"],
+            answer: 2 
+        },
+        { 
+            q_en: "44. Which tax is NOT levied by Government of India?",
+            q_hi: "44. निम्नलिखित में से कौन-सा कर भारत सरकार द्वारा नहीं लगाया जाता है?",
+            opts_en: ["Service Tax", "Education Tax", "Customs Duty", "Road Tax"],
+            opts_hi: ["सेवा कर", "शिक्षा कर", "सीमा कर", "मार्ग कर"],
+            answer: 3 
+        },
+        { 
+            q_en: "45. Which group is related to Central Taxes?",
+            q_hi: "45. निम्नलिखित में से कौन-सा समूह केन्द्रीय कर से सम्बन्धित है:",
+            opts_en: ["Excise, Sales Tax, Customs", "Excise, Customs, Income Tax", "Income Tax, Customs, House Tax", "Customs, Entertainment, Income Tax"],
+            opts_hi: ["उत्पाद शुल्क, बिक्री कर तथा सीमा शुल्क", "उत्पादक शुल्क, सीमा शुल्क तथा आय कर", "आय कर, सीमा शुल्क तथा गृह कर", "सीमा शुल्क, मनोरंजन कर तथा आय कर"],
+            answer: 1 
+        },
+        { 
+            q_en: "46. Agricultural Income Tax in India can be levied by:",
+            q_hi: "46. भारत में कृषि आय कर लगाया जा सकता है-",
+            opts_en: ["State Governments", "Central Government", "Local Government", "Central & State Governments"],
+            opts_hi: ["राज्य सरकारों द्वारा", "केन्द्र सरकार द्वारा", "स्थानीय सरकार द्वारा", "केन्द्र तथा राज्य सरकारों द्वारा"],
+            answer: 0 
+        },
+        { 
+            q_en: "47. Which of the following is a Direct Tax?",
+            q_hi: "47. निम्नलिखित में से कौन-सा प्रत्यक्ष कर है?",
+            opts_en: ["Sales Tax", "Excise Duty", "Customs Duty", "Estate Tax"],
+            opts_hi: ["विक्रय कर", "एक्साइज ड्यूटी", "कस्टम ड्यूटी", "सम्पदा कर"],
+            answer: 3 
+        },
+        { 
+            q_en: "48. Taxation is a tool of:",
+            q_hi: "48. कराधान एक उपकरण है-",
+            opts_en: ["Monetary Policy", "Fiscal Policy", "Price Policy", "Wage Policy"],
+            opts_hi: ["मौद्रिक नीति का", "राजकोषीय नीति का", "कीमत नीति का", "मजदूरी नीति का"],
+            answer: 1 
+        },
+        { 
+            q_en: "49. In which year was Service Tax introduced in India?",
+            q_hi: "49. भारत में सेवा कर किस वर्ष प्रारंभ किया गया था?",
+            opts_en: ["1994-95", "1996-97", "1998-99", "1991-92"],
+            opts_hi: ["1994-95", "1996-97", "1998-99", "1991-92"],
+            answer: 0 
+        },
+        { 
+            q_en: "50. Goods and Services Tax (GST) was introduced in India on:",
+            q_hi: "50. भारत में सामान और सेवा कर (GST) शुरू किया गया था-",
+            opts_en: ["26 Jan 2017", "04 July 2017", "08 Nov 2016", "15 Aug 2017 (Real: 1 July)"],
+            opts_hi: ["26 जनवरी, 2017", "04 जुलाई, 2017", "08 नवम्बर, 2016", "15 अगस्त, 2017"],
+            answer: 3 
+        },
+        { 
+            q_en: "51. Which was the first country to implement GST?",
+            q_hi: "51. सामान और सेवा कर (GST) लागू करने वाला पहला देश कौन था?",
+            opts_en: ["Canada", "France", "Australia", "Germany"],
+            opts_hi: ["कनाडा", "फ्रांस", "ऑस्ट्रेलिया", "जर्मनी"],
+            answer: 1 
+        },
+        { 
+            q_en: "52. Which was the first Indian state to ratify the GST Constitutional Amendment Bill?",
+            q_hi: "52. भारतीय संसद द्वारा हाल ही में पारित जीएसटी (GST) संविधान संशोधन विधेयक को स्वीकृति देने वाला पहला भारतीय राज्य कौन-सा है?",
+            opts_en: ["Arunachal Pradesh", "West Bengal", "Assam", "Meghalaya"],
+            opts_hi: ["अरुणाचल प्रदेश", "पश्चिम बंगाल", "असम", "मेघालय"],
+            answer: 2 
+        },
+        { 
+            q_en: "53. The formal launch of GST in India on 1 July 2017 took place from:",
+            q_hi: "53. 1 जुलाई, 2017 को भारत में GST का औपचारिक शुभारम्भ हुआ था-",
+            opts_en: ["Parliament House", "India Gate", "PM Office", "Rashtrapati Bhavan"],
+            opts_hi: ["संसद भवन से", "इण्डिया गेट से", "प्रधानमंत्री कार्यालय से", "राष्ट्रपति भवन से"],
+            answer: 0 
+        }
+    ];
+
+    // --- LOGIC ---
+    let questions = [];
+    let currentQuestionIndex = 0;
+    let score = 0;
+    let timer = 0;
+    let timerInterval = null;
+    let maxTime = 0;
+    let audioCtx = null;
+
+    function initAudio() {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+
+    function playSound(type) {
+        if (!audioCtx) return;
+        const osc = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        osc.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+
+        if (type === 'correct') {
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(500, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(1000, audioCtx.currentTime + 0.1);
+            gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.5);
+        } else if (type === 'wrong') {
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+            osc.frequency.linearRampToValueAtTime(100, audioCtx.currentTime + 0.3);
+            gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.3);
+        }
+    }
+
+    function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
+    }
+
+    function startQuiz() {
+        initAudio();
+        const timerInput = document.getElementById('timerInput').value;
+        maxTime = parseInt(timerInput) || 0;
+        const doShuffle = document.getElementById('shuffleToggle').checked;
+
+        questions = [...rawQuestions];
+        if (doShuffle) shuffleArray(questions);
+
+        score = 0;
+        currentQuestionIndex = 0;
+
+        document.getElementById('start-screen').classList.remove('active');
+        document.getElementById('quiz-screen').classList.add('active');
+
+        loadQuestion();
+    }
+
+    function loadQuestion() {
+        clearInterval(timerInterval);
+        document.getElementById('timerDisplay').classList.remove('pulse');
+        
+        const progress = (currentQuestionIndex / questions.length) * 100;
+        document.getElementById('progressBar').style.width = `${progress}%`;
+        document.getElementById('qCount').innerText = `Q: ${currentQuestionIndex + 1}/${questions.length}`;
+        document.getElementById('scoreCount').innerText = `Score: ${score}`;
+
+        const currentQ = questions[currentQuestionIndex];
+        
+        // Bilingual Text Injection
+        document.getElementById('qTextEn').innerText = currentQ.q_en;
+        document.getElementById('qTextHi').innerText = currentQ.q_hi;
+
+        const container = document.getElementById('optionsContainer');
+        container.innerHTML = '';
+        
+        currentQ.opts_en.forEach((optEn, idx) => {
+            const optHi = currentQ.opts_hi[idx];
+            
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            
+            const spanEn = document.createElement('span');
+            spanEn.className = 'opt-en';
+            spanEn.innerText = optEn;
+            
+            const spanHi = document.createElement('span');
+            spanHi.className = 'opt-hi';
+            spanHi.innerText = optHi;
+            
+            btn.appendChild(spanEn);
+            btn.appendChild(spanHi);
+            
+            btn.onclick = () => handleAnswer(idx, btn, currentQ.answer);
+            container.appendChild(btn);
+        });
+
+        if (maxTime > 0) {
+            timer = maxTime;
+            updateTimerDisplay();
+            timerInterval = setInterval(() => {
+                timer--;
+                updateTimerDisplay();
+                if (timer <= 0) {
+                    clearInterval(timerInterval);
+                    handleTimeOut();
+                }
+            }, 1000);
+        } else {
+            document.getElementById('timerDisplay').innerText = "∞";
+        }
+    }
+
+    function updateTimerDisplay() {
+        const tDisplay = document.getElementById('timerDisplay');
+        tDisplay.innerText = timer;
+        if (timer < 5) tDisplay.classList.add('pulse');
+        else tDisplay.classList.remove('pulse');
+    }
+
+    function handleAnswer(selectedIndex, btn, correctIndex) {
+        clearInterval(timerInterval);
+        const btns = document.querySelectorAll('.option-btn');
+        btns.forEach(b => b.disabled = true);
+
+        if (selectedIndex === correctIndex) {
+            score++;
+            btn.classList.add('correct');
+            playSound('correct');
+            triggerFeedback(true);
+        } else {
+            btn.classList.add('wrong');
+            if (correctIndex !== -1 && btns[correctIndex]) btns[correctIndex].classList.add('correct');
+            playSound('wrong');
+            triggerFeedback(false);
+        }
+        setTimeout(nextQuestion, 1500);
+    }
+
+    function handleTimeOut() {
+        const btns = document.querySelectorAll('.option-btn');
+        btns.forEach(b => b.disabled = true);
+        const correctIndex = questions[currentQuestionIndex].answer;
+        if(correctIndex !== -1 && btns[correctIndex]) {
+             btns[correctIndex].classList.add('correct');
+        }
+        playSound('wrong');
+        triggerFeedback(false);
+        setTimeout(nextQuestion, 1500);
+    }
+
+    function nextQuestion() {
+        currentQuestionIndex++;
+        if (currentQuestionIndex < questions.length) {
+            loadQuestion();
+        } else {
+            finishQuiz();
+        }
+    }
+
+    function triggerFeedback(isCorrect) {
+        const overlay = document.getElementById('feedback-overlay');
+        overlay.style.display = 'block';
+        overlay.innerHTML = '';
+
+        if (isCorrect) {
+            // Confetti
+            for(let i=0; i<30; i++) {
+                const p = document.createElement('div');
+                p.className = 'confetti';
+                p.style.left = Math.random() * 100 + 'vw';
+                p.style.top = '-10px';
+                p.style.backgroundColor = ['#FFD700', '#FF69B4', '#00FA9A', '#00BFFF'][Math.floor(Math.random()*4)];
+                p.style.animationDuration = (Math.random() * 2 + 1) + 's';
+                overlay.appendChild(p);
+            }
+        } else {
+            // Sad Emoji
+            const emoji = document.createElement('div');
+            emoji.innerText = '😢';
+            emoji.className = 'emoji-feedback';
+            overlay.appendChild(emoji);
+        }
+
+        setTimeout(() => {
+            overlay.style.display = 'none';
+        }, 1000);
+    }
+
+    function finishQuiz() {
+        clearInterval(timerInterval);
+        document.getElementById('quiz-screen').classList.remove('active');
+        document.getElementById('result-screen').classList.add('active');
+        
+        // Calculate percentage based on total questions (standard quiz rules)
+        const finalPercent = Math.round((score / questions.length) * 100);
+
+        const scoreDisplay = document.getElementById('finalScore');
+        scoreDisplay.innerText = `${finalPercent}%`;
+
+        const msg = document.getElementById('resultMessage');
+        if (finalPercent >= 80) msg.innerText = "🏆 Outstanding Performance! / उत्कृष्ट प्रदर्शन!";
+        else if (finalPercent >= 50) msg.innerText = "👏 Well Done! Keep it up. / बहुत अच्छे!";
+        else msg.innerText = "📚 Practice makes perfect! / अभ्यास करें!";
+        
+        document.getElementById('statsText').innerText = `You answered ${score} out of ${questions.length} questions correctly.`;
+    }
+
+    function resetQuiz() {
+        document.getElementById('result-screen').classList.remove('active');
+        document.getElementById('start-screen').classList.add('active');
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,1349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Indian Economy Bilingual Quiz</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&family=Noto+Sans+Devanagari:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --primary-gradient: linear-gradient(135deg, #8E2DE2, #4A00E0, #ff00cc);
+            --text-white: #ffffff;
+            --text-dim: #dddddd;
+            --correct-green: #00e676;
+            --wrong-red: #ff1744;
+            --font-en: 'Poppins', sans-serif;
+            --font-hi: 'Noto Sans Devanagari', sans-serif;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            background: var(--primary-gradient);
+            background-size: 200% 200%;
+            animation: gradientBG 15s ease infinite;
+            font-family: var(--font-en);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-white);
+            overflow-x: hidden;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Glass Container */
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 25px;
+            padding: 30px;
+            width: 90%;
+            max-width: 800px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        /* Screens */
+        .screen { display: none; flex-direction: column; align-items: center; width: 100%; }
+        .screen.active { display: flex; animation: fadeIn 0.5s ease; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Typography */
+        h1 { font-size: 2rem; text-align: center; margin-bottom: 10px; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+        h2 { font-size: 1.5rem; margin-bottom: 20px; }
+        .subtitle { font-size: 1rem; color: var(--text-dim); text-align: center; margin-bottom: 30px; }
+
+        /* Inputs & Controls */
+        .control-group { margin: 15px 0; width: 100%; max-width: 400px; }
+        label { display: block; margin-bottom: 5px; font-weight: 600; }
+        
+        input[type="number"] {
+            width: 100%; padding: 12px; border-radius: 12px; border: 1px solid var(--glass-border);
+            background: rgba(255, 255, 255, 0.15); color: white; font-size: 1.1rem; outline: none;
+        }
+
+        /* Toggle Switch */
+        .toggle-row { display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.2); padding: 10px 20px; border-radius: 15px; }
+        .switch { position: relative; display: inline-block; width: 50px; height: 26px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--correct-green); }
+        input:checked + .slider:before { transform: translateX(24px); }
+
+        /* Buttons */
+        .btn {
+            padding: 15px 40px; border: none; border-radius: 50px; font-size: 1.1rem; font-weight: 700; cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s; margin-top: 20px; text-transform: uppercase; letter-spacing: 1px;
+        }
+        .btn-start { background: white; color: #4A00E0; }
+        .btn-start:hover { transform: scale(1.05); box-shadow: 0 0 20px rgba(255,255,255,0.5); }
+        .btn-submit { background: rgba(255, 50, 50, 0.8); color: white; width: 100%; margin-top: 30px; font-size: 0.9rem; }
+        .btn-restart { background: var(--correct-green); color: white; }
+
+        /* Quiz UI */
+        .progress-bar-container { width: 100%; height: 6px; background: rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden; margin-bottom: 20px; }
+        .progress-bar { height: 100%; background: var(--correct-green); width: 0%; transition: width 0.3s ease; }
+        
+        .quiz-header { display: flex; justify-content: space-between; width: 100%; margin-bottom: 20px; font-weight: 600; font-size: 0.9rem; }
+        
+        .timer-badge {
+            background: rgba(0,0,0,0.3); padding: 5px 15px; border-radius: 20px; font-family: monospace; font-size: 1.2rem;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .timer-badge.danger { color: #ff1744; border-color: #ff1744; animation: pulse 0.8s infinite; }
+        
+        @keyframes pulse { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(1.1); } 100% { opacity: 1; transform: scale(1); } }
+
+        .question-container { width: 100%; margin-bottom: 25px; }
+        .q-en { font-size: 1.2rem; font-weight: 700; margin-bottom: 8px; line-height: 1.4; }
+        .q-hi { font-size: 1.1rem; color: var(--text-dim); font-family: var(--font-hi); line-height: 1.5; }
+
+        .options-grid { display: grid; gap: 15px; width: 100%; }
+        
+        .option-btn {
+            background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15); padding: 15px; border-radius: 15px;
+            text-align: left; cursor: pointer; transition: all 0.2s; position: relative;
+        }
+        .option-btn:hover:not([disabled]) { background: rgba(255,255,255,0.25); transform: translateX(5px); }
+        .option-btn .opt-en { display: block; font-weight: 600; font-size: 1rem; color: white; margin-bottom: 4px; }
+        .option-btn .opt-hi { display: block; font-size: 0.9rem; color: #ddd; font-family: var(--font-hi); }
+
+        /* Feedback States */
+        .option-btn.correct { background: rgba(0, 230, 118, 0.4); border-color: var(--correct-green); }
+        .option-btn.wrong { background: rgba(255, 23, 68, 0.4); border-color: var(--wrong-red); }
+
+        /* Emoji Overlay */
+        #emoji-overlay { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 6rem; z-index: 100; pointer-events: none; opacity: 0; transition: opacity 0.2s; }
+        .shake { animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both; }
+        @keyframes shake { 10%, 90% { transform: translate(-51%, -50%); } 20%, 80% { transform: translate(-49%, -50%); } 30%, 50%, 70% { transform: translate(-51%, -50%); } 40%, 60% { transform: translate(-49%, -50%); } }
+
+        /* Result Screen */
+        .score-display { font-size: 4rem; font-weight: 800; margin: 20px 0; text-shadow: 0 0 20px rgba(255,255,255,0.5); }
+        .result-message { font-size: 1.5rem; text-align: center; margin-bottom: 10px; color: var(--correct-green); }
+        
+        /* Confetti */
+        .confetti { position: fixed; width: 10px; height: 10px; top: -10px; z-index: 9999; animation: fall linear forwards; }
+        @keyframes fall { to { transform: translateY(100vh) rotate(720deg); } }
+
+        /* Mobile */
+        @media (max-width: 600px) {
+            .glass-card { padding: 20px; width: 95%; }
+            h1 { font-size: 1.5rem; }
+            .q-en { font-size: 1.1rem; }
+            .option-btn { padding: 12px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="glass-card">
+    <div id="start-screen" class="screen active">
+        <h1>Indian Economy</h1>
+        <div class="subtitle">77 Questions | Bilingual (Eng/Hin)</div>
+        
+        <div class="control-group">
+            <label>Timer per Question (Seconds)</label>
+            <input type="number" id="timerInput" placeholder="e.g. 30 (0 for no timer)" value="30">
+        </div>
+
+        <div class="control-group">
+            <div class="toggle-row">
+                <label>Shuffle Questions</label>
+                <label class="switch">
+                    <input type="checkbox" id="shuffleToggle">
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </div>
+
+        <button class="btn btn-start" onclick="startQuiz()">Start Quiz</button>
+    </div>
+
+    <div id="quiz-screen" class="screen">
+        <div class="progress-bar-container"><div class="progress-bar" id="progressBar"></div></div>
+        
+        <div class="quiz-header">
+            <span id="questionCounter">Q: 1/77</span>
+            <span id="timerDisplay" class="timer-badge">--</span>
+            <span id="scoreCounter">Score: 0</span>
+        </div>
+
+        <div class="question-container">
+            <div class="q-en" id="q-en">Question text...</div>
+            <div class="q-hi" id="q-hi">Question hindi...</div>
+        </div>
+
+        <div class="options-grid" id="optionsGrid">
+            </div>
+
+        <button class="btn btn-submit" onclick="finishQuiz()">Finish & Show Results</button>
+    </div>
+
+    <div id="result-screen" class="screen">
+        <h1>Quiz Completed!</h1>
+        <div class="score-display" id="finalScore">0%</div>
+        <div class="result-message" id="resultMessage">Well Done!</div>
+        <div class="subtitle" id="statsText">You answered X out of Y correctly.</div>
+        <button class="btn btn-restart" onclick="resetQuiz()">Restart Quiz</button>
+    </div>
+</div>
+
+<div id="emoji-overlay"></div>
+
+<script>
+    // --- DATA: ALL 77 QUESTIONS EXTRACTED FROM IMAGES ---
+    // Note: Mapped strictly to provided images.
+    const quizData = [
+    {
+        id: 1,
+        en: "Which of the following causes an increase in Public Expenditure?",
+        hi: "निम्नलिखित में कौन-सा लोक व्यय में वृद्धि का कारण है?",
+        options: [
+            { en: "Increase in National Income", hi: "राष्ट्रीय आय में वृद्धि" },
+            { en: "Debt Financing", hi: "ऋण वित्तीयन" },
+            { en: "Increase in amount of subsidies", hi: "आर्थिक सहायताओं की राशि में वृद्धि" },
+            { en: "All of the above", hi: "ये सभी" }
+        ],
+        correct: 3
+    },
+    {
+        id: 2,
+        en: "Deficit financing in India is used to increase resources for?",
+        hi: "भारत में घाटे की वित्त व्यवस्था किसके लिए संसाधनों को बढ़ाने के लिए उपयोग की जाती है?",
+        options: [
+            { en: "Economic Development", hi: "आर्थिक विकास के लिए" },
+            { en: "Paying Public Debt", hi: "सार्वजनिक ऋण चुकाने के लिए" },
+            { en: "Adjusting Balance of Payments", hi: "भुगतान शेष का समायोजन करने के लिए" },
+            { en: "Reducing Foreign Debt", hi: "विदेशी ऋण कम करने के लिए" }
+        ],
+        correct: 0
+    },
+    {
+        id: 3,
+        en: "How is the traditional budgetary deficit bridged?",
+        hi: "पारम्परिक बजटीय घाटे को किस प्रकार से पूरा किया जाता है?",
+        options: [
+            { en: "Withdrawal of cash balances from RBI", hi: "भारतीय रिजर्व बैंक के पास शेष नकदी आहरण से" },
+            { en: "Net increase in Treasury Bills", hi: "केन्द्र सरकार द्वारा जारी राजकोषीय हुण्डियों में निवल वृद्धि" },
+            { en: "1 and 2", hi: "1 और 2" },
+            { en: "By taking Foreign Loans", hi: "विदेशी ऋण लेकर" }
+        ],
+        correct: 2
+    },
+    {
+        id: 4,
+        en: "Which of the following is a principle of Budget formulation?",
+        hi: "बजट निर्माण में निम्न में से कौन-से सिद्धान्त हैं?",
+        options: [
+            { en: "Budget should be balanced", hi: "बजट सन्तुलित होना चाहिए" },
+            { en: "Assessment at departmental level", hi: "विभागीय स्तर पर आकलन होना चाहिए" },
+            { en: "Budget should not be gross", hi: "बजट सकल नहीं निबल होना चाहिए" },
+            { en: "Integration of Revenue and Capital aspects", hi: "राजस्व एवं पूँजीगत पक्षों का एकीकरण होना चाहिए" }
+        ],
+        correct: 1
+    },
+    {
+        id: 5,
+        en: "Which of the following documents are presented to the legislature along with the Budget?",
+        hi: "बजट के साथ विधायिका में निम्नलिखित में से कौन-से दस्तावेज प्रस्तुत किए जाते हैं?",
+        options: [
+            { en: "Explanatory Memorandum", hi: "बजट सम्बन्धी व्याख्यात्मक स्मृति-पत्र" },
+            { en: "Summary of Demands for Grants", hi: "अनुदान माँगों का सारांश" },
+            { en: "Appropriation Bill", hi: "विनियोग विधेयक" },
+            { en: "All of the above", hi: "ये सभी" }
+        ],
+        correct: 3
+    },
+    {
+        id: 6,
+        en: "Which statement is appropriate regarding the importance of Revenue?",
+        hi: "निम्नलिखित में कौन-सा कथन राजस्व के महत्व के सम्बन्ध में उपयुक्त है?",
+        options: [
+            { en: "Allocation of resources", hi: "साधनों का आवंटन" },
+            { en: "Affecting production, employment & prices", hi: "उत्पादन, रोजगार एवं कीमतों को प्रभावित करना" },
+            { en: "Affecting distribution of wealth", hi: "आय और सम्पत्ति के वितरण में समानता" },
+            { en: "All of the above", hi: "ये सभी" }
+        ],
+        correct: 3
+    },
+    {
+        id: 7,
+        en: "Consider the following statements regarding Budget Deficits:",
+        hi: "निम्नलिखित कथनों पर विचार करें (बजट घाटा सूत्र)",
+        options: [
+            { en: "Disposable Income = Personal Income - Direct Tax", hi: "व्यय योग्य आय = व्यक्तिगत आय - प्रत्यक्ष कर" },
+            { en: "Budget Deficit = Total Exp - Total Income", hi: "बजट घाटा = कुल व्यय - कुल आय" },
+            { en: "Budget Deficit = Total Rev Exp - Total Rev Income", hi: "बजट घाटा = सकल राजस्व व्यय - सकल राजस्व आय" },
+            { en: "All of the above", hi: "ये सभी" }
+        ],
+        correct: 3
+    },
+    {
+        id: 8,
+        en: "Consider the following statements about Deficit Financing:",
+        hi: "घाटे की वित्त व्यवस्था के सम्बन्ध में विचार करें:",
+        options: [
+            { en: "It leads to price rise", hi: "घाटे की वित्त व्यवस्था कीमत वृद्धि को जन्म देती है" },
+            { en: "It helps in capital formation", hi: "घाटे की वित्त व्यवस्था से पूँजी निर्माण में सहायता मिलती है" },
+            { en: "It assists in production growth", hi: "घाटे की वित्त व्यवस्था उत्पादन वृद्धि में सहायता करती है" },
+            { en: "All of the above", hi: "ये सभी" }
+        ],
+        correct: 3
+    },
+    {
+        id: 9,
+        en: "General Budget proposals must be presented to Parliament because:",
+        hi: "आम बजट प्रस्ताव संसद के समक्ष प्रस्तुत करना आवश्यक है, क्योंकि:",
+        options: [
+            { en: "Parliament is an expert body on economic matters", hi: "संसद आर्थिक मामलों की विशेषज्ञ वाली एक सभा है" },
+            { en: "Parliament checks wasteful expenditure", hi: "संसद बजट प्रस्तावों पर विचार करके सरकार के अपव्ययों पर प्रतिबन्ध लगाती है" },
+            { en: "Parliament is supreme in Constitution", hi: "भारतीय संविधान में संसद को सर्वोच्च स्थान प्राप्त है" },
+            { en: "Approval of people's representatives is needed", hi: "सार्वजनिक धन की प्राप्ति और व्यय के प्रावधान को जनता के प्रतिनिधियों की स्वीकृति मिलना आवश्यक है" }
+        ],
+        correct: 3
+    },
+    {
+        id: 10,
+        en: "To meet the deficit financing, which method can the Government of India use?",
+        hi: "भारत सरकार घाटे की वित्त व्यवस्था की धन पूर्ति के लिए किस साधन का आश्रय ले सकती है?",
+        options: [
+            { en: "Reducing cash balances", hi: "नकद शेषों को कम करना" },
+            { en: "Borrowing from Central Bank", hi: "केन्द्रीय बैंक से ऋण लेना" },
+            { en: "Printing additional currency", hi: "अतिरिक्त करेन्सी मुद्रा छापना" },
+            { en: "All of the above", hi: "ये सभी" }
+        ],
+        correct: 3
+    },
+    {
+        id: 11,
+        en: "Non-plan grants to states by the Center serve which purpose?",
+        hi: "गैर-योजना अनुदान केन्द्र राज्यों को निम्न उद्देश्य देता है",
+        options: [
+            { en: "Under Article 275(1)", hi: "संविधान की धारा 275 (1) के अन्तर्गत मूलवान्तर धन" },
+            { en: "For administrative reforms", hi: "प्रशासन सुधार हेतु" },
+            { en: "For salaries/allowances of state staff", hi: "राज्य कर्मियों के वेतन एवं भत्ता हेतु" },
+            { en: "All of the above", hi: "ये सभी" }
+        ],
+        correct: 3
+    },
+    {
+        id: 12,
+        en: "What is the difference between Monetary Policy and Fiscal Policy?",
+        hi: "मौद्रिक नीति एवं राजकोषीय नीति में क्या अन्तर है?",
+        options: [
+            { en: "Monetary controls volume/interest, Fiscal uses budget", hi: "मौद्रिक नीति मुद्रा की मात्रा व ब्याज दर के आधार पर मांग नियन्त्रित करती है जबकि राजकोषीय बजट प्रणाली का सहारा लेती है" },
+            { en: "Monetary relates to supply, Fiscal relates to interest", hi: "मौद्रिक नीति मुद्रा की पूर्ति से सम्बन्धित है जबकि राजकोषीय नीति ब्याज दर से सम्बन्धित है" },
+            { en: "Monetary clarifies govt exp, Fiscal relates to interest", hi: "मौद्रिक नीति सरकारी व्ययों को स्पष्ट करती है जबकि राजकोषीय नीति ब्याज दर से सम्बन्धित है" },
+            { en: "Monetary is automatic, Fiscal is discriminatory", hi: "मौद्रिक नीति स्वचालित है जबकि राजकोषीय विभेदात्मक है" }
+        ],
+        correct: 0
+    },
+    {
+        id: 13,
+        en: "If interest payments are removed from Gross Fiscal Deficit, the remainder is:",
+        hi: "यदि सकल राजकोषीय घाटे में से ब्याज भुगतान को निकाल दिया जाए तो अवशेष को कहा जाएगा",
+        options: [
+            { en: "Gross Primary Deficit", hi: "सकल प्राथमिक घाटा" },
+            { en: "Budgetary Deficit", hi: "बजटीय घाटा" },
+            { en: "Monetized Deficit", hi: "मौद्रीकृत घाटा" },
+            { en: "Revenue Deficit", hi: "राजस्व घाटा" }
+        ],
+        correct: 0
+    },
+    {
+        id: 14,
+        en: "Fiscal Deficit is:",
+        hi: "राजकोषीय घाटा है",
+        options: [
+            { en: "Total Exp - Total Receipts", hi: "कुल व्यय - कुल प्राप्तियाँ" },
+            { en: "Revenue Exp - Revenue Receipts", hi: "राजस्व व्यय - राजस्व प्राप्तियाँ" },
+            { en: "Capital Exp - Capital Receipts - Market Loans", hi: "पूँजीगत व्यय - पूँजीगत प्राप्तियाँ - बाजार ऋण" },
+            { en: "Sum of Budgetary Deficit + Govt Market Loans", hi: "बजटीय घाटे का योग और सरकार का बाजार ऋण तथा दायित्व" }
+        ],
+        correct: 3
+    },
+    {
+        id: 15,
+        en: "Deducting Interest Payment from Revenue Deficit of Central Budget yields:",
+        hi: "भारतीय केन्द्र सरकार के बजट में राजस्व घाटे से ब्याज-भुगतान घटाने पर प्राप्त होता है",
+        options: [
+            { en: "Deficit Financing", hi: "डेफिसिट फाइनेन्सिंग" },
+            { en: "Budgetary Deficit", hi: "बजटीय घाटा" },
+            { en: "Fiscal Deficit", hi: "राजकोषीय घाटा" },
+            { en: "Primary Deficit", hi: "प्राथमिक घाटा" }
+        ],
+        correct: 3
+    },
+    {
+        id: 16,
+        en: "Assertion (A): Fiscal Deficit is larger than Budgetary Deficit. Reason (R): Fiscal Deficit includes borrowing.",
+        hi: "कथन (A) राजकोषीय घाटा, बजटीय घाटे से बड़ा होता है। कारण (R) राजकोषीय घाटे का अर्थ है, सरकार द्वारा ऋण लेना।",
+        options: [
+            { en: "Both A and R true, R explains A", hi: "A और R दोनों सही हैं, तथा R, A की सही व्याख्या है" },
+            { en: "Both A and R true, R does not explain A", hi: "A और R दोनों सही हैं, परन्तु R, A की सही व्याख्या नहीं है" },
+            { en: "A true, R false", hi: "A सही है, परन्तु R गलत है" },
+            { en: "A false, R true", hi: "A गलत है, परन्तु R सही है" }
+        ],
+        correct: 0
+    },
+    {
+        id: 17,
+        en: "Which of the following motions is related to the Union Budget?",
+        hi: "निम्नलिखित प्रस्तावों में से किसका सन्दर्भित सम्बन्ध संघीय बजट से है?",
+        options: [
+            { en: "Censure Motion", hi: "निन्दा प्रस्ताव" },
+            { en: "Call Attention Motion", hi: "ध्यानाकर्षण प्रस्ताव" },
+            { en: "Cut Motion", hi: "कटौती प्रस्ताव" },
+            { en: "Adjournment Motion", hi: "स्थगन प्रस्ताव" }
+        ],
+        correct: 2
+    },
+    {
+        id: 18,
+        en: "Which is NOT an objective of the Fiscal Policy of Government of India?",
+        hi: "भारत सरकार की राजकोषीय नीति का निम्न में से कौन एक उद्देश्य नहीं है?",
+        options: [
+            { en: "Full Employment", hi: "पूर्ण रोजगार" },
+            { en: "Price Stability", hi: "मूल्य स्थिरता" },
+            { en: "Regulation of Inter-state trade", hi: "अन्तर राज्यीय व्यापार का नियमन" },
+            { en: "Equitable distribution of wealth", hi: "धन तथा आय का न्यायोचित वितरण" }
+        ],
+        correct: 2
+    },
+    {
+        id: 19,
+        en: "When was the FRBM (Fiscal Responsibility and Budget Management) Act passed?",
+        hi: "राजकोषीय उत्तरदायित्व एवं बजट प्रबन्धन अधिनियम भारतवर्ष में कब पारित किया गया था?",
+        options: [
+            { en: "2007", hi: "2007" },
+            { en: "2005", hi: "2005" },
+            { en: "2002", hi: "2002" },
+            { en: "2003", hi: "2003" }
+        ],
+        correct: 3
+    },
+    {
+        id: 20,
+        en: "Which are components of Appropriation Bill? 1. Grants by Lok Sabha 2. Expenditure on Cons. Fund.",
+        hi: "विनियोग विधेयक के अंग हैं: 1. लोकसभा द्वारा स्वीकृत माँग 2. भारत की संचित निधि पर भारित व्यय",
+        options: [
+            { en: "Only 1", hi: "केवल 1" },
+            { en: "1 and 2", hi: "1 और 2" },
+            { en: "2 and 3", hi: "2 और 3" },
+            { en: "All", hi: "ये सभी" }
+        ],
+        correct: 1
+    },
+    {
+        id: 21,
+        en: "Which of the following calculates Primary Deficit?",
+        hi: "निम्नलिखित में से कौन प्राथमिक घाटे का आकलन से होता:",
+        options: [
+            { en: "Budget Deficit - Interest", hi: "बजट घाटा - ब्याज अदायगियाँ" },
+            { en: "Budget Deficit + Interest", hi: "बजट घाटा + ब्याज अदायगियाँ" },
+            { en: "Fiscal Deficit - Interest", hi: "राजकोषीय घाटा - ब्याज अदायगियाँ" },
+            { en: "Fiscal Deficit + Interest", hi: "राजकोषीय घाटा + ब्याज अदायगियाँ" }
+        ],
+        correct: 2
+    },
+    {
+        id: 22,
+        en: "From which item does Railways earn maximum revenue?",
+        hi: "रेलवे को सर्वाधिक आमदनी किस मद से होती है?",
+        options: [
+            { en: "Goods Traffic", hi: "माल ढुलाई" },
+            { en: "Passenger Traffic", hi: "यात्री यातायात" },
+            { en: "Coaching", hi: "कोचिंग" },
+            { en: "Other Services", hi: "अन्य सेवाएँ" }
+        ],
+        correct: 0
+    },
+    {
+        id: 23,
+        en: "Whose responsibility is it to prepare the Budget?",
+        hi: "बजट तैयार करने का उत्तरदायित्व किसका है?",
+        options: [
+            { en: "Revenue Department", hi: "राजस्व" },
+            { en: "Expenditure Department", hi: "व्यय विभाग" },
+            { en: "Budget Division", hi: "बजट" },
+            { en: "Department of Economic Affairs", hi: "आर्थिक मामलों का विभाग" }
+        ],
+        correct: 3
+    },
+    {
+        id: 24,
+        en: "Which documents are presented to legislature with Budget? 1. Memo 2. Summary of Demands 3. Appr. Bill 4. Finance Bill 5. Economic Survey",
+        hi: "बजट के साथ विधायिका में कौन-से दस्तावेज प्रस्तुत किए जाते हैं? (स्मृति-पत्र, माँगों का सारांश, विनियोग, वित्त, सर्वेक्षण)",
+        options: [
+            { en: "1, 3 and 5", hi: "1, 3 और 5" },
+            { en: "1, 2 and 3", hi: "1, 2 और 3" },
+            { en: "2, 3 and 5", hi: "2, 3 और 5" },
+            { en: "1, 2, 3 and 4", hi: "1, 2, 3 और 4" }
+        ],
+        correct: 3
+    },
+    {
+        id: 25,
+        en: "Which are benefits of Zero Based Budgeting system? 1. Removes low priority items 2. Improves efficiency",
+        hi: "शून्य आधारित बजट प्रणाली के लाभ निम्न में से से हैं? 1. निम्न प्राथमिकता हटाना 2. नाटकीय सुधार",
+        options: [
+            { en: "2 and 4", hi: "2 और 4" },
+            { en: "2, 3 and 4", hi: "2, 3 और 4" },
+            { en: "1, 2 and 4", hi: "1, 2 और 4" },
+            { en: "1, 3 and 4", hi: "1, 3 और 4" }
+        ],
+        correct: 2
+    },
+    {
+        id: 26,
+        en: "Consider statements on Indian Public Finance: 1. Foreign loans depend on exchange rates 2. High debt keeps real interest rates high.",
+        hi: "भारतीय लोक वित्त के सन्दर्भ में, 1. विदेशी ऋण विनिमय दरों पर निर्भर 2. निरन्तर अधिक ऋण ने ब्याज दरों को ऊँचा रखा है।",
+        options: [
+            { en: "1, 2 and 3", hi: "1, 2 और 3" },
+            { en: "1 and 4", hi: "1 और 4" },
+            { en: "2, 3 and 4", hi: "2, 3 और 4" },
+            { en: "1, 2, 3 and 4", hi: "1, 2, 3 और 4" }
+        ],
+        correct: 3
+    },
+    {
+        id: 27,
+        en: "Consider statements on Budget in India: 1. First budget 1860 by James Wilson 2. Rail budget separated 1921.",
+        hi: "1. भारत का पहला बजट 1860 जेम्स विल्सन 2. रेल बजट 1921 में अलग किया गया।",
+        options: [
+            { en: "1 and 2", hi: "1 और 2" },
+            { en: "2 and 3", hi: "2 और 3" },
+            { en: "1 and 3", hi: "1 और 3" },
+            { en: "All of these", hi: "ये सभी" }
+        ],
+        correct: 3
+    },
+    {
+        id: 28,
+        en: "Compared to Revenue Deficit, Fiscal Deficit will always be:",
+        hi: "राजस्व घाटे की अपेक्षा, राजकोषीय घाटा सदैव रहेगा",
+        options: [
+            { en: "More", hi: "अधिक" },
+            { en: "Less", hi: "कम" },
+            { en: "Equal", hi: "समान" },
+            { en: "All of the above", hi: "ये सभी" }
+        ],
+        correct: 0
+    },
+    {
+        id: 29,
+        en: "Two parts of Public Income included in Budget are:",
+        hi: "बजट के अन्तर्गत सम्मिलित सार्वजनिक आय के दो भाग हैं",
+        options: [
+            { en: "Revenue Income and Non-Tax Revenue", hi: "राजस्व आय और गैर-कर राजस्व आय" },
+            { en: "Revenue Income and Capital", hi: "राजस्व आय और पूँजीगत" },
+            { en: "Capital Income and Non-Tax Capital", hi: "पूँजीगत आय और गैर-कर पूँजीगत आय" },
+            { en: "Non-Tax Revenue and Non-Tax Capital", hi: "गैर-कर राजस्व आय और गैर-कर पूँजीगत आय" }
+        ],
+        correct: 1
+    },
+    {
+        id: 30,
+        en: "Concept of Performance Budget was taken from?",
+        hi: "निष्पादन बजट की अवधारणा ली गई है",
+        options: [
+            { en: "Germany", hi: "जर्मनी से" },
+            { en: "France", hi: "फ्रांस से" },
+            { en: "UK", hi: "यूके से" },
+            { en: "USA", hi: "संयुक्त राज्य अमेरिका से" }
+        ],
+        correct: 3
+    },
+    {
+        id: 31,
+        en: "Who presented the first budget of Independent India?",
+        hi: "स्वतन्त्र भारत का प्रथम बजट किसने प्रस्तुत किया था?",
+        options: [
+            { en: "Vallabhbhai Patel", hi: "वल्लभ भाई पटेल" },
+            { en: "Dr. Bhabha", hi: "डॉ. भाभा" },
+            { en: "Baldev Sahay", hi: "बलदेव सहाय" },
+            { en: "RK Shanmukham Chetty", hi: "षण्मुगम चेट्टी" }
+        ],
+        correct: 3
+    },
+    {
+        id: 32,
+        en: "Consider: 1. Nehru first PM to present budget. 2. Morarji Desai presented max times.",
+        hi: "1. जवाहरलाल नेहरू प्रथम प्रधानमंत्री जिन्होंने बजट पेश किया। 2. मोरारजी देसाई ने सर्वाधिक 8 बार बजट प्रस्तुत किया।",
+        options: [
+            { en: "1 and 2", hi: "1 और 2" },
+            { en: "2 and 3", hi: "2 और 3" },
+            { en: "1, 2 and 3", hi: "1, 2 और 3" },
+            { en: "Only 3", hi: "केवल 3" }
+        ],
+        correct: 2
+    },
+    {
+        id: 33,
+        en: "When was voting on Budget started in India?",
+        hi: "भारत में बजट पर मतदान की प्रणाली सर्वप्रथम कब शुरू की गई?",
+        options: [
+            { en: "1909", hi: "1909" },
+            { en: "1919", hi: "1919" },
+            { en: "1995", hi: "1995" },
+            { en: "1946", hi: "1946" }
+        ],
+        correct: 1
+    },
+    {
+        id: 34,
+        en: "When was the first budget presented in Independent India?",
+        hi: "स्वतन्त्र भारत में पहली बार बजट कब प्रस्तुत किया गया था?",
+        options: [
+            { en: "26 Nov 1947", hi: "26 नवम्बर, 1947" },
+            { en: "1 Feb 1848", hi: "1 फरवरी, 1848" },
+            { en: "28 Feb 1960", hi: "28 फरवरी, 1960" },
+            { en: "29 Feb 1950", hi: "29 फरवरी, 1950" }
+        ],
+        correct: 0
+    },
+    {
+        id: 35,
+        en: "Correct sequence of passing Budget in Parliament:",
+        hi: "संसद में बजट पारित करने का सही अनुक्रम निर्धारित कीजिए",
+        options: [
+            { en: "Vote on Account - Finance Bill - Appr. Bill", hi: "लेखानुदान-वित्त विधेयक-विनियोग विधेयक" },
+            { en: "Finance Bill - Appr. Bill - Discussion", hi: "वित्त विधेयक-विनियोग विधेयक-बजट पर चर्चा" },
+            { en: "Discussion - Vote on Account - Finance Bill", hi: "बजट पर चर्चा-लेखानुदान-वित्त विधेयक" },
+            { en: "Discussion - Appr. Bill - Finance Bill", hi: "बजट पर चर्चा-विनियोग विधेयक-वित्त विधेयक" }
+        ],
+        correct: 3
+    },
+    {
+        id: 36,
+        en: "Fiscal Deficit in Union Budget means:",
+        hi: "संघीय बजट में राजकोषीय घाटे का अर्थ है",
+        options: [
+            { en: "Budget deficit + Net borrowing", hi: "बजट घाटे और आन्तरिक तथा बाह्य ऋणदान में निवल वृद्धि का योग" },
+            { en: "Current Exp + Current Rev", hi: "चालू व्यय और चालू राजस्व का योग" },
+            { en: "Monetized Deficit + Budget Deficit", hi: "मुद्रीकृत घाटे और बजट घाटे का योग" },
+            { en: "RBI Credit net increase", hi: "भारतीय रिजर्व बैंक से संघ सरकार द्वारा किए गए ऋणदान में हुई निवल वृद्धि" }
+        ],
+        correct: 0
+    },
+    {
+        id: 37,
+        en: "Which comes under Non-Plan Expenditure? 1. Subsidy 2. Interest 3. Defense",
+        hi: "निम्नलिखित में से क्या-क्या गैर-योजना व्यय के अन्तर्गत आते हैं? 1. सब्सिडी 2. ब्याज भुगतान 3. रक्षा व्यय",
+        options: [
+            { en: "1 and 2", hi: "1 और 2" },
+            { en: "Only 2", hi: "केवल 2" },
+            { en: "2 and 3", hi: "2 और 3" },
+            { en: "None", hi: "इनमें से कोई नहीं" }
+        ],
+        correct: 2
+    },
+    {
+        id: 38,
+        en: "Consider about budget: 1. Budget process started before independence. 2. First budget 7 April 1860.",
+        hi: "1. भारत में बजट की प्रक्रिया आजादी के पूर्व से चलन में है। 2. पहला बजट 7 अप्रैल 1860 में पेश हुआ था।",
+        options: [
+            { en: "Only 1", hi: "केवल 1" },
+            { en: "Only 2", hi: "केवल 2" },
+            { en: "1 and 2", hi: "1 और 2" },
+            { en: "All above", hi: "उपरोक्त सभी" }
+        ],
+        correct: 3
+    },
+    {
+        id: 39,
+        en: "Budget used to be at 5 PM. Who changed it to 11 AM?",
+        hi: "केन्द्रीय बजट पहले शाम 5 बजे पेश किया जाता था। किस वित्त मंत्री ने बदला और सुबह 11 बजे पेश किया जाने लगा?",
+        options: [
+            { en: "2000", hi: "2000" },
+            { en: "2001", hi: "2001" },
+            { en: "2002", hi: "2002" },
+            { en: "2004", hi: "2004" }
+        ],
+        correct: 1
+    },
+    {
+        id: 40,
+        en: "A: Budget mentioned as 'Annual Financial Statement' in Art 112. R: Morarji Desai presented max budgets.",
+        hi: "कथन (A) धारा 112 में 'वार्षिक वित्तीय विवरण'। कारण (R) मोरारजी देसाई ने सर्वाधिक बजट पेश किए।",
+        options: [
+            { en: "Both true, R explains A", hi: "A और R दोनों सही हैं, तथा A की सही व्याख्या R है" },
+            { en: "Both true, R not explains A", hi: "A और R दोनों सही हैं, परन्तु A की सही व्याख्या R नहीं है" },
+            { en: "A true, R false", hi: "A सही है, परन्तु R गलत है" },
+            { en: "A false, R true", hi: "A गलत है, परन्तु R सही" }
+        ],
+        correct: 1
+    },
+    {
+        id: 41,
+        en: "Which comes under Non-Plan Exp in Union Budget? 1. Defense 2. Interest 3. Salary",
+        hi: "संघ के बजट में गैर-योजना व्यय के अधीन: 1. रक्षा व्यय 2. ब्याज अदायगी 3. वेतन एवं पेंशन",
+        options: [
+            { en: "Only 1", hi: "केवल 1" },
+            { en: "2 and 3", hi: "2 और 3" },
+            { en: "All", hi: "ये सभी" },
+            { en: "None", hi: "उपरोक्त में से कोई नहीं" }
+        ],
+        correct: 2
+    },
+    {
+        id: 42,
+        en: "Effective Revenue Deficit was introduced in which Union Budget?",
+        hi: "प्रभावी राजस्व घाटा किस केंद्रीय बजट में पेश किया गया?",
+        options: [
+            { en: "2010-11", hi: "वर्ष 2010-11" },
+            { en: "2011-12", hi: "वर्ष 2011-12" },
+            { en: "2009-10", hi: "वर्ष 2009-10" },
+            { en: "2012-13", hi: "वर्ष 2012-13" }
+        ],
+        correct: 1
+    },
+    {
+        id: 43,
+        en: "The biggest item of Revenue Expenditure in Central Budget is:",
+        hi: "केंद्रीय बजट में राजस्व व्यय की सबसे बड़ी मद होती है",
+        options: [
+            { en: "Defense Exp", hi: "रक्षा व्यय" },
+            { en: "Major Subsidies", hi: "मुख्य उपादान" },
+            { en: "Interest Payments", hi: "ब्याज की अदायगी" },
+            { en: "Central Plan Exp", hi: "केन्द्रीय आयोजना व्यय" }
+        ],
+        correct: 2
+    },
+    {
+        id: 44,
+        en: "Which statement is true about Zero Base Budgeting? 1. Reduces tax increase 2. Allocates resources efficiently.",
+        hi: "जीरो बेस बजट की विशेषताएँ हैं: 1. इसमें कर वृद्धि में कमी आती है। 2. यह पर्याप्त संसाधनों का सुसंगत आवंटन करता है।",
+        options: [
+            { en: "1 and 2", hi: "1 और 2" },
+            { en: "2 and 3", hi: "2 और 3" },
+            { en: "1 and 3", hi: "1 और 3" },
+            { en: "All", hi: "ये सभी" }
+        ],
+        correct: 3
+    },
+    {
+        id: 45,
+        en: "Outcome Budget is complex compared to General Budget because:",
+        hi: "आउटकम बजट सामान्य बजट की तुलना में एक जटिल प्रक्रिया है जिसमें",
+        options: [
+            { en: "Financial provisions viewed in context of results", hi: "वित्तीय प्रावधानों को परिणामों के सन्दर्भ में देखा जाना होता है" },
+            { en: "Accounts of all income/exp", hi: "समस्त आय और व्यय का लेखा-जोखा रहता है" },
+            { en: "Tax increase reduces", hi: "कर वृद्धि में कमी आती है" },
+            { en: "Govt achievements evaluated in cost", hi: "सरकार की उपलब्धियों का मूल्यांकन लागत के सन्दर्भ में किया जा सकता है" }
+        ],
+        correct: 0
+    },
+    {
+        id: 46,
+        en: "Economic Survey of India is published officially every year by:",
+        hi: "भारत का आर्थिक सर्वेक्षण, प्रत्येक वर्ष सरकारी तौर पर प्रकाशित किया जाता है",
+        options: [
+            { en: "RBI", hi: "भारतीय रिजर्व बैंक द्वारा" },
+            { en: "Planning Commission", hi: "भारतीय योजना आयोग द्वारा" },
+            { en: "Ministry of Finance", hi: "भारत सरकार के वित्त मन्त्रालय द्वारा" },
+            { en: "Ministry of Industries", hi: "भारत सरकार के उद्योग मन्त्रालय द्वारा" }
+        ],
+        correct: 2
+    },
+    {
+        id: 47,
+        en: "Identify incorrect statements about Gender Budgeting: 1. First used in Britain.",
+        hi: "'जेन्डर बजटिंग' से सम्बन्धित असत्य कथनों को पहचानें: 1. जेन्डर बजट का सबसे पहला प्रयोग ब्रिटेन में हुआ।",
+        options: [
+            { en: "Only 1", hi: "केवल 1" },
+            { en: "Only 2", hi: "केवल 2" },
+            { en: "Both 1 and 2", hi: "1 और 2 दोनों" },
+            { en: "None", hi: "इनमें से कोई नहीं" }
+        ],
+        correct: 0
+    },
+    {
+        id: 48,
+        en: "Consider: 1. Multiple budget system in France/Germany. 2. Single budget creates separate for depts.",
+        hi: "1. फ्राँस, जर्मनी देशों में बजट की बहुलक प्रणाली प्रचलित है। 2. एकल बजट में सरकार प्रत्येक विभाग के लिए अलग-अलग बजट बनाती है।",
+        options: [
+            { en: "1 and 2", hi: "1 और 2" },
+            { en: "Only 2", hi: "केवल 2" },
+            { en: "2 and 3", hi: "2 और 3" },
+            { en: "None", hi: "इनमें से कोई नहीं" }
+        ],
+        correct: 0
+    },
+    {
+        id: 49,
+        en: "Which is NOT true about 'Tax Haven Country'?",
+        hi: "'टैक्स हेवेंस देश' से सम्बन्धित कौन से कथन सत्य नहीं है?",
+        options: [
+            { en: "No tax paid in Tax Havens", hi: "टैक्स हेवेंस देश में कोई कर अदा नहीं किया जाता है" },
+            { en: "Secrecy for black money depositors", hi: "काला धन जमा करने वालों के प्रति गोपनीयता बरती जाती है" },
+            { en: "St. Kitts, Mauritius are Tax Havens", hi: "सेन्ट किट्स एवं नेविस, केनरीद्वीप, माल्टा टैक्स हेवेंस देश हैं" },
+            { en: "None of these", hi: "इनमें से कोई नहीं" }
+        ],
+        correct: 3
+    },
+    {
+        id: 50,
+        en: "A: Budget is a secret document. R: India adopted Parliamentary govt.",
+        hi: "कथन (A) बजट एक गोपनीय दस्तावेज है। कारण (R) भारत ने संसदीय सरकार को अपनाया है।",
+        options: [
+            { en: "Both true, R explains A", hi: "A और R दोनों सही हैं, तथा R, A की सही व्याख्या है" },
+            { en: "Both true, R not explains A", hi: "A और R दोनों सही हैं, किन्तु R, A की सही व्याख्या नहीं है" },
+            { en: "A true, R false", hi: "A सही है, किन्तु R गलत है" },
+            { en: "A false, R true", hi: "A गलत है, किन्तु R सही है" }
+        ],
+        correct: 0
+    },
+    {
+        id: 51,
+        en: "A: Budget differentiates between charged exp and made exp on Consolidated Fund. R: Charged exp not voted.",
+        hi: "कथन (A) बजट भारत की संचित निधि पर भारित खर्च और किए गए खर्च के बीच अन्तर करता है। कारण (R) भारित खर्च संसद में मतदान का विषय नहीं है।",
+        options: [
+            { en: "Both true, R explains A", hi: "A और R दोनों सही हैं, तथा R, A की सही व्याख्या है" },
+            { en: "Both true, R not explains A", hi: "A और R दोनों सही हैं, किन्तु R, A की सही व्याख्या नहीं है" },
+            { en: "A true, R false", hi: "A सही है, किन्तु R गलत है" },
+            { en: "A false, R true", hi: "A गलत है, किन्तु R सही है" }
+        ],
+        correct: 0
+    },
+    {
+        id: 52,
+        en: "A: Budget prepared under Finance Ministry. R: FinMin is central financial agency.",
+        hi: "कथन (A) बजट को वित्त मन्त्रालय के नेतृत्व और निर्देशन में तैयार किया जाता है। कारण (R) वित्त मन्त्रालय भारत सरकार की केन्द्रीय वित्त एजेन्सी है।",
+        options: [
+            { en: "Both true, R explains A", hi: "A और R दोनों सही हैं, तथा R, A की सही व्याख्या है" },
+            { en: "Both true, R not explains A", hi: "A और R दोनों सही हैं, किन्तु R, A की सही व्याख्या नहीं है" },
+            { en: "A true, R false", hi: "A सही है, किन्तु R गलत है" },
+            { en: "A false, R true", hi: "A गलत है, किन्तु R सही है" }
+        ],
+        correct: 0
+    },
+    {
+        id: 53,
+        en: "R: It ensures parliamentary control over public expenditure.",
+        hi: "कारण (R) इससे सार्वजनिक व्यय पर संसदीय नियन्त्रण अर्थवान होता है।",
+        options: [
+            { en: "Both true, R explains A", hi: "A और R दोनों सही हैं, तथा R, A की सही व्याख्या है" },
+            { en: "Both true, R not explains A", hi: "A और R दोनों सही हैं, किन्तु R, A की सही व्याख्या नहीं है" },
+            { en: "A true, R false", hi: "A सही है, किन्तु R गलत है" },
+            { en: "A false, R true", hi: "A गलत है, किन्तु R सही है" }
+        ],
+        correct: 0
+    },
+    {
+        id: 54,
+        en: "A: Zero Base Budget ensures better participation. R: No pre-allocation needed.",
+        hi: "कथन (A) शून्य आधारित बजट निर्माण प्रक्रिया प्रशासकों की बेहतर सहभागिता को सुनिश्चित करती है। कारण (R) पूर्व आवंटन की आवश्यकता नहीं होती है।",
+        options: [
+            { en: "Both true, R explains A", hi: "A और R दोनों सही हैं, तथा R, A की सही व्याख्या है" },
+            { en: "Both true, R not explains A", hi: "A और R दोनों सही हैं, किन्तु R, A की सही व्याख्या नहीं है" },
+            { en: "A true, R false", hi: "A सही है, किन्तु R गलत है" },
+            { en: "A false, R true", hi: "A गलत है, किन्तु R सही है" }
+        ],
+        correct: 0
+    },
+    {
+        id: 55,
+        en: "A: Budget presented to Rajya Sabha after Lok Sabha. R: Kept on last working day of Feb (Old rule).",
+        hi: "कथन (A) लोकसभा में वित्त मंत्री के भाषण के बाद बजट को राज्यसभा में पेश किया जाता है। कारण (B) लोकसभा में बजट फरवरी के अन्तिम कार्यदिवस पर रखा जाता है",
+        options: [
+            { en: "Both true, R explains A", hi: "A और R दोनों सही हैं, तथा R, A की सही व्याख्या है" },
+            { en: "Both true, R not explains A", hi: "A और R दोनों सही हैं, किन्तु R, A की सही व्याख्या नहीं है" },
+            { en: "A true, R false", hi: "A सही है, किन्तु R गलत है" },
+            { en: "A false, R true", hi: "A गलत है, किन्तु R सही है" }
+        ],
+        correct: 1
+    },
+    {
+        id: 56,
+        en: "A: Budget should be based on gross estimates, not net. R: Ensures parliamentary control.",
+        hi: "कथन (A) बजट का निर्माण सकल आकलनों के आधार पर किया जाना चाहिए, न कि शुद्ध आकलनों के आधार पर। कारण (R) इससे सार्वजनिक व्यय पर संसदीय नियन्त्रण अर्थवान होता है।",
+        options: [
+            { en: "Both true, R explains A", hi: "A और R दोनों सही हैं, तथा R, A की सही व्याख्या है" },
+            { en: "Both true, R not explains A", hi: "A और R दोनों सही हैं, किन्तु R, A की सही व्याख्या नहीं है" },
+            { en: "A true, R false", hi: "A सही है, किन्तु R गलत है" },
+            { en: "A false, R true", hi: "A गलत है, किन्तु R सही है" }
+        ],
+        correct: 0
+    },
+    {
+        id: 57,
+        en: "A: Zero Based Budget ensures better participation. R: Funds availability drives change.",
+        hi: "कथन (A) शून्य आधारित बजट... प्रशासकों की सहभागिता। कारण (R) शून्य आधारित... वित्त के पूर्व आवंटन की आवश्यकता नहीं होती है।",
+        options: [
+            { en: "Both true, R explains A", hi: "A और R दोनों सही हैं, तथा R, A की सही व्याख्या है" },
+            { en: "Both true, R not explains A", hi: "A और R दोनों सही हैं, किन्तु R, A की सही व्याख्या नहीं है" },
+            { en: "A true, R false", hi: "A सही है, किन्तु R गलत है" },
+            { en: "A false, R true", hi: "A गलत है, किन्तु R सही है" }
+        ],
+        correct: 0
+    },
+    {
+        id: 58,
+        en: "India's Financial Year starts on:",
+        hi: "भारत का वित्तीय वर्ष प्रारम्भ होता है-",
+        options: [
+            { en: "1 January", hi: "1 जनवरी" },
+            { en: "1 March", hi: "1 मार्च" },
+            { en: "1 April", hi: "1 अप्रैल" },
+            { en: "1 December", hi: "1 दिसम्बर" }
+        ],
+        correct: 2
+    },
+    {
+        id: 59,
+        en: "'Budget' is an instrument of:",
+        hi: "'बजट' एक लेख-पत्र है-",
+        options: [
+            { en: "Govt's Monetary Policy", hi: "सरकार की मौद्रिक नीति का" },
+            { en: "Govt's Commercial Policy", hi: "सरकार की वाणिज्य नीति का" },
+            { en: "Govt's Fiscal Policy", hi: "सरकार की राजकोषीय नीति का" },
+            { en: "Govt's Money Saving Policy", hi: "सरकार की मुद्रा बचत नीति का" }
+        ],
+        correct: 2
+    },
+    {
+        id: 60,
+        en: "What is the meaning of Zero Based Budget?",
+        hi: "शून्य आधारित बजट का क्या अर्थ है?",
+        options: [
+            { en: "Unlimited deficit financing", hi: "असीमित घाटे की वित्त व्यवस्था" },
+            { en: "No cut in unproductive exp", hi: "अनुत्पादक व्यय की कटौती न करना" },
+            { en: "No evaluation of new programs", hi: "नए कार्यक्रमों का मूल्यांकन न करना" },
+            { en: "Preparing budget from scratch every time", hi: "हर बार बिल्कुल नए सिरे से बजट तैयार करना" }
+        ],
+        correct: 3
+    },
+    {
+        id: 61,
+        en: "Which country pioneered Zero Based Budgeting?",
+        hi: "शून्य आधारित बजट तकनीक किस देश की देन मानी जाती है?",
+        options: [
+            { en: "USA", hi: "सं.रा.अ." },
+            { en: "Britain", hi: "ब्रिटेन" },
+            { en: "France", hi: "फ्रांस" },
+            { en: "India", hi: "भारत" }
+        ],
+        correct: 0
+    },
+    {
+        id: 62,
+        en: "When was Zero Based Budgeting first adopted in USA?",
+        hi: "सं. रा. अ. में शून्य आधारित बजट तकनीक को सर्वप्रथम कब अपनाया गया?",
+        options: [
+            { en: "1877", hi: "1877 ई." },
+            { en: "1917", hi: "1917 ई." },
+            { en: "1967", hi: "1967 ई." },
+            { en: "1977", hi: "1977 ई." }
+        ],
+        correct: 3
+    },
+    {
+        id: 63,
+        en: "In which year's annual budget was Zero Based Budgeting adopted in India?",
+        hi: "भारत में शून्य आधारित बजट की किस वर्ष के वार्षिक बजट में अपनाया गया था?",
+        options: [
+            { en: "1986-87", hi: "1986-87" },
+            { en: "1987-88", hi: "1987-88" },
+            { en: "1988-89", hi: "1988-89" },
+            { en: "1989-90", hi: "1989-90" }
+        ],
+        correct: 1
+    },
+    {
+        id: 64,
+        en: "Which state in India first adopted Zero Based Budgeting technique?",
+        hi: "भारत में सर्वप्रथम किस राज्य में शून्य आधारित बजट तकनीक को अपनाया गया?",
+        options: [
+            { en: "Tamil Nadu", hi: "तमिलनाडु" },
+            { en: "Andhra Pradesh", hi: "आन्ध्र प्रदेश" },
+            { en: "Karnataka", hi: "कर्नाटक" },
+            { en: "Kerala", hi: "केरल" }
+        ],
+        correct: 1
+    },
+    {
+        id: 65,
+        en: "Repeat of 64 (Which state adopted first?)",
+        hi: "भारत में सर्वप्रथम किस राज्य में शून्य आधारित बजट तकनीक को अपनाया गया?",
+        options: [
+            { en: "Tamil Nadu", hi: "तमिलनाडु" },
+            { en: "Andhra Pradesh", hi: "आन्ध्र प्रदेश" },
+            { en: "Karnataka", hi: "कर्नाटक" },
+            { en: "Kerala", hi: "केरल" }
+        ],
+        correct: 1
+    },
+    {
+        id: 66,
+        en: "When did Zero Based Budgeting come into existence in India?",
+        hi: "भारत में शून्य आधारित बजट प्रणाली कब अस्तित्व में आया?",
+        options: [
+            { en: "4th Five Year Plan", hi: "चौथी पंचवर्षीय योजना में" },
+            { en: "6th Five Year Plan", hi: "छठी पंचवर्षीय योजना में" },
+            { en: "7th Five Year Plan", hi: "सातवीं पंचवर्षीय योजना में" },
+            { en: "9th Five Year Plan", hi: "नौवीं पंचवर्षीय योजना में" }
+        ],
+        correct: 2
+    },
+    {
+        id: 67,
+        en: "Annual Financial Statement (Budget) is presented to both Houses of Parliament by:",
+        hi: "वार्षिक वित्तीय विवरण (बजट) संसद के दोनों सदनों के समक्ष पहुँचाया जाता है-",
+        options: [
+            { en: "President", hi: "राष्ट्रपति द्वारा" },
+            { en: "Speaker", hi: "अध्यक्ष द्वारा" },
+            { en: "Vice President", hi: "उपराष्ट्रपति द्वारा" },
+            { en: "Finance Minister", hi: "वित्त मंत्री द्वारा" }
+        ],
+        correct: 0
+    },
+    {
+        id: 68,
+        en: "Which is NOT a part of Non-Plan Expenditure of Central Govt?",
+        hi: "केन्द्र सरकार का गैर योजना व्यय का अंग नहीं है-",
+        options: [
+            { en: "Defense Exp", hi: "प्रतिरक्षा व्यय" },
+            { en: "Subsidy Payment", hi: "परिदान का भुगतान" },
+            { en: "Interest Payment", hi: "ब्याज भुगतान" },
+            { en: "Allocation for Science/Tech", hi: "विज्ञान एवं तकनीकी विकास हेतु आवंटन" }
+        ],
+        correct: 3
+    },
+    {
+        id: 69,
+        en: "Maximum contribution to Gov of India's income comes from:",
+        hi: "भारत सरकार को कुल कर आय में सर्वाधिक योगदान होता है-",
+        options: [
+            { en: "Income Tax", hi: "आय कर का" },
+            { en: "Customs Duty", hi: "प्रशुल्क कर का" },
+            { en: "Central Excise Duty", hi: "केन्द्रीय आबकारी कर का" },
+            { en: "Wealth Tax", hi: "सम्पत्ति कर का" }
+        ],
+        correct: 2
+    },
+    {
+        id: 70,
+        en: "Difference between Total Expenditure and Total Receipts in Budget is called:",
+        hi: "भारत सरकार के बजट के आँकड़ों में कुल व्यय और कुल प्राप्तियों के बीच अंतर को कहते हैं-",
+        options: [
+            { en: "Fiscal Deficit", hi: "राजकोषीय घाटा" },
+            { en: "Budgetary Deficit", hi: "बजटीय घाटा" },
+            { en: "Revenue Deficit", hi: "राजस्व घाटा" },
+            { en: "Current Deficit", hi: "चालू घाटा" }
+        ],
+        correct: 1
+    },
+    {
+        id: 71,
+        en: "Fiscal Deficit means:",
+        hi: "राजकोषीय घाटे से तात्पर्य है-",
+        options: [
+            { en: "Total Exp - (Rev Receipts + Recoveries + Disinvestment)", hi: "कुल व्यय - (राजस्व प्राप्तियाँ + ऋणों की वसूली + विनिवेश से प्राप्तियां)" },
+            { en: "Total Exp - Total Receipts", hi: "कुल व्यय - कुल प्राप्तियाँ" },
+            { en: "Total Exp - (Rev Receipts + Disinvestment)", hi: "कुल व्यय - (राजस्व प्राप्तियाँ + विनिवेश से प्राप्तियाँ)" },
+            { en: "Total Exp - Disinvestment Receipts", hi: "कुल व्यय - विनिवेश से प्राप्तियाँ" }
+        ],
+        correct: 0
+    },
+    {
+        id: 72,
+        en: "If Budget is not passed by April 1, how is expenditure managed?",
+        hi: "यदि सरकार का बजट 1 अप्रैल तक न पारित हो सके, तो सरकारी व्यय किस आधार पर किया जाता है?",
+        options: [
+            { en: "Credit Grant", hi: "साख अनुदान" },
+            { en: "Supplementary Grant", hi: "अनुपूरक अनुदान" },
+            { en: "Vote on Account", hi: "लेखा अनुदान" },
+            { en: "None", hi: "उपर्युक्त में से कोई नहीं" }
+        ],
+        correct: 2
+    },
+    {
+        id: 73,
+        en: "Difference between Vote on Account and Interim Budget:",
+        hi: "लेखानुमोदन (Vote on account) और अंतरिम बजट (Interim budget) बीच क्या अंतर है?",
+        options: [
+            { en: "Only 1", hi: "केवल 1" },
+            { en: "Only 2", hi: "केवल 2" },
+            { en: "1 and 2", hi: "1 और 2 दोनों" },
+            { en: "Neither 1 nor 2", hi: "न तो 1 और न ही 2" }
+        ],
+        correct: 1
+    },
+    {
+        id: 74,
+        en: "Budget is called what in the Constitution of India?",
+        hi: "भारत के संविधान में बजट को कहा जाता है-",
+        options: [
+            { en: "Annual Budget Statement", hi: "वार्षिक बजट स्टेटमेंट" },
+            { en: "Annual Expenditure Statement", hi: "वार्षिक व्यय स्टेटमेंट" },
+            { en: "Annual Finance Statement", hi: "वार्षिक वित्त स्टेटमेंट" },
+            { en: "Annual Financial Statement", hi: "वार्षिक राजस्व स्टेटमेंट (वित्तीय विवरण)" }
+        ],
+        correct: 3
+    },
+    {
+        id: 75,
+        en: "Which body prepares Fiscal Policy in India?",
+        hi: "कौन-सी संस्था भारत में राजकोषीय नीति तैयार करती है?",
+        options: [
+            { en: "Finance Ministry", hi: "वित्त मंत्रालय" },
+            { en: "NITI Aayog", hi: "नीति आयोग" },
+            { en: "RBI", hi: "आर.बी.आई." },
+            { en: "SBI", hi: "एस.बी.आई" }
+        ],
+        correct: 0
+    },
+    {
+        id: 76,
+        en: "What is the impact of Deficit Financing on the economy?",
+        hi: "घाटे की वित्तीय व्यवस्था का अर्थव्यवस्था पर क्या प्रभाव पड़ता है?",
+        options: [
+            { en: "Decrease in taxes", hi: "करों में कमी" },
+            { en: "Increase in wages", hi: "मजदूरी में बढ़ोत्तरी" },
+            { en: "Increase in money supply", hi: "मुद्रा आपूर्ति में बढ़ोत्तरी" },
+            { en: "Decrease in money supply", hi: "मुद्रा आपूर्ति में कमी" }
+        ],
+        correct: 2
+    },
+    {
+        id: 77,
+        en: "______ is a payment that govt gives to producer to supplement market price.",
+        hi: "...... एक भुगतान है, जो सरकार किसी उत्पादक को किसी वस्तु के बाजार मूल्य के पूरक के रूप में देती है।",
+        options: [
+            { en: "Duty", hi: "शुल्क" },
+            { en: "Subsidy", hi: "सब्सिडी" },
+            { en: "Wealth Tax", hi: "सम्पत्ति कर" },
+            { en: "Corporation Tax", hi: "निगम कर" }
+        ],
+        correct: 1
+    }
+];
+
+    // --- APP LOGIC ---
+    let currentQuestions = [];
+    let currentIndex = 0;
+    let score = 0;
+    let timerInterval;
+    let timeLeft;
+    let audioCtx;
+
+    // --- SOUND ENGINE (WEB AUDIO API) ---
+    function initAudio() {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+
+    function playSound(type) {
+        if (!audioCtx) initAudio();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        if (type === 'correct') {
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(1000, audioCtx.currentTime + 0.1);
+            gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.3);
+        } else if (type === 'wrong') {
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(200, audioCtx.currentTime);
+            osc.frequency.linearRampToValueAtTime(100, audioCtx.currentTime + 0.3);
+            gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.3);
+        }
+    }
+
+    // --- CORE FUNCTIONS ---
+    function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
+    }
+
+    function startQuiz() {
+        initAudio(); // Initialize audio context on first user gesture
+        const shuffle = document.getElementById('shuffleToggle').checked;
+        const timeVal = document.getElementById('timerInput').value;
+        
+        currentQuestions = shuffle ? shuffleArray([...quizData]) : [...quizData];
+        window.userTimer = timeVal && timeVal > 0 ? parseInt(timeVal) : 0;
+        
+        currentIndex = 0;
+        score = 0;
+        
+        document.getElementById('start-screen').classList.remove('active');
+        document.getElementById('quiz-screen').classList.add('active');
+        
+        loadQuestion();
+    }
+
+    function loadQuestion() {
+        if (currentIndex >= currentQuestions.length) {
+            finishQuiz();
+            return;
+        }
+
+        const q = currentQuestions[currentIndex];
+        
+        // Update UI
+        document.getElementById('questionCounter').innerText = `Q: ${currentIndex + 1}/${currentQuestions.length}`;
+        document.getElementById('scoreCounter').innerText = `Score: ${score}`;
+        document.getElementById('q-en').innerText = q.en;
+        document.getElementById('q-hi').innerText = q.hi;
+        
+        // Progress Bar
+        const progress = ((currentIndex) / currentQuestions.length) * 100;
+        document.getElementById('progressBar').style.width = `${progress}%`;
+
+        // Render Options
+        const grid = document.getElementById('optionsGrid');
+        grid.innerHTML = '';
+        
+        q.options.forEach((opt, idx) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerHTML = `<span class="opt-en">${opt.en}</span><span class="opt-hi">${opt.hi}</span>`;
+            btn.onclick = () => checkAnswer(idx, btn, q.correct);
+            grid.appendChild(btn);
+        });
+
+        // Timer Logic
+        clearInterval(timerInterval);
+        const timerDisplay = document.getElementById('timerDisplay');
+        timerDisplay.classList.remove('danger');
+        
+        if (window.userTimer > 0) {
+            timeLeft = window.userTimer;
+            timerDisplay.innerText = timeLeft;
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                timerDisplay.innerText = timeLeft;
+                if (timeLeft < 5) timerDisplay.classList.add('danger');
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    autoMove();
+                }
+            }, 1000);
+        } else {
+            timerDisplay.innerText = "∞";
+        }
+    }
+
+    function checkAnswer(selectedIdx, btn, correctIdx) {
+        clearInterval(timerInterval);
+        
+        // Disable all buttons
+        const buttons = document.querySelectorAll('.option-btn');
+        buttons.forEach(b => b.disabled = true);
+
+        if (selectedIdx === correctIdx) {
+            btn.classList.add('correct');
+            score++;
+            playSound('correct');
+            triggerConfetti();
+        } else {
+            btn.classList.add('wrong');
+            buttons[correctIdx].classList.add('correct'); // Show correct one
+            playSound('wrong');
+            triggerEmoji();
+        }
+
+        setTimeout(nextQuestion, 1500);
+    }
+
+    function autoMove() {
+        // Time ran out: Highlight correct answer
+        const q = currentQuestions[currentIndex];
+        const buttons = document.querySelectorAll('.option-btn');
+        buttons.forEach((b, idx) => {
+            b.disabled = true;
+            if (idx === q.correct) b.classList.add('correct');
+        });
+        playSound('wrong');
+        setTimeout(nextQuestion, 1500);
+    }
+
+    function nextQuestion() {
+        currentIndex++;
+        loadQuestion();
+    }
+
+    function finishQuiz() {
+        clearInterval(timerInterval);
+        document.getElementById('quiz-screen').classList.remove('active');
+        document.getElementById('result-screen').classList.add('active');
+
+        // Calculate Stats based on how many were actually attempted/seen
+        const percentage = Math.round((score / currentQuestions.length) * 100);
+        document.getElementById('finalScore').innerText = `${percentage}%`;
+        document.getElementById('statsText').innerText = `You scored ${score} out of ${currentQuestions.length}`;
+
+        const msg = document.getElementById('resultMessage');
+        if (percentage >= 80) {
+            msg.innerText = "🏆 Outstanding Performance!";
+            msg.style.color = "#00e676";
+            triggerConfetti();
+        } else if (percentage >= 50) {
+            msg.innerText = "👏 Well Done! Keep it up.";
+            msg.style.color = "#ffeb3b";
+        } else {
+            msg.innerText = "📚 Practice makes perfect! Try again.";
+            msg.style.color = "#ff1744";
+        }
+    }
+
+    function resetQuiz() {
+        document.getElementById('result-screen').classList.remove('active');
+        document.getElementById('start-screen').classList.add('active');
+    }
+
+    // --- VISUAL FX ---
+    function triggerEmoji() {
+        const overlay = document.getElementById('emoji-overlay');
+        overlay.innerText = "😢";
+        overlay.style.opacity = 1;
+        overlay.classList.add('shake');
+        setTimeout(() => {
+            overlay.style.opacity = 0;
+            overlay.classList.remove('shake');
+        }, 1000);
+    }
+
+    function triggerConfetti() {
+        const colors = ['#f44336', '#00e676', '#2979ff', '#ffeb3b', '#ff4081'];
+        for (let i = 0; i < 50; i++) {
+            const el = document.createElement('div');
+            el.classList.add('confetti');
+            el.style.left = Math.random() * 100 + 'vw';
+            el.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+            el.style.animationDuration = (Math.random() * 2 + 2) + 's';
+            document.body.appendChild(el);
+            setTimeout(() => el.remove(), 4000);
+        }
+    }
+</script>
+</body>
+</html>

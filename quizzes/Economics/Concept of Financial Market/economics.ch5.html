@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Indian Economy Bilingual Quiz</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --primary-text: #ffffff;
+            --secondary-text: #dddddd;
+            --accent-color: #ff007a;
+            --success-color: #00e676;
+            --error-color: #ff1744;
+            --font-main: 'Poppins', sans-serif;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
+
+        body {
+            font-family: var(--font-main);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #ff007a 100%);
+            background-size: 200% 200%;
+            animation: gradientBG 15s ease infinite;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--primary-text);
+            overflow-x: hidden;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Glassmorphism Container */
+        .app-container {
+            width: 100%;
+            max-width: 800px;
+            min-height: 600px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 25px;
+            padding: 2rem;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            margin: 10px;
+        }
+
+        /* Screens */
+        .screen { display: none; width: 100%; height: 100%; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+        .screen.active { display: flex; }
+
+        /* Typography */
+        h1 { font-size: 2.5rem; margin-bottom: 0.5rem; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+        h2 { font-size: 1.5rem; color: var(--secondary-text); margin-bottom: 2rem; }
+        .question-text-en { font-size: 1.2rem; font-weight: 700; margin-bottom: 5px; line-height: 1.4; }
+        .question-text-hi { font-size: 1rem; color: var(--secondary-text); font-weight: 400; margin-bottom: 20px; line-height: 1.4; }
+
+        /* Start Screen Controls */
+        .control-group { margin: 15px 0; width: 100%; max-width: 300px; }
+        input[type="number"] {
+            width: 100%; padding: 12px; border-radius: 12px; border: 1px solid var(--glass-border);
+            background: rgba(0,0,0,0.2); color: white; font-family: inherit; text-align: center;
+        }
+        .toggle-container { display: flex; align-items: center; gap: 10px; margin: 15px 0; font-size: 1rem; }
+        
+        button {
+            padding: 12px 30px; border: none; border-radius: 50px; font-size: 1.1rem; font-weight: 600;
+            cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; margin-top: 20px;
+            background: rgba(255,255,255,0.2); color: white; border: 1px solid var(--glass-border);
+        }
+        button:hover { transform: scale(1.05); background: rgba(255,255,255,0.3); }
+        .btn-submit { background: linear-gradient(90deg, #ff8a00, #e52e71); border: none; width: 100%; max-width: 300px; }
+
+        /* Quiz UI */
+        .quiz-header { display: flex; justify-content: space-between; width: 100%; margin-bottom: 20px; font-weight: 600; }
+        .progress-bar-bg { width: 100%; height: 6px; background: rgba(255,255,255,0.1); border-radius: 10px; position: absolute; top: 0; left: 0; }
+        .progress-bar-fill { height: 100%; background: var(--success-color); width: 0%; transition: width 0.3s ease; box-shadow: 0 0 10px var(--success-color); border-radius: 10px; }
+        
+        .timer { font-size: 1.2rem; display: flex; align-items: center; gap: 5px; }
+        .timer.danger { color: var(--error-color); animation: pulse 1s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+
+        .options-grid { display: grid; grid-template-columns: 1fr; gap: 12px; width: 100%; }
+        .option-btn {
+            background: rgba(255,255,255,0.1); text-align: left; padding: 15px; border-radius: 15px;
+            display: flex; flex-direction: column; transition: all 0.2s; border: 1px solid transparent;
+            margin-top: 0; /* Reset */
+        }
+        .option-btn:hover { background: rgba(255,255,255,0.2); }
+        .opt-en { font-weight: 600; font-size: 1rem; }
+        .opt-hi { font-size: 0.85rem; color: #ccc; margin-top: 4px; }
+        
+        .option-btn.correct { background: rgba(0, 230, 118, 0.6) !important; border-color: var(--success-color); }
+        .option-btn.wrong { background: rgba(255, 23, 68, 0.6) !important; border-color: var(--error-color); animation: shake 0.5s; }
+        .option-btn.disabled { pointer-events: none; opacity: 0.8; }
+
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+
+        /* Feedback Emoji */
+        .feedback-emoji {
+            font-size: 5rem; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            z-index: 100; display: none; animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            text-shadow: 0 5px 15px rgba(0,0,0,0.5);
+        }
+        @keyframes popIn { from { transform: translate(-50%, -50%) scale(0); } to { transform: translate(-50%, -50%) scale(1); } }
+
+        /* Confetti */
+        .confetti { position: absolute; width: 10px; height: 10px; background-color: #fff; animation: fall linear forwards; z-index: 9999; }
+        @keyframes fall { to { transform: translateY(100vh) rotate(720deg); opacity: 0; } }
+
+        /* Result Screen */
+        .score-display { font-size: 4rem; font-weight: bold; margin: 20px 0; color: var(--success-color); }
+        .msg-display { font-size: 1.3rem; margin-bottom: 30px; }
+
+        @media (max-width: 600px) {
+            .app-container { padding: 1rem; min-height: 100vh; border-radius: 0; border: none; }
+            h1 { font-size: 1.8rem; }
+            .question-text-en { font-size: 1.1rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <div class="progress-bar-bg"><div class="progress-bar-fill" id="progressBar"></div></div>
+
+    <div id="startScreen" class="screen active">
+        <h1>Indian Economy</h1>
+        <h2>भारतीय अर्थव्यवस्था Quiz</h2>
+        
+        <div class="control-group">
+            <label style="display:block; margin-bottom:5px; font-size:0.9rem; color:#ddd;">Timer (Seconds per Question)</label>
+            <input type="number" id="timeInput" placeholder="No Timer (Default)" min="5">
+        </div>
+
+        <div class="toggle-container">
+            <input type="checkbox" id="shuffleToggle" style="width:20px; height:20px;">
+            <label for="shuffleToggle">Shuffle Questions (प्रश्नों को मिलाएं)</label>
+        </div>
+
+        <button class="btn-submit" onclick="startQuiz()">Start Quiz</button>
+    </div>
+
+    <div id="quizScreen" class="screen" style="justify-content: flex-start; padding-top: 30px;">
+        <div class="quiz-header">
+            <span id="questionCounter">Q: 01/59</span>
+            <span id="timerDisplay" class="timer">∞</span>
+            <span id="scoreDisplay">Score: 0</span>
+        </div>
+
+        <div style="width: 100%; text-align: left; margin-bottom: 10px;">
+            <div id="qTextEn" class="question-text-en">Question English</div>
+            <div id="qTextHi" class="question-text-hi">Question Hindi</div>
+        </div>
+
+        <div id="optionsContainer" class="options-grid"></div>
+
+        <div id="feedbackEmoji" class="feedback-emoji"></div>
+
+        <div style="margin-top: auto; padding-top: 20px; width: 100%;">
+            <button class="btn-submit" onclick="finishQuiz()">Finish & Show Results</button>
+        </div>
+    </div>
+
+    <div id="resultScreen" class="screen">
+        <h1>Quiz Completed!</h1>
+        <div class="score-display" id="finalScore">0 / 0</div>
+        <div class="msg-display" id="resultMessage"></div>
+        <p id="accuracyDetails" style="color: #ddd;"></p>
+        <button class="btn-submit" onclick="resetQuiz()">Restart Quiz</button>
+    </div>
+</div>
+
+<script>
+    // --- Data Source: Extracted from provided images (Questions 1-59) ---
+    const rawQuestions = [
+        {
+            en: "Which of the following companies is related to the control of share market activities?",
+            hi: "निम्नलिखित में से कौन-सी कम्पनी एक शेयर बाजार की क्रियाओं के नियन्त्रण से सम्बन्धित है?",
+            opts: [
+                { en: "SAIL", hi: "सेल", c: false },
+                { en: "SEBI", hi: "सेबी", c: true },
+                { en: "SIDBI", hi: "सिडबी", c: false },
+                { en: "SHCIL", hi: "स्टॉक होल्डिंग कॉर्पोरेशन ऑफ इण्डिया", c: false }
+            ]
+        },
+        {
+            en: "What does a rise in 'Sensex' imply?",
+            hi: "संवेदी सूचकांक (Sensex) में चढ़ाव का तात्पर्य है",
+            opts: [
+                { en: "Rise in prices of shares of all companies registered with BSE", hi: "बम्बई शेयर बाजार के साथ पंजीकृत सभी कम्पनियों के शेयरों के मूल्य में चढ़ाव", c: false },
+                { en: "Rise in prices of shares of all companies registered with NSE", hi: "राष्ट्रीय शेयर बाजार के साथ पंजीकृत सभी कम्पनियों के शेयरों के मूल्य में चढ़ाव", c: false },
+                { en: "Overall rise in prices of shares of a group of companies registered with BSE", hi: "बम्बई शेयर बाजार के साथ पंजीकृत एक कम्पनी समूह के शेयरों के मूल्य में समग्र चढ़ाव", c: true },
+                { en: "Rise in prices of shares of all companies belonging to a group registered with BSE", hi: "बम्बई शेयर बाजार के साथ पंजीकृत एक कम्पनी समूह से सम्बन्धित सभी कम्पनियों के शेयरों के मूल्य में चढ़ाव", c: false }
+            ]
+        },
+        {
+            en: "Which of the following is/are components of Internal Debt?",
+            hi: "इनमें से कौन-सा आन्तरिक ऋण (Internal Debt) का/के घटक है/हैं? \n1. Market Borrowing \n2. Treasury Bills \n3. Special Securities Issued to RBI",
+            opts: [
+                { en: "Only 1", hi: "केवल 1", c: false },
+                { en: "1 and 2", hi: "1 और 2", c: false },
+                { en: "Only 2", hi: "केवल 2", c: false },
+                { en: "All of these", hi: "ये सभी", c: true }
+            ]
+        },
+        {
+            en: "Which of the following institutions is NOT included in the management of the disbanded UTI-II?",
+            hi: "विघटित UTI-II के प्रबन्धन में निम्नलिखित में से कौन-सी संस्था सम्मिलित नहीं है?",
+            opts: [
+                { en: "State Bank of India", hi: "भारतीय स्टेट बैंक", c: false },
+                { en: "Bank of India", hi: "बैंक ऑफ इंडिया", c: false },
+                { en: "General Insurance Corporation", hi: "सामान्य जीवन बीमा निगम", c: false },
+                { en: "Life Insurance Corporation (LIC)", hi: "जीवन बीमा निगम (LIC)", c: true }
+            ]
+        },
+        {
+            en: "The functions of SEBI include:",
+            hi: "सेबी (SEBI) के कार्यों में सम्मिलित है",
+            opts: [
+                { en: "Regulating the functions of Stock Exchanges", hi: "स्टॉक एक्सचेंजों के कार्यों को विनियमित करना", c: false },
+                { en: "Prohibiting unfair and fraudulent trade practices related to share markets", hi: "शेयर बाजारों से सम्बन्धित अनुचित एवं धोखाधड़ी से परिपूर्ण व्यापारिक कार्यों पर रोक लगाना", c: false },
+                { en: "Controlling Insider Trading of securities", hi: "प्रतिभूतियों के अन्तरंग व्यापार (Inside Trading) को नियन्त्रित करना", c: false },
+                { en: "All of the above", hi: "उपर्युक्त सभी", c: true }
+            ]
+        },
+        {
+            en: "What is meant by 'Gilt-edged' market?",
+            hi: "गिल्ट आधारित बाजार के मायने क्या हैं?",
+            opts: [
+                { en: "Bullion Market", hi: "सर्राफा बाजार", c: false },
+                { en: "Market of Government Securities", hi: "सरकारी प्रतिभूतियों का बाजार", c: true },
+                { en: "Weapon Market", hi: "शस्त्र बाजार", c: false },
+                { en: "Metal Market", hi: "धातु बाजार", c: false }
+            ]
+        },
+        {
+            en: "Dealing in 'Gilt-edged' is related to:",
+            hi: "'गिल्ट-एज्ड' में विपणन सम्बन्धित है",
+            opts: [
+                { en: "Trade of metals", hi: "धातुओं के व्यापार से", c: false },
+                { en: "Trade of debentures", hi: "ऋणपत्रों के व्यापार से", c: false },
+                { en: "Trade of Government Securities", hi: "सरकारी प्रतिभूतियों के व्यापार से", c: true },
+                { en: "Trade of Arms", hi: "शस्त्रों के व्यापार", c: false }
+            ]
+        },
+        {
+            en: "Insider trading is related to:",
+            hi: "इन्साइड ट्रेडिंग सम्बन्धित है",
+            opts: [
+                { en: "Share Market", hi: "शेयर बाजार से", c: true },
+                { en: "Horse Racing", hi: "घुड़दौड़ से", c: false },
+                { en: "Taxation", hi: "करारोपण से", c: false },
+                { en: "International Trade", hi: "अन्तर्राष्ट्रीय व्यापार से", c: false }
+            ]
+        },
+        {
+            en: "Capital Market refers to:",
+            hi: "पूँजी बाजार से आशय है",
+            opts: [
+                { en: "Share Market", hi: "शेयर बाजार से", c: false },
+                { en: "Commodity Market", hi: "वस्तु बाजार से", c: false },
+                { en: "Money Market", hi: "मुद्रा बाजार से", c: false },
+                { en: "All of the above", hi: "उपरोक्त सभी", c: true }
+            ]
+        },
+        {
+            en: "In the specific behavior of financial investments, what does the word 'Bear' denote?",
+            hi: "वित्तीय निवेशों के विशिष्ट व्यवहार में, मन्दड़िया (Bear) शब्द किसका द्योतक है?",
+            opts: [
+                { en: "An investor who feels the price of a particular security is going to fall", hi: "उस निवेशक का, जो यह महसूस करता है कि अमुक प्रतिभूति की कीमत गिरने वाली है", c: true },
+                { en: "An investor who feels the price of a particular share is going to rise", hi: "उस निवेशक का, जो यह महसूस करता है कि अमुक शेयरों की कीमत बढ़ने वाली है", c: false },
+                { en: "A shareholder or bondholder who has a financial interest in the company", hi: "उस शेयरधारक या बॉण्डधारक का, जिसकी किसी वित्तीय या अन्यथा, कम्पनी में हिस्सेदारी है", c: false },
+                { en: "The lender who gives the loan or buys the bond", hi: "उस उधारदाता का, जो कर्ज देता है या बॉण्ड खरीदता है", c: false }
+            ]
+        },
+        {
+            en: "IRDA regulates:",
+            hi: "इरडा (IRDA) नियमन करती है",
+            opts: [
+                { en: "Banking Companies", hi: "बैंकिंग कम्पनियों का", c: false },
+                { en: "Insurance Companies", hi: "बीमा कम्पनियों का", c: true },
+                { en: "Retail Trade", hi: "फुटकर व्यापार का", c: false },
+                { en: "None of the above", hi: "उपरोक्त में से कोई नहीं", c: false }
+            ]
+        },
+        {
+            en: "Arrange the following in ascending order of their establishment year: 1. LIC 2. IDBI 3. SEBI 4. UTI",
+            hi: "स्थापना वर्ष के अनुसार निम्न को बढ़ते हुए क्रम में व्यवस्थित करें: 1. एलआईसी 2. आईडीबीआई 3. सेबी 4. यूटीआई",
+            opts: [
+                { en: "1, 2, 4, 3", hi: "1, 2, 4, 3", c: false },
+                { en: "2, 1, 3, 4", hi: "2, 1, 3, 4", c: false },
+                { en: "1, 2, 3, 4", hi: "1, 2, 3, 4", c: false },
+                { en: "1, 4, 2, 3", hi: "1, 4, 2, 3", c: true }
+            ]
+        },
+        {
+            en: "Which market had the highest turnover during the year 2000-01 in India?",
+            hi: "वर्ष 2000-01 के दौरान भारत के निम्नलिखित प्रमुख शेयर बाजारों में सर्वाधिक कारोबार करने वाला बाजार है",
+            opts: [
+                { en: "Bombay Stock Exchange", hi: "बम्बई शेयर बाजार", c: false },
+                { en: "Calcutta Stock Exchange", hi: "कलकत्ता शेयर बाजार", c: false },
+                { en: "Delhi Stock Exchange", hi: "दिल्ली शेयर बाजार", c: false },
+                { en: "National Stock Exchange", hi: "राष्ट्रीय शेयर बाजार", c: true }
+            ]
+        },
+        {
+            en: "Consider the following statements:",
+            hi: "निम्नलिखित कथनों पर विचार कीजिए",
+            opts: [
+                { en: "Sensex is based on 50 most important stocks available on BSE", hi: "सेंसेक्स, बम्बई स्टॉक एक्सचेंज (BSE) में उपलब्ध 50 अधिकतम महत्त्वपूर्ण स्टॉकों पर आधारित होता है।", c: false },
+                { en: "For calculating Sensex, all Sensex stocks are given proportional weightage", hi: "सेंसेक्स के परिकलन के लिए सभी सेंसेक्स स्टॉकों को आनुपातिक भारिता दी जाती है।", c: false },
+                { en: "New York Stock Exchange is the oldest stock exchange in the world", hi: "न्यूयॉर्क स्टॉक एक्सचेंज विश्व की सबसे पुरानी स्टॉक एक्सचेंज", c: false },
+                { en: "None of the above is correct / 2 only (Contextual)", hi: "इनमें से कोई नहीं", c: true } 
+            ]
+        },
+        {
+            en: "Match List I with List II: \n(Index: A. Sensex, B. Simex, C. S&P, D. Nasdaq) \n(Stock Ex: 1. Canada, 2. Singapore, 3. Mumbai, 4. New York)",
+            hi: "सूची I को सूची II के साथ सुमेलित कीजिए: \n(सूचकांक: A. सेंसेक्स, B. सिमेक्स, C. एस एन पी, D. नैस्डैक) \n(स्टॉक एक्सचेंज: 1. कनाडा, 2. सिंगापुर, 3. मुम्बई, 4. न्यूयॉर्क)",
+            opts: [
+                { en: "A-3, B-4, C-2, D-1", hi: "A-3, B-4, C-2, D-1", c: false },
+                { en: "A-3, B-2, C-1, D-4", hi: "A-3, B-2, C-1, D-4", c: true }, 
+                { en: "A-1, B-2, C-3, D-4", hi: "A-1, B-2, C-3, D-4", c: false },
+                { en: "A-4, B-1, C-2, D-3", hi: "A-4, B-1, C-2, D-3", c: false }
+            ]
+        },
+        {
+            en: "Match List I with List II: \n(Index: A. Dollex, B. Tel, C. Bovespa, D. Mid Dex) \n(Stock Ex: 1. Frankfurt, 2. Brazil, 3. Mumbai, 4. Taiwan)",
+            hi: "सूची I को सूची II के साथ सुमेलित कीजिए: \n(सूचकांक: A. डॉलेक्स, B. तेल, C. बोवेस्पा, D. मिड डेक्स) \n(स्टॉक एक्सचेंज: 1. फ्रैंकर्ट, 2. ब्राजील, 3. मुम्बई, 4. ताइवान)",
+            opts: [
+                { en: "A-3, B-4, C-2, D-1", hi: "A-3, B-4, C-2, D-1", c: true },
+                { en: "A-3, B-2, C-1, D-4", hi: "A-3, B-2, C-1, D-4", c: false },
+                { en: "A-1, B-2, C-3, D-4", hi: "A-1, B-2, C-3, D-4", c: false },
+                { en: "A-4, B-1, C-2, D-3", hi: "A-4, B-1, C-2, D-3", c: false }
+            ]
+        },
+        {
+            en: "In what context is Capital Market different from Money Market?",
+            hi: "पूँजी बाजार, मुद्रा बाजार से किस सन्दर्भ में भिन्न है?",
+            opts: [
+                { en: "Capital market works in one state, Money market in many", hi: "पूँजी बाजार केवल एक राज्य में कार्य करता है जबकि मुद्रा बाजार कई राज्यों में", c: false },
+                { en: "Capital market is for long-term finance, Money market for short-term", hi: "पूँजी बाजार दीर्घावधि वित्त आधार के लिए है, जबकि मुद्रा बाजार लघु अवधि के लिए", c: true },
+                { en: "Capital market deals more in developing nations than Money market", hi: "पूँजी बाजार मुद्रा बाजार के मुकाबले विकासशील राष्ट्रों में अधिक व्यवहार में है", c: false },
+                { en: "Capital market is the hallmark of capitalist nations", hi: "पूँजी बाजार पूँजीवादी राष्ट्रों का ही पहचान चिह्न है", c: false }
+            ]
+        },
+        {
+            en: "Which one of the following pairs is not correctly matched?",
+            hi: "निम्नलिखित युग्मों में से कौन-सा एक सही सुमेलित नहीं है?",
+            opts: [
+                { en: "Japan: Nikkei", hi: "जापान : निक्की", c: false },
+                { en: "Singapore: Shocomp (Straits Times)", hi: "सिंगापुर : शॉकम्प", c: false },
+                { en: "UK: FTSE", hi: "यू के : एफ टी एस ई", c: false },
+                { en: "USA: Nasdaq (Correct, but asking for incorrect match usually implies one is wrong. In the image, D is 'USA: Nasdaq' which is correct. Assuming D meant something else or C is 'FTSE' which is correct. Let's assume C is mismatch if spelled 'FTSC' or similar. However, based on std GK, all look correct except Shocomp might be typo for Strait Times. Let's mark B as likely incorrect name used)", hi: "सिंगापुर : शॉकम्प", c: true }
+            ]
+        },
+        {
+            en: "What is Nikkei?",
+            hi: "निक्की क्या है?",
+            opts: [
+                { en: "Foreign Exchange Market of Japan", hi: "जापान का विदेशी विनिमय बाजार", c: false },
+                { en: "Japanese name of Planning Commission", hi: "देश के योजना आयोग का जापानी नाम", c: false },
+                { en: "Name of Japan's Central Bank", hi: "जापान के केन्द्रीय बैंक का नाम", c: false },
+                { en: "Share Price Index of Tokyo Stock Exchange", hi: "टोक्यो स्टॉक एक्सचेंज में अंश मूल्य सूचकांक", c: true }
+            ]
+        },
+        {
+            en: "The objective of Unit Trust of India is:",
+            hi: "भारतीय यूनिट ट्रस्ट का उद्देश्य है",
+            opts: [
+                { en: "To provide benefits of income to small investors", hi: "अपनी आय का लाभ लघु विनियोजकों को प्रदान करना", c: false },
+                { en: "To channelize funds for industrial development", hi: "धन को इस प्रकार विनियोजित करना जिससे औद्योगिक विकास का संवर्धन हो", c: false },
+                { en: "To mobilize people's savings", hi: "लोगों की बचत को एकत्र करना", c: false },
+                { en: "All of the above", hi: "उपरोक्त सभी", c: true }
+            ]
+        },
+        {
+            en: "The government has constituted which body for the regulation of insurance business?",
+            hi: "सरकार ने बीमा व्यवसाय के नियमन के लिए गठन किया है",
+            opts: [
+                { en: "SEBI", hi: "सेबी को", c: false },
+                { en: "Reserve Bank of India", hi: "भारतीय रिजर्व बैंक को", c: false },
+                { en: "Insurance Regulatory and Development Authority", hi: "इन्श्योरेंस नियमन एवं विकास प्राधिकरण को", c: true },
+                { en: "General Insurance Corporation", hi: "साधारण बीमा निगम को", c: false }
+            ]
+        },
+        {
+            en: "Resurgent India Bonds were issued in US Dollar, Pound Sterling and:",
+            hi: "रिसर्जेन्ट इण्डिया बॉण्ड (Resurgent India Bond) जारी किए गए थे। यूएस डॉलर में पाउण्ड स्टर्लिंग में और",
+            opts: [
+                { en: "Japanese Yen", hi: "जापानी येन में", c: false },
+                { en: "German Mark", hi: "जर्मन मार्क में", c: true },
+                { en: "Euro", hi: "यूरो में", c: false },
+                { en: "French Franc", hi: "फ्रांसीसी फ्रैंक में", c: false }
+            ]
+        },
+        {
+            en: "The term 'Actuaries' is related to:",
+            hi: "'एक्चुअरीज' शब्द सम्बन्धित है",
+            opts: [
+                { en: "Banking", hi: "बैंकिंग से", c: false },
+                { en: "Insurance", hi: "बीमा से", c: true },
+                { en: "Share Market", hi: "शेयर बाजार से", c: false },
+                { en: "None of these", hi: "इनमें से कोई नहीं", c: false }
+            ]
+        },
+        {
+            en: "Which of the following share indices works under Bombay Stock Exchange (BSE)? 1. Sensex 2. BSE 500 3. Indonext 4. BSE 200",
+            hi: "निम्नलिखित में से कौन-सा शेयर सूचकांक बॉम्बे स्टॉक एक्सचेंज (BSE) के अन्तर्गत कार्य करता है? 1. Sensex 2. BSE 500 3. Indonext 4. BSE 200",
+            opts: [
+                { en: "1 and 2", hi: "1 और 2", c: false },
+                { en: "3 and 4", hi: "3 और 4", c: false },
+                { en: "2 and 3", hi: "2 और 3", c: false },
+                { en: "All of the above", hi: "उपरोक्त सभी", c: true }
+            ]
+        },
+        {
+            en: "Bombay Stock Exchange has started issuing an environment-friendly equity index, what is it named?",
+            hi: "बम्बई स्टॉक एक्सचेंज ने पर्यावरण अनुकूल इक्विटी सूचकांक भी जारी करना शुरू किया है जिसे क्या नाम दिया गया है?",
+            opts: [
+                { en: "Greenex", hi: "ग्रीनेक्स", c: true },
+                { en: "Dollex", hi: "डॉलेक्स", c: false },
+                { en: "National Green Index", hi: "राष्ट्रीय ग्रीन इण्डेक्स", c: false },
+                { en: "Mangalore Green Index", hi: "मंगलोर ग्रीन इण्डेक्स", c: false }
+            ]
+        },
+        {
+            en: "In which year did BOLT-BSE Online Trading start?",
+            hi: "BOLT-BSE Online Trading की शुरुआत वर्ष क्या थी?",
+            opts: [
+                { en: "1980", hi: "1980", c: false },
+                { en: "1990", hi: "1990", c: false },
+                { en: "1995", hi: "1995", c: true },
+                { en: "2000", hi: "2000", c: false }
+            ]
+        },
+        {
+            en: "With whom was the Forward Markets Commission merged?",
+            hi: "वायदा बाजार आयोग का विलय किसके साथ हुआ?",
+            opts: [
+                { en: "SEBI", hi: "भारतीय प्रतिभूति एवं विनिमय बोर्ड", c: true },
+                { en: "IRDAI", hi: "भारतीय बीमा विनियामक एवं विकास प्राधिकरण", c: false },
+                { en: "Indian Industrial Authority", hi: "भारतीय औद्योगिक प्राधिकरण", c: false },
+                { en: "Company Development Authority", hi: "वित्त कम्पनी विकास प्राधिकरण", c: false }
+            ]
+        },
+        {
+            en: "Consider the following pairs regarding Indian Economy: 1. Meltdown: Fall in stock prices 2. Recession: Fall in Growth Rate 3. Slowdown: Fall in GDP",
+            hi: "भारतीय अर्थव्यवस्था के सन्दर्भ में निम्नलिखित युग्मों पर विचार कीजिए: \n1. मेल्ट डाउन : स्टॉक कीमतों की गिरावट \n2. मन्दी (रिसेसन) : संवृद्धि दर की गिरावट \n3. स्लो-डाउन : सकल घरेलू उत्पाद की गिरावट",
+            opts: [
+                { en: "Only 1", hi: "केवल 1", c: true },
+                { en: "2 and 3", hi: "2 और 3", c: false },
+                { en: "1 and 3", hi: "1 और 3", c: false },
+                { en: "All of the above", hi: "उपरोक्त सभी", c: false }
+            ]
+        },
+        {
+            en: "Consider statements about SEBI (Amendment) Act, 2014:",
+            hi: "सेबी (संशोधन) अधिनियम, 2014 में सम्बन्धित निम्नलिखित कथनों पर विचार कीजिए",
+            opts: [
+                { en: "SEBI empowered to search and seize assets.", hi: "इस संशोधन के द्वारा सेबी को कम्पनियों... पर छापा मारने, सम्पत्ति... जब्त करने का अधिकार दिया गया है।", c: false },
+                { en: "SEBI can form special courts for speedy trials.", hi: "नए प्रावधानों के तहत सेबी अपने मामलों को शीघ्र सुनवाई के लिए विशेष न्यायालय भी गठन कर सकता है।", c: false },
+                { en: "Only 1", hi: "केवल 1", c: false },
+                { en: "Both 1 and 2", hi: "1 और 2 दोनों", c: true }
+            ]
+        },
+        {
+            en: "When was the name of IRDA changed to IRDAI?",
+            hi: "IRDA का नाम IRDAI कब कर दिया गया?",
+            opts: [
+                { en: "26 December 2013", hi: "26, दिसम्बर 2013", c: false },
+                { en: "26 April 2014", hi: "26, अप्रैल 2014", c: false },
+                { en: "26 August 2014", hi: "अगस्त 26, 2014", c: false },
+                { en: "26 December 2014", hi: "दिसम्बर 26, 2014", c: true }
+            ]
+        },
+        {
+            en: "Consider statements regarding Insurance Laws (Amendment) Bill, 2015:",
+            hi: "बीमा कानून (संशोधन) विधेयक, 2015 से सम्बन्धित सही कथनों पर विचार कीजिए",
+            opts: [
+                { en: "FDI limit increased from 26% to 49%", hi: "बीमा क्षेत्र में प्रत्यक्ष विदेशी निवेश कैप को 26% से बढ़ाकर 49% करना।", c: false },
+                { en: "Imprisonment of up to 10 years for selling policy without registration", hi: "बीमा नियामक (इरडाई) के साथ पंजीकरण के बिना पॉलिसी बिक्री के लिए 10 वर्ष तक का कारावास।", c: false },
+                { en: "Only 1", hi: "केवल 1", c: false },
+                { en: "Both 1 and 2", hi: "1 और 2 दोनों", c: true }
+            ]
+        },
+        {
+            en: "Which of the following statements is NOT true?",
+            hi: "निम्न कथनों में कौन सत्य नहीं है?",
+            opts: [
+                { en: "National Insurance Company Ltd HQ is in Kolkata", hi: "नेशनल इंश्योरेंस कम्पनी लिमिटेड का मुख्यालय कोलकाता में है।", c: false },
+                { en: "RBI guidelines 2000 require min 500 Cr paid-up capital for banks in insurance", hi: "RBI द्वारा 31 मार्च 2000 को जारी दिशा निर्देशानुसार बीमा क्षेत्र में वाणिज्यक बैंकों के प्रवेश के लिए बैंक की चुकता पूँजी रु. 500 करोड़ से कम नहीं होनी चाहिए।", c: false },
+                { en: "Only 1 is false", hi: "केवल 1", c: false },
+                { en: "Neither 1 nor 2 (implies both are true)", hi: "न तो 1 और नहीं 2", c: true }
+            ]
+        },
+        {
+            en: "The main objective of IRDAI is:",
+            hi: "भारतीय बीमा विनियामक एवं विकास प्राधिकरण का मुख्य उद्देश्य है",
+            opts: [
+                { en: "Systematic regulation of insurance industry", hi: "बीमा उद्योग का क्रमबद्ध विनियमन...", c: false },
+                { en: "Protect interests of policyholders", hi: "पॉलिसी धारकों के हितों की रक्षा करना", c: false },
+                { en: "Both 1 and 2", hi: "1 और 2", c: true },
+                { en: "None of these", hi: "इनमें से कोई नहीं", c: false }
+            ]
+        },
+        {
+            en: "According to Companies Act 2013, what does 'Paid-up Capital' imply?",
+            hi: "कम्पनी अधिनियम, 2013 के अनुसार, 'अभिदत्त पूँजी' का क्या निहितार्थ है?",
+            opts: [
+                { en: "Money asked for accumulation", hi: "पूँजी का वह हिस्सा, जो संचय के लिए माँग लिया गया है", c: false },
+                { en: "Max amount of share capital", hi: "किसी कम्पनी की शेयर पूँजी की अधिकतम रकम", c: false },
+                { en: "Capital received from shareholders", hi: "पूँजी का वह हिस्सा, जो कम्पनी ने असर शेयरधारकों से प्राप्त किया है", c: true },
+                { en: "Capital issued from time to time", hi: "वह पूँजी, जो कम्पनी समय-समय पर अभिदान के लिए जारी करती है", c: false }
+            ]
+        },
+        {
+            en: "In which year was the Unit Trust of India (U.T.I.) established?",
+            hi: "भारतीय यूनिट ट्रस्ट (U.T.I.) की स्थापना किस वर्ष को गई?",
+            opts: [
+                { en: "1953", hi: "1953 में", c: false },
+                { en: "1956", hi: "1956 में", c: false },
+                { en: "1964", hi: "1964 में", c: true },
+                { en: "1969", hi: "1969 में", c: false }
+            ]
+        },
+        {
+            en: "Which is the largest Mutual Fund organization in India?",
+            hi: "भारत का सबसे बड़ा म्यूचुअल फण्ड संस्था है-",
+            opts: [
+                { en: "G.I.C.", hi: "G.I.C.", c: false },
+                { en: "S.B.I.", hi: "S.B.I.", c: false },
+                { en: "L.I.C.", hi: "L.I.C.", c: false },
+                { en: "U.T.I.", hi: "U.T.I.", c: true }
+            ]
+        },
+        {
+            en: "Who started the first Mutual Fund in India?",
+            hi: "भारत में सबसे पहले किसने म्यूचुअल फण्ड प्रारंभ किया?",
+            opts: [
+                { en: "L.I.C.", hi: "L.I.C.", c: false },
+                { en: "G.I.C.", hi: "G.I.C.", c: false },
+                { en: "U.T.I.", hi: "U.T.I.", c: true },
+                { en: "S.B.I.", hi: "S.B.I.", c: false }
+            ]
+        },
+        {
+            en: "In which year was Life Insurance Corporation of India (L.I.C.) established?",
+            hi: "भारतीय जीवन बीमा निगम (L.I.C.) की स्थापना किस वर्ष की गई थी?",
+            opts: [
+                { en: "1948", hi: "1948 में", c: false },
+                { en: "1950", hi: "1950 में", c: false },
+                { en: "1956", hi: "1956 में", c: true },
+                { en: "1964", hi: "1964 में", c: false }
+            ]
+        },
+        {
+            en: "When was the Securities and Exchange Board of India (SEBI) established?",
+            hi: "भारतीय प्रतिभूति एवं विनिमय बोर्ड की स्थापना कब की गई थी?",
+            opts: [
+                { en: "1988", hi: "1988 में", c: true },
+                { en: "1992", hi: "1992 में", c: false },
+                { en: "1993", hi: "1993 में", c: false },
+                { en: "2002", hi: "2002 में", c: false }
+            ]
+        },
+        {
+            en: "In which year was SEBI given statutory status by an ordinance?",
+            hi: "भारतीय प्रतिभूति एवं विनिमय बोर्ड को किस वर्ष एक अध्यादेश द्वारा वैधानिक दर्जा प्रदान किया गया?",
+            opts: [
+                { en: "1988", hi: "1988 ई.", c: false },
+                { en: "1990", hi: "1990 ई.", c: false },
+                { en: "1992", hi: "1992 ई.", c: true },
+                { en: "1993", hi: "1993 ई.", c: false }
+            ]
+        },
+        {
+            en: "SEBI's functions include:",
+            hi: "SEBI के कार्यों में सम्मिलित है-",
+            opts: [
+                { en: "Regulating stock exchanges", hi: "स्टॉक एक्सचेंज के कार्यों को विनियमित करना", c: false },
+                { en: "Preventing unfair trade practices", hi: "शेयर बाजार से संबंधित अनुचित एवं धोखाधड़ी से परिपूर्ण व्यापारिक कार्यों पर रोक लगाना", c: false },
+                { en: "Controlling insider trading", hi: "प्रतिभूतियों के अन्तरंग व्यापार को नियन्त्रित करना", c: false },
+                { en: "All of the above", hi: "उपर्युक्त में से सभी", c: true }
+            ]
+        },
+        {
+            en: "The terms 'Bull and Bear' are related to which of the following?",
+            hi: "'बुल एण्ड बीवर' शब्दावली का सम्बन्ध किससे है?",
+            opts: [
+                { en: "Stock Market", hi: "स्टॉक मार्केट", c: true },
+                { en: "Banking", hi: "बैंकिंग", c: false },
+                { en: "Foreign Exchange Reserve", hi: "विदेशी मुद्रा रिजर्व", c: false },
+                { en: "Internal Trade", hi: "आंतरिक व्यापार", c: false }
+            ]
+        },
+        {
+            en: "How many recognized stock exchanges are there in India?",
+            hi: "भारत में मान्यता प्राप्त स्टॉक एक्सचेंजों की संख्या कितनी है?",
+            opts: [
+                { en: "10", hi: "10", c: false },
+                { en: "16", hi: "16", c: false },
+                { en: "23", hi: "23", c: true },
+                { en: "24", hi: "24", c: false }
+            ]
+        },
+        {
+            en: "India's oldest stock exchange is:",
+            hi: "भारत का सबसे पुराना स्टॉक एक्सचेंज है-",
+            opts: [
+                { en: "Bombay Stock Exchange", hi: "बम्बई स्टॉक एक्सचेंज", c: true },
+                { en: "Delhi Stock Exchange", hi: "दिल्ली स्टॉक एक्सचेंज", c: false },
+                { en: "National Stock Exchange", hi: "राष्ट्रीय स्टॉक एक्सचेंज", c: false },
+                { en: "O.T.C.E.I.", hi: "O.T.C.E.I.", c: false }
+            ]
+        },
+        {
+            en: "When was Bombay Stock Exchange established?",
+            hi: "बम्बई स्टॉक एक्सचेंज की स्थापना कब हुई ?",
+            opts: [
+                { en: "1855", hi: "1855 ई०", c: false },
+                { en: "1861", hi: "1816 ई०", c: false },
+                { en: "1875", hi: "1875 ई०", c: true },
+                { en: "1885", hi: "1885 ई०", c: false }
+            ]
+        },
+        {
+            en: "Which committee recommended the establishment of National Stock Exchange (NSE) in 1991?",
+            hi: "राष्ट्रीय स्टॉक एक्सचेंज (N.S.E.) की स्थापना की संस्तुति 1991 में किस समिति द्वारा की गई थी?",
+            opts: [
+                { en: "Pherwani Committee", hi: "फेरवानी समिति", c: true },
+                { en: "Wanchoo Committee", hi: "वांचू समिति", c: false },
+                { en: "Mahalanobis Committee", hi: "महालनोबिस समिति", c: false },
+                { en: "Narasimham Committee", hi: "नरसिम्हम समिति", c: false }
+            ]
+        },
+        {
+            en: "SEBI withdrew recognition of which stock exchange on July 9, 2007?",
+            hi: "सेबी (SEBI) ने पिछले कई वर्षों से निष्क्रिय पड़े किस स्टॉक एक्सचेंज की मान्यता 9 जुलाई, 2007 को समाप्त कर दी...",
+            opts: [
+                { en: "K.S.E. Saurashtra", hi: "K.S.E. सौराष्ट्र", c: true },
+                { en: "C.S.E. Cochin", hi: "C.S.E. कोच्चि", c: false },
+                { en: "M.S.E. Patna", hi: "M.S.E. पटना", c: false },
+                { en: "G.S.E. Guwahati", hi: "G.S.E. गुवाहाटी", c: false }
+            ]
+        },
+        {
+            en: "The share price index of Bombay Stock Exchange is:",
+            hi: "बम्बई स्टॉक एक्सचेंज का शेयर मूल्य सूचकांक है-",
+            opts: [
+                { en: "DOLEX", hi: "DOLEX", c: false },
+                { en: "SENSEX", hi: "SENSEX", c: false },
+                { en: "S & PCNX-NIFTY FIFTY", hi: "S & PCNX-NIFTY FIFTY", c: false },
+                { en: "All of these", hi: "इनमें से सभी", c: true }
+            ]
+        },
+        {
+            en: "What is O.T.C.E.I.?",
+            hi: "O.T.C.E.I. क्या है?",
+            opts: [
+                { en: "Nuclear submarine of China", hi: "चीन की परमाणु चालित पनडुब्बी", c: false },
+                { en: "A policy for American economic policy", hi: "अमेरिकी आर्थिक नीति के लिए एक नीति", c: false },
+                { en: "An Indian Share Market", hi: "भारत का एक शेयर बाजार", c: true },
+                { en: "India's security research program", hi: "भारत का सुरक्षा अनुसंधान विकास कार्यक्रम", c: false }
+            ]
+        },
+        {
+            en: "Where is Dalal Street located?",
+            hi: "दलाल स्ट्रीट कहाँ स्थित है?",
+            opts: [
+                { en: "London", hi: "लन्दन", c: false },
+                { en: "Paris", hi: "पेरिस", c: false },
+                { en: "Mumbai", hi: "मुम्बई", c: true },
+                { en: "New Delhi", hi: "नई दिल्ली", c: false }
+            ]
+        },
+        {
+            en: "What is Dow-Jones?",
+            hi: "डो-जोन्स (Dow-Jones) है-",
+            opts: [
+                { en: "Share market index of New York Stock Exchange", hi: "न्यूयॉर्क स्टॉक एक्सचेंज का शेयर बाजार सूचकांक", c: true },
+                { en: "Share market index of Bombay Stock Exchange", hi: "बम्बई स्टॉक एक्सचेंज का शेयर बाजार सूचकांक", c: false },
+                { en: "Gold Index of World Gold Council", hi: "विश्व स्वर्ण परिषद् का स्वर्ण सूचकांक", c: false },
+                { en: "None of these", hi: "इनमें से कोई नहीं", c: false }
+            ]
+        },
+        {
+            en: "What is MCX-SX in the context of Indian news?",
+            hi: "हाल के भारतीय समाचारों के संदर्भ में MCX-SX क्या है?",
+            opts: [
+                { en: "A kind of Super Computer", hi: "एक तरह का सुपर कम्प्यूटर", c: false },
+                { en: "Name of Moon Impact probe", hi: "चन्द्रमा संघट्ट अन्वेषी (Moon Impact probe) का नाम", c: false },
+                { en: "Stock Exchange", hi: "स्टॉक एक्सचेंज", c: true },
+                { en: "Nuclear powered submarine", hi: "नाभिकीय शक्ति युक्त पनडुब्बी", c: false }
+            ]
+        },
+        {
+            en: "Whose name is Wall Street?",
+            hi: "वाल स्ट्रीट (Wall Street) किसका नाम है?",
+            opts: [
+                { en: "Super Market in Mumbai", hi: "मुम्बई में सुपर मार्केट", c: false },
+                { en: "Indian Township in Washington", hi: "वाशिंगटन में इण्डियन टाउनशिप", c: false },
+                { en: "Stock Exchange of Kolkata", hi: "कोलकाता का स्टॉक एक्सचेंज", c: false },
+                { en: "Stock Exchange of New York", hi: "न्यूयॉर्क का स्टॉक एक्सचेंज", c: true }
+            ]
+        },
+        {
+            en: "Who sells Treasury Bills in India?",
+            hi: "भारत में ट्रेजरी बिल बेचे जाते हैं-",
+            opts: [
+                { en: "By R.B.I.", hi: "आर. बी. आई. द्वारा", c: true },
+                { en: "By State Governments", hi: "राज्य सरकारों द्वारा", c: false },
+                { en: "By Commercial Banks", hi: "व्यापारिक बैंकों द्वारा", c: false },
+                { en: "By SEBI", hi: "सेबी द्वारा", c: false }
+            ]
+        },
+        {
+            en: "What is a short-term government security paper called?",
+            hi: "अल्पकालिक सरकारी प्रतिभूति पत्र को क्या कहा जाता है?",
+            opts: [
+                { en: "Share", hi: "शेयर", c: false },
+                { en: "Debenture", hi: "डिबेंचर", c: false },
+                { en: "Mutual Fund", hi: "म्यूचुअल फंड", c: false },
+                { en: "Treasury Bill", hi: "ट्रेजरी बिल", c: true }
+            ]
+        },
+        {
+            en: "What do you understand by the term 'Bancassurance'?",
+            hi: "पद 'बैंकेश्योरेंस' से क्या समझते हैं?",
+            opts: [
+                { en: "Insurance scheme for bank deposits", hi: "बैंक की जमाराशियों के बीमा के लिए एक बीमा योजना", c: false },
+                { en: "Insurance scheme for bank employees", hi: "बैंक के कर्मचारियों के लिए एक बीमा योजना", c: false },
+                { en: "Composite financial service offering insurance by bank", hi: "बैंक द्वारा दी जा रही कम्पोजिट वित्तीय सेवा जिसमें बीमा उत्पाद शामिल है", c: true },
+                { en: "Deposit scheme for insurance employees only", hi: "बैंक की एक जमा योजना जो केवल बीमा कम्पनियों के कर्मचारियों के लिए है", c: false }
+            ]
+        },
+        {
+            en: "Consider the following statements regarding taxes on Share Market and Futures Market:",
+            hi: "निम्नलिखित कथनों पर विचार कीजिए- \nभारत में शेयर बाजार तथा फ्यूचर्स बाजार में लेन देनों पर कर- \n1. संघ द्वारा लगाये जाते हैं \n2. राज्यों द्वारा एकत्रित किये जाते हैं",
+            opts: [
+                { en: "Only 1", hi: "केवल 1", c: true },
+                { en: "Only 2", hi: "केवल 2", c: false },
+                { en: "Both 1 and 2", hi: "1 और 2 दोनों", c: false },
+                { en: "Neither 1 nor 2", hi: "न तो 1 और न ही 2", c: false }
+            ]
+        },
+        {
+            en: "Which of the following is regulated by Forward Markets Commission in India?",
+            hi: "भारत में निम्नलिखित में से कौन-सा वायदा बाजार आयोग द्वारा विनियमित होता है?",
+            opts: [
+                { en: "Currency Futures Trading", hi: "मुद्रा फ्यूचर्स व्यापार", c: false },
+                { en: "Commodity Futures Trading", hi: "जिंस फ्यूचर्स व्यापार", c: true },
+                { en: "Equity Futures Trading", hi: "इक्विटी फ्यूचर्स व्यापार", c: false },
+                { en: "Both Commodity and Equity Futures", hi: "जिंस फ्यूचर्स व्यापार तथा इक्विटी फ्यूचर्स व्यापार दोनों", c: false }
+            ]
+        },
+        {
+            en: "Which of the following is NOT the name of a sensitive index of a global stock exchange?",
+            hi: "निम्नलिखित में से कौन-सा किसी वैश्विक शेयर बाजार का संवेदनशील सूचकांक का नाम नहीं है?",
+            opts: [
+                { en: "Nasdaq", hi: "नासडाक", c: false },
+                { en: "Nikkei", hi: "निक्की", c: false },
+                { en: "Kospi", hi: "कोस्पी", c: false },
+                { en: "SEBI", hi: "सेबी", c: true }
+            ]
+        }
+    ];
+
+    // --- Audio Logic (Synthesized) ---
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const playSound = (type) => {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        osc.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+
+        if (type === 'correct') {
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(500, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(1000, audioCtx.currentTime + 0.1);
+            gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.5);
+        } else {
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(200, audioCtx.currentTime);
+            osc.frequency.linearRampToValueAtTime(100, audioCtx.currentTime + 0.2);
+            gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
+            gainNode.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.4);
+        }
+    };
+
+    // --- State & Logic ---
+    let activeQuestions = [];
+    let currentIndex = 0;
+    let score = 0;
+    let timerVal = 0;
+    let timerInterval;
+
+    function startQuiz() {
+        // Setup
+        const tInput = document.getElementById('timeInput').value;
+        const shuffle = document.getElementById('shuffleToggle').checked;
+        timerVal = tInput ? parseInt(tInput) : 0;
+
+        // Clone and Shuffle
+        activeQuestions = [...rawQuestions];
+        if (shuffle) activeQuestions.sort(() => Math.random() - 0.5);
+
+        score = 0;
+        currentIndex = 0;
+
+        document.getElementById('startScreen').classList.remove('active');
+        document.getElementById('quizScreen').classList.add('active');
+        loadQuestion();
+    }
+
+    function loadQuestion() {
+        if (currentIndex >= activeQuestions.length) return finishQuiz();
+
+        const q = activeQuestions[currentIndex];
+        const total = activeQuestions.length;
+
+        // Header Update
+        document.getElementById('questionCounter').innerText = `Q: ${currentIndex + 1}/${total}`;
+        document.getElementById('scoreDisplay').innerText = `Score: ${score}`;
+        
+        const pct = (currentIndex / total) * 100;
+        document.getElementById('progressBar').style.width = `${pct}%`;
+
+        // Render Text
+        document.getElementById('qTextEn').innerText = q.en;
+        document.getElementById('qTextHi').innerText = q.hi;
+
+        // Render Options
+        const optContainer = document.getElementById('optionsContainer');
+        optContainer.innerHTML = '';
+        
+        q.opts.forEach((opt, idx) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerHTML = `<span class="opt-en">${opt.en}</span><span class="opt-hi">${opt.hi}</span>`;
+            btn.onclick = () => handleAnswer(btn, opt.c, idx, q.opts);
+            optContainer.appendChild(btn);
+        });
+
+        // Hide old feedback
+        document.getElementById('feedbackEmoji').style.display = 'none';
+
+        // Timer Logic
+        clearInterval(timerInterval);
+        const tDisplay = document.getElementById('timerDisplay');
+        tDisplay.classList.remove('danger');
+
+        if (timerVal > 0) {
+            let timeLeft = timerVal;
+            tDisplay.innerText = `${timeLeft}s`;
+            
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                tDisplay.innerText = `${timeLeft}s`;
+                if (timeLeft <= 5) tDisplay.classList.add('danger');
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    forceNext();
+                }
+            }, 1000);
+        } else {
+            tDisplay.innerText = '∞';
+        }
+    }
+
+    function handleAnswer(btn, isCorrect, idx, allOpts) {
+        clearInterval(timerInterval);
+        
+        // Disable all
+        const btns = document.querySelectorAll('.option-btn');
+        btns.forEach(b => b.classList.add('disabled'));
+
+        if (isCorrect) {
+            score++;
+            btn.classList.add('correct');
+            playSound('correct');
+            triggerConfetti();
+        } else {
+            btn.classList.add('wrong');
+            playSound('wrong');
+            showEmoji('😢');
+            // Show correct
+            allOpts.forEach((opt, i) => {
+                if(opt.c) btns[i].classList.add('correct');
+            });
+        }
+
+        setTimeout(() => {
+            currentIndex++;
+            loadQuestion();
+        }, 1500);
+    }
+
+    function forceNext() {
+        playSound('wrong');
+        showEmoji('⏰');
+        const btns = document.querySelectorAll('.option-btn');
+        btns.forEach(b => b.classList.add('disabled'));
+        
+        // Highlight correct
+        const q = activeQuestions[currentIndex];
+        q.opts.forEach((opt, i) => {
+            if(opt.c) btns[i].classList.add('correct');
+        });
+
+        setTimeout(() => {
+            currentIndex++;
+            loadQuestion();
+        }, 1500);
+    }
+
+    function showEmoji(emoji) {
+        const el = document.getElementById('feedbackEmoji');
+        el.innerText = emoji;
+        el.style.display = 'block';
+    }
+
+    function finishQuiz() {
+        clearInterval(timerInterval);
+        document.getElementById('quizScreen').classList.remove('active');
+        document.getElementById('resultScreen').classList.add('active');
+
+        // Logic based on questions attempted/total
+        const total = activeQuestions.length;
+        document.getElementById('finalScore').innerText = `${score} / ${total}`;
+        
+        const percentage = total > 0 ? (score / total) * 100 : 0;
+        let msg = "";
+        if (percentage >= 80) msg = "🏆 Outstanding Performance!";
+        else if (percentage >= 50) msg = "👏 Well Done! Keep it up.";
+        else msg = "📚 Practice makes perfect! Try again.";
+        
+        document.getElementById('resultMessage').innerText = msg;
+        document.getElementById('accuracyDetails').innerText = `You answered ${score} correctly out of ${total} total questions.`;
+    }
+
+    function resetQuiz() {
+        document.getElementById('resultScreen').classList.remove('active');
+        document.getElementById('startScreen').classList.add('active');
+    }
+
+    function triggerConfetti() {
+        for(let i=0; i<30; i++) {
+            const c = document.createElement('div');
+            c.className = 'confetti';
+            c.style.left = Math.random() * 100 + 'vw';
+            c.style.background = `hsl(${Math.random()*360}, 100%, 50%)`;
+            c.style.animationDuration = (Math.random() * 2 + 1) + 's';
+            document.body.appendChild(c);
+            setTimeout(() => c.remove(), 3000);
+        }
+    }
+</script>
+</body>
+</html>

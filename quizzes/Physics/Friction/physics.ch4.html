@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Physics Friction Quiz | भौतिकी घर्षण प्रश्नोत्तरी</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --text-main: #ffffff;
+            --text-hindi: #e0e0e0;
+            --accent-green: #00e676;
+            --accent-red: #ff5252;
+            --accent-blue: #448aff;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: radial-gradient(circle at 0% 0%, #4a148c, #311b92, #880e4f);
+            background-size: 200% 200%;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--text-main);
+            overflow: hidden;
+            animation: gradientMove 15s ease infinite;
+        }
+
+        @keyframes gradientMove {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Glassmorphism Card */
+        .container {
+            width: 95%;
+            max-width: 700px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 25px;
+            padding: 2rem;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            position: relative;
+            overflow: hidden;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        /* Screens */
+        .screen {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Start Screen */
+        h1 { font-size: 2rem; text-align: center; margin-bottom: 0.5rem; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+        h2 { font-size: 1.2rem; color: var(--text-hindi); margin-bottom: 2rem; font-weight: 400; }
+
+        .control-group {
+            width: 100%;
+            margin-bottom: 1.5rem;
+            background: rgba(0,0,0,0.2);
+            padding: 15px;
+            border-radius: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        input[type="number"] {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid white;
+            color: white;
+            padding: 8px;
+            border-radius: 8px;
+            width: 80px;
+            text-align: center;
+            font-family: 'Poppins';
+        }
+
+        /* Toggle Switch */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(255,255,255,0.2);
+            transition: .4s;
+            border-radius: 24px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider { background-color: var(--accent-green); }
+        input:checked + .slider:before { transform: translateX(26px); }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            padding: 15px 40px;
+            color: white;
+            font-size: 1.2rem;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: transform 0.2s;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            margin-top: 1rem;
+            font-weight: 600;
+        }
+
+        .btn-primary:hover { transform: scale(1.05); }
+
+        /* Quiz UI */
+        .quiz-header {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+
+        .progress-container {
+            width: 100%;
+            height: 6px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            margin-bottom: 1.5rem;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: var(--accent-green);
+            width: 0%;
+            transition: width 0.3s ease;
+            box-shadow: 0 0 10px var(--accent-green);
+        }
+
+        .timer-badge {
+            background: rgba(0,0,0,0.3);
+            padding: 5px 15px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .timer-pulse {
+            animation: pulseRed 1s infinite;
+            color: var(--accent-red);
+            font-weight: bold;
+        }
+
+        @keyframes pulseRed {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .question-box {
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .q-en { font-size: 1.1rem; font-weight: 700; margin-bottom: 5px; line-height: 1.4; }
+        .q-hi { font-size: 0.95rem; color: var(--text-hindi); font-weight: 400; line-height: 1.4; }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+            width: 100%;
+        }
+
+        .option-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 12px 15px;
+            border-radius: 12px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateX(5px);
+        }
+
+        .opt-en { font-size: 1rem; font-weight: 600; color: #fff; }
+        .opt-hi { font-size: 0.85rem; color: #ccc; margin-top: 2px; }
+
+        .option-btn.correct { background: rgba(0, 230, 118, 0.4); border-color: var(--accent-green); }
+        .option-btn.wrong { background: rgba(255, 82, 82, 0.4); border-color: var(--accent-red); }
+
+        .btn-finish {
+            margin-top: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid white;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        .btn-finish:hover { background: rgba(255, 255, 255, 0.2); }
+
+        /* Feedback Elements */
+        #emoji-overlay {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 5rem;
+            pointer-events: none;
+            display: none;
+            z-index: 10;
+        }
+
+        .shake { animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both; }
+
+        @keyframes shake {
+            10%, 90% { transform: translate(-53%, -50%); }
+            20%, 80% { transform: translate(-47%, -50%); }
+            30%, 50%, 70% { transform: translate(-53%, -50%); }
+            40%, 60% { transform: translate(-47%, -50%); }
+        }
+
+        /* Result Screen */
+        .score-display {
+            font-size: 4rem;
+            font-weight: 800;
+            margin: 1rem 0;
+            background: -webkit-linear-gradient(#00e676, #00b0ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .message-display { font-size: 1.2rem; text-align: center; margin-bottom: 2rem; }
+
+        /* Confetti */
+        .confetti {
+            position: absolute;
+            width: 10px; height: 10px;
+            background-color: #f00;
+            animation: fall linear forwards;
+            z-index: 9999;
+        }
+        @keyframes fall { to { transform: translateY(100vh) rotate(720deg); } }
+
+        /* Mobile */
+        @media (max-width: 480px) {
+            .container { padding: 1.5rem; width: 100%; border-radius: 0; height: 100vh; max-height: 100vh; border: none; }
+            h1 { font-size: 1.5rem; }
+            .score-display { font-size: 3rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div id="start-screen" class="screen active">
+        <h1>Physics Quiz</h1>
+        <h2>भौतिकी प्रश्नोत्तरी</h2>
+        
+        <div class="control-group">
+            <span>Manual Timer (sec/q)<br><small style="color:#ccc">खाली = No Timer</small></span>
+            <input type="number" id="timer-input" placeholder="0">
+        </div>
+
+        <div class="control-group">
+            <span>Shuffle Questions<br><small style="color:#ccc">प्रश्नों को मिलाएं</small></span>
+            <label class="switch">
+                <input type="checkbox" id="shuffle-toggle">
+                <span class="slider"></span>
+            </label>
+        </div>
+
+        <button class="btn-primary" onclick="startQuiz()">Start Quiz</button>
+    </div>
+
+    <div id="quiz-screen" class="screen">
+        <div class="progress-container"><div class="progress-bar" id="progress-bar"></div></div>
+        
+        <div class="quiz-header">
+            <span id="q-counter">Q: 01/19</span>
+            <div class="timer-badge">
+                <span>⏱</span>
+                <span id="timer-display">--</span>
+            </div>
+            <span id="score-live">Score: 0</span>
+        </div>
+
+        <div class="question-box">
+            <div id="q-text-en" class="q-en">Question English</div>
+            <div id="q-text-hi" class="q-hi">प्रश्न हिंदी</div>
+        </div>
+
+        <div class="options-grid" id="options-container">
+            </div>
+
+        <button class="btn-finish" onclick="finishQuiz()">Finish & Show Results</button>
+    </div>
+
+    <div id="result-screen" class="screen">
+        <h1>Quiz Completed!</h1>
+        <div class="score-display" id="final-score">0%</div>
+        <p class="message-display" id="result-msg">Message</p>
+        <div style="text-align:center; margin-bottom:1rem; color:#ddd">
+            Raw Score: <span id="raw-score">0/19</span>
+        </div>
+        <button class="btn-primary" onclick="location.reload()">Restart Quiz</button>
+    </div>
+
+    <div id="emoji-overlay">😢</div>
+</div>
+
+<script>
+    /* --- DATA EXTRACTED FROM IMAGES 1-19 --- */
+    const rawQuestions = [
+        {
+            id: 1,
+            en: "If Rolling, Static and Sliding friction forces are arranged in correct order, it will be:",
+            hi: "लोटनिक, स्थैतिक तथा सर्पी घर्षण के कारण बलों को व्यवस्थित किया जाए तो सही व्यवस्था होगी-",
+            options: [
+                {en: "Rolling, Static, Sliding", hi: "लोटनिक, स्थैतिक, सर्पी"},
+                {en: "Rolling, Sliding, Static", hi: "लोटनिक, सर्पी, स्थैतिक"},
+                {en: "Static, Sliding, Rolling", hi: "स्थैतिक, सर्पी, लोटनिक"},
+                {en: "Sliding, Static, Rolling", hi: "सर्पी, स्थैतिक, लोटनिक"}
+            ],
+            correct: 2 // Static > Sliding > Rolling
+        },
+        {
+            id: 2,
+            en: "A toy car is run on dry marble floor, wet marble floor, newspaper, and towel. The increasing order of friction force is:",
+            hi: "एक खिलौना कार को संगमरमर के सूखे फर्श, गीले फर्श, समाचार पत्र, तथा तौलिया पर चलाया जाता है। घर्षण बल का बढ़ता क्रम होगा-",
+            options: [
+                {en: "Wet marble, Dry marble, Newspaper, Towel", hi: "संगमरमर का गीला फर्श, संगमरमर का सूखा फर्श, समाचार पत्र, तौलिया"},
+                {en: "Newspaper, Towel, Dry marble, Wet marble", hi: "समाचार पत्र, तौलिया, संगमरमर का सूखा फर्श, संगमरमर का गीला फर्श"},
+                {en: "Towel, Newspaper, Dry marble, Wet marble", hi: "तौलिया, समाचार पत्र, संगमरमर का सूखा फर्श, संगमरमर का गीला फर्श"},
+                {en: "Wet marble, Dry marble, Towel, Newspaper", hi: "संगमरमर का गीला फर्श, संगमरमर का सूखा फर्श, तौलिया, समाचार पत्र"}
+            ],
+            correct: 0 // Wet (least) -> Dry -> Paper -> Towel (most rough)
+        },
+        {
+            id: 3,
+            en: "Static friction is:",
+            hi: "स्थैतिक घर्षण होता है-",
+            options: [
+                {en: "Greater than sliding friction", hi: "सर्पी घर्षण से अधिक"},
+                {en: "Less than sliding friction", hi: "सर्पी घर्षण से कम"},
+                {en: "Equal to sliding friction", hi: "सर्पी घर्षण के बराबर"},
+                {en: "None of these", hi: "इनमें से कोई नहीं"}
+            ],
+            correct: 0
+        },
+        {
+            id: 4,
+            en: "One way to increase friction is:",
+            hi: "घर्षण बढ़ाने का एक उपाय है-",
+            options: [
+                {en: "Polishing", hi: "पॉलिश करना"},
+                {en: "Streamlining", hi: "धारा रेखीय आकृति बनाना"},
+                {en: "Making surface rough", hi: "रुखड़ा करना"},
+                {en: "Using lubricants", hi: "स्नेहक का प्रयोग करना"}
+            ],
+            correct: 2
+        },
+        {
+            id: 5,
+            en: "Friction is:",
+            hi: "घर्षण है-",
+            options: [
+                {en: "Enemy", hi: "शत्रु"},
+                {en: "Friend", hi: "मित्र"},
+                {en: "Both Enemy and Friend", hi: "शत्रु एवं मित्र दोनों"},
+                {en: "None of these", hi: "इनमें से कोई नहीं"}
+            ],
+            correct: 2
+        },
+        {
+            id: 6,
+            en: "If all matter consisted only of electrically neutral particles like neutrons, then:",
+            hi: "यदि सभी पदार्थ केवल न्यूट्रॉन जैसे विद्युतीय उदासीन कणों से मिलकर बना होता, तब-",
+            options: [
+                {en: "Friction would not exist", hi: "घर्षण का अस्तित्व नहीं रहता"},
+                {en: "There would be no tension in string", hi: "डोरी से तनाव नहीं होता"},
+                {en: "Spring force would not exist", hi: "स्प्रिंग बल का अस्तित्व नहीं होता"},
+                {en: "All statements are correct", hi: "सभी कथन सही है।"}
+            ],
+            correct: 3 // EM force is responsible for all contact forces
+        },
+        {
+            id: 7,
+            en: "Friction force acts in the direction of relative motion:",
+            hi: "घर्षण बल लगता है आपेक्षिक गति के-",
+            options: [
+                {en: "In the same direction", hi: "दिशा में"},
+                {en: "Opposite to direction", hi: "दिशा के विपरीत"},
+                {en: "Perpendicular to direction", hi: "दिशा के लंबवत"},
+                {en: "At any angle", hi: "दिशा के साथ किसी भी कोण पर"}
+            ],
+            correct: 1
+        },
+        {
+            id: 8,
+            en: "Limiting friction is:",
+            hi: "चरम घर्षण (Limiting friction), स्थिर घर्षण पर-",
+            options: [
+                {en: "Minimum value", hi: "न्यूनतम मान है"},
+                {en: "Maximum value", hi: "महत्तम मान है"},
+                {en: "Double the value", hi: "दुगुना है"},
+                {en: "Half the value", hi: "आधा है"}
+            ],
+            correct: 1
+        },
+        {
+            id: 9,
+            en: "The value of μs / μk is:",
+            hi: "μs / μk का मान होता है-",
+            options: [
+                {en: "More than 1", hi: "1 से अधिक"},
+                {en: "Less than 1", hi: "1 से कम"},
+                {en: "Equal to 1", hi: "1 के बराबर"},
+                {en: "Zero", hi: "शून्य"}
+            ],
+            correct: 0 // Static coeff is higher than kinetic
+        },
+        {
+            id: 10,
+            en: "Coefficient of friction is:",
+            hi: "घर्षण गुणांक-",
+            options: [
+                {en: "A dimensionless quantity", hi: "एक विमाहीन राशि है"},
+                {en: "Has dimension MLT^-2", hi: "की विमा MLT⁻² है"},
+                {en: "Is the force between surfaces", hi: "दो संपर्क सतह के बीच लगने वाला घर्षण बल है"},
+                {en: "None of these", hi: "इनमें कोई नहीं"}
+            ],
+            correct: 0
+        },
+        {
+            id: 11,
+            en: "If coefficient of friction is μ, a body on an inclined plane will just start sliding down when angle of inclination is slightly more than:",
+            hi: "यदि घर्षण गुणांक μ हो तो Inclined plane पर रखी वस्तु नीचे की ओर तब सरकने लगेगी जब आनत समतल के झुकाव के कोण निम्नलिखित से थोड़ा अधिक हो-",
+            options: [
+                {en: "tan μ", hi: "tan μ"},
+                {en: "tan⁻¹(μ)", hi: "tan⁻¹(μ)"},
+                {en: "tan⁻¹(1/μ)", hi: "tan⁻¹(1/μ)"},
+                {en: "tan(1/μ)", hi: "tan(1/μ)"}
+            ],
+            correct: 1 // Angle of repose
+        },
+        {
+            id: 12,
+            en: "A force of 4 kg-wt is required to pull a 100 kg object. The coefficient of friction between object and surface is:",
+            hi: "100 kg द्रव्यमान की एक वस्तु को खींचने के लिए 4 kg-wt बल की आवश्यकता होती है। वस्तु और सतह के बीच घर्षण गुणांक है-",
+            options: [
+                {en: "0.1", hi: "0.1"},
+                {en: "0.01", hi: "0.01"},
+                {en: "0.04", hi: "0.04"},
+                {en: "0.04 M", hi: "0.04 M"}
+            ],
+            correct: 2 // F=4, R=100, mu = 4/100
+        },
+        {
+            id: 13,
+            en: "If the normal force is doubled, the coefficient of friction will:",
+            hi: "यदि अभिलंब बल दुगुणा कर दिया जाए तो घर्षण गुणांक-",
+            options: [
+                {en: "Become double", hi: "दुगुणा हो जाएगा"},
+                {en: "Become four times", hi: "चौगुना हो जाएगा"},
+                {en: "Remain same", hi: "समान रहेगा"},
+                {en: "Become half", hi: "आधा हो जाएगा"}
+            ],
+            correct: 2 // Coeff depends on material, not force
+        },
+        {
+            id: 14,
+            en: "Object A just slides on a plane inclined at 30°. When object B is placed, it just slides at 40°. Then:",
+            hi: "एक आनत तल का झुकाव कोण 30° होने पर उस पर स्थित एक वस्तु A नीचे की ओर ठीक फिसलने की स्थिति में होती है। A के स्थान पर दूसरा वस्तु B रखने पर पाया जाता है कि तल का झुकाव कोण 40° होने पर... तब-",
+            options: [
+                {en: "μA > μB", hi: "निश्चित रूप से A की मात्रा > B की मात्रा"}, // Translating options based on logic, Hindi text is slightly vague about 'matra' but implies properties
+                {en: "μA ∝ μB", hi: "निश्चित रूप से A की मात्रा ∝ B की मात्रा"},
+                {en: "μA = μB", hi: "निश्चित रूप से A की मात्रा = B की मात्रा"},
+                {en: "Coefficient of friction differs for A and B", hi: "A तथा B के लिए घर्षण गुणांक भिन्न है।"}
+            ],
+            correct: 3 // Tan30 vs Tan40 implies different mu
+        },
+        {
+            id: 15,
+            en: "A 10kg block on rough surface is pulled by 15N force. If μ=0.2 and g=10m/s², the block will:",
+            hi: "किसी रूक्ष क्षैतिज तल पर रखे 10 kg द्रव्यमान का एक आयताकार ब्लॉक 15 N के बल से... यदि μ = 0.2 तथा g = 10 m/s² हो तो ब्लॉक-",
+            options: [
+                {en: "Experience 20N friction", hi: "20 N के घर्षण बल का अनुभव करेगा"},
+                {en: "Experience 15N friction", hi: "15 N के घर्षण बल का अनुभव करेगा"},
+                {en: "Move with acceleration 1.5 m/s²", hi: "1.5 ms⁻² के त्वरण से..."},
+                {en: "Move opposite to force", hi: "विपरीत गतिशील होगा"}
+            ],
+            correct: 1 // Max friction 20N. Applied 15N. So static friction = Applied = 15N.
+        },
+        {
+            id: 16,
+            en: "Three blocks (4kg, 8kg, 24kg) connected by string on frictionless surface are pulled by Force F. If acceleration is 2 m/s², value of F is:",
+            hi: "नीचे चित्र के अनुसार 4 kg, 8 kg तथा 24 kg के तीन ब्लॉक... यदि निकाय का त्वरण 2 m/s² हो तो आरोपित बल F का मान होगा-",
+            options: [
+                {en: "36 N", hi: "36 N"},
+                {en: "72 N", hi: "72 N"},
+                {en: "180 N", hi: "180 N"},
+                {en: "200 N", hi: "200 N"}
+            ],
+            correct: 1 // Total mass 36. F=ma = 36*2 = 72
+        },
+        {
+            id: 17,
+            en: "Walking on ice is harder than on road because:",
+            hi: "सड़क पर चलने की अपेक्षा बर्फ पर चलना कठिन है, क्योंकि-",
+            options: [
+                {en: "Ice is harder than road", hi: "बर्फ सड़क से सख्त होती है।"},
+                {en: "Road is harder than ice", hi: "सड़क बर्फ से सख्त होती है।"},
+                {en: "Ice gives no reaction", hi: "जब हम अपने पैर से धक्का देते हैं तो बर्फ कोई प्रतिक्रिया व्यक्त नहीं करती।"},
+                {en: "Friction is less in ice than road", hi: "बर्फ में सड़क की अपेक्षा घर्षण कम होता है।"}
+            ],
+            correct: 3
+        },
+        {
+            id: 18,
+            en: "Walking on ice is difficult compared to concrete road with grooves because:",
+            hi: "रोड़ी युक्त सड़क की तुलना में बर्फ पर चलना कठिन होता है, क्योंकि",
+            options: [
+                {en: "Ice is soft, road is hard", hi: "बर्फ मुलायम एवं स्पंजी होता है..."},
+                {en: "Friction between foot & ice is less", hi: "पैर तथा बर्फ के मध्य घर्षण बल रोड़ी एवं पैर के मध्य घर्षण बल की तुलना में कम होता है।"},
+                {en: "Friction on ice is higher", hi: "बर्फ पर घर्षण बल रोड़ी की तुलना में अधिक होता है।"},
+                {en: "None of the above", hi: "उपर्युक्त में से कोई नहीं"}
+            ],
+            correct: 1
+        },
+        {
+            id: 19,
+            en: "It is easier to roll a barrel than to pull it because:",
+            hi: "लकड़ी के सिलिंडराकार पात्र (Barrel) को खींचने की जगह लुढ़काना आसान होता है, क्योंकि-",
+            options: [
+                {en: "Weight acts effectively when pulled", hi: "जब उसे खींचा जाता है, तो वस्तु का भार कार्यकारी होता है।"},
+                {en: "Rolling friction is much less than sliding friction", hi: "लुढ़कन अवस्था का घर्षण बल फिसलन अवस्था के घर्षण बल की तुलना में बहुत कम होता है।"},
+                {en: "Surface area is more in pulling", hi: "खींचने की अवस्था में सड़क के सम्पर्क में बैरल का पृष्ठ क्षेत्रफल अधिक होता है।"},
+                {en: "None of these", hi: "उपर्युक्त विकल्पों के अतिरिक्त कोई विकल्प।"}
+            ],
+            correct: 1
+        }
+    ];
+
+    /* --- GAME LOGIC --- */
+    let currentQIndex = 0;
+    let score = 0;
+    let timerValue = 0;
+    let timerInterval;
+    let currentQuestions = [];
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    function playSound(type) {
+        if(audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        if (type === 'correct') {
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(500, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(1000, audioCtx.currentTime + 0.1);
+            gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.5);
+        } else {
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+            osc.frequency.linearRampToValueAtTime(50, audioCtx.currentTime + 0.3);
+            gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.3);
+        }
+    }
+
+    function createConfetti() {
+        const colors = ['#00e676', '#ffea00', '#ff5252', '#00b0ff'];
+        for (let i = 0; i < 50; i++) {
+            const conf = document.createElement('div');
+            conf.classList.add('confetti');
+            conf.style.left = Math.random() * 100 + 'vw';
+            conf.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+            conf.style.animationDuration = (Math.random() * 2 + 1) + 's';
+            document.body.appendChild(conf);
+            setTimeout(() => conf.remove(), 3000);
+        }
+    }
+
+    function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
+    }
+
+    function startQuiz() {
+        const timerInput = document.getElementById('timer-input').value;
+        const doShuffle = document.getElementById('shuffle-toggle').checked;
+        
+        timerValue = timerInput ? parseInt(timerInput) : 0;
+        
+        // Clone questions to avoid modifying original
+        currentQuestions = JSON.parse(JSON.stringify(rawQuestions));
+        if (doShuffle) shuffleArray(currentQuestions);
+
+        score = 0;
+        currentQIndex = 0;
+        
+        document.getElementById('start-screen').classList.remove('active');
+        document.getElementById('quiz-screen').classList.add('active');
+        
+        loadQuestion();
+    }
+
+    function startTimer() {
+        clearInterval(timerInterval);
+        const display = document.getElementById('timer-display');
+        
+        if (timerValue <= 0) {
+            display.parentElement.style.display = 'none';
+            return;
+        }
+        
+        display.parentElement.style.display = 'flex';
+        let timeLeft = timerValue;
+        display.textContent = timeLeft;
+        display.classList.remove('timer-pulse');
+
+        timerInterval = setInterval(() => {
+            timeLeft--;
+            display.textContent = timeLeft;
+            if (timeLeft <= 5) display.classList.add('timer-pulse');
+            
+            if (timeLeft <= 0) {
+                clearInterval(timerInterval);
+                handleTimeOut();
+            }
+        }, 1000);
+    }
+
+    function loadQuestion() {
+        if (currentQIndex >= currentQuestions.length) {
+            finishQuiz();
+            return;
+        }
+
+        const q = currentQuestions[currentQIndex];
+        
+        // Update UI
+        document.getElementById('q-counter').textContent = `Q: ${currentQIndex + 1}/${currentQuestions.length}`;
+        document.getElementById('score-live').textContent = `Score: ${score}`;
+        document.getElementById('progress-bar').style.width = `${((currentQIndex) / currentQuestions.length) * 100}%`;
+        
+        // Set Text
+        document.getElementById('q-text-en').textContent = q.en;
+        document.getElementById('q-text-hi').textContent = q.hi;
+
+        // Generate Options
+        const optContainer = document.getElementById('options-container');
+        optContainer.innerHTML = '';
+        
+        q.options.forEach((opt, index) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerHTML = `<span class="opt-en">${String.fromCharCode(65+index)}. ${opt.en}</span><span class="opt-hi">${opt.hi}</span>`;
+            btn.onclick = () => checkAnswer(index, btn);
+            optContainer.appendChild(btn);
+        });
+
+        startTimer();
+    }
+
+    function handleTimeOut() {
+        const btns = document.querySelectorAll('.option-btn');
+        btns.forEach(b => b.disabled = true);
+        
+        // Highlight correct answer
+        const q = currentQuestions[currentQIndex];
+        btns[q.correct].classList.add('correct');
+        playSound('wrong');
+        
+        setTimeout(() => {
+            currentQIndex++;
+            loadQuestion();
+        }, 1500);
+    }
+
+    function checkAnswer(selectedIndex, btnElement) {
+        clearInterval(timerInterval);
+        const q = currentQuestions[currentQIndex];
+        const buttons = document.querySelectorAll('.option-btn');
+        
+        // Disable all
+        buttons.forEach(b => b.disabled = true);
+
+        if (selectedIndex === q.correct) {
+            // Correct
+            score++;
+            btnElement.classList.add('correct');
+            playSound('correct');
+            createConfetti();
+        } else {
+            // Wrong
+            btnElement.classList.add('wrong');
+            buttons[q.correct].classList.add('correct');
+            playSound('wrong');
+            
+            // Emoji Shake
+            const emoji = document.getElementById('emoji-overlay');
+            emoji.style.display = 'block';
+            emoji.classList.add('shake');
+            setTimeout(() => {
+                emoji.style.display = 'none';
+                emoji.classList.remove('shake');
+            }, 1000);
+        }
+
+        setTimeout(() => {
+            currentQIndex++;
+            loadQuestion();
+        }, 1500);
+    }
+
+    function finishQuiz() {
+        clearInterval(timerInterval);
+        document.getElementById('quiz-screen').classList.remove('active');
+        document.getElementById('result-screen').classList.add('active');
+
+        // Logic handled for questions attempted so far (if early exit)
+        // or total questions (if finished normally). 
+        // Denominator depends on if we want score based on total questions or just attempted.
+        // Usually quiz scores are based on total available questions.
+        
+        const total = currentQuestions.length;
+        const percentage = Math.round((score / total) * 100);
+        
+        const scoreDisplay = document.getElementById('final-score');
+        scoreDisplay.textContent = percentage + '%';
+        document.getElementById('raw-score').textContent = `${score}/${total}`;
+
+        const msgElement = document.getElementById('result-msg');
+        if (percentage >= 80) {
+            msgElement.textContent = "🏆 Outstanding Performance!";
+        } else if (percentage >= 50) {
+            msgElement.textContent = "👏 Well Done! Keep it up.";
+        } else {
+            msgElement.textContent = "📚 Practice makes perfect! Try again.";
+        }
+    }
+</script>
+
+</body>
+</html>

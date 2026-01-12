@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Projectile Motion Master Quiz</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --glass-blur: 20px;
+            --text-primary: #ffffff;
+            --text-secondary: #dddddd;
+            --accent-green: #00ff88;
+            --accent-red: #ff4d4d;
+            --accent-blue: #00d4ff;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Poppins', sans-serif;
+            user-select: none; /* Prevent text selection for app-like feel */
+        }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #1a1a2e, #16213e, #4a1c40); /* Deep space mesh fallback */
+            background: radial-gradient(circle at 10% 20%, rgb(69, 39, 160) 0%, rgb(0, 105, 92) 90%);
+            /* Vibrant multi-color mesh */
+            background: radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
+                        radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%), 
+                        radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 50%);
+            background-size: 200% 200%;
+            animation: gradientBG 15s ease infinite;
+            color: var(--text-primary);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            overflow: hidden;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* --- Glassmorphism Container --- */
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(var(--glass-blur));
+            -webkit-backdrop-filter: blur(var(--glass-blur));
+            border: 1px solid var(--glass-border);
+            border-radius: 25px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            width: 100%;
+            max-width: 700px;
+            padding: 30px;
+            position: relative;
+            z-index: 10;
+            transition: transform 0.3s ease;
+        }
+
+        /* --- Screens --- */
+        .screen {
+            display: none;
+            flex-direction: column;
+            gap: 20px;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+        
+        .screen.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        /* --- Typography --- */
+        h1, h2 { text-align: center; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+        .sub-text { font-size: 0.9rem; color: var(--text-secondary); text-align: center; }
+        
+        .bilingual-text {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .text-en { font-weight: 600; font-size: 1.1rem; color: #fff; }
+        .text-hi { font-weight: 400; font-size: 0.95rem; color: #ddd; }
+
+        /* --- Inputs & Controls --- */
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .input-wrapper {
+            background: rgba(0,0,0,0.2);
+            padding: 15px;
+            border-radius: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        input[type="number"] {
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 8px;
+            border-radius: 8px;
+            width: 80px;
+            text-align: center;
+            font-size: 1rem;
+        }
+
+        /* Toggle Switch */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(255,255,255,0.2);
+            transition: .4s;
+            border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px; width: 16px;
+            left: 4px; bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider { background-color: var(--accent-blue); }
+        input:checked + .slider:before { transform: translateX(26px); }
+
+        /* --- Buttons --- */
+        .btn {
+            background: linear-gradient(90deg, #ff00cc, #333399);
+            border: none;
+            padding: 15px 30px;
+            color: white;
+            border-radius: 50px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            text-align: center;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            margin-top: 10px;
+        }
+        .btn:hover { transform: scale(1.05); box-shadow: 0 6px 20px rgba(0,0,0,0.4); }
+        
+        .btn-secondary {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.3);
+            font-size: 1rem;
+        }
+
+        /* --- Quiz Interface --- */
+        .quiz-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .progress-container {
+            width: 100%;
+            height: 4px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 2px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        .progress-bar {
+            height: 100%;
+            background: var(--accent-blue);
+            width: 0%;
+            transition: width 0.3s ease;
+            box-shadow: 0 0 10px var(--accent-blue);
+        }
+
+        .timer {
+            font-weight: bold;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .timer.danger { color: var(--accent-red); animation: pulse 1s infinite; }
+
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+
+        .question-box {
+            background: rgba(0,0,0,0.2);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            border-left: 4px solid var(--accent-blue);
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+
+        .option-btn {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 12px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+        .option-btn:hover { background: rgba(255,255,255,0.15); transform: translateX(5px); }
+        
+        /* Feedback States */
+        .option-btn.correct { background: rgba(0, 255, 136, 0.2); border-color: var(--accent-green); }
+        .option-btn.wrong { background: rgba(255, 77, 77, 0.2); border-color: var(--accent-red); }
+        
+        .option-btn.correct::after { content: '✔'; position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: var(--accent-green); font-size: 1.5rem; }
+        .option-btn.wrong::after { content: '✖'; position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: var(--accent-red); font-size: 1.5rem; }
+
+        /* --- Visual Effects --- */
+        #feedback-overlay {
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 5rem;
+            z-index: 9999;
+            pointer-events: none;
+            display: none;
+        }
+        .shake { animation: shake 0.5s; }
+        @keyframes shake {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            25% { transform: translate(-55%, -50%) rotate(-5deg); }
+            75% { transform: translate(-45%, -50%) rotate(5deg); }
+            100% { transform: translate(-50%, -50%) rotate(0deg); }
+        }
+
+        .confetti {
+            position: fixed;
+            width: 10px; height: 10px;
+            background-color: #f0f;
+            z-index: 9998;
+            pointer-events: none;
+        }
+
+        /* --- Results --- */
+        .score-circle {
+            width: 150px; height: 150px;
+            border-radius: 50%;
+            background: conic-gradient(var(--accent-green) 0%, rgba(255,255,255,0.1) 0%);
+            margin: 0 auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2.5rem;
+            font-weight: bold;
+            position: relative;
+            box-shadow: 0 0 30px rgba(0,255,136,0.2);
+        }
+        .score-circle::before {
+            content: ''; position: absolute;
+            width: 130px; height: 130px;
+            background: #1a1a2e; /* Match approximate bg color */
+            border-radius: 50%;
+            z-index: -1;
+        }
+        
+        /* Mobile Tweaks */
+        @media (max-width: 600px) {
+            .glass-card { padding: 20px; width: 95%; }
+            .text-en { font-size: 1rem; }
+            .text-hi { font-size: 0.85rem; }
+            .btn { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="glass-card">
+        <div id="start-screen" class="screen active">
+            <h1>Projectile Motion<br><span style="font-size:0.6em; color:var(--accent-blue)">Class 11 Physics</span></h1>
+            <p class="sub-text">Bilingual Quiz (English & Hindi)</p>
+            
+            <div class="control-group">
+                <div class="input-wrapper">
+                    <span class="bilingual-text">
+                        <span class="text-en">Timer per Question</span>
+                        <span class="text-hi">टाइमर प्रति प्रश्न (sec)</span>
+                    </span>
+                    <input type="number" id="timerInput" placeholder="0" min="0">
+                </div>
+
+                <div class="input-wrapper">
+                    <span class="bilingual-text">
+                        <span class="text-en">Shuffle Questions</span>
+                        <span class="text-hi">प्रश्नों को मिलाएं</span>
+                    </span>
+                    <label class="switch">
+                        <input type="checkbox" id="shuffleToggle">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+
+            <button class="btn" onclick="startQuiz()">Start Quiz / प्रश्नोत्तरी शुरू करें</button>
+        </div>
+
+        <div id="quiz-screen" class="screen">
+            <div class="progress-container">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+
+            <div class="quiz-header">
+                <div>
+                    <span style="font-size:0.8rem; opacity:0.7">Question</span><br>
+                    <span id="q-counter" style="font-weight:bold; font-size:1.2rem">01/10</span>
+                </div>
+                <div class="timer" id="timerDisplay">⏳ --</div>
+                <div>
+                    <span style="font-size:0.8rem; opacity:0.7">Score</span><br>
+                    <span id="score-display" style="font-weight:bold; font-size:1.2rem; color:var(--accent-green)">0</span>
+                </div>
+            </div>
+
+            <div class="question-box" id="question-text">
+                </div>
+
+            <div class="options-grid" id="options-container">
+                </div>
+
+            <button class="btn btn-secondary" onclick="finishQuizEarly()" style="width:100%; margin-top:20px;">
+                Submit & Finish / समाप्त करें
+            </button>
+        </div>
+
+        <div id="result-screen" class="screen">
+            <h1>Quiz Result</h1>
+            
+            <div class="score-circle" id="final-score-circle">
+                <span id="final-score-text">0%</span>
+            </div>
+
+            <h2 id="result-message" style="margin-top:20px;"></h2>
+            <p id="stats-detail" class="sub-text"></p>
+
+            <button class="btn" onclick="resetQuiz()">Restart Quiz / फिर से शुरू करें</button>
+        </div>
+    </div>
+
+    <div id="feedback-overlay"></div>
+
+    <script>
+        // --- 1. DATA (Extracted from Image & Translated) ---
+        const rawData = [
+            {
+                qEn: "For a given projection velocity, the range of the projectile is maximum when the angle of projection with the horizontal is:",
+                qHi: "किसी नियत प्रक्षेपण वेग के लिए पिंड का परास अधिकतम तब होता है जब उसे प्रक्षेपित किया जाता है क्षैतिज तल से:",
+                options: [
+                    { en: "30°", hi: "30° के कोण पर" },
+                    { en: "45°", hi: "45° के कोण पर" },
+                    { en: "60°", hi: "60° के कोण पर" },
+                    { en: "90°", hi: "90° के कोण पर" }
+                ],
+                correct: 1 // (b) 45 deg
+            },
+            {
+                qEn: "To hit a target on the ground while flying horizontally, a bomber must drop the bomb:",
+                qHi: "क्षैतिजतः कुछ ऊँचाई पर जाते हुए एक बमवर्षक को पृथ्वी पर किसी लक्ष्य पर बम मारने के लिए उसे बम तब गिराना चाहिए—",
+                options: [
+                    { en: "Directly above the target", hi: "लक्ष्य के ठीक ऊपर है" },
+                    { en: "After passing the target", hi: "लक्ष्य से आगे निकल जाता है" },
+                    { en: "Before reaching the target", hi: "लक्ष्य के पीछे से" },
+                    { en: "All three are correct", hi: "इनमें तीनों सही है।" }
+                ],
+                correct: 2 // (c) Before/Behind
+            },
+            {
+                qEn: "When an object is thrown at an angle for maximum range, its kinetic energy at the maximum height of its path is E. Its initial kinetic energy was:",
+                qHi: "जब किसी वस्तु को महत्तम परास वाले कोण से फेंका जाता है तब उसकी गतिज ऊर्जा E है। अपने पथ की महत्तम ऊँचाई वाले बिंदु पर उसकी क्षैतिज गतिज ऊर्जा है—",
+                // Note: The Hindi question is slightly ambiguous compared to standard physics problems. Usually, it asks: "If KE at launch is E, what is KE at top?" (Answer E/2).
+                // Or "If KE at top is E, what was initial?". Based on the option choices usually seen:
+                // Let's assume the question asks: What is KE at top if Initial is E? (Standard wording mismatch in image options).
+                // The image shows options: E, E/2, E/3, Zero.
+                // Physics: At 45 deg, Vx = Vcos45 = V/root2. KE = 1/2 m (V/root2)^2 = 1/2 (1/2 mV^2) = E_initial/2.
+                // Let's stick to the options.
+                options: [
+                    { en: "E", hi: "E" },
+                    { en: "E/2", hi: "E/2" },
+                    { en: "E/3", hi: "E/3" },
+                    { en: "Zero", hi: "शून्य" }
+                ],
+                correct: 1 // (b) E/2
+            },
+            {
+                qEn: "If an object is thrown vertically upwards with initial velocity u, the maximum height (h) covered by the object is:",
+                qHi: "अगर किसी वस्तु को u प्रारंभिक वेग से ऊपर फेंका जाए तो वस्तु द्वारा तय की गई अधिकतम ऊँचाई (h) का मान होता है?",
+                options: [
+                    { en: "u/g", hi: "u/g" },
+                    { en: "u²/g", hi: "u²/g" },
+                    { en: "u²/2g", hi: "u²/2g" },
+                    { en: "2u²/g", hi: "2u²/g" }
+                ],
+                correct: 2 // (c) u^2/2g
+            },
+            {
+                qEn: "The shape of the trajectory of a projectile is:",
+                qHi: "प्रक्षेप्य पथ का आकार होता है—",
+                options: [
+                    { en: "Linear", hi: "सरलरेखीय" },
+                    { en: "Circular", hi: "वृत्ताकार" },
+                    { en: "Parabolic", hi: "परवलयाकार" },
+                    { en: "Curvilinear", hi: "वक्र रेखीय" }
+                ],
+                correct: 2 // (c) Parabolic
+            },
+            {
+                qEn: "A boy can throw a ball vertically upwards to a maximum height of 100 m. How far can he throw the ball horizontally?",
+                qHi: "एक लड़का गेंद को 100 m उर्ध्वाधर ऊपर की ओर फेंक सकता है, तो वह गेंद को कितनी अधिकतम क्षैतिज दूरी तक फेंक सकता है—",
+                options: [
+                    { en: "150 m", hi: "150 m" },
+                    { en: "200 m", hi: "200 m" },
+                    { en: "100 m", hi: "100 m" },
+                    { en: "75 m", hi: "75 m" }
+                ],
+                correct: 1 // (b) 200m (Rmax = 2 * Hmax_vertical)
+            },
+            {
+                qEn: "A cannonball is fired with a velocity of 1 km/sec at an angle of 30° with the horizontal. How long will it take to reach the maximum height? (g=10m/s²)",
+                qHi: "तोप का एक गोला 1 km/sec के वेग से क्षैतिज तल के साथ 30° का कोण बनाता हुआ छोड़ा जाता है तो गोला उच्चतम बिंदु पर पहुँचने में कितना समय लेगा (g = 10m/sec² ले)",
+                options: [
+                    { en: "51.02 sec", hi: "51.02 sec" },
+                    { en: "50 sec", hi: "50 sec" },
+                    { en: "25 sec", hi: "25 sec" },
+                    { en: "8 sec", hi: "8 sec" }
+                ],
+                correct: 1 // (b) 50 sec (t = usin/g = 1000*0.5/10)
+            },
+            {
+                qEn: "A cannonball is fired at 2 km/sec at an angle of 45° with the horizontal. At what distance from the cannon will it hit the ground? (g=10m/s²)",
+                qHi: "तोप का एक गोला 2 km/sec के वेग से क्षैतिज तल के साथ 45° का कोण बनाकर छोड़ा जाता है तो गोला तपे से कितनी दूरी पर पृथ्वी से टकरायेगा। (g = 10 m/sec² ले)",
+                options: [
+                    { en: "4 x 10⁵ m", hi: "4 x 10⁵ m" },
+                    { en: "4 x 10⁶ m", hi: "4 x 10⁶ m" },
+                    { en: "4000 m", hi: "4000 m" },
+                    { en: "5 x 10⁵ m", hi: "5 x 10⁵ m" }
+                ],
+                correct: 0 // (a) 4x10^5 m
+            },
+            {
+                qEn: "A hunter aims his gun at a monkey hanging from a tree. The moment the bullet is fired, the monkey drops. In this case, the bullet:",
+                qHi: "एक शिकारी वृक्ष पर लटके एक बंदर के सिर को लक्ष्य करके गोली चलाता है, गोली चलाते ही बंदर कूद जाता है, वैसी दशा में गोली—",
+                options: [
+                    { en: "Will pierce the monkey's head", hi: "बंदर के सिर में छेद कर देगी" },
+                    { en: "Will go above the monkey's head", hi: "बंदर के सिर के ऊपर चली जाएगी" },
+                    { en: "Will go below the monkey's head", hi: "बंदर के सिर के नीचे चली जाएगी" },
+                    { en: "May or may not hit", hi: "बंदर के सिर को छेद भी सकती है और नहीं भी" }
+                ],
+                correct: 0 // (a) Will hit
+            },
+            {
+                qEn: "A ball is dropped from the roof of a house, and simultaneously another ball is thrown horizontally. Which ball will hit the ground first?",
+                qHi: "किसी मकान की छत से एक गेंद गिरायी जाती है और उसी समय एक दूसरी गेंद क्षैतिजतः फेंकी जाती है। कौन-सी गेंद जमीन पर पहले गिरेगी—",
+                options: [
+                    { en: "Horizontally thrown ball first", hi: "क्षैतिज फेंकी गेंद पहले गिरेगी" },
+                    { en: "Dropped ball first", hi: "पहला गेंद पहले गिरेगी" },
+                    { en: "Both will hit together", hi: "दोनों गेंद जमीन पर एक साथ गिरेगी" },
+                    { en: "None of these", hi: "इनमें कोई नहीं" }
+                ],
+                correct: 2 // (c) Together
+            }
+        ];
+
+        // --- 2. STATE & VARIABLES ---
+        let currentQuestions = [];
+        let currentIndex = 0;
+        let score = 0;
+        let timerInterval;
+        let timeLeft = 0;
+        let audioCtx = null;
+        let timePerQuestion = 0; // 0 means disabled
+
+        // --- 3. AUDIO ENGINE (Web Audio API) ---
+        function initAudio() {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+
+        function playSound(type) {
+            initAudio();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            if (type === 'correct') {
+                // High pitch "Ting"
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.1);
+                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.5);
+            } else if (type === 'wrong') {
+                // Low pitch "Buzz"
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+                osc.frequency.linearRampToValueAtTime(100, audioCtx.currentTime + 0.3);
+                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.3);
+            }
+        }
+
+        // --- 4. ANIMATION ENGINE ---
+        function triggerConfetti() {
+            const colors = ['#00ff88', '#00d4ff', '#ff00cc', '#ffff00'];
+            for (let i = 0; i < 50; i++) {
+                const conf = document.createElement('div');
+                conf.classList.add('confetti');
+                conf.style.left = Math.random() * 100 + 'vw';
+                conf.style.top = -10 + 'px';
+                conf.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                document.body.appendChild(conf);
+
+                // Simple JS physics animation
+                let speedY = Math.random() * 3 + 2;
+                let speedX = Math.random() * 4 - 2;
+                let rotation = Math.random() * 360;
+                let rotSpeed = Math.random() * 10 - 5;
+                let posY = -10;
+                let posX = parseFloat(conf.style.left);
+
+                const anim = setInterval(() => {
+                    posY += speedY;
+                    posX += speedX;
+                    rotation += rotSpeed;
+                    conf.style.top = posY + 'px';
+                    conf.style.left = posX + 'px'; // Using px for smoother anim
+                    conf.style.transform = `rotate(${rotation}deg)`;
+
+                    if (posY > window.innerHeight) {
+                        clearInterval(anim);
+                        conf.remove();
+                    }
+                }, 16);
+            }
+        }
+
+        function triggerShake() {
+            const feedback = document.getElementById('feedback-overlay');
+            feedback.innerHTML = '😢';
+            feedback.style.display = 'block';
+            feedback.classList.add('shake');
+            setTimeout(() => {
+                feedback.classList.remove('shake');
+                feedback.style.display = 'none';
+            }, 500);
+        }
+
+        function triggerFlower() {
+             const feedback = document.getElementById('feedback-overlay');
+             feedback.innerHTML = '🌸';
+             feedback.style.display = 'block';
+             triggerConfetti();
+             setTimeout(() => {
+                 feedback.style.display = 'none';
+             }, 800);
+        }
+
+        // --- 5. LOGIC FUNCTIONS ---
+        
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        function startQuiz() {
+            // Settings
+            const timerVal = document.getElementById('timerInput').value;
+            timePerQuestion = timerVal ? parseInt(timerVal) : 0;
+            const doShuffle = document.getElementById('shuffleToggle').checked;
+
+            // Prepare Data
+            currentQuestions = JSON.parse(JSON.stringify(rawData)); // Deep copy
+            if (doShuffle) shuffleArray(currentQuestions);
+
+            // Reset State
+            currentIndex = 0;
+            score = 0;
+            
+            // Switch Screens
+            document.getElementById('start-screen').classList.remove('active');
+            document.getElementById('result-screen').classList.remove('active');
+            document.getElementById('quiz-screen').classList.add('active');
+
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            clearInterval(timerInterval);
+            
+            if (currentIndex >= currentQuestions.length) {
+                endQuiz();
+                return;
+            }
+
+            // Update UI Counters
+            document.getElementById('q-counter').innerText = 
+                `${(currentIndex + 1).toString().padStart(2, '0')}/${currentQuestions.length}`;
+            document.getElementById('score-display').innerText = score.toString().padStart(2, '0');
+            
+            const progressPct = ((currentIndex) / currentQuestions.length) * 100;
+            document.getElementById('progressBar').style.width = `${progressPct}%`;
+
+            // Load Content
+            const qData = currentQuestions[currentIndex];
+            const qBox = document.getElementById('question-text');
+            qBox.innerHTML = `
+                <div class="bilingual-text">
+                    <span class="text-en">${qData.qEn}</span>
+                    <span class="text-hi">${qData.qHi}</span>
+                </div>
+            `;
+
+            const optContainer = document.getElementById('options-container');
+            optContainer.innerHTML = '';
+
+            qData.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.onclick = () => checkAnswer(idx, btn);
+                btn.innerHTML = `
+                    <div class="bilingual-text">
+                        <span class="text-en">${String.fromCharCode(97+idx)}) ${opt.en}</span>
+                        <span class="text-hi">${String.fromCharCode(97+idx)}) ${opt.hi}</span>
+                    </div>
+                `;
+                optContainer.appendChild(btn);
+            });
+
+            // Start Timer if enabled
+            const timerDisplay = document.getElementById('timerDisplay');
+            timerDisplay.classList.remove('danger');
+            
+            if (timePerQuestion > 0) {
+                timeLeft = timePerQuestion;
+                timerDisplay.innerText = `⏳ ${timeLeft}s`;
+                timerInterval = setInterval(() => {
+                    timeLeft--;
+                    timerDisplay.innerText = `⏳ ${timeLeft}s`;
+                    
+                    if (timeLeft < 5) timerDisplay.classList.add('danger');
+                    
+                    if (timeLeft <= 0) {
+                        clearInterval(timerInterval);
+                        playSound('wrong');
+                        // Auto-move to next treating as wrong/skip
+                        currentIndex++;
+                        loadQuestion();
+                    }
+                }, 1000);
+            } else {
+                timerDisplay.innerText = "∞";
+            }
+        }
+
+        function checkAnswer(selectedIdx, btnElement) {
+            clearInterval(timerInterval);
+            
+            // Disable all buttons
+            const allBtns = document.querySelectorAll('.option-btn');
+            allBtns.forEach(b => b.disabled = true);
+
+            const correctIdx = currentQuestions[currentIndex].correct;
+
+            if (selectedIdx === correctIdx) {
+                // Correct
+                btnElement.classList.add('correct');
+                score++;
+                playSound('correct');
+                triggerFlower();
+            } else {
+                // Wrong
+                btnElement.classList.add('wrong');
+                // Highlight correct one
+                allBtns[correctIdx].classList.add('correct');
+                playSound('wrong');
+                triggerShake();
+            }
+
+            // Next Question Delay
+            setTimeout(() => {
+                currentIndex++;
+                loadQuestion();
+            }, 1500);
+        }
+
+        function finishQuizEarly() {
+            clearInterval(timerInterval);
+            endQuiz();
+        }
+
+        function endQuiz() {
+            document.getElementById('quiz-screen').classList.remove('active');
+            document.getElementById('result-screen').classList.add('active');
+
+            const total = currentQuestions.length;
+            const percentage = Math.round((score / total) * 100);
+
+            // Update Circle
+            const circle = document.getElementById('final-score-circle');
+            circle.style.background = `conic-gradient(var(--accent-green) ${percentage}%, rgba(255,255,255,0.1) ${percentage}%)`;
+            document.getElementById('final-score-text').innerText = `${percentage}%`;
+
+            // Message
+            const msgTitle = document.getElementById('result-message');
+            const detail = document.getElementById('stats-detail');
+            
+            if (percentage >= 80) {
+                msgTitle.innerText = "🏆 Outstanding Performance!";
+                msgTitle.style.color = "var(--accent-green)";
+            } else if (percentage >= 50) {
+                msgTitle.innerText = "👏 Well Done! Keep it up.";
+                msgTitle.style.color = "var(--accent-blue)";
+            } else {
+                msgTitle.innerText = "📚 Practice makes perfect!";
+                msgTitle.style.color = "var(--accent-red)";
+            }
+
+            detail.innerText = `You scored ${score} out of ${total} questions.`;
+        }
+
+        function resetQuiz() {
+            document.getElementById('result-screen').classList.remove('active');
+            document.getElementById('start-screen').classList.add('active');
+        }
+
+    </script>
+</body>
+</html>

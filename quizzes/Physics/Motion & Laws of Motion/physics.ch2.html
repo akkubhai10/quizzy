@@ -1,0 +1,1425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Physics Master Quiz | भौतिकी मास्टर क्विज़</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* CSS Variables & Global Styles */
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: 1px solid rgba(255, 255, 255, 0.2);
+            --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            --primary-text: #ffffff;
+            --secondary-text: #dddddd;
+            --accent-green: #2ecc71;
+            --accent-red: #e74c3c;
+            --accent-blue: #3498db;
+        }
+
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #ff6b6b 100%);
+            background-size: 200% 200%;
+            animation: gradientBG 15s ease infinite;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--primary-text);
+            overflow-x: hidden;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Glassmorphism Container */
+        .app-container {
+            width: 95%;
+            max-width: 700px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 25px;
+            border: var(--glass-border);
+            box-shadow: var(--glass-shadow);
+            padding: 20px;
+            position: relative;
+            min-height: 600px;
+            display: flex;
+            flex-direction: column;
+            transition: height 0.3s ease;
+        }
+
+        /* Screens */
+        .screen {
+            display: none;
+            flex-direction: column;
+            height: 100%;
+            flex: 1;
+        }
+
+        .screen.active {
+            display: flex;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Start Screen */
+        .start-screen {
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            color: var(--secondary-text);
+            margin-bottom: 40px;
+        }
+
+        .settings-group {
+            width: 100%;
+            max-width: 300px;
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+
+        input[type="number"] {
+            width: 100%;
+            padding: 12px;
+            border-radius: 12px;
+            border: none;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            font-family: inherit;
+            font-size: 1rem;
+            outline: none;
+        }
+        
+        input[type="number"]::placeholder {
+            color: rgba(255,255,255,0.6);
+        }
+
+        /* Toggle Switch */
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(255,255,255,0.1);
+            padding: 10px 15px;
+            border-radius: 12px;
+            margin-top: 10px;
+            cursor: pointer;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 50px;
+            height: 26px;
+            background-color: rgba(0,0,0,0.3);
+            border-radius: 20px;
+            transition: 0.3s;
+        }
+
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 20px;
+            height: 20px;
+            background-color: white;
+            border-radius: 50%;
+            transition: 0.3s;
+        }
+
+        .toggle-active .toggle-switch {
+            background-color: var(--accent-green);
+        }
+
+        .toggle-active .toggle-switch::after {
+            transform: translateX(24px);
+        }
+
+        .btn-primary {
+            margin-top: 20px;
+            padding: 15px 40px;
+            background: linear-gradient(45deg, #ff9a9e 0%, #fad0c4 99%, #fad0c4 100%);
+            border: none;
+            border-radius: 50px;
+            color: #333;
+            font-weight: 700;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .btn-primary:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        /* Quiz UI */
+        .quiz-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .progress-bar-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 6px;
+            background: rgba(0,0,0,0.1);
+            border-radius: 25px 25px 0 0;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: var(--accent-green);
+            width: 0%;
+            transition: width 0.5s ease;
+            box-shadow: 0 0 10px var(--accent-green);
+        }
+
+        .timer {
+            background: rgba(0,0,0,0.3);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-variant-numeric: tabular-nums;
+            display: none; /* Hidden by default */
+        }
+        
+        .timer.active {
+            display: block;
+        }
+
+        .timer.danger {
+            color: var(--accent-red);
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .question-card {
+            background: rgba(255,255,255,0.05);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .q-text-en {
+            font-size: 1.15rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+            line-height: 1.4;
+        }
+
+        .q-text-hi {
+            font-size: 1rem;
+            color: var(--secondary-text);
+            font-weight: 400;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .option-btn {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 12px 15px;
+            border-radius: 12px;
+            color: white;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            background: rgba(255,255,255,0.2);
+            transform: translateX(5px);
+        }
+
+        .option-btn.correct {
+            background: rgba(46, 204, 113, 0.6) !important;
+            border-color: #2ecc71;
+        }
+
+        .option-btn.wrong {
+            background: rgba(231, 76, 60, 0.6) !important;
+            border-color: #e74c3c;
+        }
+
+        .opt-en { font-weight: 600; font-size: 0.95rem; }
+        .opt-hi { font-size: 0.85rem; color: #ddd; margin-top: 2px; }
+
+        .finish-btn {
+            align-self: center;
+            background: rgba(52, 152, 219, 0.3);
+            border: 1px solid var(--accent-blue);
+            padding: 10px 25px;
+            border-radius: 20px;
+            color: white;
+            cursor: pointer;
+            margin-top: auto;
+        }
+
+        .finish-btn:hover {
+            background: rgba(52, 152, 219, 0.6);
+        }
+
+        /* Result Screen */
+        .result-screen {
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .score-circle {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            border: 8px solid rgba(255,255,255,0.2);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 3rem;
+            font-weight: 700;
+            margin: 20px auto;
+            background: rgba(0,0,0,0.2);
+        }
+
+        .result-msg {
+            font-size: 1.5rem;
+            margin: 10px 0 30px;
+        }
+
+        /* Animations */
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: #f00;
+            top: -10px;
+            z-index: 9999;
+        }
+
+        .shake {
+            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+        }
+
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+            40%, 60% { transform: translate3d(4px, 0, 0); }
+        }
+
+        .sad-emoji {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 5rem;
+            z-index: 50;
+            pointer-events: none;
+            display: none;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 480px) {
+            h1 { font-size: 1.8rem; }
+            .app-container { padding: 15px; height: 100vh; border-radius: 0; }
+            .q-text-en { font-size: 1rem; }
+            .q-text-hi { font-size: 0.9rem; }
+            .option-btn { padding: 10px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <div class="progress-bar-container">
+        <div class="progress-bar" id="progressBar"></div>
+    </div>
+
+    <div class="screen start-screen active" id="startScreen">
+        <h1>Physics Quiz</h1>
+        <p class="subtitle">Bilingual Test Series (1-67)</p>
+        
+        <div class="settings-group">
+            <label>Timer per Question (Seconds)</label>
+            <input type="number" id="timeInput" placeholder="0 for No Timer">
+        </div>
+
+        <div class="settings-group">
+            <div class="toggle-container" id="shuffleToggle">
+                <span>Shuffle Questions</span>
+                <div class="toggle-switch"></div>
+            </div>
+        </div>
+
+        <button class="btn-primary" onclick="app.startQuiz()">Start Quiz</button>
+    </div>
+
+    <div class="screen" id="quizScreen">
+        <div class="quiz-header">
+            <span id="qCount">Q: 01/67</span>
+            <span class="timer" id="timerDisplay">10s</span>
+            <span id="scoreDisplay">Score: 0</span>
+        </div>
+
+        <div class="question-card">
+            <div id="questionText"></div>
+        </div>
+
+        <div class="options-grid" id="optionsContainer">
+            </div>
+
+        <button class="finish-btn" onclick="app.endQuiz(true)">Finish & Show Results</button>
+        <div class="sad-emoji" id="sadEmoji">😢</div>
+    </div>
+
+    <div class="screen result-screen" id="resultScreen">
+        <h1>Quiz Completed!</h1>
+        <div class="score-circle" id="finalScore">0%</div>
+        <div class="result-msg" id="resultMsg"></div>
+        <p id="statsText" style="color:#ddd; margin-bottom:20px;"></p>
+        <button class="btn-primary" onclick="app.reset()">Restart Quiz</button>
+    </div>
+</div>
+
+<script>
+    // --- Data: 67 Questions Transcribed & Translated ---
+    const rawQuestions = [
+        {
+            qEn: "In a given time interval, the magnitude of displacement is ___ the distance covered by the object in that interval.",
+            qHi: "किसी समय अंतराल में विस्थापन का परिमाण उस समय अंतराल में वस्तु द्वारा तय की गई दूरी...",
+            opts: [
+                {en:"Always equal to", hi:"के हमेशा बराबर होता है"},
+                {en:"More than", hi:"से अधिक होता है"},
+                {en:"Always less than", hi:"से हमेशा कम होता है"},
+                {en:"Can be less than or equal to", hi:"से कम हो सकता है (या बराबर)"}
+            ],
+            ans: 3
+        },
+        {
+            qEn: "If the distance covered by an object is directly proportional to the square of time, then:",
+            qHi: "यदि किसी वस्तु द्वारा तय की गई दूरी समय के अनुक्रमानुपाती होती है, तो",
+            opts: [
+                {en:"Velocity is zero", hi:"वस्तु का वेग शून्य है"},
+                {en:"Moving with uniform speed", hi:"वस्तु एक समान चाल से चल रही है"},
+                {en:"Acceleration is constant", hi:"वस्तु का त्वरण अचर है"},
+                {en:"Velocity is uniform", hi:"वस्तु का वेग एक समान है"}
+            ],
+            ans: 2
+        },
+        {
+            qEn: "Which of the following is a scalar quantity?",
+            qHi: "निम्नलिखित में कौन अदिश राशि है-",
+            opts: [
+                {en:"Displacement", hi:"विस्थापन"},
+                {en:"Acceleration", hi:"त्वरण"},
+                {en:"Speed", hi:"चाल"},
+                {en:"Velocity", hi:"वेग"}
+            ],
+            ans: 2
+        },
+        {
+            qEn: "What is the relationship between Velocity, Displacement and Time?",
+            qHi: "वेग, विस्थापन तथा समय में क्या संबंध है?",
+            opts: [
+                {en:"V = T/D", hi:"वेग = समय/विस्थापन"},
+                {en:"V = D/T", hi:"वेग = विस्थापन/समय"},
+                {en:"V = D + T", hi:"वेग = विस्थापन + समय"},
+                {en:"V = D - T", hi:"वेग = विस्थापन - समय"}
+            ],
+            ans: 1
+        },
+        {
+            qEn: "Average velocity for uniform accelerated motion is:",
+            qHi: "एक समान त्वरित गति के लिए औसत वेग",
+            opts: [
+                {en:"u - v", hi:"u - v"},
+                {en:"u + v", hi:"u + v"},
+                {en:"(u+v)/2", hi:"(u+v)/2"},
+                {en:"(u+v)/3", hi:"(u+v)/3"}
+            ],
+            ans: 2
+        },
+        {
+            qEn: "If an object goes from Patna to Ranchi and returns to Patna, the displacement is:",
+            qHi: "यदि कोई वस्तु पटना से राँची जाता है और पुनः राँची से पटना वापस आ जाता है, तो उस व्यक्ति का विस्थापन होगा-",
+            opts: [
+                {en:"Zero", hi:"शून्य"},
+                {en:"Distance between Patna-Ranchi", hi:"पटना से राँची के बीच की दूरी"},
+                {en:"Double the distance", hi:"राँची से पटना के बीच की दूरी का दुगुना"},
+                {en:"Infinite", hi:"अनंत"}
+            ],
+            ans: 0
+        },
+        {
+            qEn: "When a ball is thrown straight up to height H and returns, total distance covered is:",
+            qHi: "जब एक गेंद को सीधे ऊपर की ओर हवा में फेंका जाता है, तब वह H ऊँचाई तक पहुँचने के बाद वापस आ जाता है, तो गेंद द्वारा तय की गई कुल दूरी होगी-",
+            opts: [
+                {en:"H", hi:"H"},
+                {en:"H/2", hi:"H/2"},
+                {en:"2H", hi:"2H"},
+                {en:"Zero", hi:"शून्य"}
+            ],
+            ans: 2
+        },
+        {
+            qEn: "When an object moves back and forth about a fixed point, this motion is called:",
+            qHi: "जब कोई वस्तु एक निश्चित बिंदु के आगे-पीछे चलती है, तो इस गति को कहते हैं-",
+            opts: [
+                {en:"Oscillatory Motion", hi:"दोलनी गति"},
+                {en:"Periodic Motion", hi:"आवर्त गति"},
+                {en:"Accelerated Motion", hi:"त्वरित गति"},
+                {en:"All of these", hi:"इनमें से सभी"}
+            ],
+            ans: 0
+        },
+        {
+            qEn: "For an object moving with uniform motion, the nature of the distance-time graph is:",
+            qHi: "जब कोई वस्तु एक समान गति से चलती है, तब उसके लिए दूरी-समय ग्राफ की प्रकृति होती है-",
+            opts: [
+                {en:"A curved line", hi:"एक वक्र रेखा"},
+                {en:"A straight line", hi:"एक सरल रेखा"},
+                {en:"A circle", hi:"एक वृत्त"},
+                {en:"None of these", hi:"इनमें से कोई नहीं"}
+            ],
+            ans: 1
+        },
+        {
+            qEn: "An object with initial speed 24 cm/s and acceleration -4 cm/s² will stop after:",
+            qHi: "24 cm/sec की प्रारंभिक चाल और 4cm/s² के त्वरण से गतिमान वस्तु कितने समय के बाद रुक जाएगी?",
+            opts: [
+                {en:"4 sec", hi:"4 sec. के बाद"},
+                {en:"6 sec", hi:"6 sec. के बाद"},
+                {en:"10 sec", hi:"10 sec. के बाद"},
+                {en:"12 sec", hi:"12 sec. के बाद"}
+            ],
+            ans: 1
+        },
+        {
+            qEn: "The velocity of an object moving with uniform acceleration:",
+            qHi: "समान त्वरण से गतिमान वस्तु का वेग-",
+            opts: [
+                {en:"Decreases", hi:"घटता जाएगा"},
+                {en:"Increases (Changes)", hi:"बढ़ता जाएगा (बदलता है)"},
+                {en:"Becomes zero", hi:"शून्य हो जाएगा"},
+                {en:"Decreases or Increases", hi:"घटता जाएगा या बढ़ता जाएगा"}
+            ],
+            ans: 3
+        },
+        {
+            qEn: "Is it possible that displacement is zero but distance covered is not zero?",
+            qHi: "क्या यह संभव है कि विस्थापन शून्य हो और तय की गई दूरी शून्य न हो-",
+            opts: [
+                {en:"Yes", hi:"हाँ"},
+                {en:"No", hi:"नहीं"}
+            ],
+            ans: 0
+        },
+        {
+            qEn: "Which instrument is installed in vehicles to measure speed?",
+            qHi: "वाहनों की चाल मापने हेतु कौन-सा उपकरण वाहन में लगे होते हैं-",
+            opts: [
+                {en:"Odometer", hi:"ओडोमीटर"},
+                {en:"Speedometer", hi:"स्पीडोमीटर"},
+                {en:"Accelerometer", hi:"एक्सिलरोमीटर"},
+                {en:"Altimeter", hi:"अल्टीमीटर"}
+            ],
+            ans: 1
+        },
+        {
+            qEn: "Which of the following is NOT a vector quantity?",
+            qHi: "निम्नलिखित में से कौन एक सदिश राशि नहीं है?",
+            opts: [
+                {en:"Momentum", hi:"संवेग"},
+                {en:"Velocity", hi:"वेग"},
+                {en:"Angular Velocity", hi:"कोणीय वेग"},
+                {en:"Mass", hi:"द्रव्यमान"}
+            ],
+            ans: 3
+        },
+        {
+            qEn: "Which is a Scalar quantity?",
+            qHi: "अदिश राशि है-",
+            opts: [
+                {en:"Energy", hi:"ऊर्जा"},
+                {en:"Torque", hi:"बल आघूर्ण"},
+                {en:"Momentum", hi:"संवेग"},
+                {en:"All of above", hi:"उपर्युक्त सभी"}
+            ],
+            ans: 0
+        },
+        {
+            qEn: "Which of the following is NOT a vector quantity?",
+            qHi: "निम्नलिखित में से कौन-सी राशि सदिश नहीं है?",
+            opts: [
+                {en:"Displacement", hi:"विस्थापन"},
+                {en:"Velocity", hi:"वेग"},
+                {en:"Force", hi:"बल"},
+                {en:"Volume", hi:"आयतन"}
+            ],
+            ans: 3
+        },
+        {
+            qEn: "Which of the following is NOT a vector quantity? (Duplicate check)",
+            qHi: "निम्नलिखित में से कौन-सी राशि सदिश नहीं है?",
+            opts: [
+                {en:"Displacement", hi:"विस्थापन"},
+                {en:"Velocity", hi:"वेग"},
+                {en:"Force", hi:"बल"},
+                {en:"Volume", hi:"आयतन"}
+            ],
+            ans: 3
+        },
+        {
+            qEn: "Which is a vector quantity among these?",
+            qHi: "निम्नलिखित में सदिश राशि है-",
+            opts: [
+                {en:"Velocity", hi:"वेग"},
+                {en:"Mass", hi:"द्रव्यमान"},
+                {en:"Time", hi:"समय"},
+                {en:"Length", hi:"लम्बाई"}
+            ],
+            ans: 0
+        },
+        {
+            qEn: "Which is NOT a derived quantity?",
+            qHi: "निम्नलिखित में से कौन-सा एक व्युत्पन्न परिमाण नहीं है?",
+            opts: [
+                {en:"Density", hi:"घनत्व"},
+                {en:"Mass", hi:"द्रव्यमान"},
+                {en:"Volume", hi:"आयतन"},
+                {en:"Speed", hi:"चाल"}
+            ],
+            ans: 1
+        },
+        {
+            qEn: "Correct formula to find acceleration is:",
+            qHi: "त्वरण ज्ञात करने का सही सूत्र कौन-सा है?",
+            opts: [
+                {en:"a = (v-u)/t", hi:"a = (v-u)/t"},
+                {en:"a = u + vt", hi:"a = u + vt"},
+                {en:"a = (v+u)/t", hi:"a = (v+u)/t"},
+                {en:"a = (v+u)/2", hi:"a = (v+u)/2"}
+            ],
+            ans: 0
+        },
+        {
+            qEn: "The ratio of Momentum and Velocity gives which physical quantity?",
+            qHi: "पदार्थ के संवेग और वेग के अनुपात से कौन-सी भौतिक राशि प्राप्त की जाती है?",
+            opts: [
+                {en:"Velocity", hi:"वेग"},
+                {en:"Acceleration", hi:"त्वरण"},
+                {en:"Mass", hi:"द्रव्यमान"},
+                {en:"Force", hi:"बल"}
+            ],
+            ans: 2
+        },
+        {
+            qEn: "Property of Inertia is found:",
+            qHi: "जड़त्व का गुण :",
+            opts: [
+                {en:"In some bodies", hi:"किसी-किसी वस्तु में होता है"},
+                {en:"In every body", hi:"प्रत्येक वस्तु में होता है"},
+                {en:"In no body", hi:"किसी भी वस्तु में नहीं होता है"},
+                {en:"Only in moving bodies", hi:"केवल गतिशील वस्तु में होता है"}
+            ],
+            ans: 1
+        },
+        {
+            qEn: "When the motion of a body is accelerated, then:",
+            qHi: "जब किसी वस्तु की गति त्वरित होती है तो",
+            opts: [
+                {en:"Speed always increases", hi:"उसकी चाल में हमेशा वृद्धि होती है"},
+                {en:"Velocity always increases", hi:"उसके वेग में हमेशा वृद्धि होती है"},
+                {en:"It falls towards earth", hi:"वह हमेशा पृथ्वी की ओर गिरती है"},
+                {en:"A force always acts on it", hi:"उनपर हमेशा कोई बल कार्य करता है"}
+            ],
+            ans: 3
+        },
+        {
+            qEn: "A force acts on a free body. If we know magnitude of force and mass, we can calculate:",
+            qHi: "गति करने के लिए स्वतंत्र किसी वस्तु पर कोई बल लगाया गया। यदि बल का परिमाण तथा वस्तु का द्रव्यमान ज्ञात हो, तो हम",
+            opts: [
+                {en:"Weight", hi:"वस्तु का भार ज्ञात कर सकते हैं"},
+                {en:"Speed", hi:"वस्तु की चाल ज्ञात कर सकते हैं"},
+                {en:"Acceleration", hi:"वस्तु का त्वरण ज्ञात कर सकते हैं"},
+                {en:"Position", hi:"वस्तु की स्थिति ज्ञात कर सकते हैं"}
+            ],
+            ans: 2
+        },
+        {
+            qEn: "If 1 N force is applied on a 1 kg free body, it will move with:",
+            qHi: "यदि गति करने के लिए स्वतंत्र 1 kg द्रव्यमान की किसी वस्तु पर 1 N बल लगाया जाए तो वह",
+            opts: [
+                {en:"1 m/s speed", hi:"1 m/s की चाल से गति करेगी"},
+                {en:"1 km/s speed", hi:"1 km/s की चाल से गति करेगी"},
+                {en:"10 m/s² acceleration", hi:"10 m/s² के त्वरण से गतिशील होगी"},
+                {en:"1 m/s² acceleration", hi:"1 m/s² के त्वरण से गतिशील होगी"}
+            ],
+            ans: 3
+        },
+        {
+            qEn: "When an external force acts on a body, the acceleration produced is:",
+            qHi: "जब किसी वस्तु पर कोई बाह्य बल लगता है तब वह बल के दिशा में त्वरित हो जाती है। इस प्रकार उत्पन्न त्वरण वस्तु-",
+            opts: [
+                {en:"Directly proportional to force", hi:"पर लगे बल के समानुपाती होता है"},
+                {en:"Proportional to velocity", hi:"के वेग के समानुपाती होता है"},
+                {en:"Proportional to mass", hi:"के द्रव्यमान के समानुपाती होता है"},
+                {en:"Proportional to inertia", hi:"के जड़त्व के समानुपाती होता है"}
+            ],
+            ans: 0
+        },
+        {
+            qEn: "A constant force creates 0.08 m/s² acceleration in 0.6 kg body. Force magnitude is:",
+            qHi: "कोई अचर बल 0.6 kg द्रव्यमान के किसी पिंड में 0.08 m/s² का त्वरण उत्पन्न करता है तो बल का परिमाण है-",
+            opts: [
+                {en:"0.048 N", hi:"0.048 N"},
+                {en:"0 N", hi:"0 N"},
+                {en:"48 N", hi:"48 N"},
+                {en:"0.48 N", hi:"0.48 N"}
+            ],
+            ans: 0
+        },
+        {
+            qEn: "Force A: 10g mass, 8 m/s² acc. Force B: 20g mass, 5 m/s² acc. Which is true?",
+            qHi: "कोई बल 10 g द्रव्यमान की वस्तु A में 8 m/s² का त्वरण उत्पन्न करता है और दूसरा बल 20 g द्रव्यमान की वस्तु B में 5 m/s² का त्वरण उत्पन्न करता है तो",
+            opts: [
+                {en:"Force on A is greater", hi:"B की अपेक्षा A पर बड़ा बल लगता है"},
+                {en:"Force on B is greater", hi:"A की अपेक्षा B पर बड़ा बल लगता है"},
+                {en:"Equal force", hi:"A और B दोनों पर समान बल लगता है"},
+                {en:"Zero force", hi:"A और B दोनों पर लगा बल शून्य है"}
+            ],
+            ans: 1
+        },
+        {
+            qEn: "Momentum of body with mass m and velocity v is:",
+            qHi: "किसी m द्रव्यमान की वस्तु जिसका वेग v है, का संवेग होगा-",
+            opts: [
+                {en:"(mv)²", hi:"(mv)²"},
+                {en:"mv²", hi:"mv²"},
+                {en:"½mv²", hi:"½mv²"},
+                {en:"mv", hi:"mv"}
+            ],
+            ans: 3
+        },
+        {
+            qEn: "If velocity of a moving body is halved, its momentum becomes:",
+            qHi: "किसी गतिशील पिंड का वेग आधा करने से उसका संवेग हो जाता है-",
+            opts: [
+                {en:"Half", hi:"आधा"},
+                {en:"Double", hi:"दुगुना"},
+                {en:"Four times", hi:"चौगुना"},
+                {en:"One fourth", hi:"चौथाई"}
+            ],
+            ans: 0
+        },
+        {
+            qEn: "According to Newton's 3rd Law, action and reaction forces:",
+            qHi: "न्यूटन के गति के तीसरे नियम के अनुसार क्रिया तथा प्रतिक्रिया से संबद्ध बल",
+            opts: [
+                {en:"Must act on same body", hi:"हमेशा एक ही वस्तु पर लगे होने चाहिए"},
+                {en:"Can act on different bodies", hi:"भिन्न-भिन्न वस्तु पर लगे हो सकते हैं"},
+                {en:"Must act on different bodies", hi:"हमेशा भिन्न-भिन्न वस्तुओं पर ही लगे होना चाहिए"},
+                {en:"Magnitude not equal", hi:"का परिमाण बराबर होना जरूरी नहीं है किंतु उनकी दिशा समान होनी चाहिए"}
+            ],
+            ans: 2
+        },
+        {
+            qEn: "A cricket ball rolls on ground and stops. Why?",
+            qHi: "किसी बल्लेबाज द्वारा क्रिकेट की गेंद को मारने पर गेंद जमीन पर लुढ़कती है। कुछ दूरी चलने के पश्चात गेंद रुक जाती है। गेंद रुकने के लिए धीमी होती है, क्योंकि",
+            opts: [
+                {en:"Hit was not hard enough", hi:"बल्लेबाज ने गेंद को पर्याप्त प्रयास से हिट नहीं किया है"},
+                {en:"Velocity proportional to force", hi:"वेग गेंद पर लगाए बल के समानुपाती है"},
+                {en:"Force opposes motion", hi:"गेंद पर गति की दिशा के विपरीत एक बल कार्य कर रहा है"},
+                {en:"No unbalanced force", hi:"गेंद पर कोई असंतुलित बल कार्यरत नहीं है अतः गेंद विरामावस्था में आने के लिए प्रयासरत है"}
+            ],
+            ans: 2
+        },
+        {
+            qEn: "The measure of inertia of a body is its:",
+            qHi: "किसी वस्तु के जड़त्व की माप होती है-",
+            opts: [
+                {en:"Speed", hi:"वस्तु की चाल से"},
+                {en:"Position", hi:"वस्तु कहाँ स्थित है उससे"},
+                {en:"Mass", hi:"वस्तु के द्रव्यमान से"},
+                {en:"None", hi:"इनमें से कोई नहीं"}
+            ],
+            ans: 2
+        },
+        {
+            qEn: "Who has the highest inertia?",
+            qHi: "साइकिल, मोटरसाईकिल, कार और रेलगाड़ी में किसका जड़त्व अधिक है-",
+            opts: [
+                {en:"All equal", hi:"सभी का जड़त्व बराबर है"},
+                {en:"Motorcycle", hi:"मोटरसाईकिल का जड़त्व अधिक है"},
+                {en:"Train", hi:"रेलगाड़ी का जड़त्व अधिक है"},
+                {en:"Cycle", hi:"साइकिल का जड़त्व अधिक है"}
+            ],
+            ans: 2
+        },
+        {
+            qEn: "Force has:",
+            qHi: "बल को होता है-",
+            opts: [
+                {en:"Only Magnitude", hi:"केवल परिमाण"},
+                {en:"Only Direction", hi:"केवल दिशा"},
+                {en:"Magnitude and Direction", hi:"परिमाण और दिशा दोनों"},
+                {en:"Neither", hi:"न तो परिमाण न तो दिशा"}
+            ],
+            ans: 2
+        },
+        {
+            qEn: "Newton (N) is SI unit of:",
+            qHi: "न्यूटन (N) SI मात्रक है-",
+            opts: [
+                {en:"Force", hi:"बल का"},
+                {en:"Velocity", hi:"वेग का"},
+                {en:"Momentum", hi:"संवेग का"},
+                {en:"Work", hi:"कार्य का"}
+            ],
+            ans: 0
+        },
+        {
+            qEn: "Which relation is correct?",
+            qHi: "निम्नलिखित में कौन सही है-",
+            opts: [
+                {en:"1N = 1 kg", hi:"1N = 1 kg"},
+                {en:"1N = 1 kgm", hi:"1N = 1 kgm"},
+                {en:"1N = 1 kg m/s²", hi:"1N = 1 kg m/s²"},
+                {en:"1N = 1 kg/s²", hi:"1N = 1 kg/s²"}
+            ],
+            ans: 2
+        },
+        {
+            qEn: "If Force F acts on mass m producing acceleration a, then:",
+            qHi: "यदि F परिमाण का बल m द्रव्यमान की वस्तु में a त्वरण उत्पन्न करता है, तो",
+            opts: [
+                {en:"a ∝ m", hi:"a ∝ m"},
+                {en:"a ∝ 1/m", hi:"a ∝ 1/m"},
+                {en:"a ∝ 1/F", hi:"a ∝ 1/F"},
+                {en:"a = F × m", hi:"a = F × m"}
+            ],
+            ans: 1
+        },
+        {
+            qEn: "Which two quantities have SI unit kg m/sec?",
+            qHi: "निम्नलिखित में किन दो राशियों का SI मात्रक kgm/sec होता है?",
+            opts: [
+                {en:"Momentum and Impulse", hi:"संवेग और आवेग"},
+                {en:"Force and Momentum", hi:"बल और संवेग"},
+                {en:"Impulse and Velocity", hi:"आवेग और वेग"},
+                {en:"Momentum and Displacement", hi:"संवेग और विस्थापन"}
+            ],
+            ans: 0
+        },
+        {
+            qEn: "Rate of change of momentum represents:",
+            qHi: "संवेग में परिवर्तन की दर निम्नलिखित में किस राशि को सूचित करती है-",
+            opts: [
+                {en:"Acceleration", hi:"त्वरण को"},
+                {en:"Mass", hi:"द्रव्यमान को"},
+                {en:"Force", hi:"बल को"},
+                {en:"None", hi:"इनमें से कोई नहीं"}
+            ],
+            ans: 2
+        },
+        {
+            qEn: "Which represents conservation of momentum for two colliding bodies?",
+            qHi: "यदि m₁ तथा m₂ द्रव्यमान के दो वस्तु टकराने से पहले... संवेग संरक्षण के सिद्धान्त के अनुसार निम्नांकित में कौन मान्य है ?",
+            opts: [
+                {en:"m₁u₁ - m₂u₂ = m₁v₁ - m₂v₂", hi:"m₁u₁ - m₂u₂ = m₁v₁ - m₂v₂"},
+                {en:"m₁u₁ + m₂u₂ = m₁v₁ + m₂v₂", hi:"m₁u₁ + m₂u₂ = m₁v₁ + m₂v₂"},
+                {en:"m₁u₁ - m₂u₂ = m₁v₁ + m₂v₂", hi:"m₁u₁ - m₂u₂ = m₁v₁ + m₂v₂"},
+                {en:"m₁u₁ + m₂u₂ = m₁v₁ - m₂v₂", hi:"m₁u₁ + m₂u₂ = m₁v₁ - m₂v₂"}
+            ],
+            ans: 1
+        },
+        {
+            qEn: "Recoil of gun is based on conservation of:",
+            qHi: "बंदूक का प्रतिक्षेप किसके संरक्षण सिद्धान्त पर आधारित है-",
+            opts: [
+                {en:"Force", hi:"बल"},
+                {en:"Momentum", hi:"संवेग"},
+                {en:"Energy", hi:"ऊर्जा"},
+                {en:"Velocity", hi:"वेग"}
+            ],
+            ans: 1
+        },
+        {
+            qEn: "A 0.5kg object is kept on a table. What is its momentum?",
+            qHi: "0.5 kg द्रव्यमान की एक वस्तु टेबुल पर रखी है। वस्तु का संवेग कितना होगा ?",
+            opts: [
+                {en:"0 kgm/s", hi:"0 kgm/s (Wait, 0.5 kgms? No, velocity is 0)"},
+                {en:"5 kgm/s", hi:"5 kgm/s"},
+                {en:"500 kgm/s", hi:"500 kgm/s"},
+                {en:"105 kgm/s", hi:"105 kgm/s"}
+            ],
+            ans: 0
+        },
+        {
+            qEn: "Ratio of momentum and velocity gives:",
+            qHi: "पदार्थ के संवेग और वेग के अनुपात से कौन-सी भौतिक राशि प्राप्त की जाती है ?",
+            opts: [
+                {en:"Velocity", hi:"वेग"},
+                {en:"Mass", hi:"द्रव्यमान"},
+                {en:"Acceleration", hi:"त्वरण"},
+                {en:"Force", hi:"बल"}
+            ],
+            ans: 1
+        },
+        {
+            qEn: "Force is defined by:",
+            qHi: "“किसी भी स्थिर या गतिशील वस्तु की स्थिति और दिशा में तब तक कोई परिवर्तन नहीं होता जब तक उस पर कोई बाह्य बल सक्रिय न हो।” यह है-",
+            opts: [
+                {en:"Newton's 1st Law", hi:"न्यूटन का गति विषयक प्रथम नियम"},
+                {en:"Newton's 2nd Law", hi:"न्यूटन का गति विषयक द्वितीय नियम"},
+                {en:"Newton's 3rd Law", hi:"न्यूटन का गति विषयक तृतीय नियम"},
+                {en:"Galileo's Law", hi:"गैलिलियो का गति विषयक नियम"}
+            ],
+            ans: 0
+        },
+        {
+            qEn: "Acceleration produced by unbalanced force is:",
+            qHi: "किसी असंतुलित बल द्वारा किसी पिण्ड में उत्पन्न त्वरण-",
+            opts: [
+                {en:"Inversely proportional to force", hi:"बल के व्युत्क्रमानुपाती होता है"},
+                {en:"Directly proportional to force", hi:"बल के अनुक्रमानुपाती होता है"},
+                {en:"Independent of force", hi:"बल के प्रभाव से स्वतंत्र होता है"},
+                {en:"Zero", hi:"शून्य होता है।"}
+            ],
+            ans: 1
+        },
+        {
+            qEn: "According to Newton's 3rd law, force associated with action-reaction:",
+            qHi: "न्यूटन के गति के तीसरे नियम के अनुसार किया गया प्रतिक्रिया से सम्बद्ध बल-",
+            opts: [
+                {en:"Must be on same body", hi:"हमेशा एक ही वस्तु पर लगे होने चाहिए"},
+                {en:"Can be on different bodies", hi:"भिन्न-भिन्न वस्तु पर लगे हो सकते हैं"},
+                {en:"Must be on different bodies", hi:"हमेशा भिन्न-भिन्न वस्तुओं पर ही लगे होना चाहिए"},
+                {en:"Directions same", hi:"का परिमाण बराबर होना जरूरी नहीं है, किन्तु उनकी दिशा समान होनी चाहिए।"}
+            ],
+            ans: 2
+        },
+        {
+            qEn: "\"Action and Reaction are equal and opposite\" is:",
+            qHi: "“प्रत्येक क्रिया के बराबर व विपरीत दिशा में एक प्रतिक्रिया होती है।” यह है-",
+            opts: [
+                {en:"1st Law", hi:"न्यूटन का गति विषयक प्रथम नियम"},
+                {en:"2nd Law", hi:"न्यूटन का गति विषयक द्वितीय नियम"},
+                {en:"3rd Law", hi:"न्यूटन का गति विषयक तृतीय नियम"},
+                {en:"None", hi:"उपर्युक्त में कोई नहीं"}
+            ],
+            ans: 2
+        },
+        {
+            qEn: "Swimming is possible due to which law?",
+            qHi: "जल में तैरना न्यूटन की गति के किस नियम के कारण सम्भव है ?",
+            opts: [
+                {en:"1st Law", hi:"प्रथम नियम"},
+                {en:"2nd Law", hi:"द्वितीय नियम"},
+                {en:"3rd Law", hi:"तृतीय नियम"},
+                {en:"All", hi:"उपर्युक्त सभी"}
+            ],
+            ans: 2
+        },
+        {
+            qEn: "\"A body remains at rest until external force applied\". Whose statement?",
+            qHi: "“कोई पिण्ड तब तक विरामावस्था में ही बना रहेगा जब तक उस पर कोई बाह्य बल कार्य नहीं करता है।” यह कथन किसका है ?",
+            opts: [
+                {en:"Newton", hi:"न्यूटन"},
+                {en:"Einstein", hi:"आइन्स्टीन"},
+                {en:"Archimedes", hi:"आर्किमिडीज"},
+                {en:"Galileo", hi:"गैलिलियो"}
+            ],
+            ans: 0
+        },
+        {
+            qEn: "Definition of force comes from:",
+            qHi: "बल की परिभाषा आती है, न्यूटन के-",
+            opts: [
+                {en:"1st Law", hi:"गति के पहले नियम से"},
+                {en:"2nd Law", hi:"गति के दूसरे नियम से"},
+                {en:"3rd Law", hi:"गति के तीसरे नियम से"},
+                {en:"Gravitation Law", hi:"गुरुत्वाकर्षण नियम से"}
+            ],
+            ans: 0
+        },
+        {
+            qEn: "Property of body to resist change in state of rest or motion:",
+            qHi: "किसी पिण्ड के उस गुणधर्म को क्या कहते हैं जिससे वह सीधी रेखा में विराम या एकसमान गति की स्थिति में किसी भी परिवर्तन का विरोध करती है ?",
+            opts: [
+                {en:"Mobility", hi:"गतिहीनता"},
+                {en:"Inertia", hi:"जड़त्व"},
+                {en:"Weight", hi:"कुल भार"},
+                {en:"Inactivity", hi:"अक्रियता"}
+            ],
+            ans: 1
+        },
+        {
+            qEn: "Newton's First Law is also called:",
+            qHi: "न्यूटन के पहले नियम को भी कहते हैं-",
+            opts: [
+                {en:"Law of Torque", hi:"आघूर्ण का नियम"},
+                {en:"Law of Inertia", hi:"जड़त्व का नियम"},
+                {en:"Law of Energy", hi:"ऊर्जा का नियम"},
+                {en:"Law of Momentum", hi:"संवेग का नियम"}
+            ],
+            ans: 1
+        },
+        {
+            qEn: "A horse pulling a cart moves forward due to force exerted by:",
+            qHi: "गाड़ी खींचता हुआ घोड़ा किस बल के कारण आगे बढ़ता है ?",
+            opts: [
+                {en:"Cart on horse", hi:"गाड़ी द्वारा घोड़े पर आरोपित बल से"},
+                {en:"Horse on cart", hi:"घोड़े द्वारा गाड़ी पर आरोपित बल से"},
+                {en:"Horse on earth", hi:"घोड़े द्वारा अपने पैरों से पृथ्वी पर आरोपित बल से"},
+                {en:"Earth on horse", hi:"पृथ्वी द्वारा घोड़े के पैरों पर आरोपित बल से"}
+            ],
+            ans: 3
+        },
+        {
+            qEn: "Passengers fall forward when a moving bus stops suddenly due to:",
+            qHi: "चलती हुई बस जब अचानक ब्रेक लगाती है, तो उसमें बैठे हुए यात्री आगे की दिशा में गिरते हैं। इसको किसके द्वारा समझाया जा सकता है ?",
+            opts: [
+                {en:"Relativity", hi:"सापेक्षता सिद्धांत"},
+                {en:"Newton's 1st Law", hi:"न्यूटन का पहला नियम"},
+                {en:"Newton's 2nd Law", hi:"न्यूटन का दूसरा नियम"},
+                {en:"Newton's 3rd Law", hi:"न्यूटन का तीसरा नियम"}
+            ],
+            ans: 1
+        },
+        {
+            qEn: "Rocket works on the principle of:",
+            qHi: "रॉकेट किस सिद्धान्त पर कार्य करता है ?",
+            opts: [
+                {en:"3rd Law", hi:"न्यूटन का तृतीय नियम"},
+                {en:"1st Law", hi:"न्यूटन का प्रथम नियम"},
+                {en:"2nd Law", hi:"न्यूटन का द्वितीय नियम"},
+                {en:"Archimedes Principle", hi:"आर्किमिडीज का सिद्धान्त"}
+            ],
+            ans: 0
+        },
+        {
+            qEn: "If a horse starts suddenly, the rider falls backward. Reason:",
+            qHi: "अश्व यदि एकाएक चलना प्रारम्भ कर दे तो अश्वारोही के गिरने की आशंका का कारण है-",
+            opts: [
+                {en:"Moment of Inertia", hi:"जड़त्व आघूर्ण"},
+                {en:"Conservation of Mass", hi:"द्रव्यमान का संरक्षण नियम"},
+                {en:"Inertia of Rest", hi:"विश्राम जड़त्व"},
+                {en:"3rd Law", hi:"गति का तीसरा नियम"}
+            ],
+            ans: 2
+        },
+        {
+            qEn: "Why does a cricket player pull his hands back while catching a fast ball?",
+            qHi: "क्रिकेट का खिलाड़ी तेजी से आती हुई बॉल को क्यों अपने हाथ को पीछे खींचकर पकड़ता है ?",
+            opts: [
+                {en:"Ball comes to rest", hi:"बॉल विश्राम की स्थिति में आ सकती है"},
+                {en:"Ball remains accelerated", hi:"बॉल त्वरित स्थिति में रह सकती है"},
+                {en:"To exert less force", hi:"हो सकता है कि उसे कम बल लगाने की आवश्यकता हो"},
+                {en:"To exert more force", hi:"हो सकता है कि उसे अधिक बल लगाने की आवश्यकता हो"}
+            ],
+            ans: 2
+        },
+        {
+            qEn: "Force is the product of:",
+            qHi: "बल गुणनफल है-",
+            opts: [
+                {en:"Mass and Velocity", hi:"द्रव्यमान और वेग का"},
+                {en:"Mass and Acceleration", hi:"द्रव्यमान और त्वरण का"},
+                {en:"Weight and Velocity", hi:"भार और वेग का"},
+                {en:"Weight and Acceleration", hi:"भार और त्वरण का"}
+            ],
+            ans: 1
+        },
+        {
+            qEn: "Beating a carpet with a stick removes dust. Which law applies?",
+            qHi: "किसी कालीन की सफाई के लिए, यदि उसे छड़ी से पीटा जाए, तो उसमें कौन सा नियम लागू होता है ?",
+            opts: [
+                {en:"1st Law", hi:"गति का पहला नियम"},
+                {en:"2nd Law", hi:"गति का दूसरा नियम"},
+                {en:"3rd Law", hi:"गति का तीसरा नियम"},
+                {en:"Combination of 1 & 2", hi:"गति के पहले और दूसरे नियम का संयोजन"}
+            ],
+            ans: 0
+        },
+        {
+            qEn: "Velocity of a body moving with uniform acceleration:",
+            qHi: "कोई पिण्ड समान त्वरण से गतिशील है उसका वेग-",
+            opts: [
+                {en:"Increases", hi:"बढ़ता जाएगा"},
+                {en:"Decreases", hi:"घटता जाएगा"},
+                {en:"Remains same", hi:"समरूप रहेगा"},
+                {en:"Increases then decreases", hi:"पहले बढ़ेगा बाद में घटेगा"}
+            ],
+            ans: 0
+        },
+        {
+            qEn: "Two bodies A and B move in same direction with same velocity. Relative velocity of A w.r.t B:",
+            qHi: "एक ही दिशा में समान वेग से A और B दो पिण्ड जा रहे हैं। A का आपेक्षिक वेग B के साथ",
+            opts: [
+                {en:"Same", hi:"वही होगा"},
+                {en:"Double", hi:"उस वेग का दुगुणा होगा"},
+                {en:"Zero", hi:"शून्य होगा"},
+                {en:"None", hi:"इनमें से कोई नहीं"}
+            ],
+            ans: 2
+        },
+        {
+            qEn: "Glass ball falls and breaks (stops). Tennis ball hits and rebounds. Which suffers greater change in momentum?",
+            qHi: "शीशे की एक गोली दीवार से टकराकर नीचे गिर जाती है। एक समान द्रव्यमान के टेनिस के गेंद समान वेग से दीवार से टकराकर वापस हो जाती है सही उत्तर प्राप्त करें।",
+            opts: [
+                {en:"Glass ball", hi:"शीशे की गोली का संवेग टेनिस की गेंद से अधिक होता है।"},
+                {en:"Tennis ball", hi:"शीशे की गोली के संवेग में टेनिस की गेंद से अपेक्षाकृत अधिक परिवर्तन होता है।"},
+                {en:"Tennis ball (Greater Change)", hi:"टेनिस की गेंद के संवेग में शीशे की गोली से अपेक्षाकृत अधिक परिवर्तन होता है।"},
+                {en:"Both same", hi:"दोनों समान परिवर्तन होता है।"}
+            ],
+            ans: 2
+        },
+        {
+            qEn: "A jet engine works on conservation of:",
+            qHi: "एक जेट इंजन काम करता है-",
+            opts: [
+                {en:"Mass", hi:"द्रव्यमान संरक्षण"},
+                {en:"Energy", hi:"ऊर्जा संरक्षण"},
+                {en:"Linear Momentum", hi:"रेखीय संवेग संरक्षण"},
+                {en:"Angular Momentum", hi:"कोणीय संवेग संरक्षण के सिद्धान्त पर"}
+            ],
+            ans: 2
+        },
+        {
+            qEn: "Mass of a particle is best defined by:",
+            qHi: "कण के गति के द्रव्यमान की सर्वोत्तम परिभाषा दी जाती है-",
+            opts: [
+                {en:"Force/Acceleration", hi:"उसके संवेग द्वारा (Force/Acc derived from F=ma)"},
+                {en:"Kinetic Energy", hi:"उसकी गतिज ऊर्जा द्वारा"},
+                {en:"Acceleration", hi:"उसके त्वरण द्वारा"},
+                {en:"Velocity", hi:"उसके वेग और विस्थापन द्वारा"}
+            ],
+            ans: 0
+        },
+        {
+            qEn: "SI unit of force is Newton and 1 Newton equals:",
+            qHi: "बल का S.I. मात्रक न्यूटन होता है और यह-",
+            opts: [
+                {en:"10⁴ Dyne", hi:"10⁴ डायन"},
+                {en:"10⁵ Dyne", hi:"10⁵ डायन"},
+                {en:"10⁶ Dyne", hi:"10⁶ डायन"},
+                {en:"10⁷ Dyne", hi:"10⁷ डायन के बराबर होता है"}
+            ],
+            ans: 1
+        },
+        {
+            qEn: "When a shell fired from a cannon explodes in mid-air:",
+            qHi: "जब तोप से दागा गया गोला बीच हवा में विस्फोट करता है तो-",
+            opts: [
+                {en:"Momentum increases", hi:"संवेग बढ़ता है"},
+                {en:"Momentum decreases", hi:"इसकी संवेग घटता है"},
+                {en:"Total Kinetic Energy Increases", hi:"इसकी कुल गतिज ऊर्जा बढ़ती है"},
+                {en:"Total KE constant", hi:"इसकी कुल गतिज ऊर्जा अपरिवर्तित रहती है।"}
+            ],
+            ans: 2
+        }
+    ];
+
+    // --- Application Logic ---
+    const app = {
+        questions: [],
+        currentQIndex: 0,
+        score: 0,
+        timer: null,
+        timeLeft: 0,
+        isShuffled: false,
+        timePerQuestion: 0,
+        audioCtx: null,
+
+        // Initialize and Audio Context
+        initAudio: function() {
+            if (!this.audioCtx) {
+                this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        },
+
+        playTone: function(type) {
+            this.initAudio();
+            const osc = this.audioCtx.createOscillator();
+            const gainNode = this.audioCtx.createGain();
+            osc.connect(gainNode);
+            gainNode.connect(this.audioCtx.destination);
+
+            if (type === 'correct') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(600, this.audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(1200, this.audioCtx.currentTime + 0.1);
+                gainNode.gain.setValueAtTime(0.1, this.audioCtx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioCtx.currentTime + 0.5);
+                osc.start();
+                osc.stop(this.audioCtx.currentTime + 0.5);
+            } else {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(150, this.audioCtx.currentTime);
+                osc.frequency.linearRampToValueAtTime(100, this.audioCtx.currentTime + 0.3);
+                gainNode.gain.setValueAtTime(0.1, this.audioCtx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioCtx.currentTime + 0.5);
+                osc.start();
+                osc.stop(this.audioCtx.currentTime + 0.5);
+            }
+        },
+
+        // --- Core Functions ---
+        startQuiz: function() {
+            // Get Settings
+            const tInput = document.getElementById('timeInput').value;
+            this.timePerQuestion = tInput ? parseInt(tInput) : 0;
+            
+            // Shuffle Logic
+            this.questions = [...rawQuestions];
+            if (this.isShuffled) {
+                this.questions.sort(() => Math.random() - 0.5);
+            }
+
+            // Reset States
+            this.currentQIndex = 0;
+            this.score = 0;
+            
+            // Switch Screens
+            document.getElementById('startScreen').classList.remove('active');
+            document.getElementById('quizScreen').classList.add('active');
+
+            this.loadQuestion();
+        },
+
+        loadQuestion: function() {
+            const q = this.questions[this.currentQIndex];
+            const qCountEl = document.getElementById('qCount');
+            const timerEl = document.getElementById('timerDisplay');
+            const scoreEl = document.getElementById('scoreDisplay');
+            const bar = document.getElementById('progressBar');
+
+            // UI Updates
+            qCountEl.textContent = `Q: ${(this.currentQIndex + 1).toString().padStart(2, '0')}/${this.questions.length}`;
+            scoreEl.textContent = `Score: ${this.score}`;
+            bar.style.width = `${((this.currentQIndex) / this.questions.length) * 100}%`;
+
+            // Reset Sad Emoji
+            document.getElementById('sadEmoji').style.display = 'none';
+
+            // Timer Setup
+            clearInterval(this.timer);
+            timerEl.classList.remove('danger', 'active');
+            
+            if (this.timePerQuestion > 0) {
+                this.timeLeft = this.timePerQuestion;
+                timerEl.classList.add('active');
+                timerEl.textContent = this.timeLeft + 's';
+                
+                this.timer = setInterval(() => {
+                    this.timeLeft--;
+                    timerEl.textContent = this.timeLeft + 's';
+                    
+                    if (this.timeLeft <= 5) timerEl.classList.add('danger');
+                    
+                    if (this.timeLeft <= 0) {
+                        clearInterval(this.timer);
+                        this.handleTimeOut();
+                    }
+                }, 1000);
+            }
+
+            // Render Question Text
+            const qTextContainer = document.getElementById('questionText');
+            qTextContainer.innerHTML = `
+                <div class="q-text-en">${q.qEn}</div>
+                <div class="q-text-hi">${q.qHi}</div>
+            `;
+
+            // Render Options
+            const optsContainer = document.getElementById('optionsContainer');
+            optsContainer.innerHTML = '';
+            
+            q.opts.forEach((opt, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerHTML = `
+                    <span class="opt-en">${String.fromCharCode(65+index)}. ${opt.en}</span>
+                    <span class="opt-hi">${opt.hi}</span>
+                `;
+                btn.onclick = () => this.checkAnswer(index, btn);
+                optsContainer.appendChild(btn);
+            });
+        },
+
+        checkAnswer: function(selectedIndex, btnElement) {
+            clearInterval(this.timer); // Stop timer immediately
+            const currentQ = this.questions[this.currentQIndex];
+            const isCorrect = selectedIndex === currentQ.ans;
+            const buttons = document.querySelectorAll('.option-btn');
+
+            // Disable all buttons
+            buttons.forEach(b => b.disabled = true);
+
+            if (isCorrect) {
+                this.score++;
+                btnElement.classList.add('correct');
+                this.playTone('correct');
+                this.triggerConfetti();
+            } else {
+                btnElement.classList.add('wrong');
+                buttons[currentQ.ans].classList.add('correct'); // Show correct answer
+                this.playTone('wrong');
+                
+                // Sad Emoji Animation
+                const emoji = document.getElementById('sadEmoji');
+                emoji.style.display = 'block';
+                emoji.classList.add('shake');
+                setTimeout(() => emoji.classList.remove('shake'), 500);
+            }
+
+            // Auto Transition
+            setTimeout(() => {
+                this.currentQIndex++;
+                if (this.currentQIndex < this.questions.length) {
+                    this.loadQuestion();
+                } else {
+                    this.endQuiz();
+                }
+            }, 1500);
+        },
+
+        handleTimeOut: function() {
+            const currentQ = this.questions[this.currentQIndex];
+            const buttons = document.querySelectorAll('.option-btn');
+            buttons.forEach(b => b.disabled = true);
+            buttons[currentQ.ans].classList.add('correct');
+            this.playTone('wrong');
+
+             setTimeout(() => {
+                this.currentQIndex++;
+                if (this.currentQIndex < this.questions.length) {
+                    this.loadQuestion();
+                } else {
+                    this.endQuiz();
+                }
+            }, 1500);
+        },
+
+        endQuiz: function(earlyExit = false) {
+            clearInterval(this.timer);
+            document.getElementById('quizScreen').classList.remove('active');
+            document.getElementById('resultScreen').classList.add('active');
+
+            // Calculate Percentage based on questions ATTEMPTED if early exit, 
+            // but normally percentage is usually total questions. 
+            // To be fair: Score / Total Questions shown so far? 
+            // Standard: Score / Total Questions in Quiz.
+            
+            // Logic: The progress bar shows full progress, so lets calculate based on Total Questions
+            const total = this.questions.length;
+            const percentage = Math.round((this.score / total) * 100);
+            
+            document.getElementById('finalScore').textContent = percentage + '%';
+            document.getElementById('statsText').textContent = `You scored ${this.score} out of ${total}`;
+
+            let msg = "";
+            if (percentage >= 80) msg = "🏆 Outstanding Performance!";
+            else if (percentage >= 50) msg = "👏 Well Done! Keep it up.";
+            else msg = "📚 Practice makes perfect! Try again.";
+
+            document.getElementById('resultMsg').textContent = msg;
+        },
+
+        reset: function() {
+            document.getElementById('resultScreen').classList.remove('active');
+            document.getElementById('startScreen').classList.add('active');
+        },
+
+        triggerConfetti: function() {
+            for (let i = 0; i < 30; i++) {
+                const conf = document.createElement('div');
+                conf.className = 'confetti';
+                conf.style.left = Math.random() * 100 + 'vw';
+                conf.style.backgroundColor = `hsl(${Math.random() * 360}, 100%, 50%)`;
+                conf.style.animation = `fall ${Math.random() * 1 + 1}s linear forwards`;
+                document.body.appendChild(conf);
+                
+                // Remove from DOM after animation
+                setTimeout(() => conf.remove(), 2000);
+            }
+        }
+    };
+
+    // Toggle Switch Logic
+    document.getElementById('shuffleToggle').addEventListener('click', function() {
+        this.classList.toggle('toggle-active');
+        app.isShuffled = !app.isShuffled;
+    });
+
+    // Add Keyframes for confetti dynamically
+    const styleSheet = document.createElement("style");
+    styleSheet.innerText = `
+        @keyframes fall {
+            to { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+        }
+    `;
+    document.head.appendChild(styleSheet);
+
+</script>
+</body>
+</html>

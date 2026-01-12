@@ -1,0 +1,1107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Physics Master Quiz (Bilingual)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            --primary-text: #ffffff;
+            --secondary-text: #e0e0e0;
+            --hindi-text: #d1d5db; /* Slightly dimmed for hierarchy */
+            --correct: #4ade80;
+            --wrong: #f87171;
+            --accent: #a855f7;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+
+        body {
+            background: linear-gradient(135deg, #4f46e5, #a855f7, #ec4899);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--primary-text);
+            overflow-x: hidden;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* --- Glass Container --- */
+        .container {
+            width: 90%;
+            max-width: 800px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 25px;
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--glass-shadow);
+            padding: 2rem;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        /* --- Screen Logic --- */
+        .screen { display: none; animation: fadeIn 0.5s ease; }
+        .screen.active { display: block; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* --- Start Screen --- */
+        .start-content { text-align: center; }
+        h1 { font-size: 2.5rem; margin-bottom: 0.5rem; font-weight: 700; text-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        .subtitle { font-size: 1.1rem; color: var(--secondary-text); margin-bottom: 2rem; }
+        
+        .settings-group {
+            background: rgba(0,0,0,0.2);
+            padding: 1.5rem;
+            border-radius: 15px;
+            margin-bottom: 2rem;
+            text-align: left;
+        }
+
+        .input-group { margin-bottom: 1rem; }
+        label { display: block; margin-bottom: 0.5rem; font-size: 0.9rem; }
+        input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            border-radius: 8px;
+            border: none;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            font-size: 1rem;
+        }
+        input[type="number"]:focus { outline: 2px solid var(--accent); }
+
+        .toggle-group { display: flex; align-items: center; justify-content: space-between; }
+        .switch {
+            position: relative; display: inline-block; width: 60px; height: 34px;
+        }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(255,255,255,0.2); transition: .4s; border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute; content: ""; height: 26px; width: 26px; left: 4px; bottom: 4px;
+            background-color: white; transition: .4s; border-radius: 50%;
+        }
+        input:checked + .slider { background-color: var(--accent); }
+        input:checked + .slider:before { transform: translateX(26px); }
+
+        .btn-primary {
+            background: linear-gradient(90deg, #ff8a00, #e52e71);
+            color: white; border: none; padding: 15px 40px; font-size: 1.2rem;
+            border-radius: 50px; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;
+            font-weight: 600; width: 100%;
+        }
+        .btn-primary:hover { transform: scale(1.05); box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
+
+        /* --- Quiz UI --- */
+        .progress-container {
+            position: absolute; top: 0; left: 0; width: 100%; height: 5px; background: rgba(255,255,255,0.1);
+        }
+        .progress-bar { height: 100%; background: #4ade80; width: 0%; transition: width 0.3s ease; box-shadow: 0 0 10px #4ade80; }
+
+        .quiz-header {
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;
+            font-size: 1rem; font-weight: 600;
+        }
+
+        .timer-badge {
+            background: rgba(0,0,0,0.3); padding: 5px 15px; border-radius: 20px;
+        }
+        .timer-pulse { animation: pulseRed 1s infinite; color: #ff6b6b; }
+        @keyframes pulseRed { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+
+        .question-box { margin-bottom: 25px; }
+        .q-eng { font-size: 1.3rem; margin-bottom: 8px; line-height: 1.4; }
+        .q-hin { font-size: 1.1rem; color: var(--hindi-text); font-weight: 400; line-height: 1.5; }
+
+        .options-grid { display: grid; gap: 15px; }
+        .option-btn {
+            background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.1);
+            padding: 15px; border-radius: 12px; color: white; text-align: left;
+            cursor: pointer; transition: all 0.2s; display: flex; flex-direction: column;
+        }
+        .option-btn:hover { background: rgba(255,255,255,0.2); transform: translateX(5px); }
+        .opt-en { font-weight: 600; font-size: 1rem; margin-bottom: 4px; }
+        .opt-hi { font-size: 0.9rem; color: var(--hindi-text); }
+
+        .option-btn.correct { background: var(--correct) !important; color: #000; border-color: var(--correct); }
+        .option-btn.correct .opt-hi { color: #333; }
+        .option-btn.wrong { background: var(--wrong) !important; animation: shake 0.5s; }
+
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+
+        .finish-btn {
+            margin-top: 20px; background: rgba(255, 69, 58, 0.8); width: 100%;
+            padding: 12px; border-radius: 12px; border: none; color: white; font-weight: 600; cursor: pointer;
+        }
+        .finish-btn:hover { background: rgba(255, 69, 58, 1); }
+
+        /* --- Result Screen --- */
+        .result-content { text-align: center; }
+        .emoji { font-size: 4rem; display: block; margin-bottom: 10px; animation: bounce 2s infinite; }
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        .score-big { font-size: 3rem; font-weight: 700; background: -webkit-linear-gradient(#fff, #bbb); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .feedback { font-size: 1.2rem; margin: 15px 0 30px 0; color: var(--secondary-text); }
+
+        /* Confetti Canvas */
+        #confetti-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; }
+
+        /* Mobile Adjustments */
+        @media (max-width: 600px) {
+            .container { padding: 1.5rem; width: 95%; }
+            h1 { font-size: 1.8rem; }
+            .q-eng { font-size: 1.1rem; }
+            .q-hin { font-size: 0.95rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="confetti-canvas"></canvas>
+
+    <div class="container">
+        <div id="start-screen" class="screen active">
+            <div class="start-content">
+                <h1>Physics Master</h1>
+                <p class="subtitle">Heat & Thermodynamics (Q101-151)</p>
+                
+                <div class="settings-group">
+                    <div class="input-group">
+                        <label>⏱ Timer per Question (Seconds)</label>
+                        <input type="number" id="timeInput" placeholder="Leave empty for no timer" min="5">
+                    </div>
+                    <div class="toggle-group">
+                        <label>🔀 Shuffle Questions</label>
+                        <label class="switch">
+                            <input type="checkbox" id="shuffleToggle">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <button class="btn-primary" onclick="app.startQuiz()">Start Quiz 🚀</button>
+            </div>
+        </div>
+
+        <div id="quiz-screen" class="screen">
+            <div class="progress-container"><div class="progress-bar" id="progressBar"></div></div>
+            
+            <div class="quiz-header">
+                <span id="q-counter">Q: 1/50</span>
+                <span id="timer-display" class="timer-badge">∞</span>
+                <span id="score-display">Score: 0</span>
+            </div>
+
+            <div class="question-box">
+                <div id="q-text-en" class="q-eng">Question English</div>
+                <div id="q-text-hi" class="q-hin">Question Hindi</div>
+            </div>
+
+            <div id="options-container" class="options-grid">
+                </div>
+
+            <button class="finish-btn" onclick="app.finishQuiz()">⛔ Finish & Show Results</button>
+        </div>
+
+        <div id="result-screen" class="screen">
+            <div class="result-content">
+                <span id="result-emoji" class="emoji">🏆</span>
+                <h2>Quiz Completed!</h2>
+                <div class="score-big" id="final-score">0%</div>
+                <p class="feedback" id="feedback-text">Message</p>
+                <div style="margin-top: 20px;">
+                    <p>Correct: <span id="res-correct" style="color:#4ade80">0</span></p>
+                    <p>Wrong: <span id="res-wrong" style="color:#f87171">0</span></p>
+                </div>
+                <button class="btn-primary" style="margin-top: 30px;" onclick="location.reload()">Restart Quiz 🔄</button>
+            </div>
+        </div>
+    </div>
+
+<script>
+/* --- DATASET (Extracted from User Images Q101-151) --- */
+const RAW_DATA = [
+    {
+        id: 101,
+        q_en: "Heat loss in a thermos flask can be prevented by:",
+        q_hi: "थर्मस फ्लास्क में ऊष्मा का क्षय रोका जा सकता है-",
+        options: [
+            {en: "Convection", hi: "संवहन से"},
+            {en: "Conduction", hi: "चालन से"},
+            {en: "Radiation", hi: "विकिरण से"},
+            {en: "Conduction, Convection & Radiation", hi: "चालन, संवहन व विकिरण से"}
+        ],
+        correct: 3
+    },
+    {
+        id: 102,
+        q_en: "The internal walls of a thermos flask are shiny to prevent:",
+        q_hi: "थर्मस फ्लास्क की आन्तरिक दीवारें चमकीली होती है-",
+        options: [
+            {en: "Heat loss by convection", hi: "संवहन द्वारा होने वाली ऊष्मा गति को रोकने के लिए"},
+            {en: "Heat loss by radiation", hi: "विकिरण द्वारा होने वाली ऊष्मा हानि को रोकने के लिए"},
+            {en: "Heat loss by conduction", hi: "चालन द्वारा होने वाली ऊष्मा हानि को रोकने के लिए"},
+            {en: "None of these", hi: "इनमें से कोई नहीं"}
+        ],
+        correct: 1
+    },
+    {
+        id: 103,
+        q_en: "A thermos flask keeps liquid hot for a long time because:",
+        q_hi: "थर्मस फ्लास्क तरल पदार्थों को लम्बे समय तक गरम रखता है, क्योंकि-",
+        options: [
+            {en: "It contains gas which emits heat", hi: "उसमें गैस भरी रहती है, जो ऊष्मा उत्सर्जित करती है।"},
+            {en: "It has internal heating", hi: "उसमें आन्तरिक तापन होता है"},
+            {en: "Shiny internal wall & double walls prevent heat transfer", hi: "चमकदार आन्तरिक दीवार तथा बाह्य आवरण की दोहरी दीवारें ऊष्मा को निकलने से या प्रविष्ट होने से रोकती है।"},
+            {en: "None of the above", hi: "उपर्युक्त में कोई नहीं"}
+        ],
+        correct: 2
+    },
+    {
+        id: 104,
+        q_en: "By which method are the walls of a thermos flask silvered to minimize heat transfer?",
+        q_hi: "किस विधि से ऊष्मा स्थानान्तरण को न्यूनतम करने के लिए थर्मस फ्लास्क की दीवारों पर कलई की जाती है ?",
+        options: [
+            {en: "Conduction", hi: "चालन"},
+            {en: "Convection", hi: "संवहन"},
+            {en: "Radiation", hi: "विकिरण"},
+            {en: "All of these", hi: "इनमें से सभी"}
+        ],
+        correct: 2
+    },
+    {
+        id: 105,
+        q_en: "The heat required to raise the temperature of unit mass of a substance by 1°C is:",
+        q_hi: "किसी पदार्थ के एकांक द्रव्यमान का ताप एक डिग्री सेल्सियस बढ़ाने में लगी ऊष्मा है-",
+        options: [
+            {en: "Specific Heat", hi: "विशिष्ट ऊष्मा"},
+            {en: "Heat Capacity", hi: "ऊष्मा धारिता"},
+            {en: "Water Equivalent", hi: "जल तुल्यांक"},
+            {en: "Latent Heat", hi: "गुप्त ऊष्मा"}
+        ],
+        correct: 0
+    },
+    {
+        id: 106,
+        q_en: "Which of the following has the highest value of specific heat?",
+        q_hi: "निम्नलिखित में से किसमें सर्वोच्च विशिष्ट ऊष्मा का मान होता है ?",
+        options: [
+            {en: "Glass", hi: "कांच"},
+            {en: "Copper", hi: "तांबा"},
+            {en: "Lead", hi: "सीसा"},
+            {en: "Water", hi: "जल"}
+        ],
+        correct: 3
+    },
+    {
+        id: 107,
+        q_en: "During the day, earth heats up faster than sea water because:",
+        q_hi: "दिन के समय पृथ्वी समुद्र के जल की अपेक्षा बहुत जल्दी गर्म हो जाती है, क्योंकि-",
+        options: [
+            {en: "Density of earth is more than water", hi: "पृथ्वी का घनत्व जल की अपेक्षा अधिक होता है।"},
+            {en: "Because of aquatic animals in sea", hi: "समुद्र में रहने वलो जलीय जन्तुओं के कारण।"},
+            {en: "Specific heat capacity of water is very high", hi: "जल की विशिष्ट ऊष्मा धारिता काफी अधिक होती है।"},
+            {en: "Water is made of Hydrogen and Oxygen", hi: "जल हाइड्रोजन एवं ऑक्सीजन से बना होता है।"}
+        ],
+        correct: 2
+    },
+    {
+        id: 108,
+        q_en: "Water is used to cool the radiator of motor cars because:",
+        q_hi: "मोटरगाड़ी के रेडियेटर को ठंडा करने के लिए पानी का व्यवहार किया जाता है, क्योंकि-",
+        options: [
+            {en: "Specific heat of water is high", hi: "पानी की विशिष्ट ऊष्मा अधिक होती है।"},
+            {en: "Density of water is low", hi: "पानी का घनत्व कम होता है।"},
+            {en: "Water is cheap", hi: "पानी सस्ता होता है"},
+            {en: "Water is available at low temp", hi: "पानी कम ताप पर मिलता है"}
+        ],
+        correct: 0
+    },
+    {
+        id: 109,
+        q_en: "Cryogenic engines are used in:",
+        q_hi: "निम्नतापी इंजनों (Cryogenic engine) का अनुप्रयोग होता है-",
+        options: [
+            {en: "Submarine propulsion", hi: "पनडुब्बी नोदन में"},
+            {en: "Frost-free refrigerators", hi: "तुषारमुक्त प्रशीतित्रों में"},
+            {en: "Rocket technology", hi: "रॉकेट प्रौद्योगिकी में"},
+            {en: "Superconductivity research", hi: "अतिचालकता विषयक अनुसंधानों में"}
+        ],
+        correct: 2
+    },
+    {
+        id: 110,
+        q_en: "At what temperature is cryogenic testing done?",
+        q_hi: "निम्नतापी परीक्षण किस ताप पर किया जाता है ?",
+        options: [
+            {en: "-20°C", hi: "-20°C"},
+            {en: "-40°C", hi: "-40°C"},
+            {en: "-100°C", hi: "-100°C"},
+            {en: "-196°C", hi: "-196°C"}
+        ],
+        correct: 3
+    },
+    {
+        id: 111,
+        q_en: "Application of Cryogenics is in:",
+        q_hi: "न्यून तापमानों (Cryogenics) का अनुप्रयोग होता है-",
+        options: [
+            {en: "Space travel, surgery & magnetic levitation", hi: "अन्तरिक्ष यात्रा, शल्य कर्म एवं चुम्बकीय प्रोत्यापन में"},
+            {en: "Surgery, magnetic levitation & telemetry", hi: "शल्य कर्म, चुम्बकीय प्रोत्यापन एवं दूरमिति में"},
+            {en: "Space travel, surgery & telemetry", hi: "अन्तरिक्ष यात्रा, शल्य कर्म एवं दूरमिति में"},
+            {en: "Space travel, magnetic levitation & telemetry", hi: "अन्तरिक्ष यात्रा, चुम्बकीय प्रोत्यापन एवं दूरमिति में"}
+        ],
+        correct: 0
+    },
+    {
+        id: 112,
+        q_en: "Direct conversion of solid to vapor without becoming liquid is called:",
+        q_hi: "किसी ठोस पदार्थ के बिना द्रव में बदले सीधे वाष्प में परिवर्तित होने को कहते हैं-",
+        options: [
+            {en: "Boiling", hi: "क्वथन"},
+            {en: "Distillation", hi: "आसवन"},
+            {en: "Sublimation", hi: "उर्ध्वपातन"},
+            {en: "Polymerization", hi: "बहुलीकरण"}
+        ],
+        correct: 2
+    },
+    {
+        id: 113,
+        q_en: "Sublimate substance is:",
+        q_hi: "उर्ध्वपातज (Sublimate) पदार्थ है-",
+        options: [
+            {en: "Camphor", hi: "कपूर"},
+            {en: "Naphthalene", hi: "नेथलीन"},
+            {en: "Ammonium Chloride", hi: "अमोनियम क्लोराइड"},
+            {en: "All of the above", hi: "उपर्युक्त सभी"}
+        ],
+        correct: 3
+    },
+    {
+        id: 114,
+        q_en: "The temperature at which a solid turns into liquid upon heating is called:",
+        q_hi: "जिस ताप पर कोई ठोस पदार्थ ऊष्मा पाकर द्रव में परिणत होता है, कहलाता है-",
+        options: [
+            {en: "Boiling Point", hi: "क्वथनांक"},
+            {en: "Melting Point", hi: "गलनांक"},
+            {en: "Evaporation", hi: "वाष्पन"},
+            {en: "None of these", hi: "इनमें से कोई नहीं"}
+        ],
+        correct: 1
+    },
+    {
+        id: 115,
+        q_en: "The temperature at which a liquid turns into vapor upon heating is called:",
+        q_hi: "जिस ताप पर कोई द्रव ऊष्मा पाकर वाष्प में बदलता है, कहलाता है-",
+        options: [
+            {en: "Melting Point", hi: "गलनांक"},
+            {en: "Freezing Point", hi: "द्रवणांक"},
+            {en: "Boiling Point", hi: "क्वथनांक"},
+            {en: "None of these", hi: "इनमें से कोई नहीं"}
+        ],
+        correct: 2
+    },
+    {
+        id: 116,
+        q_en: "What is the effect of adding impurities on the melting point of a pure substance?",
+        q_hi: "शुद्ध पदार्थ में कोई अन्य पदार्थ देने पर उसके गलनांक पर क्या प्रभाव पड़ता है ?",
+        options: [
+            {en: "Increases", hi: "बढ़ जाता है"},
+            {en: "Decreases", hi: "घट जाता है"},
+            {en: "Remains unchanged", hi: "अपरिवर्तित रहता है"},
+            {en: "First increases then decreases", hi: "पहले बढ़ता फिर घटता है"}
+        ],
+        correct: 1
+    },
+    {
+        id: 117,
+        q_en: "The melting point of alloys compared to their constituent metals is:",
+        q_hi: "मिश्रधातुओं के गलनांक उनके अवयवी धातुओं की अपेक्षा-",
+        options: [
+            {en: "Lower", hi: "निम्न होते हैं"},
+            {en: "Higher", hi: "उच्च होते हैं"},
+            {en: "Equal", hi: "बराबर होते हैं"},
+            {en: "None of these", hi: "इनमें से कोई नहीं"}
+        ],
+        correct: 0
+    },
+    {
+        id: 118,
+        q_en: "Change of state from liquid to vapor is called:",
+        q_hi: "द्रव से वाष्प में पदार्थ के अवस्था परिवर्तन को कहते हैं-",
+        options: [
+            {en: "Melting", hi: "गलन"},
+            {en: "Vaporization", hi: "वाष्पन"},
+            {en: "Boiling", hi: "क्वथन"},
+            {en: "None of these", hi: "इनमें से कोई नहीं"}
+        ],
+        correct: 1
+    },
+    {
+        id: 119,
+        q_en: "Change of state from solid to liquid is called:",
+        q_hi: "ठोस से द्रव में पदार्थ के अवस्था परिवर्तन को कहते हैं-",
+        options: [
+            {en: "Melting", hi: "गलन"},
+            {en: "Vaporization", hi: "वाष्पन"},
+            {en: "Boiling", hi: "क्वथन"},
+            {en: "None of these", hi: "इनमें से कोई नहीं"}
+        ],
+        correct: 0
+    },
+    {
+        id: 120,
+        q_en: "On increasing pressure, the boiling point of a liquid:",
+        q_hi: "दाब बढ़ने से किसी द्रव का क्वथनांक-",
+        options: [
+            {en: "Decreases", hi: "घटेगा"},
+            {en: "Increases", hi: "बढ़ेगा"},
+            {en: "Remains same", hi: "म S म"}, // Assuming typo in source meant same
+            {en: "Sometimes decreases sometimes increases", hi: "कभी घटेगा कभी बढ़ेगा"}
+        ],
+        correct: 1
+    },
+    {
+        id: 121,
+        q_en: "What is the effect on melting point by adding impurities?",
+        q_hi: "अप्द्रव्यों को मिलाने से गलनांक पर क्या प्रभाव पड़ता है ?",
+        options: [
+            {en: "Increases", hi: "बढ़ता है"},
+            {en: "Decreases", hi: "घटता है"},
+            {en: "Remains unchanged", hi: "अपरिवर्तित रहता है"},
+            {en: "None of these", hi: "इनमें से कोई नहीं"}
+        ],
+        correct: 1
+    },
+    {
+        id: 122,
+        q_en: "When does water boil?",
+        q_hi: "पानी कब उबलता है ?",
+        options: [
+            {en: "When vapor pressure is 1 gm/sq cm", hi: "जब इसका वाष्प दाब एक ग्राम प्रति वर्ग सेमी. होता है।"},
+            {en: "When vapor pressure equals 76 cm of Hg", hi: "जब इसका वाष्प दाब पारे के 76 सेमी. के बराबर होती है।"},
+            {en: "When saturated vapor pressure equals atmospheric pressure", hi: "जल का स्थितीय वाष्प दाब वातावरणीय दाब के बराबर होता है।"},
+            {en: "When water temp reaches 100°C", hi: "जब पानी का तापमान 100°C तक पहुंच जाता है।"}
+        ],
+        correct: 2
+    },
+    {
+        id: 123,
+        q_en: "The Triple Point of water is:",
+        q_hi: "पानी का त्रिगुणात्मक बिन्दु (Triple Point) होता है-",
+        options: [
+            {en: "273.16°C", hi: "273.16°C"},
+            {en: "273.16°F", hi: "273.16°F"},
+            {en: "273.16 K", hi: "273.16 K"},
+            {en: "373.16 K", hi: "373.16 K"}
+        ],
+        correct: 2
+    },
+    {
+        id: 124,
+        q_en: "Due to evaporation of a liquid, its temperature:",
+        q_hi: "किसी द्रव का वाष्पीकरण होने से उसका तापमान-",
+        options: [
+            {en: "Increases", hi: "बढ़ेगा"},
+            {en: "Decreases", hi: "घटेगा"},
+            {en: "Increases rapidly", hi: "तेजी से बढ़ेगा"},
+            {en: "Remains unchanged", hi: "अपरिवर्तित रहेगा"}
+        ],
+        correct: 1
+    },
+    {
+        id: 125,
+        q_en: "The temperature at which ice, water, and vapor coexist in equilibrium is called:",
+        q_hi: "वह ताप जिस पर बर्फ, पानी और वाष्प संतुलन में रहता है, कहा जाता है-",
+        options: [
+            {en: "Freezing Point", hi: "हिमांक"},
+            {en: "Boiling Point", hi: "क्वथनांक"},
+            {en: "Critical Temp", hi: "क्रांतिक माप"},
+            {en: "Triple Point", hi: "त्रिक बिन्दु"}
+        ],
+        correct: 3
+    },
+    {
+        id: 126,
+        q_en: "The rate of evaporation does NOT depend on:",
+        q_hi: "वाष्पीकरण की दर निर्भर नहीं करती है-",
+        options: [
+            {en: "Temperature of liquid", hi: "द्रव के ताप पर"},
+            {en: "Surface area of liquid", hi: "द्रव के पृष्ठ क्षेत्रफल पर"},
+            {en: "Total mass of liquid", hi: "द्रव की सम्पूर्ण मात्रा पर"},
+            {en: "Air pressure", hi: "वायुदाब पर"}
+        ],
+        correct: 2
+    },
+    {
+        id: 127,
+        q_en: "Where will it take more time to cook rice?",
+        q_hi: "चावल को पकाने में कहां अधिक समय लगेगा ?",
+        options: [
+            {en: "At sea level", hi: "समुद्र तट पर"},
+            {en: "At depth of sea", hi: "समुद्र की गहराई पर"},
+            {en: "In Shimla", hi: "शिमला में"},
+            {en: "On Mount Everest", hi: "माउण्ट एवरेस्ट पर"}
+        ],
+        correct: 3
+    },
+    {
+        id: 128,
+        q_en: "For a given liquid, the rate of vaporization depends on:",
+        q_hi: "किसी निश्चित द्रव के लिए वाष्पन की दर निर्भर करती है-",
+        options: [
+            {en: "Liquid temperature", hi: "द्रव के ताप पर"},
+            {en: "Air temperature", hi: "वायु के ताप पर"},
+            {en: "Open surface area", hi: "द्रव की खुली सतह के क्षेत्रफल पर"},
+            {en: "All of the above factors", hi: "उपर्युक्त सभी कारकों पर"}
+        ],
+        correct: 3
+    },
+    {
+        id: 129,
+        q_en: "Boiling point of water:",
+        q_hi: "जल का क्वथनांक (Boiling Point)-",
+        options: [
+            {en: "Is always 100°C", hi: "सदैव 100°C होता है"},
+            {en: "Depends on container material", hi: "पात्र के पदार्थ पर निर्भर करता है"},
+            {en: "Depends on relative humidity", hi: "आपेक्षिक आर्द्रता पर निर्भर करता है"},
+            {en: "Depends on pressure above open surface", hi: "जल की खुली सतह के ऊपर के दाब पर निर्भर करता है।"}
+        ],
+        correct: 3
+    },
+    {
+        id: 130,
+        q_en: "Why is there snowfall on high mountains?",
+        q_hi: "ऊंची पहाड़ियों पर हिमपात क्यों होता है ?",
+        options: [
+            {en: "Cold freezes water vapor", hi: "ऊंची पहाड़ियों पर कुछ गैस जलवाष्प को जमा कर देती है।"},
+            {en: "Clouds are near earth", hi: "बादल पहाड़ियों पर धरती के निकट होते हैं अतः जलवाष्प जमकर बर्फ बन जाती है।"},
+            {en: "Temp is below freezing point", hi: "ऊंची पहाड़ियों पर तापमान हिमांक से कम होता है, अतः जलवाष्प जमकर बर्फ बन जाती है।"},
+            {en: "None of the above", hi: "उपर्युक्त में कोई नहीं।"}
+        ],
+        correct: 2
+    },
+    {
+        id: 131,
+        q_en: "It takes more time to cook potatoes on mountain peaks because:",
+        q_hi: "पहाड़ की चोटियों पर आलुओं को पकाने में अधिक समय लगता है, क्योंकि-",
+        options: [
+            {en: "Temp at top is less than sea level", hi: "पहाड़ की चोटी पर का ताप समुद्रतल के ताप से कम होता है"},
+            {en: "Temp at top is higher", hi: "पहाड़ की चोटी पर ताप उच्चतर होता है"},
+            {en: "Atmospheric pressure is high", hi: "वायुमंडलीय दाब उच्च (अधिक) होता है"},
+            {en: "Atmospheric pressure is low", hi: "वायुमंडलीय दाब कम होता है"}
+        ],
+        correct: 3
+    },
+    {
+        id: 132,
+        q_en: "The process of making camphor vapor from solid camphor is called:",
+        q_hi: "ठोस कपूर से कपूर वाष्प बनाने की प्रक्रिया को कहते हैं-",
+        options: [
+            {en: "Vaporization", hi: "वाष्पीकरण"},
+            {en: "Freezing", hi: "हिमीकरण"},
+            {en: "Melting", hi: "पिघलना"},
+            {en: "Sublimation", hi: "उर्ध्वपातन"}
+        ],
+        correct: 3
+    },
+    {
+        id: 133,
+        q_en: "During summer, water kept in an earthen pot becomes cool due to:",
+        q_hi: "गर्मी के दिनों के दौरान, मिट्टी के बर्तन में रखा पानी ठंडा हो जाता है, निम्नलिखित संवृत्ति के कारण-",
+        options: [
+            {en: "Diffusion", hi: "विसरण"},
+            {en: "Transpiration", hi: "वाष्पोत्सर्जन"},
+            {en: "Osmosis", hi: "ऑस्मोसिस"},
+            {en: "Evaporation", hi: "वाष्पीकरण"}
+        ],
+        correct: 3
+    },
+    {
+        id: 134,
+        q_en: "When two blocks of ice are pressed together, they stick because:",
+        q_hi: "बर्फ के दो टुकड़ों को आपस में दबाने पर टुकड़े आपस में चिपक जाते हैं, क्योंकि-",
+        options: [
+            {en: "Melting point decreases with increased pressure", hi: "दाब अधिक होने से बर्फ का गलनांक घट जाता है।"},
+            {en: "Melting point increases with increased pressure", hi: "दाब अधिक होने से बर्फ का गलनांक बढ़ जाता है।"},
+            {en: "MP decreases then increases", hi: "दाब अधिक होने से बर्फ का गलनांक पहले घटता है फिर बढ़ता है।"},
+            {en: "No relation between pressure and MP", hi: "दाब व गलनांक में कोई संबंध नहीं है।"}
+        ],
+        correct: 0
+    },
+    {
+        id: 135,
+        q_en: "Skating on ice demonstrates that on increasing pressure, melting point of ice:",
+        q_hi: "बर्फ में स्केटिंग करना प्रदर्शित करता है कि दाब बढ़ाने पर बर्फ का गलनांक-",
+        options: [
+            {en: "Increases", hi: "बढ़ जाता है"},
+            {en: "Remains unchanged", hi: "अपरिवर्तित रहता है"},
+            {en: "Decreases", hi: "घट जाता है"},
+            {en: "First decreases then increases", hi: "पहले घटता है फिर बढ़ता है"}
+        ],
+        correct: 2
+    },
+    {
+        id: 136,
+        q_en: "An ice cube is floating in a glass full of water. When the ice melts completely, the water level:",
+        q_hi: "पानी से भरे गिलास में बर्फ का एक टुकड़ा तैर रहा है। टुकड़े के पूरा पिघल जाने पर गिलास में पानी का तल-",
+        options: [
+            {en: "Increases", hi: "बढ़ जाता है"},
+            {en: "Decreases", hi: "घट जाता है"},
+            {en: "Remains unchanged", hi: "अपरिवर्तित रहता है"},
+            {en: "None of these", hi: "इनमें से कोई नहीं"}
+        ],
+        correct: 2
+    },
+    {
+        id: 137,
+        q_en: "Food cooks faster in a pressure cooker because:",
+        q_hi: "प्रेशर कुकर में भोजन कम समय में तैयार हो जाता है, क्योंकि-",
+        options: [
+            {en: "Boiling point of water increases", hi: "जल का क्वथनांक बढ़ जाता है"},
+            {en: "Boiling point of water decreases", hi: "जल का क्वथनांक घट जाता है"},
+            {en: "Food takes less heat", hi: "भोजन कम ऊष्मा लेता है"},
+            {en: "None of the above", hi: "उपर्युक्त में से कोई नहीं"}
+        ],
+        correct: 0
+    },
+    {
+        id: 138,
+        q_en: "Humans feel uncomfortable due to humidity. The reason is:",
+        q_hi: "मनुष्य आर्द्रता से परेशानी महसूस करता है। इसका निम्न में से उपर्युक्त कारण क्या है ?",
+        options: [
+            {en: "Excess sweating", hi: "अधिक पसीना आना"},
+            {en: "Less sweating", hi: "कम पसीना आना"},
+            {en: "Sweat does not evaporate due to humidity", hi: "पसीना का आर्द्रता के कारण वाष्पित नहीं होना"},
+            {en: "None of the above", hi: "उपर्युक्त में कोई नहीं"}
+        ],
+        correct: 2
+    },
+    {
+        id: 139,
+        q_en: "The process of a liquid changing into vapor before its boiling point is called:",
+        q_hi: "किसी द्रव का उसके क्वथनांक से पूर्व उसके वाष्प में बदलने की प्रक्रिया को क्या कहते हैं ?",
+        options: [
+            {en: "Evaporation", hi: "वाष्पीकरण"},
+            {en: "Condensation", hi: "संघनन"},
+            {en: "Freezing", hi: "हिमीकरण"},
+            {en: "None of these", hi: "इनमें से कोई नहीं"}
+        ],
+        correct: 0
+    },
+    {
+        id: 140,
+        q_en: "Water boils at the following temperature on mountains:",
+        q_hi: "पहाड़ों पर पानी निम्नलिखित तापमान पर उबलने लगता है-",
+        options: [
+            {en: "Less than 100°C", hi: "100°C से कम"},
+            {en: "More than 100°C", hi: "100°C से अधिक"},
+            {en: "100°C", hi: "100°C"},
+            {en: "None of these", hi: "इनमें से कोई नहीं"}
+        ],
+        correct: 0
+    },
+    {
+        id: 141,
+        q_en: "Heat absorbed or released which changes the state of matter but not the temperature is called:",
+        q_hi: "वह उत्सर्जित या अवशोषित ऊष्मा जो पदार्थ का अवस्था परिवर्तन तो करती है, परन्तु ताप में किसी प्रकार का परिवर्तन नहीं करती, कहलाती है-",
+        options: [
+            {en: "Specific heat", hi: "विशिष्ट ऊष्मा"},
+            {en: "Absorbed heat", hi: "अवशोषित ऊष्मा"},
+            {en: "Emitted heat", hi: "उत्सर्जित ऊष्मा"},
+            {en: "Latent heat", hi: "गुप्त ऊष्मा"}
+        ],
+        correct: 3
+    },
+    {
+        id: 142,
+        q_en: "Heat required to change unit mass of solid to liquid at its melting point is called:",
+        q_hi: "किसी ठोस पदार्थ के एकांक द्रव्यमान को उसके गलनांक पर ठोस से द्रव में बदलने के लिए आवश्यक ऊष्मा को कहते हैं-",
+        options: [
+            {en: "MP of solid", hi: "ठोस का गलनांक"},
+            {en: "BP of solid", hi: "ठोस का क्वथनांक"},
+            {en: "Latent heat of fusion", hi: "ठोस के गलन की गुप्त ऊष्मा"},
+            {en: "Evaporation", hi: "वाष्पन"}
+        ],
+        correct: 2
+    },
+    {
+        id: 143,
+        q_en: "The latent heat of fusion of ice is:",
+        q_hi: "बर्फ के गलन की गुप्त ऊष्मा का मान होता है-",
+        options: [
+            {en: "0.8 Cal/g", hi: "0.8 Cal/g"},
+            {en: "8 Cal/g", hi: "8 Cal/g"},
+            {en: "80 Cal/g", hi: "80 Cal/g"},
+            {en: "536 Cal/g", hi: "536 Cal/g"}
+        ],
+        correct: 2
+    },
+    {
+        id: 144,
+        q_en: "The latent heat of steam is:",
+        q_hi: "वाष्प की गुप्त ऊष्मा होती है-",
+        options: [
+            {en: "536 Cal/g", hi: "536 Cal/g"},
+            {en: "336 Cal/g", hi: "336 Cal/g"},
+            {en: "542 Cal/g", hi: "542 Cal/g"},
+            {en: "340 Cal/g", hi: "340 Cal/g"}
+        ],
+        correct: 0
+    },
+    {
+        id: 145,
+        q_en: "Steam causes more severe burns than boiling water because:",
+        q_hi: "भाप से हाथ अधिक जलता है, अपेक्षाकृत उबलते जल से क्योंकि-",
+        options: [
+            {en: "Steam has latent heat", hi: "भाप में गुप्त ऊष्मा होती है।"},
+            {en: "Steam penetrates body", hi: "भाप शरीर के भीतर घुस जाती है।"},
+            {en: "Steam has more striking power", hi: "भाप में अधिक मारक क्षमता होती है।"},
+            {en: "Steam is lighter", hi: "भाप हल्की होती है।"}
+        ],
+        correct: 0
+    },
+    {
+        id: 146,
+        q_en: "The First Law of Thermodynamics is related to the conservation of:",
+        q_hi: "ऊष्मागतिकी के प्रथम नियम से संरक्षित होता है-",
+        options: [
+            {en: "Momentum", hi: "संवेग"},
+            {en: "Energy", hi: "ऊर्जा"},
+            {en: "Momentum & Energy", hi: "संवेग और ऊर्जा दोनों"},
+            {en: "None of these", hi: "इनमें से कोई नहीं"}
+        ],
+        correct: 1
+    },
+    {
+        id: 147,
+        q_en: "The concept of Internal Energy is derived from which law of thermodynamics?",
+        q_hi: "आन्तरिक ऊर्जा की संकल्पना ऊष्मागतिकी के किस नियम से मिलती है ?",
+        options: [
+            {en: "Zeroth Law", hi: "शून्यांक नियम"},
+            {en: "First Law", hi: "प्रथम नियम"},
+            {en: "Second Law", hi: "द्वितीय नियम"},
+            {en: "Third Law", hi: "तृतीय नियम"}
+        ],
+        correct: 1
+    },
+    {
+        id: 148,
+        q_en: "In an Adiabatic Change:",
+        q_hi: "रुद्धोष्म परिवर्तन (Adiabatic Change) में-",
+        options: [
+            {en: "Heat remains constant", hi: "ऊष्मा अपरिवर्तित रहती है"},
+            {en: "Temperature remains constant", hi: "ताप अपरिवर्तित रहती है"},
+            {en: "Both heat & temp change", hi: "ऊष्मा व ताप दोनों बदलते हैं"},
+            {en: "None of these", hi: "इनमें से कोई नहीं"}
+        ],
+        correct: 0
+    },
+    {
+        id: 149,
+        q_en: "In an Isothermal Change:",
+        q_hi: "समतापीय परिवर्तन (Isothermal Change) में-",
+        options: [
+            {en: "Heat remains constant", hi: "ऊष्मा अपरिवर्तित रहती है"},
+            {en: "Temperature remains constant", hi: "ताप अपरिवर्तित रहती है"},
+            {en: "Both heat & temp change", hi: "ऊष्मा व ताप दोनों बदलते हैं"},
+            {en: "None of these", hi: "इनमें से कोई नहीं"}
+        ],
+        correct: 1
+    },
+    {
+        id: 150,
+        q_en: "The function of a Thermostat in a refrigerator is:",
+        q_hi: "रेफ्रिजरेटर में थर्मोस्टेट (Thermostat) का कार्य है-",
+        options: [
+            {en: "To lower temp", hi: "तापमान को कम करना"},
+            {en: "To increase freezing temp", hi: "हिमायन ताप को बढ़ाना"},
+            {en: "To maintain constant temperature", hi: "एक समान तापमान बनाये रखना"},
+            {en: "To decrease melting point", hi: "गलनांक को घटाना"}
+        ],
+        correct: 2
+    },
+    {
+        id: 151,
+        q_en: "First law of thermodynamics is generally related to:",
+        q_hi: "तापगतिकी का प्रथम नियम सामान्यतया किसके सम्बद्ध मामला है ?",
+        options: [
+            {en: "Charles's Law", hi: "चार्ल्स नियम"},
+            {en: "Law of Conservation of Energy", hi: "ऊर्जा के संरक्षण के नियम"},
+            {en: "Law of Heat Exchange", hi: "ऊष्मा विनिमय के नियम"},
+            {en: "Newton's Law of Cooling", hi: "न्यूटन के शीतलन नियम"}
+        ],
+        correct: 1
+    }
+];
+
+/* --- LOGIC --- */
+const app = {
+    questions: [],
+    currentIdx: 0,
+    score: 0,
+    timer: null,
+    timeLimit: 0,
+    remainingTime: 0,
+
+    init: () => {
+        // Confetti Canvas sizing
+        const canvas = document.getElementById('confetti-canvas');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    },
+
+    startQuiz: () => {
+        const timeInput = document.getElementById('timeInput').value;
+        const shuffle = document.getElementById('shuffleToggle').checked;
+        
+        app.timeLimit = parseInt(timeInput) || 0;
+        app.questions = [...RAW_DATA];
+        
+        if (shuffle) {
+            app.questions.sort(() => Math.random() - 0.5);
+        }
+
+        app.currentIdx = 0;
+        app.score = 0;
+        document.getElementById('start-screen').classList.remove('active');
+        document.getElementById('quiz-screen').classList.add('active');
+        app.loadQuestion();
+    },
+
+    loadQuestion: () => {
+        if (app.currentIdx >= app.questions.length) {
+            app.finishQuiz();
+            return;
+        }
+
+        // Reset State
+        clearInterval(app.timer);
+        const q = app.questions[app.currentIdx];
+        const ui = {
+            counter: document.getElementById('q-counter'),
+            score: document.getElementById('score-display'),
+            timer: document.getElementById('timer-display'),
+            qEn: document.getElementById('q-text-en'),
+            qHi: document.getElementById('q-text-hi'),
+            opts: document.getElementById('options-container'),
+            prog: document.getElementById('progressBar')
+        };
+
+        // Update Text
+        ui.counter.innerText = `Q: ${app.currentIdx + 1}/${app.questions.length}`;
+        ui.score.innerText = `Score: ${app.score}`;
+        ui.qEn.innerText = `${q.id}. ${q.q_en}`;
+        ui.qHi.innerText = q.q_hi;
+        ui.prog.style.width = `${((app.currentIdx) / app.questions.length) * 100}%`;
+
+        // Render Options
+        ui.opts.innerHTML = '';
+        q.options.forEach((opt, idx) => {
+            const btn = document.createElement('div');
+            btn.className = 'option-btn';
+            btn.innerHTML = `<span class="opt-en">${String.fromCharCode(97+idx)}) ${opt.en}</span><span class="opt-hi">${opt.hi}</span>`;
+            btn.onclick = () => app.handleAnswer(idx, btn);
+            ui.opts.appendChild(btn);
+        });
+
+        // Timer Logic
+        ui.timer.classList.remove('timer-pulse');
+        if (app.timeLimit > 0) {
+            app.remainingTime = app.timeLimit;
+            ui.timer.innerText = app.remainingTime;
+            app.timer = setInterval(() => {
+                app.remainingTime--;
+                ui.timer.innerText = app.remainingTime;
+                
+                if (app.remainingTime < 5) ui.timer.classList.add('timer-pulse');
+                
+                if (app.remainingTime <= 0) {
+                    clearInterval(app.timer);
+                    app.handleTimeout();
+                }
+            }, 1000);
+        } else {
+            ui.timer.innerText = "∞";
+        }
+    },
+
+    handleAnswer: (selectedIdx, btnElement) => {
+        if (document.querySelector('.option-btn.clicked')) return; // Prevent double click
+        clearInterval(app.timer);
+
+        const btns = document.querySelectorAll('.option-btn');
+        btns.forEach(b => {
+            b.classList.add('clicked');
+            b.style.pointerEvents = 'none';
+        });
+
+        const q = app.questions[app.currentIdx];
+        const correct = q.correct === selectedIdx;
+
+        if (correct) {
+            btnElement.classList.add('correct');
+            app.score++;
+            app.playSound('correct');
+            confetti.fire();
+        } else {
+            btnElement.classList.add('wrong');
+            btns[q.correct].classList.add('correct');
+            app.playSound('wrong');
+        }
+
+        setTimeout(() => {
+            app.currentIdx++;
+            app.loadQuestion();
+        }, 1500);
+    },
+
+    handleTimeout: () => {
+        const btns = document.querySelectorAll('.option-btn');
+        const q = app.questions[app.currentIdx];
+        btns.forEach(b => b.style.pointerEvents = 'none');
+        btns[q.correct].classList.add('correct');
+        app.playSound('wrong');
+        setTimeout(() => {
+            app.currentIdx++;
+            app.loadQuestion();
+        }, 1500);
+    },
+
+    finishQuiz: () => {
+        clearInterval(app.timer);
+        document.getElementById('quiz-screen').classList.remove('active');
+        document.getElementById('result-screen').classList.add('active');
+
+        // Logic for incomplete quiz (Early Exit)
+        const totalAnswered = app.currentIdx; // Questions seen so far
+        // If finished naturally, totalAnswered is questions.length. 
+        // If early exit, it's current index.
+        const totalQs = app.questions.length; // Or should we base it on what they attempted? 
+        // Usually early exit implies calculating score based on what was done or total. 
+        // Let's stick to simple Total Score / Total Questions.
+        
+        const percentage = Math.round((app.score / totalQs) * 100);
+        const scoreEl = document.getElementById('final-score');
+        const fbEl = document.getElementById('feedback-text');
+        const emojiEl = document.getElementById('result-emoji');
+
+        scoreEl.innerText = `${percentage}%`;
+        document.getElementById('res-correct').innerText = app.score;
+        document.getElementById('res-wrong').innerText = totalAnswered - app.score;
+
+        if (percentage >= 80) {
+            fbEl.innerText = "🏆 Outstanding Performance!";
+            emojiEl.innerText = "🏆";
+            confetti.fire();
+        } else if (percentage >= 50) {
+            fbEl.innerText = "👏 Well Done! Keep it up.";
+            emojiEl.innerText = "👏";
+        } else {
+            fbEl.innerText = "📚 Practice makes perfect! Try again.";
+            emojiEl.innerText = "😢";
+        }
+    },
+
+    playSound: (type) => {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContext) return;
+        
+        const ctx = new AudioContext();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        if (type === 'correct') {
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(600, ctx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(1000, ctx.currentTime + 0.1);
+            gain.gain.setValueAtTime(0.1, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+            osc.start();
+            osc.stop(ctx.currentTime + 0.3);
+        } else {
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(150, ctx.currentTime);
+            osc.frequency.linearRampToValueAtTime(100, ctx.currentTime + 0.2);
+            gain.gain.setValueAtTime(0.1, ctx.currentTime);
+            gain.gain.linearRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+            osc.start();
+            osc.stop(ctx.currentTime + 0.3);
+        }
+    }
+};
+
+/* --- MINI CONFETTI ENGINE (No External Libs) --- */
+const confetti = {
+    particles: [],
+    fire: () => {
+        const canvas = document.getElementById('confetti-canvas');
+        const ctx = canvas.getContext('2d');
+        const colors = ['#ff0', '#f0f', '#0ff', '#0f0', '#f00'];
+        
+        for(let i=0; i<100; i++) {
+            confetti.particles.push({
+                x: canvas.width / 2,
+                y: canvas.height / 2,
+                vx: (Math.random() - 0.5) * 20,
+                vy: (Math.random() - 0.5) * 20,
+                color: colors[Math.floor(Math.random() * colors.length)],
+                size: Math.random() * 5 + 2,
+                life: 100
+            });
+        }
+        
+        if (!confetti.running) {
+            confetti.running = true;
+            confetti.loop();
+        }
+    },
+    running: false,
+    loop: () => {
+        const canvas = document.getElementById('confetti-canvas');
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        confetti.particles.forEach((p, index) => {
+            p.x += p.vx;
+            p.y += p.vy;
+            p.vy += 0.2; // Gravity
+            p.life--;
+            ctx.fillStyle = p.color;
+            ctx.fillRect(p.x, p.y, p.size, p.size);
+            
+            if (p.life <= 0) confetti.particles.splice(index, 1);
+        });
+        
+        if (confetti.particles.length > 0) {
+            requestAnimationFrame(confetti.loop);
+        } else {
+            confetti.running = false;
+        }
+    }
+};
+
+window.onload = app.init;
+</script>
+</body>
+</html>

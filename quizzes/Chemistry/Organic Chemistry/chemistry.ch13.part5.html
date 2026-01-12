@@ -1,0 +1,1051 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chemistry Quiz (201-241) | रसायन विज्ञान</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --text-main: #ffffff;
+            --text-sub: #e0e0e0;
+            --accent-green: #00e676;
+            --accent-red: #ff1744;
+            --accent-blue: #2979ff;
+            --accent-pink: #f50057;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #ff758c 100%);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--text-main);
+            overflow-x: hidden;
+            padding: 10px;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Glassmorphism Card */
+        .glass-container {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 25px;
+            padding: 30px;
+            width: 100%;
+            max-width: 800px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            min-height: 600px;
+            transition: all 0.3s ease;
+        }
+
+        .screen {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            height: 100%;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Typography */
+        h1, h2 {
+            text-align: center;
+            margin-bottom: 15px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .hindi-sub {
+            font-size: 0.85em;
+            color: var(--text-sub);
+            display: block;
+            margin-top: 6px;
+            font-weight: 400;
+            line-height: 1.4;
+        }
+
+        /* Inputs & Controls */
+        .control-group {
+            margin: 20px 0;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        input[type="number"] {
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
+            padding: 15px;
+            border-radius: 15px;
+            color: white;
+            font-family: 'Poppins', sans-serif;
+            font-size: 1.1rem;
+            outline: none;
+            text-align: center;
+            transition: border-color 0.3s;
+        }
+
+        input[type="number"]:focus {
+            border-color: var(--accent-blue);
+        }
+
+        input[type="number"]::placeholder { color: rgba(255,255,255,0.6); }
+
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(0,0,0,0.2);
+            padding: 15px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+        }
+
+        /* Buttons */
+        .btn {
+            background: linear-gradient(90deg, #ff8a00, #e52e71);
+            border: none;
+            padding: 16px 40px;
+            color: white;
+            font-size: 1.2rem;
+            font-weight: 600;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: auto;
+            width: 100%;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+        }
+
+        .btn:hover {
+            transform: scale(1.02);
+            box-shadow: 0 10px 25px rgba(229, 46, 113, 0.4);
+        }
+
+        .btn-finish {
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.2);
+            font-size: 1rem;
+            margin-top: 20px;
+        }
+
+        .btn-finish:hover {
+            background: rgba(255,255,255,0.25);
+        }
+
+        /* Quiz UI */
+        .top-bar {
+            width: 100%;
+            margin-bottom: 25px;
+        }
+
+        .progress-container {
+            width: 100%;
+            height: 6px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            margin-bottom: 15px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: var(--accent-green);
+            width: 0%;
+            transition: width 0.3s ease;
+            box-shadow: 0 0 15px var(--accent-green);
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.95rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .question-box {
+            background: rgba(0,0,0,0.2);
+            padding: 25px;
+            border-radius: 20px;
+            width: 100%;
+            margin-bottom: 25px;
+            border-left: 5px solid var(--accent-pink);
+        }
+
+        .question-text {
+            font-size: 1.15rem;
+            line-height: 1.6;
+            font-weight: 600;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+            width: 100%;
+        }
+
+        @media (min-width: 600px) {
+            .options-grid { grid-template-columns: 1fr 1fr; }
+        }
+
+        .option-btn {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.15);
+            padding: 16px;
+            border-radius: 15px;
+            text-align: left;
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: 'Poppins', sans-serif;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            background: rgba(255,255,255,0.25);
+            transform: translateX(5px);
+        }
+
+        .option-btn.correct {
+            background: rgba(0, 230, 118, 0.7) !important;
+            border-color: var(--accent-green);
+        }
+
+        .option-btn.wrong {
+            background: rgba(255, 23, 68, 0.7) !important;
+            border-color: var(--accent-red);
+        }
+
+        /* Timer */
+        .timer-badge {
+            width: 55px;
+            height: 55px;
+            border-radius: 50%;
+            border: 3px solid white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+            margin: 0 auto 20px auto;
+            transition: all 0.3s;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+
+        .timer-badge.pulse {
+            border-color: var(--accent-red);
+            color: var(--accent-red);
+            animation: pulse 1s infinite;
+            background: rgba(255, 23, 68, 0.2);
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 23, 68, 0.7); }
+            70% { transform: scale(1.1); box-shadow: 0 0 0 10px rgba(255, 23, 68, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 23, 68, 0); }
+        }
+
+        /* Feedback Overlay */
+        #feedback-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .emoji-feedback {
+            font-size: 6rem;
+            opacity: 0;
+            transform: scale(0.5);
+            transition: opacity 0.2s, transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            text-shadow: 0 4px 20px rgba(0,0,0,0.5);
+        }
+
+        .emoji-feedback.show {
+            opacity: 1;
+            transform: scale(1);
+            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+        }
+
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+            40%, 60% { transform: translate3d(4px, 0, 0); }
+        }
+
+        /* Particles */
+        .particle {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: #fff;
+            border-radius: 50%;
+            z-index: 9999;
+        }
+
+        /* Results */
+        .score-big {
+            font-size: 4.5rem;
+            font-weight: 700;
+            margin: 20px 0;
+            background: -webkit-linear-gradient(top, #ffffff, #e0e0e0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+        }
+    </style>
+</head>
+<body>
+
+    <div class="glass-container">
+        
+        <div id="start-screen" class="screen active" style="justify-content: center;">
+            <h1 style="font-size: 2.5rem;">Chemistry Quiz <br><span class="hindi-sub" style="font-size: 1.2rem; color: #fff;">रसायन विज्ञान (201-241)</span></h1>
+            
+            <div style="width: 100%; padding: 0 20px; margin-top: 30px;">
+                <div class="control-group">
+                    <label>Timer per Question (Seconds) <br><span class="hindi-sub">टाइमर (सेकंड)</span></label>
+                    <input type="number" id="timer-input" placeholder="0 = Unlimited" value="30">
+                </div>
+
+                <div class="toggle-container">
+                    <div>
+                        <strong>Shuffle Questions</strong>
+                        <span class="hindi-sub">प्रश्नों को मिलाएं</span>
+                    </div>
+                    <input type="checkbox" id="shuffle-toggle" checked style="width: 20px; height: 20px; accent-color: var(--accent-pink);">
+                </div>
+
+                <button class="btn" onclick="app.startQuiz()">Start Quiz <span class="hindi-sub" style="display:inline; color:inherit;">शुरू करें</span></button>
+            </div>
+        </div>
+
+        <div id="quiz-screen" class="screen">
+            <div class="top-bar">
+                <div class="progress-container">
+                    <div id="progress-bar" class="progress-bar"></div>
+                </div>
+                <div class="stats">
+                    <span id="q-counter">Q: 1/41</span>
+                    <span id="score-counter">Score: 0</span>
+                </div>
+            </div>
+
+            <div id="timer-badge" class="timer-badge">--</div>
+
+            <div class="question-box">
+                <div id="question-text" class="question-text">Loading...</div>
+            </div>
+
+            <div id="options-container" class="options-grid">
+                </div>
+
+            <button class="btn btn-finish" onclick="app.finishQuiz()">Finish & Show Results <span class="hindi-sub" style="display:inline; color: inherit;">परिणाम देखें</span></button>
+        </div>
+
+        <div id="result-screen" class="screen" style="justify-content: center;">
+            <h1>Result <span class="hindi-sub" style="display:inline;">परिणाम</span></h1>
+            <div id="final-score" class="score-big">0%</div>
+            <p id="result-message" style="font-size: 1.2rem; margin-bottom: 10px; text-align: center; padding: 0 20px;">Message</p>
+            <p id="stats-detail" style="opacity: 0.8; margin-bottom: 30px;">Correct: 0 | Total: 41</p>
+            <button class="btn" onclick="app.resetQuiz()">Restart Quiz <span class="hindi-sub" style="display:inline; color: inherit;">पुनः प्रयास करें</span></button>
+        </div>
+
+    </div>
+
+    <div id="feedback-overlay">
+        <div id="emoji-display" class="emoji-feedback">😢</div>
+    </div>
+
+    <script>
+        // Database: Questions 201-241 extracted from images
+        const rawQuestions = [
+            {
+                q: {en: "Which statement is not correct regarding polymerization?", hi: "बहुलीकरण के संदर्भ में कौन-सा कथन सही नहीं है?"},
+                options: [
+                    {en: "It is a reversible reaction", hi: "यह एक उत्क्रमणीय अभिक्रिया है"},
+                    {en: "Different types of molecules combine in it", hi: "इसमें भिन्न-भिन्न प्रकार के अणु परस्पर संयोग करते हैं"},
+                    {en: "Molecular weight of polymer is integral multiple of monomer", hi: "बहुलक यौगिक का अणुभार आरम्भिक यौगिक के अणुभार का पूर्ण गुणक होता है"},
+                    {en: "Carbon atoms do not form new bonds in this", hi: "इसमें कार्बन परमाणु नया बंधन नहीं बनाते हैं"}
+                ],
+                ans: 3 // Carbon atoms DO form new bonds (e.g., pi to sigma).
+            },
+            {
+                q: {en: "Example of polymerization is:", hi: "बहुलीकरण का उदाहरण है-"},
+                options: [
+                    {en: "Acetylene to Benzene", hi: "ऐसीटिलीन का बेन्जीन में परिवर्तन"},
+                    {en: "Formaldehyde to Trioxane", hi: "फॉर्मेल्डिहाइड का ट्राइऑक्सेन में परिवर्तन"},
+                    {en: "Acetaldehyde to Paraldehyde", hi: "ऐसीटेल्डिहाइड का पैरेल्डिहाइड में परिवर्तन"},
+                    {en: "All of the above", hi: "उपर्युक्त सभी"}
+                ],
+                ans: 3
+            },
+            {
+                q: {en: "Which is not correct regarding 'Polymer'?", hi: "'बहुलक' के संदर्भ में निम्नलिखित में कौन-सा एक सही नहीं है ?"},
+                options: [
+                    {en: "Small molecules combine regularly to form polymer", hi: "छोटे-छोटे सरल अणु नियमित तरीके से परस्पर संयुक्त होकर बहुलक का निर्माण करते हैं"},
+                    {en: "Small molecules forming polymer are called monomers", hi: "छोटे-छोटे अणु जिनसे बहुलक का निर्माण होता है, एकलक कहलाते हैं"},
+                    {en: "Process of forming polymer is polymerization", hi: "बहुलक बनने की प्रक्रिया को बहुलीकरण कहते हैं"},
+                    {en: "Polymers have very low molecular mass", hi: "बहुलक काफी निम्न आण्विक द्रव्यमान वाले अणु होते हैं"}
+                ],
+                ans: 3
+            },
+            {
+                q: {en: "Which is not a natural polymer?", hi: "निम्नलिखित में कौन-सा एक प्राकृतिक बहुलक नहीं है ?"},
+                options: [
+                    {en: "Rubber", hi: "रबड़"},
+                    {en: "Protein", hi: "प्रोटीन"},
+                    {en: "Cellulose", hi: "सेलुलोज"},
+                    {en: "Nylon", hi: "नाइलन"}
+                ],
+                ans: 3
+            },
+            {
+                q: {en: "Natural rubber is a polymer of which hydrocarbon?", hi: "प्राकृतिक रबड़ किस हाइड्रोकार्बन का बहुलक है ?"},
+                options: [
+                    {en: "Ethylene", hi: "एथिलीन"},
+                    {en: "Isoprene", hi: "आइसोप्रीन"},
+                    {en: "Styrene", hi: "स्टाइरीन"},
+                    {en: "Teflon", hi: "टेफ्लॉन"}
+                ],
+                ans: 1
+            },
+            {
+                q: {en: "Which synthetic polymer resembles natural rubber?", hi: "निम्नलिखित में कौन-सा संश्लेषित बहुलक, प्राकृतिक रबड़ के सदृश है ?"},
+                options: [
+                    {en: "Neoprene", hi: "नियोप्रीन"},
+                    {en: "Orlon", hi: "ऑर्लोन"},
+                    {en: "Teflon", hi: "टेफ्लॉन"},
+                    {en: "Polystyrene", hi: "पॉलिस्टाइरीन"}
+                ],
+                ans: 0
+            },
+            {
+                q: {en: "Neoprene rubber is obtained by polymerization of:", hi: "नियोप्रीन रबड़ को प्राप्त किया जाता है निम्नांकित में किसके बहुलीकरण द्वारा ?"},
+                options: [
+                    {en: "Chloroprene", hi: "क्लोरोप्रीन"},
+                    {en: "Isoprene", hi: "आइसोप्रीन"},
+                    {en: "Acetylene", hi: "ऐसीटिलीन"},
+                    {en: "Butadiene", hi: "ब्यूटाडाईन"}
+                ],
+                ans: 0
+            },
+            {
+                q: {en: "First industrial synthetic rubber is:", hi: "पहला औद्योगिक संश्लिष्ट रबड़ है-"},
+                options: [
+                    {en: "Buna-N rubber", hi: "ब्यूना-N-रबड़"},
+                    {en: "Buna-S rubber", hi: "ब्यूना-S-रबड़"},
+                    {en: "Methyl rubber", hi: "मेथिल रबड़"},
+                    {en: "None", hi: "इनमें से कोई नहीं"}
+                ],
+                ans: 2
+            },
+            {
+                q: {en: "Which polymer contains ester bond?", hi: "निम्न में किस बहुलक में एस्टर बंध होता है ?"},
+                options: [
+                    {en: "Terylene", hi: "टेरिलीन में"},
+                    {en: "Nylon", hi: "नायलॉन में"},
+                    {en: "Teflon", hi: "टेफ्लॉन में"},
+                    {en: "Bakelite", hi: "बेकेलाइट में"}
+                ],
+                ans: 0
+            },
+            {
+                q: {en: "Fiber obtained by condensation of Adipic acid and Hexamethylene diamine is:", hi: "ऐडिपिक अम्ल एवं हेक्सामेथिलीन डाइएमीन के संघनन द्वारा प्राप्त होने वाला रेशा है-"},
+                options: [
+                    {en: "Nylon", hi: "नायलॉन"},
+                    {en: "Caprolactam", hi: "कैप्रोलैक्टम"},
+                    {en: "Teflon", hi: "टेफ्लॉन"},
+                    {en: "Polystyrene", hi: "पॉलिस्टाइरी"}
+                ],
+                ans: 0 // Note: Source lists nylon, specifically nylon-6,6.
+            },
+            {
+                q: {en: "Phenol is used in the manufacture of which of the following?", hi: "फिनॉल निम्नलिखित में किसके निर्माण में प्रयुक्त होता है ?"},
+                options: [
+                    {en: "Polystyrene", hi: "पॉलिस्टाइरीन"},
+                    {en: "Bakelite", hi: "बेकेलाइट"},
+                    {en: "Nylon", hi: "नायलॉन"},
+                    {en: "PVC", hi: "PVC"}
+                ],
+                ans: 1
+            },
+            {
+                q: {en: "Orlon is a polymer of:", hi: "ऑर्लोन बहुलक है-"},
+                options: [
+                    {en: "Tetrafluoroethylene", hi: "टेट्राफ्लोरोएथीन का"},
+                    {en: "Acrylonitrile", hi: "ऐक्रिलोनाइट्राइल का"},
+                    {en: "Ethanoic Acid", hi: "एथेनोइक अम्ल का"},
+                    {en: "Benzene", hi: "बेंजीन का"}
+                ],
+                ans: 1
+            },
+            {
+                q: {en: "PMMA is a polymer of:", hi: "PMMA बहुलक है-"},
+                options: [
+                    {en: "Methyl Acrylate", hi: "मेथिल एक्रिलेट का"},
+                    {en: "Methyl Methacrylate", hi: "मेथिल मेथिल एक्रिलेट का"},
+                    {en: "Ethyl Acrylate", hi: "एथिल एक्रिलेट का"},
+                    {en: "All of these", hi: "इनमें से सभी"}
+                ],
+                ans: 1
+            },
+            {
+                q: {en: "Which is used to make non-stick cookware?", hi: "न चिपकने वाले भोजन बनानेवाले बर्तनों को बनाने में किसका प्रयोग होता है ?"},
+                options: [
+                    {en: "Polystyrene", hi: "पॉलिस्टाइरीन का"},
+                    {en: "Polytetrafluoroethylene (Teflon)", hi: "पॉलिटेट्राक्लोरो एथीन का"},
+                    {en: "Polythene", hi: "पॉलीथीन का"},
+                    {en: "None", hi: "इनमें से कोई नहीं"}
+                ],
+                ans: 1
+            },
+            {
+                q: {en: "Caprolactam is monomer of:", hi: "कैप्रोलैक्टम निम्नलिखित में किसका मोनोमर है ?"},
+                options: [
+                    {en: "Nylon-6", hi: "नायलॉन-6"},
+                    {en: "Nylon-6,6", hi: "नायलॉन-6,6"},
+                    {en: "Nylon-2-Nylon-6", hi: "नायलॉन 2-नायलॉन 6"},
+                    {en: "Terylene", hi: "टेरिलीन"}
+                ],
+                ans: 0
+            },
+            {
+                q: {en: "Terylene is made by reaction of Terephthalic acid and...?", hi: "टेरिलीन बनायी जाती है टेट्राथैलिक अम्ल तथा निम्नलिखित की प्रतिक्रिया से-"},
+                options: [
+                    {en: "Ethylene", hi: "इथिलीन"},
+                    {en: "Acetylene", hi: "ऐसीटिलीन"},
+                    {en: "Xylene", hi: "जाइलीन"},
+                    {en: "Ethylene Glycol", hi: "इथिलीन ग्लाइकॉल"}
+                ],
+                ans: 3
+            },
+            {
+                q: {en: "Orlon is a polymer made from:", hi: "ऑर्लोन (Orlon) किससे बनने वाला पॉलीमर है ?"},
+                options: [
+                    {en: "Acrylonitrile", hi: "ऐक्रिलोनाइट्राइल"},
+                    {en: "Neoprene", hi: "नियोप्रीन"},
+                    {en: "Vinyl Chloride", hi: "विनाइल क्लोराइड"},
+                    {en: "Tetrafluoroethylene", hi: "टेट्राफ्लुओरो एथिलीन"}
+                ],
+                ans: 0
+            },
+            {
+                q: {en: "What is Teflon?", hi: "टेफ्लॉन क्या है ?"},
+                options: [
+                    {en: "Fluorocarbon", hi: "फ्लुओरो कार्बन"},
+                    {en: "Hydrocarbon", hi: "हाइड्रो कार्बन"},
+                    {en: "Germicide", hi: "रोगाणुनाशक"},
+                    {en: "Insecticide", hi: "कीटनाशक"}
+                ],
+                ans: 0
+            },
+            {
+                q: {en: "Obtained by polymerization of Chloroethylene?", hi: "क्लोरो इथिलीन के बहुलीकरण से प्राप्त होता है ?"},
+                options: [
+                    {en: "Urea", hi: "यूरिया"},
+                    {en: "Polyethene", hi: "पॉलीथीन"},
+                    {en: "PVC", hi: "PVC"},
+                    {en: "Rubber", hi: "रबड़"}
+                ],
+                ans: 2
+            },
+            {
+                q: {en: "Which is not a natural polymer?", hi: "निम्नलिखित में से कौन प्राकृतिक बहुलक नहीं है ?"},
+                options: [
+                    {en: "Silk", hi: "रेशम"},
+                    {en: "Wool", hi: "ऊन"},
+                    {en: "Nylon", hi: "नाइलोन"},
+                    {en: "Leather", hi: "चमड़ा"}
+                ],
+                ans: 2
+            },
+            {
+                q: {en: "Which is not a polymer?", hi: "निम्नलिखित में कौन-सा एक बहुलक नहीं है ?"},
+                options: [
+                    {en: "Nylon", hi: "नायलॉन"},
+                    {en: "Caprolactam", hi: "कैप्रोलैक्टम"},
+                    {en: "Teflon", hi: "टेफ्लॉन"},
+                    {en: "Polystyrene", hi: "पॉलिस्टाइरी"}
+                ],
+                ans: 1
+            },
+            {
+                q: {en: "Which polymer is used to make bullet proof windows?", hi: "निम्नलिखित में से कौन-सा बहुलक बुलेट प्रूफ खिड़की बनाने में उपयोग किया जाता है ?"},
+                options: [
+                    {en: "Polycarbonate", hi: "पॉलिकार्बोनेट"},
+                    {en: "Polyurethane", hi: "पॉलियूरिथेन"},
+                    {en: "Polystyrene", hi: "पॉलिस्टाइरीन"},
+                    {en: "Polyamide", hi: "पॉलिएमाइड"}
+                ],
+                ans: 0
+            },
+            {
+                q: {en: "Which polymer is used in making non-stick pans?", hi: "निम्नलिखित बहुलकों में से किसका उपयोग ना-चिपकने वाली कड़ाही के निर्माण में किया जाता है ?"},
+                options: [
+                    {en: "PVC", hi: "पी. वी. सी."},
+                    {en: "Teflon", hi: "टेफ्लॉन"},
+                    {en: "Neoprene", hi: "नियोप्रीन"},
+                    {en: "Gutta Percha", hi: "ब्यूटा N रबड़"}
+                ],
+                ans: 1
+            },
+            {
+                q: {en: "Bakelite is a polymer of Phenol and...?", hi: "बेकेलाइट, फिनॉल तथा अन्य किसका बहुलक है ?"},
+                options: [
+                    {en: "Benzaldehyde", hi: "बेन्जेल्डिहाइड"},
+                    {en: "Cinnamaldehyde", hi: "सिनेल्डिहाइड"},
+                    {en: "Formaldehyde", hi: "फॉर्मेल्डिहाइड"},
+                    {en: "Acetaldehyde", hi: "ऐसीटल्डिहाइड"}
+                ],
+                ans: 2
+            },
+            {
+                q: {en: "Raincoats are made of?", hi: "बरसाती किसे बनाया जाता है ?"},
+                options: [
+                    {en: "Polyethylene", hi: "पॉली इथिलीन"},
+                    {en: "Polystyrene", hi: "पॉली स्टाइरीन"},
+                    {en: "Polycarbonates", hi: "पॉली कार्बोनेट्स"},
+                    {en: "Polychloroethene (PVC)", hi: "पॉली क्लोरोएथीन"}
+                ],
+                ans: 3
+            },
+            {
+                q: {en: "PVC is formed by polymerization of?", hi: "निम्नलिखित में से किसके बहुलीकरण से PVC बनता है ?"},
+                options: [
+                    {en: "Propene", hi: "प्रोटीन"},
+                    {en: "Vinyl Chloride", hi: "विनाइल क्लोराइड"},
+                    {en: "Styrene", hi: "स्टाइरीन"},
+                    {en: "Acetylene", hi: "ऐसीटिलीन"}
+                ],
+                ans: 1
+            },
+            {
+                q: {en: "Teflon plastic is formed by polymerization of which compound?", hi: "टेफ्लॉन नामक प्लास्टिक का निर्माण किस यौगिक के बहुलीकरण द्वारा होता है ?"},
+                options: [
+                    {en: "Ethylene", hi: "इथिलीन"},
+                    {en: "Acetylene", hi: "ऐसीटिलीन"},
+                    {en: "Benzene", hi: "बेन्जीन"},
+                    {en: "Tetrafluoroethylene", hi: "टेट्राफ्लोरो इथिलीन"}
+                ],
+                ans: 3
+            },
+            {
+                q: {en: "First man-made artificial fiber was?", hi: "मानव निर्मित प्रथम कृत्रिम रेशा था ?"},
+                options: [
+                    {en: "Rayon", hi: "रेयॉन"},
+                    {en: "Nylon", hi: "नायलॉन"},
+                    {en: "Polyester", hi: "पॉलिस्टर"},
+                    {en: "Terricot", hi: "टेरीकॉट"}
+                ],
+                ans: 0
+            },
+            {
+                q: {en: "Nylon is:", hi: "नायलॉन है-"},
+                options: [
+                    {en: "Vinyl polymer", hi: "विनाइल बहुलक"},
+                    {en: "Polyamide", hi: "पॉलिएमाइड"},
+                    {en: "Polyester", hi: "पॉलिएस्टर"},
+                    {en: "Polysaccharide", hi: "पॉलीसैकेराइड"}
+                ],
+                ans: 1
+            },
+            {
+                q: {en: "Artificial silk is also known as?", hi: "कृत्रिम रेशम को अन्य किस नाम से जाना जाता है ?"},
+                options: [
+                    {en: "Rayon", hi: "रेयॉन"},
+                    {en: "Dacron", hi: "डेक्रॉन"},
+                    {en: "Nylon", hi: "नायलॉन"},
+                    {en: "Fiber glass", hi: "रेशा काँच"}
+                ],
+                ans: 0
+            },
+            {
+                q: {en: "Which is a natural fiber?", hi: "निम्नलिखित में कौन प्राकृतिक रेशा है ?"},
+                options: [
+                    {en: "Resin", hi: "रेजीन"},
+                    {en: "Nylon", hi: "नायलॉन"},
+                    {en: "Silk", hi: "रेशम"},
+                    {en: "Polyester", hi: "पॉलिएस्टर"}
+                ],
+                ans: 2
+            },
+            {
+                q: {en: "Lac is:", hi: "लाह है-"},
+                options: [
+                    {en: "Natural Element", hi: "प्राकृतिक तत्व"},
+                    {en: "Natural Isotope", hi: "प्राकृतिक अपरूप"},
+                    {en: "Natural Polymer", hi: "प्राकृतिक बहुलक"},
+                    {en: "Artificial Polymer", hi: "कृत्रिम बहुलक"}
+                ],
+                ans: 2
+            },
+            {
+                q: {en: "Polymer obtained from condensation of HMDA and Adipic acid is?", hi: "हक्सा मिथाइलीन डायमाइन और एडिपिक एसिड के संघनन से प्राप्त पॉलीमर क्या होता है ?"},
+                options: [
+                    {en: "Bakelite", hi: "बेकेलाइट"},
+                    {en: "Nylon-66", hi: "नायलॉन 6 6"},
+                    {en: "Terylene", hi: "टेरीलीन"},
+                    {en: "Tollen's", hi: "टॉलेन्स"}
+                ],
+                ans: 1
+            },
+            {
+                q: {en: "Which monomer is used in synthesis of Nylon-6?", hi: "नायलॉन-6 के संश्लेषण में कौन-सा एकलक प्रयोग होता है ?"},
+                options: [
+                    {en: "HMDA and Adipic acid", hi: "हेक्सामेथिलीन डाइएमीन और एडिपिक अम्ल"},
+                    {en: "Caprolactam", hi: "कैप्रोलैक्टम"},
+                    {en: "Urea and Formaldehyde", hi: "यूरिया और फॉर्मेल्डिहाइड"},
+                    {en: "Phenol and Formaldehyde", hi: "फिनॉल और फॉर्मेल्डिहाइड"}
+                ],
+                ans: 1
+            },
+            {
+                q: {en: "Which is an example of non-cellulosic fiber?", hi: "निम्नलिखित में से कौन-सा एक गैर सेलूलोज रेशा का उदाहरण है ?"},
+                options: [
+                    {en: "Jute", hi: "जूट"},
+                    {en: "Rayon", hi: "रेयॉन"},
+                    {en: "Nylon", hi: "नायलॉन"},
+                    {en: "Linen", hi: "लिनन"}
+                ],
+                ans: 2
+            },
+            {
+                q: {en: "Which polymer cannot be biodegraded?", hi: "निम्नलिखित में से कौन-सा बहुलक जैव निम्नीकृत नहीं किया जा सकता है ?"},
+                options: [
+                    {en: "Cellulose", hi: "सेलुलोज"},
+                    {en: "Protein", hi: "प्रोटीन"},
+                    {en: "Starch", hi: "स्टार्च"},
+                    {en: "PVC", hi: "पीवीसी"}
+                ],
+                ans: 3
+            },
+            {
+                q: {en: "Consider the statements: 1. Nylon is polyamide. 2. Terylene is polyester.", hi: "निम्नलिखित कथनों पर विचार कीजिए- 1. नायलॉन एक पॉलिएमाइड रेशा है। 2. टेरीलीन एक पॉलिएस्टर रेशा है।"},
+                options: [
+                    {en: "Only 1", hi: "केवल 1"},
+                    {en: "Only 2", hi: "केवल 2"},
+                    {en: "Both 1 and 2", hi: "1 तथा 2 दोनों"},
+                    {en: "Neither 1 nor 2", hi: "न तो 1 न ही 2"}
+                ],
+                ans: 2
+            },
+            {
+                q: {en: "Plastic is:", hi: "प्लास्टिक है-"},
+                options: [
+                    {en: "Complex of saturated hydrocarbons", hi: "संतृप्त हाइड्रोकार्बन के जटिल यौगिक"},
+                    {en: "High polymer of unsaturated hydrocarbons", hi: "असंतृप्त हाइड्रोकार्बन के उच्च बहुलक"},
+                    {en: "Isomer of unsaturated hydrocarbons", hi: "असंतृप्त हाइड्रोकार्बन के समावयवी"},
+                    {en: "Inorganic complex", hi: "एक अकार्बनिक जटिल यौगिक"}
+                ],
+                ans: 1
+            },
+            {
+                q: {en: "Which plastic is used for packing food items?", hi: "कौन-सा प्लास्टिक खाने के पदार्थों को पैक करने में प्रयोग किया जाता है ?"},
+                options: [
+                    {en: "PVC", hi: "पॉली विनाइल क्लोराइड"},
+                    {en: "Polypropylene", hi: "पॉली प्रोपीलीन"},
+                    {en: "Polyethylene", hi: "पॉली इथिलीन"},
+                    {en: "Tetrafluoroethane", hi: "टेट्राफ्लोरो इथेन"}
+                ],
+                ans: 2
+            },
+            {
+                q: {en: "Polythene and PVC are:", hi: "पॉलिथीन तथा पी.वी.सी. है-"},
+                options: [
+                    {en: "Thermosetting plastic", hi: "थर्मोसेटिंग प्लास्टिक"},
+                    {en: "Thermoplastic", hi: "थर्मोप्लास्टिक"},
+                    {en: "Acrylic", hi: "ऐक्रेलिक"},
+                    {en: "All of these", hi: "इनमें से सभी"}
+                ],
+                ans: 1
+            },
+            {
+                q: {en: "Bakelite is:", hi: "बेकेलाइट है-"},
+                options: [
+                    {en: "Thermosetting plastic", hi: "थर्मोसेटिंग प्लास्टिक"},
+                    {en: "Thermoplastic", hi: "थर्मोप्लास्टिक"},
+                    {en: "Elastomer", hi: "इलास्टोमर"},
+                    {en: "None", hi: "इनमें से कोई नहीं"}
+                ],
+                ans: 0
+            }
+        ];
+
+        // App Logic
+        const app = {
+            currentQIndex: 0,
+            score: 0,
+            timer: null,
+            timeLeft: 0,
+            settings: { time: 30, shuffle: true },
+            activeQuestions: [],
+            audioCtx: null,
+
+            // Initialize Audio
+            initAudio: function() {
+                if (!this.audioCtx) this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            },
+
+            // Start Quiz
+            startQuiz: function() {
+                this.initAudio();
+                
+                // Get Settings
+                const timeVal = parseInt(document.getElementById('timer-input').value);
+                this.settings.time = isNaN(timeVal) ? 0 : timeVal;
+                this.settings.shuffle = document.getElementById('shuffle-toggle').checked;
+
+                // Prepare Data
+                this.activeQuestions = [...rawQuestions];
+                if(this.settings.shuffle) {
+                    this.activeQuestions.sort(() => Math.random() - 0.5);
+                }
+
+                // Reset
+                this.currentQIndex = 0;
+                this.score = 0;
+                document.getElementById('start-screen').classList.remove('active');
+                document.getElementById('result-screen').classList.remove('active');
+                document.getElementById('quiz-screen').classList.add('active');
+
+                this.loadQuestion();
+            },
+
+            // Load Question
+            loadQuestion: function() {
+                if (this.currentQIndex >= this.activeQuestions.length) {
+                    this.finishQuiz();
+                    return;
+                }
+
+                const data = this.activeQuestions[this.currentQIndex];
+                
+                // Update UI
+                document.getElementById('q-counter').innerText = `Q: ${this.currentQIndex + 1}/${this.activeQuestions.length}`;
+                document.getElementById('score-counter').innerText = `Score: ${this.score}`;
+                
+                const pct = ((this.currentQIndex) / this.activeQuestions.length) * 100;
+                document.getElementById('progress-bar').style.width = `${pct}%`;
+
+                document.getElementById('question-text').innerHTML = `
+                    ${data.q.en}
+                    <span class="hindi-sub">${data.q.hi}</span>
+                `;
+
+                // Options
+                const container = document.getElementById('options-container');
+                container.innerHTML = '';
+                data.options.forEach((opt, idx) => {
+                    const btn = document.createElement('button');
+                    btn.className = 'option-btn';
+                    btn.innerHTML = `${opt.en}<span class="hindi-sub">${opt.hi}</span>`;
+                    btn.onclick = () => this.handleAnswer(idx, data.ans, btn);
+                    container.appendChild(btn);
+                });
+
+                // Timer logic
+                if (this.settings.time > 0) {
+                    this.startTimer();
+                } else {
+                    document.getElementById('timer-badge').style.display = 'none';
+                }
+            },
+
+            // Timer
+            startTimer: function() {
+                clearInterval(this.timer);
+                this.timeLeft = this.settings.time;
+                const badge = document.getElementById('timer-badge');
+                badge.style.display = 'flex';
+                badge.classList.remove('pulse');
+                badge.innerText = this.timeLeft;
+
+                this.timer = setInterval(() => {
+                    this.timeLeft--;
+                    badge.innerText = this.timeLeft;
+                    
+                    if (this.timeLeft <= 5) badge.classList.add('pulse');
+                    
+                    if (this.timeLeft <= 0) {
+                        clearInterval(this.timer);
+                        this.handleTimeUp();
+                    }
+                }, 1000);
+            },
+
+            // Handle Interaction
+            handleAnswer: function(selectedIdx, correctIdx, btn) {
+                clearInterval(this.timer);
+                
+                // Lock buttons
+                const allBtns = document.querySelectorAll('.option-btn');
+                allBtns.forEach(b => b.disabled = true);
+
+                if (selectedIdx === correctIdx) {
+                    this.score++;
+                    btn.classList.add('correct');
+                    this.playSound('correct');
+                    this.triggerConfetti();
+                } else {
+                    btn.classList.add('wrong');
+                    allBtns[correctIdx].classList.add('correct');
+                    this.playSound('wrong');
+                    this.triggerShake();
+                }
+
+                setTimeout(() => {
+                    this.currentQIndex++;
+                    this.loadQuestion();
+                }, 1500);
+            },
+
+            handleTimeUp: function() {
+                const allBtns = document.querySelectorAll('.option-btn');
+                allBtns.forEach(b => b.disabled = true);
+                const correctIdx = this.activeQuestions[this.currentQIndex].ans;
+                allBtns[correctIdx].classList.add('correct');
+                this.playSound('wrong');
+                this.triggerShake();
+
+                setTimeout(() => {
+                    this.currentQIndex++;
+                    this.loadQuestion();
+                }, 1500);
+            },
+
+            // Sounds (Web Audio API)
+            playSound: function(type) {
+                if (!this.audioCtx) return;
+                const osc = this.audioCtx.createOscillator();
+                const gain = this.audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(this.audioCtx.destination);
+
+                if (type === 'correct') {
+                    // Cheerful Chime
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(600, this.audioCtx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(1200, this.audioCtx.currentTime + 0.1);
+                    gain.gain.setValueAtTime(0.1, this.audioCtx.currentTime);
+                    gain.gain.linearRampToValueAtTime(0, this.audioCtx.currentTime + 0.5);
+                    osc.start();
+                    osc.stop(this.audioCtx.currentTime + 0.5);
+                } else {
+                    // Dull Thud
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(150, this.audioCtx.currentTime);
+                    osc.frequency.linearRampToValueAtTime(100, this.audioCtx.currentTime + 0.3);
+                    gain.gain.setValueAtTime(0.1, this.audioCtx.currentTime);
+                    gain.gain.linearRampToValueAtTime(0, this.audioCtx.currentTime + 0.3);
+                    osc.start();
+                    osc.stop(this.audioCtx.currentTime + 0.3);
+                }
+            },
+
+            // Visual Effects
+            triggerConfetti: function() {
+                for(let i=0; i<30; i++) {
+                    const p = document.createElement('div');
+                    p.className = 'particle';
+                    p.style.left = Math.random() * 100 + '%';
+                    p.style.top = '-10px';
+                    p.style.backgroundColor = `hsl(${Math.random()*360}, 100%, 50%)`;
+                    
+                    // Simple JS Animation
+                    const speed = 2 + Math.random() * 3;
+                    const angle = Math.random() * 360;
+                    
+                    let y = 0;
+                    let r = 0;
+                    
+                    const fall = () => {
+                        y += speed;
+                        r += 5;
+                        p.style.transform = `translateY(${y}px) rotate(${r}deg)`;
+                        if (y < window.innerHeight) requestAnimationFrame(fall);
+                        else p.remove();
+                    };
+                    
+                    document.body.appendChild(p);
+                    requestAnimationFrame(fall);
+                }
+            },
+
+            triggerShake: function() {
+                const el = document.getElementById('emoji-display');
+                el.classList.add('show');
+                setTimeout(() => el.classList.remove('show'), 1000);
+            },
+
+            // Finish
+            finishQuiz: function() {
+                clearInterval(this.timer);
+                document.getElementById('quiz-screen').classList.remove('active');
+                document.getElementById('result-screen').classList.add('active');
+
+                // Logic: Score based on Total Questions to give accurate grading
+                const total = this.activeQuestions.length;
+                const percentage = Math.round((this.score / total) * 100);
+
+                document.getElementById('final-score').innerText = `${percentage}%`;
+                document.getElementById('stats-detail').innerText = `Correct: ${this.score} | Total: ${total}`;
+
+                let msg = "";
+                if (percentage >= 80) msg = "🏆 Outstanding Performance!";
+                else if (percentage >= 50) msg = "👏 Well Done! Keep it up.";
+                else msg = "📚 Practice makes perfect! Try again.";
+                
+                document.getElementById('result-message').innerText = msg;
+            },
+
+            resetQuiz: function() {
+                document.getElementById('result-screen').classList.remove('active');
+                document.getElementById('start-screen').classList.add('active');
+            }
+        };
+    </script>
+</body>
+</html>

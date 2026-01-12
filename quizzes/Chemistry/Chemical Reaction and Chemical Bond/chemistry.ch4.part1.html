@@ -1,0 +1,1032 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chemistry Master Quiz | रसायन विज्ञान प्रश्नोत्तरी</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --text-main: #ffffff;
+            --text-sec: #e0e0e0;
+            --accent: #ff007f;
+            --correct: #00e676;
+            --wrong: #ff1744;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Poppins', sans-serif;
+            user-select: none; /* Prevent text selection during rapid clicking */
+        }
+
+        body {
+            min-height: 100vh;
+            background: radial-gradient(circle at top left, #4a00e0, transparent 50%),
+                        radial-gradient(circle at bottom right, #8e2de2, transparent 50%),
+                        radial-gradient(circle at center, #1a0b2e, #000);
+            background-size: 200% 200%;
+            animation: gradientMove 15s ease infinite;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--text-main);
+            overflow-x: hidden;
+        }
+
+        @keyframes gradientMove {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Glassmorphism Container */
+        .app-container {
+            width: 95%;
+            max-width: 800px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid var(--glass-border);
+            border-radius: 25px;
+            padding: 2rem;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            position: relative;
+            overflow: hidden;
+            min-height: 600px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Screens */
+        .screen {
+            display: none;
+            flex-direction: column;
+            height: 100%;
+            flex-grow: 1;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        /* Start Screen */
+        .start-content {
+            text-align: center;
+            margin: auto;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(to right, #fff, #b3e5fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            color: var(--text-sec);
+            margin-bottom: 2rem;
+            font-size: 1.1rem;
+        }
+
+        .settings-group {
+            margin-bottom: 2rem;
+            background: rgba(0,0,0,0.2);
+            padding: 1.5rem;
+            border-radius: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+            color: #ddd;
+        }
+
+        input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            border-radius: 10px;
+            border: 1px solid var(--glass-border);
+            background: rgba(255,255,255,0.1);
+            color: white;
+            font-size: 1.1rem;
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            cursor: pointer;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 50px;
+            height: 26px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 20px;
+            transition: 0.3s;
+        }
+
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            transition: 0.3s;
+        }
+
+        #shuffleToggle:checked + .toggle-switch {
+            background: var(--correct);
+        }
+
+        #shuffleToggle:checked + .toggle-switch::after {
+            transform: translateX(24px);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            padding: 15px 40px;
+            color: white;
+            font-size: 1.2rem;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(118, 75, 162, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(118, 75, 162, 0.6);
+        }
+
+        /* Quiz UI */
+        .quiz-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .stat-box {
+            background: rgba(0,0,0,0.2);
+            padding: 8px 15px;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .timer-box {
+            border: 1px solid var(--glass-border);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .timer-box.urgent {
+            animation: pulseRed 1s infinite;
+            border-color: var(--wrong);
+            color: var(--wrong);
+        }
+
+        @keyframes pulseRed {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.05); opacity: 0.8; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .progress-container {
+            width: 100%;
+            height: 6px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            margin-bottom: 2rem;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #00c6ff, #0072ff);
+            width: 0%;
+            transition: width 0.5s ease;
+            box-shadow: 0 0 10px #0072ff;
+        }
+
+        .question-box {
+            margin-bottom: 2rem;
+        }
+
+        .q-text-en {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            line-height: 1.4;
+        }
+
+        .q-text-hi {
+            font-size: 1.1rem;
+            color: #ddd;
+            font-weight: 400;
+            margin-bottom: 1rem;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+
+        @media (min-width: 600px) {
+            .options-grid { grid-template-columns: 1fr 1fr; }
+        }
+
+        .option-btn {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--glass-border);
+            padding: 15px;
+            border-radius: 15px;
+            color: white;
+            text-align: left;
+            cursor: pointer;
+            transition: 0.3s;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            background: rgba(255,255,255,0.15);
+            transform: translateX(5px);
+        }
+
+        .option-btn.correct {
+            background: rgba(0, 230, 118, 0.3) !important;
+            border-color: var(--correct) !important;
+            box-shadow: 0 0 15px rgba(0, 230, 118, 0.4);
+        }
+
+        .option-btn.wrong {
+            background: rgba(255, 23, 68, 0.3) !important;
+            border-color: var(--wrong) !important;
+            animation: shake 0.5s;
+        }
+
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            50% { transform: translateX(5px); }
+            75% { transform: translateX(-5px); }
+            100% { transform: translateX(0); }
+        }
+
+        .opt-en { font-weight: 600; font-size: 1rem; }
+        .opt-hi { font-size: 0.85rem; color: #ccc; margin-top: 2px; }
+
+        .footer-controls {
+            margin-top: auto;
+            display: flex;
+            justify-content: flex-end;
+            padding-top: 20px;
+        }
+
+        .btn-finish {
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.3);
+            color: #aaa;
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .btn-finish:hover {
+            background: rgba(255,23,68,0.2);
+            color: white;
+            border-color: var(--wrong);
+        }
+
+        /* Result Screen */
+        .result-content {
+            text-align: center;
+            margin: auto;
+        }
+
+        .score-display {
+            font-size: 4rem;
+            font-weight: 700;
+            margin: 1rem 0;
+            background: linear-gradient(to bottom, #fff, #bbb);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .message {
+            font-size: 1.5rem;
+            margin-bottom: 2rem;
+            color: #b3e5fc;
+        }
+
+        /* Feedback Emojis */
+        .feedback-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 5rem;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+            z-index: 100;
+        }
+
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: #f00;
+            animation: fall linear forwards;
+            z-index: 9999;
+        }
+
+        @keyframes fall {
+            to { transform: translateY(100vh) rotate(720deg); }
+        }
+
+        @media (max-width: 480px) {
+            .app-container { padding: 1.5rem 1rem; }
+            h1 { font-size: 1.8rem; }
+            .q-text-en { font-size: 1.1rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    
+    <div id="start-screen" class="screen active">
+        <div class="start-content">
+            <h1>Chemistry Master</h1>
+            <p class="subtitle">Bilingual Quiz (Hindi / English)</p>
+            
+            <div class="settings-group">
+                <label>Timer per Question (Seconds)</label>
+                <input type="number" id="timeInput" placeholder="0 for No Timer" value="30">
+                
+                <div class="toggle-container" onclick="document.getElementById('shuffleToggle').click()">
+                    <input type="checkbox" id="shuffleToggle" style="display:none;">
+                    <div class="toggle-switch"></div>
+                    <span>Shuffle Questions / प्रश्न मिलाएं</span>
+                </div>
+            </div>
+
+            <button class="btn-primary" onclick="startQuiz()">Start Quiz</button>
+        </div>
+    </div>
+
+    <div id="quiz-screen" class="screen">
+        <div id="feedback-emoji" class="feedback-overlay"></div>
+
+        <div class="progress-container">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+
+        <div class="quiz-header">
+            <div class="stat-box">Q: <span id="qCount">01/50</span></div>
+            <div class="stat-box">Score: <span id="scoreVal">0</span></div>
+            <div class="stat-box timer-box" id="timerBox">
+                ⏱ <span id="timerVal">--</span>
+            </div>
+        </div>
+
+        <div class="question-box">
+            <div class="q-text-en" id="qEn">Question English</div>
+            <div class="q-text-hi" id="qHi">Question Hindi</div>
+        </div>
+
+        <div class="options-grid" id="optionsGrid">
+            </div>
+
+        <div class="footer-controls">
+            <button class="btn-finish" onclick="finishQuiz()">Finish & Show Result</button>
+        </div>
+    </div>
+
+    <div id="result-screen" class="screen">
+        <div class="result-content">
+            <h2>Quiz Completed!</h2>
+            <div class="score-display" id="finalScore">0/50</div>
+            <div class="message" id="finalMsg">Message</div>
+            <button class="btn-primary" onclick="restartApp()">Restart Quiz</button>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    /* --- DATA: 50 Extracted & Translated Questions --- */
+    const rawQuestions = [
+        {
+            qE: "A Chemical reaction is?",
+            qH: "रासायनिक अभिक्रिया है-",
+            optsE: ["Physical change", "Chemical change", "Both Physical & Chemical", "None of these"],
+            optsH: ["भौतिक परिवर्तन", "रसायनिक परिवर्तन", "भौतिक एवं रसायनिक परिवर्तन दोनों", "इनमें से कोई नहीं"],
+            ans: 1
+        },
+        {
+            qE: "What are substances that take part in a chemical reaction called?",
+            qH: "रसायनिक अभिक्रिया में भाग लेने वाले पदार्थ को क्या कहते हैं?",
+            optsE: ["Reactant", "Product", "Element", "Mixture"],
+            optsH: ["अभिकारक", "उत्पाद", "तत्व", "मिश्रण"],
+            ans: 0
+        },
+        {
+            qE: "Which statement is correct regarding chemical reactions?",
+            qH: "निम्नलिखित कथनों पर विचार कीजिए- (कौन-सा सही है?)",
+            optsE: ["New atoms are formed", "New molecules are formed", "Both 1 & 2", "Neither 1 nor 2"],
+            optsH: ["नए प्रकार के परमाणु का निर्माण होता है", "नए प्रकार के अणु का निर्माण होता है", "1 तथा 2 दोनों", "न तो 1 न ही 2"],
+            ans: 1
+        },
+        {
+            qE: "Which of the following changes can occur during a chemical reaction?",
+            qH: "रसायनिक अभिक्रिया के दौरान निम्नलिखित में कौन-से परिवर्तन हो सकता है?",
+            optsE: ["Evolution of gas", "Change in color", "Change in state", "All of these"],
+            optsH: ["गैस का निकलना", "रंग में परिवर्तन", "अवस्था में परिवर्तन", "इनमें से सभी"],
+            ans: 3
+        },
+        {
+            qE: "Which of the following does NOT change during a chemical reaction?",
+            qH: "रसायनिक अभिक्रिया के दौरान निम्नलिखित में कौन-सा परिवर्तन नहीं होता है?",
+            optsE: ["Evolution of gas", "Increase in mass", "Change in temp", "Change in state"],
+            optsH: ["गैस का निकलना", "द्रव्यमान का बढ़ना", "ताप में परिवर्तन", "अवस्था में परिवर्तन"],
+            ans: 1
+        },
+        {
+            qE: "Who takes part in a chemical reaction?",
+            qH: "रसायनिक अभिक्रिया में कौन भाग लेता है?",
+            optsE: ["Ion", "Molecule", "Atom", "All of these"],
+            optsH: ["आयन", "अणु", "परमाणु", "इनमें से सभी"],
+            ans: 3 // In context of options, atoms rearrange, but often ions participate. Context suggests 'All' or 'Atom'. Sticking to Atom usually, but Image implies D.
+        },
+        {
+            qE: "In which of the following changes is a chemical reaction taking place?",
+            qH: "निम्नलिखित में किस परिवर्तन में रसायनिक अभिक्रिया सम्पन्न हो रही है?",
+            optsE: ["Souring of milk", "Digestion of food", "Boiling water", "1, 2, 4, 5"],
+            optsH: ["दूध का खट्टा होना", "मानव शरीर में भोजन का पचना", "जल का उबलना", "1, 2, 4 और 5"],
+            ans: 3 // Based on Image Q7 options logic
+        },
+        {
+            qE: "Which statement is NOT correct regarding chemical reactions?",
+            qH: "रसायनिक अभिक्रिया के संबंध में कौन-सा कथन सही नहीं है?",
+            optsE: ["Atoms participate", "Atoms are unstable", "Valence electrons participate", "Core electrons participate"],
+            optsH: ["पदार्थ के परमाणु भाग लेते है", "परमाणु अस्थायी होते है", "संयोजी इलेक्ट्रॉन भाग लेते है", "कोर इलेक्ट्रॉन भाग लेते है"],
+            ans: 3
+        },
+        {
+            qE: "Consider the statements: 1. Reactions only happen in labs. 2. No reactions in human body.",
+            qH: "1. रसायनिक अभिक्रिया केवल प्रयोगशाला में ही सम्पन्न कराया जा सकता है। 2. मानव शरीर में कोई रसायनिक अभिक्रिया नहीं होती है।",
+            optsE: ["Only 1", "Only 2", "Both 1 & 2", "Neither 1 nor 2"],
+            optsH: ["केवल 1", "केवल 2", "1 तथा 2 दोनों", "न तो 1 न ही 2"],
+            ans: 3
+        },
+        {
+            qE: "As a result of a chemical reaction, which of the following does NOT change?",
+            qH: "रसायनिक अभिक्रिया के फलस्वरूप निम्नलिखित में कोई परिवर्तन नहीं होता है-",
+            optsE: ["Chemical property", "Physical property", "Mass", "Volume"],
+            optsH: ["रसायनिक गुण", "भौतिक गुण", "द्रव्यमान", "आयतन"],
+            ans: 2
+        },
+        {
+            qE: "When chemical reactions are expressed in short form, it is called-",
+            qH: "रसायनिक अभिक्रियाओं को संक्षिप्त रूप से जब व्यक्त करते हैं, तो वह कहलाता है-",
+            optsE: ["Chemical symbol", "Chemical formula", "Chemical reaction", "Chemical equation"],
+            optsH: ["रसायनिक संकेत", "रसायनिक सूत्र", "रसायनिक अभिक्रिया", "रसायनिक समीकरण"],
+            ans: 3
+        },
+        {
+            qE: "Equation with equal number of atoms on left and right is called:",
+            qH: "रसायनिक समीकरण के बाएं तथा दाएं दोनों ओर प्रत्येक प्रकार के परमाणुओं की संख्या समान है। यह रसायनिक समीकरण होगा-",
+            optsE: ["Balanced", "Unbalanced", "Law of mass conservation", "Both a & b"],
+            optsH: ["संतुलित", "असंतुलित", "द्रव्यमान संरक्षण नियम के अनुकूल", "a तथा b दोनों"],
+            ans: 0
+        },
+        {
+            qE: "Which information is NOT obtained from a chemical equation?",
+            qH: "रसायनिक समीकरण द्वारा निम्नलिखित में कौन-सी सूचना प्राप्त नहीं होती है?",
+            optsE: ["Reactant/Product formula", "Heat evolved/absorbed", "Reactants involved", "Atoms involved"],
+            optsH: ["अभिकारक तथा उत्पाद का अणुसूत्र", "अभिक्रिया में उत्सर्जित या अवशोषित ऊष्मा", "भाग लेने वाले अभिकारक", "परमाणु या अणु की संख्या"],
+            ans: 1 // Unless specified, standard equations don't always show heat.
+        },
+        {
+            qE: "Which information can be obtained from a chemical equation?",
+            qH: "रसायनिक समीकरण द्वारा निम्नलिखित में अभिक्रिया के संबंध में कौन-सी जानकारी प्राप्त हो सकती है?",
+            optsE: ["Mole ratio", "Physical state", "Exothermic/Endothermic", "Speed of reaction"],
+            optsH: ["अभिकारक तथा उत्पाद के मोलो का अनुपात", "अभिकारक तथा उत्पाद की भौतिक अवस्था", "अभिक्रिया ऊष्माशोषी है या ऊष्माक्षेपी", "अभिक्रिया का वेग"],
+            ans: 0
+        },
+        {
+            qE: "Concept of balanced chemical equation is according to which law?",
+            qH: "संतुलित रसायनिक समीकरण की अवधारणा विज्ञान के किस सिद्धान्त के अनुकूल है-",
+            optsE: ["Rate law", "Activation energy", "Conservation of mass", "Newton's first law"],
+            optsH: ["वेग-नियम के सिद्धान्त", "सक्रियण ऊर्जा के सिद्धान्त", "द्रव्यमान संरक्षण के सिद्धांत", "न्यूटन के प्रथम गति सिद्धान्त"],
+            ans: 2
+        },
+        {
+            qE: "Consider the equation: 2CO + O2 = 2CO2. Which statement is true?",
+            qH: "2CO + O2 = 2CO2. सही कथन का चयन कीजिए-",
+            optsE: ["CO reacts with O2 in 2:1 mole ratio", "2 moles CO & 1 mole O2 form 1 mole CO2", "Any amount of CO needs 1 mole O2", "1 mole CO reacts with 1 mole O2"],
+            optsH: ["CO की O2 के साथ 2:1 मोल अनुपात में अभिक्रिया", "2 मोल CO और 1 मोल O2... 1 मोल CO2 बनाएंगे", "CO की कितनी भी मात्रा...", "CO का 1 मोल O2 के 1 मोल..."],
+            ans: 0
+        },
+        {
+            qE: "Which statement regarding chemical equations is FALSE?",
+            qH: "रसायनिक समीकरण के संबंध में निम्नलिखित में कौन-सा कथन असत्य है?",
+            optsE: ["Shows mass ratio", "Tells reaction speed", "Tells relative volume (gas)", "Tells relative number of atoms"],
+            optsH: ["यह अभिकारक तथा उत्पाद के द्रव्यमानों का अनुपात बताता है", "यह अभिक्रिया के वेग की जानकारी देता है", "यह गैसीय अभिकारक... आयतन की जानकारी देता है", "परमाणुओं... की आपेक्षिक संख्या..."],
+            ans: 1
+        },
+        {
+            qE: "Which of the following is NOT a balanced chemical equation?",
+            qH: "निम्नलिखित में कौन संतुलित रसायनिक समीकरण नहीं है-",
+            optsE: ["4Na + O2 -> 2Na2O", "H2O2 -> H2O + O2", "Mg(OH)2 + 2HCl -> MgCl2 + 2H2O", "4Fe + 3O2 -> 2Fe2O3"],
+            optsH: ["4Na + O2 -> 2Na2O", "H2O2 -> H2O + O2", "Mg(OH)2 + 2HCl -> MgCl2 + 2H2O", "4Fe + 3O2 -> 2Fe2O3"],
+            ans: 1
+        },
+        {
+            qE: "Which of the following statements is correct?",
+            qH: "निम्नलिखित में कौन-सा कथन सही है?",
+            optsE: ["Metal-Metal reaction impossible", "Element-Compound reaction impossible", "Solid-Liquid reaction impossible", "All of these"],
+            optsH: ["धातु का धातु के बीच रसायनिक अभिक्रिया नहीं हो सकती है", "तत्व का यौगिक के रसायनिक अभिक्रिया नहीं हो सकता है", "ठोस पदार्थ का द्रव पदार्थ के साथ... नहीं हो सकता है", "इनमें से सभी"],
+            ans: 0
+        },
+        {
+            qE: "Which of the following chemical equations is balanced?",
+            qH: "निम्नलिखित में से कौन-सा रसायनिक समीकरण संतुलित है?",
+            optsE: ["Fe + Cl2 -> FeCl3", "NH4NO2 -> N2 + 2H2O", "KBr + Cl2 -> KCl + Br2", "Fe + O2 -> Fe2O3"],
+            optsH: ["Fe + Cl2 -> FeCl3", "NH4NO2 -> N2 + 2H2O", "KBr + Cl2 -> KCl + Br2", "Fe + O2 -> Fe2O3"],
+            ans: 1
+        },
+        {
+            qE: "Which of the following is a Combination reaction?",
+            qH: "निम्नलिखित में कौन संयोजन अभिक्रिया है-",
+            optsE: ["Heating Iron with Sulfur", "Heating Calcium Carbonate", "Zinc in Copper Sulfate", "Barium Chloride in Sodium Sulfate"],
+            optsH: ["आयरन को सल्फर के साथ गरम किया जाता है", "कैल्सियम कार्बोनेट को गरम करने पर", "जिंक धातु की पट्टी को कॉपर सल्फेट...", "बेरियम क्लोराइड विलयन को सोडियम सल्फेट..."],
+            ans: 0
+        },
+        {
+            qE: "Heating Calcium Carbonate forms Calcium Oxide and CO2. What type of reaction is this?",
+            qH: "कैल्सियम कार्बोनेट को गर्म करने पर कैल्सियम ऑक्साइड तथा कार्बन डाइ ऑक्साइड बनते हैं। यह किस प्रकार की अभिक्रिया है?",
+            optsE: ["Displacement", "Decomposition", "Combination", "Neutralization"],
+            optsH: ["विस्थापन", "अपघटन", "संयोजन", "उदासीनीकरण"],
+            ans: 1
+        },
+        {
+            qE: "Consider: 1. Decomposition breaks 1 substance into 2+. 2. Needs heat/light/electricity.",
+            qH: "1. अपघटन अभिक्रिया में एक रसायनिक पदार्थ टूटकर दो या अधिक... 2. अपघटन अभिक्रिया ऊष्मा, प्रकाश या विद्युत ऊर्जा के माध्यम से सम्पन्न होता है।",
+            optsE: ["Only 1", "Only 2", "Only 3", "All of the above"],
+            optsH: ["केवल 1", "केवल 2", "केवल 3", "उपर्युक्त सभी"],
+            ans: 3
+        },
+        {
+            qE: "Which of the following is an Exothermic reaction?",
+            qH: "निम्नलिखित में कौन ऊष्माक्षेपी अभिक्रिया है?",
+            optsE: ["Burning of fuel", "Compost from waste", "Respiration", "All of these"],
+            optsH: ["ईंधन का दहन", "जन्तु तथा पौधे के अवशेष से कम्पोस्ट बनना", "श्वसन", "इनमें से सभी"],
+            ans: 3
+        },
+        {
+            qE: "Consider: 1. Combination reactions are exothermic. 2. Decomposition are endothermic.",
+            qH: "1. संयोजन अभिक्रिया की प्रकृति ऊष्माक्षेपी होता है। 2. अपघटन अभिक्रिया की प्रकृति ऊष्माशोषी होता है।",
+            optsE: ["Only 1", "Only 2", "Both 1 & 2", "Neither 1 nor 2"],
+            optsH: ["केवल 1", "केवल 2", "1 तथा 2 दोनों", "न तो 1 न ही 2"],
+            ans: 2
+        },
+        {
+            qE: "Which of the following is a Displacement reaction?",
+            qH: "निम्नलिखित में कौन-सी अभिक्रिया विस्थापन (Displacement) अभिक्रिया है?",
+            optsE: ["Fe2O3 + 2Al -> Al2O3 + 2Fe", "2CO + O2 -> 2CO2", "FeS + H2SO4 -> FeSO4 + H2S", "CaCO3 -> CaO + CO2"],
+            optsH: ["Fe2O3 + 2Al -> Al2O3 + 2Fe", "2CO + O2 -> 2CO2", "FeS + H2SO4 -> FeSO4 + H2S", "CaCO3 -> CaO + CO2"],
+            ans: 0
+        },
+        {
+            qE: "Oxygen gas liberated during electrolysis of metal oxide is at:",
+            qH: "धातु के ऑक्साइड का विद्युत अपघटन करने पर ऑक्सीजन गैस मुक्त होते हैं-",
+            optsE: ["Anode", "Cathode", "Both Anode & Cathode", "None"],
+            optsH: ["एनोड पर", "कैथोड पर", "एनोड तथा कैथोड दोनों पर", "इनमें से कोई नहीं"],
+            ans: 0
+        },
+        {
+            qE: "Which of the following is a Double Displacement reaction?",
+            qH: "निम्नलिखित में कौन उभय विस्थापन (Double Displacement) अभिक्रिया है?",
+            optsE: ["2Mg + O2 -> 2MgO", "Zn + H2SO4 -> ZnSO4 + H2", "AgNO3 + NaCl -> AgCl + NaNO3", "2H2 + O2 -> 2H2O"],
+            optsH: ["2Mg + O2 -> 2MgO", "Zn + H2SO4 -> ZnSO4 + H2", "AgNO3 + NaCl -> AgCl + NaNO3", "2H2 + O2 -> 2H2O"],
+            ans: 2
+        },
+        {
+            qE: "Burning Ammonia in Oxygen produces which gas?",
+            qH: "अमोनिया को ऑक्सीजन में जलाने पर कौन-सी गैस बनती है?",
+            optsE: ["H2", "N2", "O2", "Cl2"],
+            optsH: ["H2", "N2", "O2", "Cl2"],
+            ans: 1
+        },
+        {
+            qE: "What is obtained from Thermal Decomposition of Lead Nitrate?",
+            qH: "लेड नाइट्रेट का उष्मीय विघटन (Thermal Decomposition) से क्या प्राप्त होते हैं?",
+            optsE: ["N2O5, O2, Pb", "NO2, Pb3O4", "Only O2", "PbO, NO2, O2"],
+            optsH: ["N2O5, O2 तथा Pb", "NO2 तथा Pb3O4", "सिर्फ O2", "PbO, NO2 तथा O2"],
+            ans: 3
+        },
+        {
+            qE: "Reaction between Sodium Hydroxide and Hydrochloric Acid is:",
+            qH: "सोडियम हाइड्रोक्साइड और हाइड्रोक्लोरिक अम्ल के बीच किस प्रकार की रसायनिक अभिक्रिया सम्पन्न होगी?",
+            optsE: ["Combination", "Displacement", "Decomposition", "Neutralization"],
+            optsH: ["संयोजन", "विस्थापन", "अपघटन", "उदासीनीकरण"],
+            ans: 3
+        },
+        {
+            qE: "Gas released on heating KClO3 is?",
+            qH: "KClO3 का गर्म करने पर मुक्त होनेवाली गैस है?",
+            optsE: ["Cl2", "H2", "O2", "O3"],
+            optsH: ["Cl2", "H2", "O2", "O3"],
+            ans: 2
+        },
+        {
+            qE: "CaO + H2O -> Ca(OH)2 + Heat. This reaction is:",
+            qH: "CaO + H2O -> Ca(OH)2 + ऊष्मा. उपर्युक्त रसायनिक अभिक्रिया है-",
+            optsE: ["Combination & Exothermic", "Decomposition & Exothermic", "Combination & Endothermic", "Decomposition & Endothermic"],
+            optsH: ["संयोजन तथा ऊष्माक्षेपी", "अपघटन तथा ऊष्माक्षेपी", "संयोजन तथा ऊष्माशोषी", "अपघटन तथा ऊष्माशोषी"],
+            ans: 0
+        },
+        {
+            qE: "Reaction where heat is produced along with product is called-",
+            qH: "जिस रसायनिक अभिक्रिया में उत्पाद के साथ-साथ ऊष्मा की उत्पत्ति होती है, उसे कहते है-",
+            optsE: ["Exothermic", "Electric Decomposition", "Endothermic", "Photochemical"],
+            optsH: ["ऊष्माक्षेपी अभिक्रिया", "विद्युत अपघटन अभिक्रिया", "ऊष्माशोषी अभिक्रिया", "प्रकाश रसायनिक अभिक्रिया"],
+            ans: 0
+        },
+        {
+            qE: "4NH3 + 5O2 -> 4NO + 6H2O. What type of reaction is this?",
+            qH: "4NH3 + 5O2 -> 4NO + 6H2O. निम्नलिखित रसायनिक अभिक्रिया किस प्रकार की रसायनिक अभिक्रिया है?",
+            optsE: ["Combination", "Displacement", "Decomposition", "Photochemical"],
+            optsH: ["संयोजन", "विस्थापन", "अपघटन", "प्रकाश रसायनिक"],
+            ans: 1
+        },
+        {
+            qE: "Which metal will displace Iron from Ferrous Sulfate solution?",
+            qH: "फेरस सल्फेट के विलयन से लोहा को निम्नलिखित में कौन-सी धातु विस्थापित करेगी?",
+            optsE: ["Sn", "Zn", "Ag", "Cu"],
+            optsH: ["Sn", "Zn", "Ag", "Cu"],
+            ans: 1
+        },
+        {
+            qE: "Which of the following is NOT a Decomposition reaction?",
+            qH: "निम्नलिखित में कौन अपघटन अभिक्रिया नहीं है?",
+            optsE: ["2Cu + O2 -> 2CuO", "CaCO3 -> CaO + CO2", "2KClO3 -> 2KCl + 3O2", "Digestion of food"],
+            optsH: ["2Cu + O2 -> 2CuO", "CaCO3 -> CaO + CO2", "2KClO3 -> 2KCl + 3O2", "शरीर में भोजन का पचना"],
+            ans: 0
+        },
+        {
+            qE: "Silver Chloride is kept in dark bottles because:",
+            qH: "सिल्वर क्लोराइड को गाढ़े भूरे रंग के बोतल में रखा जाता है, क्योंकि-",
+            optsE: ["It is volatile", "Decomposes in sunlight", "Oxidizes in air", "Turns red in sunlight"],
+            optsH: ["सिल्वर क्लोराइड एक वाष्पशील पदार्थ है", "सिल्वर क्लोराइड सूर्य के प्रकाश के संपर्क में अपघटित हो जाता है", "सिल्वर क्लोराइड वायु के ऑक्सीजन... आक्सीकृत हो जाता है", "सूर्य प्रकाश की उपस्थिति... लाल हो जाता है"],
+            ans: 1
+        },
+        {
+            qE: "Which of the following is an Exothermic reaction?",
+            qH: "निम्नलिखित में कौन ऊष्माक्षेपी अभिक्रिया है?",
+            optsE: ["N2 + O2 -> 2NO - d Joules", "C + O2 -> CO2 + 94.45 Joules", "Both", "None"],
+            optsH: ["N2 + O2 -> 2NO - d जूल", "C + O2 -> CO2 + 94.45 जूल", "दोनों", "कोई नहीं"],
+            ans: 1
+        },
+        {
+            qE: "Mole ratio of Hydrogen and Oxygen liberated in electrolysis of water is:",
+            qH: "जल का विद्युत अपघटन करने पर मुक्त होने वाले हाइड्रोजन और ऑक्सीजन गैसों का मोल अनुपात होता है-",
+            optsE: ["1:2", "2:1", "2:3", "3:2"],
+            optsH: ["1:2", "2:1", "2:3", "3:2"],
+            ans: 1
+        },
+        {
+            qE: "Iron nail in Copper Sulfate turns solution color from Blue to?",
+            qH: "कॉपर सल्फेट के जलीय विलयन में लोहे के अंश को डुबाया गया। 30 मिनट बाद इस विलयन का रंग में परिवर्तन किस प्रकार होगा?",
+            optsE: ["Green to Blue", "Blue to Light Green", "Colorless to Green", "Blue to Colorless"],
+            optsH: ["हरा रंग से नीला", "नीला से हल्का हरा", "रंगहीन से हल्का हरा", "नीला से रंगहीन"],
+            ans: 1
+        },
+        {
+            qE: "Color change when Citric acid is added to Potassium Permanganate (Purple):",
+            qH: "साइट्रिक अम्ल को बैंगनी रंग के पोटैशियम परमैगनेट (KMnO4) विलयन में डालने पर, रंग का परिवर्तन किस रूप में होगा?",
+            optsE: ["Purple to Green", "Purple to Red-Brown", "Purple to Colorless", "Purple to Red"],
+            optsH: ["बैंगनी से हरा", "बैंगनी से लाल-भूरा", "बैंगनी से रंगहीन", "बैंगनी से लाल"],
+            ans: 2
+        },
+        {
+            qE: "Color change when SO2 is passed through Acidic Potassium Dichromate:",
+            qH: "अम्लीय पोटैशियम डाइक्रोमेट (K2Cr2O7) के घोल में सल्फरडाइ ऑक्साइड गैस प्रवाहित करने पर रंग परिवर्तन किस प्रकार होगा?",
+            optsE: ["Purple to Green", "Green to Red-Brown", "Green to Purple", "Orange to Green"],
+            optsH: ["बैंगनी से हरा", "हरा से लाल-भूरा", "हरा से बैंगनी", "नारंगी से हरा"],
+            ans: 3
+        },
+        {
+            qE: "Displacement reaction cannot occur between:",
+            qH: "निम्नलिखित में किसके बीच विस्थापन अभिक्रिया सम्पन्न नहीं हो सकता है?",
+            optsE: ["FeSO4 + Cu", "MgCl2 + Al", "NaCl + Cu", "All of these"],
+            optsH: ["FeSO4 के विलयन तथा कॉपर", "MgCl2 के विलयन तथा ऐलुमिनियम", "NaCl के विलयन तथा कॉपर", "इनमें से सभी"],
+            ans: 3
+        },
+        {
+            qE: "Magnesium ribbon burning in Nitrogen gas forms:",
+            qH: "मैग्नीशियम का एक फीता नाइट्रोजन गैस की उपस्थिति में जलकर कौन-सा यौगिक बनाता है?",
+            optsE: ["Won't burn", "Mg2N2", "Mg3N2", "MgN"],
+            optsH: ["मैग्नीशियम नहीं जलेगा...", "Mg2N2", "Mg3N2", "MgN"],
+            ans: 2
+        },
+        {
+            qE: "Which metal will displace Copper from Copper Sulfate solution?",
+            qH: "निम्नलिखित में कौन-सी धातु कॉपर सल्फेट के विलयन से कॉपर को विस्थापित कर देगा?",
+            optsE: ["Fe", "Au", "Ag", "Pt"],
+            optsH: ["Fe", "Au", "Ag", "Pt"],
+            ans: 0
+        },
+        {
+            qE: "Substance used to prevent rancidity in fat-containing foods:",
+            qH: "वसायुक्त खाद्य पदार्थ को सड़ने से बचाने के लिए जिस बाहरी पदार्थ का इस्तेमाल किया जाता है, उसे क्या कहते हैं?",
+            optsE: ["Enzyme", "Catalyst", "Antioxidant", "Promoter"],
+            optsH: ["एन्जाइम", "उत्प्रेरक", "एंटीऑक्सीडेंट", "वर्द्धक"],
+            ans: 2
+        },
+        {
+            qE: "Which of the following is a Combustion reaction?",
+            qH: "निम्नलिखित में कौन दहन अभिक्रिया है?",
+            optsE: ["Boiling water", "Burning Petrol", "Freezing water", "Melting wax"],
+            optsH: ["जल का उबलना", "पेट्रोल का जलना", "जल का जमना", "मोम का पिघलना"],
+            ans: 1
+        },
+        {
+            qE: "Reaction between Quick Lime and Water:",
+            qH: "काली चूना (Quick lime) और जल के बीच जब अभिक्रिया होगी, तो-",
+            optsE: ["O2 gas evolved", "Enough heat absorbed", "Enough heat evolved", "Neither heat evolved nor absorbed"],
+            optsH: ["कली चूना अपघटित होकर ऑक्सीजन गैस देती है", "पर्याप्त ऊष्मा का अवशोषण होता है", "पर्याप्त ऊष्मा का उत्सर्जन होता है", "ऊष्मा का न तो उत्सर्जन होता है और न ही अवशोषण"],
+            ans: 2
+        },
+        {
+            qE: "Gas used to preserve fresh oil for a long time?",
+            qH: "किसी ताजा तेल को बहुत दिनों तक सुरक्षित रखने के लिए निम्नलिखित में किस गैस का उपयोग किया जाता है?",
+            optsE: ["Oxygen", "Ammonia", "Nitrogen", "Carbon Dioxide"],
+            optsH: ["ऑक्सीजन", "अमोनिया", "नाइट्रोजन", "कार्बन डाइऑक्साइड"],
+            ans: 2
+        }
+    ];
+
+    /* --- STATE MANAGEMENT --- */
+    let currentQuestions = [];
+    let currentIdx = 0;
+    let score = 0;
+    let timerInterval = null;
+    let timeLeft = 0;
+    let isTimerEnabled = false;
+
+    /* --- AUDIO CONTEXT (Synth) --- */
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    function playSound(type) {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        const now = audioCtx.currentTime;
+        if (type === 'correct') {
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(500, now);
+            osc.frequency.exponentialRampToValueAtTime(1000, now + 0.1);
+            gain.gain.setValueAtTime(0.1, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+            osc.start(now);
+            osc.stop(now + 0.5);
+        } else if (type === 'wrong') {
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(150, now);
+            osc.frequency.linearRampToValueAtTime(100, now + 0.3);
+            gain.gain.setValueAtTime(0.1, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+            osc.start(now);
+            osc.stop(now + 0.4);
+        } else if (type === 'click') {
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(300, now);
+            gain.gain.setValueAtTime(0.05, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+            osc.start(now);
+            osc.stop(now + 0.1);
+        }
+    }
+
+    /* --- LOGIC --- */
+    function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
+    }
+
+    function startQuiz() {
+        const timeVal = document.getElementById('timeInput').value;
+        const shuffle = document.getElementById('shuffleToggle').checked;
+
+        isTimerEnabled = timeVal > 0;
+        timeLeft = isTimerEnabled ? parseInt(timeVal) : 0;
+
+        currentQuestions = shuffle ? shuffleArray([...rawQuestions]) : [...rawQuestions];
+        currentIdx = 0;
+        score = 0;
+
+        document.getElementById('start-screen').classList.remove('active');
+        document.getElementById('quiz-screen').classList.add('active');
+        
+        loadQuestion();
+    }
+
+    function loadQuestion() {
+        if (currentIdx >= currentQuestions.length) {
+            finishQuiz();
+            return;
+        }
+
+        // Reset UI
+        document.getElementById('feedback-emoji').style.opacity = '0';
+        document.getElementById('timerBox').classList.remove('urgent');
+        
+        // Timer Reset
+        if (timerInterval) clearInterval(timerInterval);
+        if (isTimerEnabled) {
+            let t = document.getElementById('timeInput').value;
+            startTimer(t);
+        } else {
+            document.getElementById('timerVal').innerText = "∞";
+        }
+
+        // Update Stats
+        document.getElementById('qCount').innerText = `${String(currentIdx + 1).padStart(2, '0')}/${currentQuestions.length}`;
+        document.getElementById('scoreVal').innerText = String(score).padStart(2, '0');
+        
+        // Progress Bar
+        const progress = ((currentIdx) / currentQuestions.length) * 100;
+        document.getElementById('progressBar').style.width = `${progress}%`;
+
+        // Render Question
+        const q = currentQuestions[currentIdx];
+        document.getElementById('qEn').innerText = q.qE;
+        document.getElementById('qHi').innerText = q.qH;
+
+        // Render Options
+        const grid = document.getElementById('optionsGrid');
+        grid.innerHTML = '';
+        
+        q.optsE.forEach((optE, i) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerHTML = `
+                <span class="opt-en">${optE}</span>
+                <span class="opt-hi">${q.optsH[i]}</span>
+            `;
+            btn.onclick = () => handleAnswer(i, btn);
+            grid.appendChild(btn);
+        });
+    }
+
+    function startTimer(seconds) {
+        timeLeft = seconds;
+        const display = document.getElementById('timerVal');
+        const box = document.getElementById('timerBox');
+        
+        display.innerText = timeLeft;
+        
+        timerInterval = setInterval(() => {
+            timeLeft--;
+            display.innerText = timeLeft;
+            
+            if (timeLeft < 5) box.classList.add('urgent');
+            else box.classList.remove('urgent');
+
+            if (timeLeft <= 0) {
+                clearInterval(timerInterval);
+                playBuzz();
+                showFeedback(false);
+                disableOptions();
+                highlightCorrect();
+                setTimeout(() => {
+                    currentIdx++;
+                    loadQuestion();
+                }, 1500);
+            }
+        }, 1000);
+    }
+
+    function handleAnswer(selectedIndex, btnElement) {
+        if (timerInterval) clearInterval(timerInterval);
+        disableOptions();
+
+        const correctIndex = currentQuestions[currentIdx].ans;
+        const isCorrect = selectedIndex === correctIndex;
+
+        if (isCorrect) {
+            score++;
+            btnElement.classList.add('correct');
+            playSound('correct');
+            spawnConfetti();
+            showFeedback(true);
+        } else {
+            btnElement.classList.add('wrong');
+            playSound('wrong');
+            highlightCorrect();
+            showFeedback(false);
+        }
+
+        // Auto Move
+        setTimeout(() => {
+            currentIdx++;
+            loadQuestion();
+        }, 1500);
+    }
+
+    function disableOptions() {
+        const btns = document.querySelectorAll('.option-btn');
+        btns.forEach(b => b.disabled = true);
+    }
+
+    function highlightCorrect() {
+        const btns = document.querySelectorAll('.option-btn');
+        const correctIndex = currentQuestions[currentIdx].ans;
+        btns[correctIndex].classList.add('correct');
+    }
+
+    function showFeedback(isSuccess) {
+        const el = document.getElementById('feedback-emoji');
+        el.innerText = isSuccess ? '🤩' : '😢';
+        el.style.opacity = '1';
+        el.style.animation = isSuccess ? 'none' : 'shake 0.5s';
+        setTimeout(() => el.style.opacity = '0', 1000);
+    }
+
+    function playBuzz() {
+        playSound('wrong');
+    }
+
+    function spawnConfetti() {
+        for(let i=0; i<30; i++) {
+            const c = document.createElement('div');
+            c.className = 'confetti';
+            c.style.left = Math.random() * 100 + 'vw';
+            c.style.backgroundColor = `hsl(${Math.random()*360}, 100%, 50%)`;
+            c.style.animationDuration = Math.random() * 2 + 1 + 's';
+            document.body.appendChild(c);
+            setTimeout(() => c.remove(), 3000);
+        }
+    }
+
+    function finishQuiz() {
+        if (timerInterval) clearInterval(timerInterval);
+        document.getElementById('quiz-screen').classList.remove('active');
+        document.getElementById('result-screen').classList.add('active');
+
+        const total = currentQuestions.length; // Or distinct questions answered if you prefer
+        // Since early exit, total is technically distinct questions shown so far OR total possible.
+        // Usually result shows Score/TotalPossible.
+        
+        // We will show score / 50 (or total pool size)
+        const finalScoreEl = document.getElementById('finalScore');
+        finalScoreEl.innerText = `${score} / ${currentQuestions.length}`;
+
+        const percentage = (score / currentQuestions.length) * 100;
+        const msgEl = document.getElementById('finalMsg');
+
+        if (percentage >= 80) msgEl.innerText = "🏆 Outstanding Performance!";
+        else if (percentage >= 50) msgEl.innerText = "👏 Well Done! Keep it up.";
+        else msgEl.innerText = "📚 Practice makes perfect! Try again.";
+    }
+
+    function restartApp() {
+        document.getElementById('result-screen').classList.remove('active');
+        document.getElementById('start-screen').classList.add('active');
+    }
+</script>
+
+</body>
+</html>

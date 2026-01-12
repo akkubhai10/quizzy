@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chemistry Quiz (51-100) | रसायन विज्ञान</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --text-main: #ffffff;
+            --text-sub: #e0e0e0;
+            --accent-green: #00e676;
+            --accent-red: #ff1744;
+            --accent-blue: #2979ff;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #8E2DE2 0%, #4A00E0 50%, #f12711 100%);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--text-main);
+            overflow-x: hidden;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Glassmorphism Card */
+        .glass-container {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 25px;
+            padding: 30px;
+            width: 90%;
+            max-width: 800px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            min-height: 500px;
+        }
+
+        .screen {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            height: 100%;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Typography */
+        h1, h2 {
+            text-align: center;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .hindi-sub {
+            font-size: 0.9em;
+            color: var(--text-sub);
+            display: block;
+            margin-top: 5px;
+            font-weight: 400;
+        }
+
+        /* Inputs & Controls */
+        .control-group {
+            margin: 20px 0;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        input[type="number"] {
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
+            padding: 15px;
+            border-radius: 15px;
+            color: white;
+            font-family: 'Poppins', sans-serif;
+            font-size: 1.1rem;
+            outline: none;
+            text-align: center;
+        }
+
+        input[type="number"]::placeholder { color: rgba(255,255,255,0.7); }
+
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(0,0,0,0.2);
+            padding: 15px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+
+        /* Buttons */
+        .btn {
+            background: linear-gradient(90deg, #ff8a00, #e52e71);
+            border: none;
+            padding: 15px 40px;
+            color: white;
+            font-size: 1.2rem;
+            font-weight: 600;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: auto;
+            width: 100%;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+        }
+
+        .btn:hover {
+            transform: scale(1.02);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        .btn-finish {
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.2);
+            font-size: 1rem;
+            margin-top: 20px;
+        }
+
+        /* Quiz UI */
+        .top-bar {
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .progress-container {
+            width: 100%;
+            height: 6px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            margin-bottom: 15px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: var(--accent-green);
+            width: 0%;
+            transition: width 0.3s ease;
+            box-shadow: 0 0 10px var(--accent-green);
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .question-box {
+            background: rgba(0,0,0,0.2);
+            padding: 20px;
+            border-radius: 15px;
+            width: 100%;
+            margin-bottom: 25px;
+            border-left: 5px solid var(--accent-blue);
+        }
+
+        .question-text {
+            font-size: 1.1rem;
+            line-height: 1.5;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+            width: 100%;
+        }
+
+        @media (min-width: 600px) {
+            .options-grid { grid-template-columns: 1fr 1fr; }
+        }
+
+        .option-btn {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.15);
+            padding: 15px;
+            border-radius: 12px;
+            text-align: left;
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: 'Poppins', sans-serif;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            background: rgba(255,255,255,0.25);
+            transform: translateX(5px);
+        }
+
+        .option-btn.correct {
+            background: rgba(0, 230, 118, 0.6) !important;
+            border-color: var(--accent-green);
+        }
+
+        .option-btn.wrong {
+            background: rgba(255, 23, 68, 0.6) !important;
+            border-color: var(--accent-red);
+        }
+
+        /* Timer */
+        .timer-badge {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: 3px solid white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+            margin: 0 auto 10px auto;
+            transition: all 0.3s;
+        }
+
+        .timer-badge.pulse {
+            border-color: var(--accent-red);
+            color: var(--accent-red);
+            animation: pulse 1s infinite;
+            background: rgba(255, 23, 68, 0.2);
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        /* Feedback Overlay */
+        #feedback-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .emoji-feedback {
+            font-size: 6rem;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .emoji-feedback.show {
+            opacity: 1;
+            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+        }
+
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+            40%, 60% { transform: translate3d(4px, 0, 0); }
+        }
+
+        /* Particles */
+        .particle {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: #fff;
+            border-radius: 50%;
+            z-index: 9999;
+        }
+
+        /* Results */
+        .score-big {
+            font-size: 4rem;
+            font-weight: 700;
+            margin: 20px 0;
+            background: -webkit-linear-gradient(white, #e0e0e0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="glass-container">
+        
+        <div id="start-screen" class="screen active" style="justify-content: center;">
+            <h1 style="font-size: 2.5rem;">Chemistry Quiz <br><span class="hindi-sub" style="font-size: 1.2rem; color: #fff;">रसायन विज्ञान (51-100)</span></h1>
+            
+            <div style="width: 100%; padding: 0 20px; margin-top: 30px;">
+                <div class="control-group">
+                    <label>Timer per Question (Seconds) <br><span class="hindi-sub">टाइमर (सेकंड)</span></label>
+                    <input type="number" id="timer-input" placeholder="0 = Unlimited" value="30">
+                </div>
+
+                <div class="toggle-container">
+                    <div>
+                        <strong>Shuffle Questions</strong>
+                        <span class="hindi-sub">प्रश्नों को मिलाएं</span>
+                    </div>
+                    <input type="checkbox" id="shuffle-toggle" checked style="width: 20px; height: 20px;">
+                </div>
+
+                <button class="btn" onclick="app.startQuiz()">Start Quiz <span class="hindi-sub" style="display:inline; color:inherit;">शुरू करें</span></button>
+            </div>
+        </div>
+
+        <div id="quiz-screen" class="screen">
+            <div class="top-bar">
+                <div class="progress-container">
+                    <div id="progress-bar" class="progress-bar"></div>
+                </div>
+                <div class="stats">
+                    <span id="q-counter">Q: 51/100</span>
+                    <span id="score-counter">Score: 0</span>
+                </div>
+            </div>
+
+            <div id="timer-badge" class="timer-badge">--</div>
+
+            <div class="question-box">
+                <div id="question-text" class="question-text">Loading...</div>
+            </div>
+
+            <div id="options-container" class="options-grid">
+                </div>
+
+            <button class="btn btn-finish" onclick="app.finishQuiz()">Finish & Show Results <span class="hindi-sub" style="display:inline; color: inherit;">परिणाम देखें</span></button>
+        </div>
+
+        <div id="result-screen" class="screen" style="justify-content: center;">
+            <h1>Result <span class="hindi-sub" style="display:inline;">परिणाम</span></h1>
+            <div id="final-score" class="score-big">0%</div>
+            <p id="result-message" style="font-size: 1.2rem; margin-bottom: 10px; text-align: center;">Message</p>
+            <p id="stats-detail" style="opacity: 0.8; margin-bottom: 30px;">Correct: 0 | Total: 50</p>
+            <button class="btn" onclick="app.resetQuiz()">Restart Quiz <span class="hindi-sub" style="display:inline; color: inherit;">पुनः प्रयास करें</span></button>
+        </div>
+
+    </div>
+
+    <div id="feedback-overlay">
+        <div id="emoji-display" class="emoji-feedback">😢</div>
+    </div>
+
+    <script>
+        // Database: Questions 51-100 extracted from images
+        const rawQuestions = [
+            {
+                q: {en: "Who discovered Deuterium or Heavy Hydrogen?", hi: "ड्यूटेरियम या भारी हाइड्रोजन का आविष्कार सर्वप्रथम किसके द्वारा किया गया?"},
+                options: [
+                    {en: "Urey", hi: "यूरे"}, {en: "Brickwedde", hi: "ब्रिकवेट"}, {en: "Murphy", hi: "मर्फी"}, {en: "All of these", hi: "इनमें से सभी"}
+                ],
+                ans: 3 
+            },
+            {
+                q: {en: "Which metal does NOT release Hydrogen on reaction with dilute HCl?", hi: "निम्नलिखित में से कौन-सी धातु तनु HCI से अभिक्रिया कर हाइड्रोजन मुक्त नहीं करता है?"},
+                options: [
+                    {en: "Zinc", hi: "जस्ता"}, {en: "Copper", hi: "ताँबा"}, {en: "Sodium", hi: "सोडियम"}, {en: "Magnesium", hi: "मैग्नीशियम"}
+                ],
+                ans: 1
+            },
+            {
+                q: {en: "Which is used as a moderator in nuclear reactors?", hi: "निम्नलिखित में से कौन नाभिकीय रिएक्टरों में मंदक के रूप में इस्तेमाल होता है?"},
+                options: [
+                    {en: "Soft Water", hi: "मृदु जल"}, {en: "Heavy Water", hi: "भारी जल"}, {en: "Hard Water", hi: "कठोर जल"}, {en: "Sea Water", hi: "समुद्री जल"}
+                ],
+                ans: 1
+            },
+            {
+                q: {en: "Hydrogen gas is produced by the reaction of dilute HNO3 on:", hi: "किस पर तनु HNO3 की अभिक्रिया से हाइड्रोजन गैस उत्पन्न होती है?"},
+                options: [
+                    {en: "Al", hi: "Al"}, {en: "Mn", hi: "Mn"}, {en: "Fe", hi: "Fe"}, {en: "Cu", hi: "Cu"}
+                ],
+                ans: 1
+            },
+            {
+                q: {en: "Heavy water can be obtained by:", hi: "भारी जल प्राप्त किया जा सकता है-"},
+                options: [
+                    {en: "Boiling water", hi: "जल को उबालकर"}, {en: "Cooling water", hi: "जल को ठंडा कर"}, {en: "Prolonged electrolysis of water", hi: "जल को लंबे समय तक वैद्युत अपघटन करके"}, {en: "Heating H2O2", hi: "H2O2 को गर्म करके"}
+                ],
+                ans: 2
+            },
+            {
+                q: {en: "Which oxide forms Hydrogen Peroxide on reacting with dilute H2SO4?", hi: "निम्नलिखित में से कौन-सा ऑक्साइड तनु H2SO4 से अभिक्रिया करके हाइड्रोजन परऑक्साइड बनाता है?"},
+                options: [
+                    {en: "Na2O2", hi: "Na2O2"}, {en: "Na2O", hi: "Na2O"}, {en: "MgO", hi: "MgO"}, {en: "Fe2O3", hi: "Fe2O3"}
+                ],
+                ans: 0
+            },
+            {
+                q: {en: "How is Hydrogen Peroxide prepared in the laboratory?", hi: "प्रयोगशाला में हाइड्रोजन परऑक्साइड किस प्रकार तैयार की जाती है?"},
+                options: [
+                    {en: "Mixing MnO2 in cold dilute H2SO4", hi: "MnO2 को ठंडे तनु H2SO4 में मिलाकर"}, {en: "Adding PbO2 to acidic KMnO4", hi: "PbO2 को अम्लीय KMnO4 में डालकर"}, {en: "Adding Na2O2 to boiling water", hi: "Na2O2 को H2O2 को उबलते जल में डालकर"}, {en: "Dissolving BaO2 in cold water and passing CO2", hi: "BaO2 को ठंडे जल में घुलाकर विलयन में CO2 प्रवाहित करने पर"}
+                ],
+                ans: 3
+            },
+            {
+                q: {en: "Commercial '10 volume H2O2' is a solution with strength approximately:", hi: "व्यापारिक '10 आयतन H2O2' एक ऐसा विलयन है जिसकी सामर्थ्य होती है-"},
+                options: [
+                    {en: "30%", hi: "लगभग 30%"}, {en: "10%", hi: "लगभग 10%"}, {en: "3%", hi: "लगभग 3%"}, {en: "1%", hi: "लगभग 1%"}
+                ],
+                ans: 2
+            },
+            {
+                q: {en: "Consider statements about 'Heavy Water': 1. Called Deuterium Oxide (D2O). 2. Colorless liquid like normal water. 3. Max density at 4°C.", hi: "'भारी जल' के संबंध में निम्नलिखित कथनों पर विचार कीजिए-"},
+                options: [
+                    {en: "Only 1", hi: "केवल 1"}, {en: "1 and 2", hi: "1 और 2"}, {en: "Only 2", hi: "केवल 2"}, {en: "2 and 3", hi: "2 और 3"}
+                ],
+                ans: 1
+            },
+            {
+                q: {en: "Used in bleaching of hair:", hi: "बालों के ब्लीचिंग में प्रयुक्त होता है-"},
+                options: [
+                    {en: "Heavy Water", hi: "भारी जल"}, {en: "Hydrogen Peroxide", hi: "हाइड्रोजन परऑक्साइड"}, {en: "Sulfuric Acid", hi: "सल्फ्यूरिक अम्ल"}, {en: "Oxalic Acid", hi: "ऑक्जेलिक अम्ल"}
+                ],
+                ans: 1
+            },
+            {
+                q: {en: "Chemical used to restore color of old oil paintings:", hi: "भ्रष्ट पदार्थों को फिर से साफ करने में या पुराने तैल चित्रों के रंगों को फिर से उभारने में निम्नलिखित में किस रसायन का प्रयोग किया जाता है?"},
+                options: [
+                    {en: "Nitric Acid", hi: "नाइट्रिक अम्ल"}, {en: "Sulfuric Acid", hi: "सल्फ्यूरिक अम्ल"}, {en: "Heavy Water", hi: "भारी जल"}, {en: "Hydrogen Peroxide", hi: "हाइड्रोजन परऑक्साइड"}
+                ],
+                ans: 3
+            },
+            {
+                q: {en: "Sea water is more saline than rain water because:", hi: "समुद्र का जल वर्षा जल से अधिक लवण युक्त होता है, क्यों-"},
+                options: [
+                    {en: "Atmosphere near sea is salty", hi: "समुद्र के आस-पास का वातावरण लवण युक्त होता है"}, {en: "Rivers bring salt from earth", hi: "समुद्र में मिलने वाली नदियाँ अपने साथ लवण बहाकर लाती है"}, {en: "Salt rocks inside sea", hi: "समुद्र के अंदर लवण के चट्टानें हैं"}, {en: "Sea animals produce salt", hi: "समुद्र में रहने वाले जीव जन्तु लवण उत्पन्न करते हैं"}
+                ],
+                ans: 1
+            },
+            {
+                q: {en: "Pure water can be obtained from sea water by which process?", hi: "समुद्री जल से शुद्ध जल किस प्रक्रिया द्वारा प्राप्त किया जा सकता है?"},
+                options: [
+                    {en: "Condensation", hi: "सघनन द्वारा"}, {en: "Distillation", hi: "आसवन द्वारा"}, {en: "Evaporation", hi: "वाष्पन द्वारा"}, {en: "Fractional Distillation", hi: "प्रभाजी आसवन द्वारा"}
+                ],
+                ans: 1
+            },
+            {
+                q: {en: "Density of water when heated from 0°C to 100°C:", hi: "0°C से 100°C तक गर्म करने पर पानी का घनत्व-"},
+                options: [
+                    {en: "Increases till 4°C then decreases", hi: "4°C तक बढ़ता है और फिर घटता है"}, {en: "Decreases till 4°C then increases", hi: "4°C तक घटता है और फिर बढ़ता है"}, {en: "Increases with temperature", hi: "तापमान बढ़ने के साथ-साथ बढ़ता है"}, {en: "Decreases with temperature", hi: "तापमान बढ़ने के साथ-साथ घटता है"}
+                ],
+                ans: 0
+            },
+            {
+                q: {en: "Volume of water when heated from 0°C to 100°C:", hi: "0°C से 100°C तक गर्म करने पर पानी का आयतन-"},
+                options: [
+                    {en: "Increases till 4°C then decreases", hi: "4°C तक बढ़ता है और फिर घटता है"}, {en: "Decreases till 4°C then increases", hi: "4°C तक घटता है और फिर बढ़ता है"}, {en: "Increases with temperature", hi: "तापमान बढ़ने के साथ-साथ बढ़ता है"}, {en: "Decreases with temperature", hi: "तापमान बढ़ने के साथ-साथ घटता है"}
+                ],
+                ans: 1
+            },
+            {
+                q: {en: "Why does water have a higher boiling point than H2S or HCl?", hi: "हाइड्रोजन सल्फाइड या हाइड्रोजन क्लोराइड के तुलना में जल का उच्च क्वथनांक किसके कारण है?"},
+                options: [
+                    {en: "Hydrogen Bonding", hi: "हाइड्रोजन आबंधन"}, {en: "Polar Covalent Bonding", hi: "ध्रुवीय सहसंयोजी आबंधन"}, {en: "Van der Waals attraction", hi: "वाण्डरवाल्स आकर्षण"}, {en: "Dipole Insulation", hi: "द्विध्रुवी रोधन"}
+                ],
+                ans: 0
+            },
+            {
+                q: {en: "Which element is most abundant in the Universe?", hi: "निम्नलिखित में कौन-सा तत्व ब्रह्माण्ड में सर्वाधिक मात्रा में उपलब्ध है?"},
+                options: [
+                    {en: "Nitrogen", hi: "नाइट्रोजन"}, {en: "Hydrogen", hi: "हाइड्रोजन"}, {en: "Oxygen", hi: "ऑक्सीजन"}, {en: "Helium", hi: "हीलियम"}
+                ],
+                ans: 1
+            },
+            {
+                q: {en: "Why is 'Heavy Water' called so?", hi: "पानी में क्या होने पर उसे भारी पानी कहा जाता है?"},
+                options: [
+                    {en: "Heavy isotope of Hydrogen", hi: "हाइड्रोजन का भारी समस्थानिक"}, {en: "Heavy isotope of Oxygen", hi: "ऑक्सीजन का भारी समस्थानिक"}, {en: "Molecular number of H atoms", hi: "हाइड्रोजन परमाणुओं की अणु संख्या"}, {en: "Molecular number of O atoms", hi: "ऑक्सीजन परमाणुओं की अणु संख्या"}
+                ],
+                ans: 0
+            },
+            {
+                q: {en: "Disinfection of water in rural areas is done by:", hi: "ग्रामीण क्षेत्रों में जल का किटाणुनाशन किया जाता है-"},
+                options: [
+                    {en: "Potassium Permanganate", hi: "पोटेशियम परमैगनेट द्वारा"}, {en: "Chlorine", hi: "क्लोरिन द्वारा"}, {en: "Sodium Chloride", hi: "सोडियम क्लोराइड द्वारा"}, {en: "Sodium Sulfate", hi: "सोडियम सल्फेट द्वारा"}
+                ],
+                ans: 0
+            },
+            {
+                q: {en: "Specific gravity of D2O is:", hi: "D2O का विशिष्ट घनत्व होता है-"},
+                options: [
+                    {en: "More than H2O", hi: "H2O से ज्यादा"}, {en: "Less than H2O", hi: "H2O से कम"}, {en: "Equal to H2O", hi: "H2O के बराबर"}, {en: "None", hi: "इनमें से कोई नहीं"}
+                ],
+                ans: 0
+            },
+            {
+                q: {en: "If a burning candle is placed in a jar of dry Hydrogen gas:", hi: "यदि शुष्क हाइड्रोजन के गैस जार में जलती हुई मोमबत्ती डाली जाए तो-"},
+                options: [
+                    {en: "Candle extinguishes", hi: "मोमबत्ती बुझ जाती है"}, {en: "Candle burns faster", hi: "मोमबत्ती और अधिक तेजी से जलने लगता है"}, {en: "Hydrogen burns, candle extinguishes", hi: "हाइड्रोजन जलने लगता है, परन्तु मोमबत्ती बुझ जाती है"}, {en: "No change", hi: "मोमबत्ती में किसी भी प्रकार का परिवर्तन नहीं आता"}
+                ],
+                ans: 2
+            },
+            {
+                q: {en: "Consider statements: 1. Alum settles dirt in water. 2. Chlorine/Bleaching powder kills bacteria.", hi: "निम्नलिखित पर विचार कीजिए-"},
+                options: [
+                    {en: "Only 1", hi: "केवल 1"}, {en: "Only 2", hi: "केवल 2"}, {en: "Both 1 and 2", hi: "1 तथा 2 दोनों"}, {en: "Neither 1 nor 2", hi: "न तो 1 न ही 2"}
+                ],
+                ans: 2
+            },
+            {
+                q: {en: "Potassium Permanganate makes water:", hi: "पोटैशियम परमैगनेट जल को-"},
+                options: [
+                    {en: "Germ free", hi: "किटाणुरहित बना देता है"}, {en: "Tasty", hi: "स्वादिष्ट बनाता है"}, {en: "Transparent", hi: "पारदर्शक बनाता है"}, {en: "Odor free", hi: "दुर्गन्ध मुक्त बनाता है"}
+                ],
+                ans: 0
+            },
+            {
+                q: {en: "Reaction between which two reactants produces Hydrogen gas?", hi: "निम्नलिखित में से किन दो अभिकारकों के मध्य अभिक्रिया हाइड्रोजन गैस उत्पन्न करेगी?"},
+                options: [
+                    {en: "Magnesium and Hydrochloric acid", hi: "मैग्नीशियम और हाइड्रोक्लोरिक अम्ल"}, {en: "Copper and Dilute Nitric acid", hi: "ताम्र और तनु नाइट्रिक अम्ल"}, {en: "Calcium Carbonate and HCl", hi: "कैल्शियम कार्बोनेट और हाइड्रोक्लोरिक अम्ल"}, {en: "Zinc and Nitric acid", hi: "जस्ता और नाइट्रिक अम्ल"}
+                ],
+                ans: 0
+            },
+            {
+                q: {en: "A white layer forms on the inner surface of a kettle after boiling water. This layer is:", hi: "केतली में पानी को उबालने पर उसकी आन्तरिक परत पर सफेद पदार्थ की एक परत जम जाती है, यह परत होती है-"},
+                options: [
+                    {en: "Sodium Chloride", hi: "सोडियम क्लोराइड की"}, {en: "Calcium Chloride", hi: "कैल्शियम क्लोराइड की"}, {en: "Magnesium Chloride", hi: "मैग्नीशियम क्लोराइड की"}, {en: "Carbonates of Ca and Mg", hi: "Ca तथा Mg के कार्बोनेट्स की"}
+                ],
+                ans: 3
+            },
+            {
+                q: {en: "When hard water evaporates completely, a white solid remains. This is due to presence of:", hi: "जब कठोर जल पूर्णतः वाष्पीकृत हो जाता है, तब पात्र में सफेद ठोस बच्चा रह जाता है। यह निम्नलिखित में से किसकी उपस्थिति के कारण होता है?"},
+                options: [
+                    {en: "Ca & Mg Carbonates", hi: "Ca और Mg के कार्बोनेट"}, {en: "Ca & Mg Sulfates", hi: "Ca और Mg के सल्फेट"}, {en: "Ca & Mg Chlorides", hi: "Ca और Mg के क्लोराइड"}, {en: "All of these (1, 2, 3)", hi: "1, 2 और 3"}
+                ],
+                ans: 3
+            },
+            {
+                q: {en: "Purest form of water is:", hi: "जल का शुद्धतम रूप है-"},
+                options: [
+                    {en: "Tap water", hi: "नल का जल"}, {en: "Rain water", hi: "वर्षा का जल"}, {en: "Ground water", hi: "भौम जल"}, {en: "Distilled water", hi: "आसुत जल"}
+                ],
+                ans: 1
+            },
+            {
+                q: {en: "Reason for absence of Hydrogen in atmosphere:", hi: "वायुमंडल में हाइड्रोजन नहीं पाये जाने का कारण है-"},
+                options: [
+                    {en: "Highly flammable", hi: "यह अतिज्वलनशील होती है"}, {en: "Lightest gas", hi: "यह सबसे हल्की गैस होती है"}, {en: "Absorbed by plants", hi: "पौधे इसका अवशोषण कर लेते हैं"}, {en: "Combines with Oxygen immediately", hi: "यह तुरन्त ऑक्सीजन के साथ मिलकर पानी बना देती है"}
+                ],
+                ans: 1
+            },
+            {
+                q: {en: "Process used to make Vanaspati Ghee from Vegetable Oil:", hi: "वनस्पति तेल से डालडा या वनस्पति घी बनाने में निम्नलिखित में से कौन-सी प्रक्रिया इस्तेमाल की जाती है?"},
+                options: [
+                    {en: "Hydrolysis", hi: "जल अपघटन"}, {en: "Oxidation", hi: "ऑक्सीकरण"}, {en: "Ozone degradation", hi: "ओजोन अपघटन"}, {en: "Hydrogenation", hi: "हाइड्रोजनीकरण"}
+                ],
+                ans: 3
+            },
+            {
+                q: {en: "Method used in industrial production of Vanaspati Ghee:", hi: "वनस्पति घी के औद्योगिक उत्पादन में कौन-सी विधि काम में लायी जाती है?"},
+                options: [
+                    {en: "Reduction", hi: "अपचयन"}, {en: "Oxidation", hi: "ऑक्सीकरण"}, {en: "Ionization", hi: "आयनन"}, {en: "Dissociation", hi: "वियोजन"}
+                ],
+                ans: 0
+            },
+            {
+                q: {en: "Who discovered Heavy Water?", hi: "निम्नलिखित में किसने भारी जल की खोज की?"},
+                options: [
+                    {en: "Heinrich Hertz", hi: "हेनरिक हर्ट्ज"}, {en: "H.C. Urey", hi: "एच. सी. यूरे"}, {en: "Robert Boyle", hi: "रॉबर्ट बायल"}, {en: "Joseph Priestley", hi: "जोसेफ प्रोस्टले"}
+                ],
+                ans: 1
+            },
+            {
+                q: {en: "Which group of Periodic Table is called Carbon Family?", hi: "आवर्त सारणी के किस वर्ग को कार्बन परिवार कहा जाता है?"},
+                options: [
+                    {en: "Group-17", hi: "वर्ग-17"}, {en: "Group-15", hi: "वर्ग-15"}, {en: "Group-16", hi: "वर्ग-16"}, {en: "Group-14", hi: "वर्ग-14"}
+                ],
+                ans: 3
+            },
+            {
+                q: {en: "Which statement is NOT correct regarding Carbon?", hi: "कार्बन के संबंध में निम्नलिखित में कौन-सा एक सही नहीं है?"},
+                options: [
+                    {en: "It is a non-metal", hi: "यह एक अधातु तत्व है"}, {en: "Has 6 P, 6 N, 6 e-", hi: "इसके परमाणु में 6 प्रोटॉन, 6 न्यूट्रॉन तथा 6 इलेक्ट्रॉन होते हैं"}, {en: "Essential for organic compounds", hi: "कार्बन सभी जैव यौगिकों का अनिवार्य मूल तत्व है"}, {en: "Not found in free state in nature", hi: "प्रकृति में कार्बन मुक्त अवस्था में नहीं पाये जाते हैं"}
+                ],
+                ans: 3
+            },
+            {
+                q: {en: "Which is the radioactive isotope of Carbon?", hi: "निम्नलिखित में कौन कार्बन का रेडियो सक्रिय समस्थानिक है?"},
+                options: [
+                    {en: "12C", hi: "12C"}, {en: "14C", hi: "14C"}, {en: "13C", hi: "13C"}, {en: "None", hi: "इनमें से कोई नहीं"}
+                ],
+                ans: 2 
+            },
+            {
+                q: {en: "Consider statements: 1. Property of self-linking is Catenation. 2. Catenation is ONLY in Carbon.", hi: "निम्नलिखित कथनों पर विचार कीजिए-"},
+                options: [
+                    {en: "Only 1", hi: "केवल 1"}, {en: "Only 2", hi: "केवल 2"}, {en: "Both 1 and 2", hi: "1 तथा 2 दोनों"}, {en: "Neither 1 nor 2", hi: "न तो 1 न ही 2"}
+                ],
+                ans: 0 
+            },
+            {
+                q: {en: "With which element does Hydrogen form the most compounds?", hi: "हाइड्रोजन के साथ सबसे अधिक यौगिक निम्नलिखित में से किस तत्व द्वारा बनाये जाते हैं?"},
+                options: [
+                    {en: "Nitrogen", hi: "नाइट्रोजन"}, {en: "Silicon", hi: "सिलिकॉन"}, {en: "Carbon", hi: "कार्बन"}, {en: "Oxygen", hi: "ऑक्सीजन"}
+                ],
+                ans: 2
+            },
+            {
+                q: {en: "Property where one element exists in multiple forms is called:", hi: "वह गुण जिसके कारण एक ही तत्व कई रूपों में पाया जाता है, कहलाता है-"},
+                options: [
+                    {en: "Polymerization", hi: "बहुलीकरण"}, {en: "Isotopes", hi: "समस्थानिक"}, {en: "Allotropy", hi: "अपरूपता"}, {en: "Isobars", hi: "समभारिक"}
+                ],
+                ans: 2
+            },
+            {
+                q: {en: "Which of the following is an allotrope of Carbon?", hi: "निम्नलिखित में कौन कार्बन के अपरूप है?"},
+                options: [
+                    {en: "Diamond", hi: "हीरा"}, {en: "Graphite", hi: "ग्रेफाइट"}, {en: "Fullerene", hi: "फुलेरीन"}, {en: "All of these", hi: "इनमें से सभी"}
+                ],
+                ans: 3
+            },
+            {
+                q: {en: "Consider statements about allotropes: 1. Chemical properties differ. 2. Physical properties are similar.", hi: "निम्नलिखित कथनों पर विचार कीजिए-"},
+                options: [
+                    {en: "Only 1", hi: "केवल 1"}, {en: "Only 2", hi: "केवल 2"}, {en: "Both 1 and 2", hi: "1 तथा 2 दोनों"}, {en: "Neither 1 nor 2", hi: "न तो 1 न ही 2"}
+                ],
+                ans: 3
+            },
+            {
+                q: {en: "Which is NOT a Crystalline allotrope of Carbon?", hi: "निम्नलिखित में कौन सा एक कार्बन के रवेदार (Crystalline) अपरूप नहीं है?"},
+                options: [
+                    {en: "Diamond", hi: "हीरा"}, {en: "Fullerene", hi: "फुलेरीन"}, {en: "Graphite", hi: "ग्रेफाइट"}, {en: "Coal", hi: "कोयला"}
+                ],
+                ans: 3
+            },
+            {
+                q: {en: "Which does NOT contain Carbon?", hi: "निम्नलिखित में किसमें कार्बन नहीं है?"},
+                options: [
+                    {en: "Diamond", hi: "हीरा"}, {en: "Coal", hi: "कोयला"}, {en: "Graphite", hi: "ग्रेफाइट"}, {en: "Quartz (Sand)", hi: "क्वार्ट्ज"}
+                ],
+                ans: 3
+            },
+            {
+                q: {en: "Correct statements about Diamond: 1. Used as gem (refractive). 2. Conductor. 3. Used to cut glass/stone. 4. Used for rock drilling.", hi: "हीरे के बारे में निम्नलिखित कथनों में से कौन-से सही हैं?"},
+                options: [
+                    {en: "1, 3 and 4", hi: "1, 3 और 4"}, {en: "1, 2 and 3", hi: "1, 2 और 3"}, {en: "2, 3 and 4", hi: "2, 3 और 4"}, {en: "2 and 4", hi: "2 और 4"}
+                ],
+                ans: 0
+            },
+            {
+                q: {en: "Which of the following is an element?", hi: "निम्नलिखित में कौन-सा एक तत्व है?"},
+                options: [
+                    {en: "Sand", hi: "रेत"}, {en: "Marble", hi: "संगमरमर"}, {en: "Diamond", hi: "हीरा"}, {en: "Sugar", hi: "शक्कर"}
+                ],
+                ans: 2
+            },
+            {
+                q: {en: "Purest form of Carbon is-", hi: "कार्बन का शुद्धतम रूप है-"},
+                options: [
+                    {en: "Diamond", hi: "हीरा"}, {en: "Charcoal", hi: "चारकोल"}, {en: "Graphite", hi: "ग्रेफाइट"}, {en: "Fullerene", hi: "फुलेरीन"}
+                ],
+                ans: 3
+            },
+            {
+                q: {en: "Which is NOT true regarding properties of Diamond?", hi: "हीरा के गुणों के संदर्भ में निम्नलिखित में कौन-सा एक सही नहीं है?"},
+                options: [
+                    {en: "Hardest substance", hi: "हीरा सबसे सख्त (कठोर) पदार्थ है"}, {en: "Density 3.5, Refractive Index 2.417", hi: "हीरा का घनत्व 3.5 तथा अपवर्तनांक 2.417 होता है"}, {en: "Inert and Insoluble", hi: "वह अक्रियाशील पदार्थ है तथा किसी भी रसायन में नहीं घुलता"}, {en: "X-rays cannot pass through it", hi: "X-किरणें हीरा को पार नहीं कर पाती है"}
+                ],
+                ans: 3
+            },
+            {
+                q: {en: "Which is NOT true regarding properties of Graphite?", hi: "ग्रेफाइट के गुण के संदर्भ में निम्नलिखित में कौन-सा एक सही नहीं है?"},
+                options: [
+                    {en: "Black crystalline substance", hi: "यह काले रंग का रवेदार पदार्थ है"}, {en: "Good conductor of heat/electricity", hi: "यह उष्मा और विद्युत का सुचालक होता है"}, {en: "Very hard substance", hi: "यह बहुत ही सख्त पदार्थ है"}, {en: "Marks paper black (pencil)", hi: "इसे कागज पर रगड़ने से काला निशान बनता है"}
+                ],
+                ans: 2
+            },
+            {
+                q: {en: "Positive rod (Anode) of Dry Cell is made of?", hi: "शुष्क सेल की धनात्मक छड़े किससे बनायी जाती है?"},
+                options: [
+                    {en: "Copper", hi: "तांबा"}, {en: "Zinc", hi: "जस्ता"}, {en: "Graphite", hi: "ग्रेफाइट"}, {en: "Brass", hi: "पीतल"}
+                ],
+                ans: 2
+            },
+            {
+                q: {en: "Which is a good lubricant?", hi: "निम्नलिखित में कौन-सा अच्छा स्नेहक है?"},
+                options: [
+                    {en: "Diamond powder", hi: "हीरा का चूर्ण"}, {en: "Molten Carbon", hi: "गलित कार्बन"}, {en: "Graphite powder", hi: "ग्रेफाइट का चूर्ण"}, {en: "Steel powder", hi: "इस्पात का चूर्ण"}
+                ],
+                ans: 2
+            },
+            {
+                q: {en: "Consider statements: 1. Heating diamond releases CO2. 2. Heating graphite releases CO2.", hi: "निम्नलिखित कथनों पर विचार कीजिए-"},
+                options: [
+                    {en: "Only 1", hi: "केवल 1"}, {en: "Only 2", hi: "केवल 2"}, {en: "Both 1 and 2", hi: "1 तथा 2 दोनों"}, {en: "Neither 1 nor 2", hi: "न तो 1 न ही 2"}
+                ],
+                ans: 2
+            },
+            {
+                q: {en: "Used to decolorize raw sugar:", hi: "कच्ची चीनी को रंगविहीन करने हेतु प्रयोग किया जाता है-"},
+                options: [
+                    {en: "Wood charcoal", hi: "काष्ठ चारकोल"}, {en: "Animal charcoal", hi: "एनीमल चारकोल"}, {en: "Coconut charcoal", hi: "नारियल का चारकोल"}, {en: "Sugar charcoal", hi: "चीनी का चारकोल"}
+                ],
+                ans: 1
+            }
+        ];
+
+        // App Logic
+        const app = {
+            currentQIndex: 0,
+            score: 0,
+            timer: null,
+            timeLeft: 0,
+            settings: { time: 30, shuffle: true },
+            activeQuestions: [],
+            audioCtx: null,
+
+            // Initialize Audio
+            initAudio: function() {
+                if (!this.audioCtx) this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            },
+
+            // Start Quiz
+            startQuiz: function() {
+                this.initAudio();
+                
+                // Get Settings
+                const timeVal = parseInt(document.getElementById('timer-input').value);
+                this.settings.time = isNaN(timeVal) ? 0 : timeVal;
+                this.settings.shuffle = document.getElementById('shuffle-toggle').checked;
+
+                // Prepare Data
+                this.activeQuestions = [...rawQuestions];
+                if(this.settings.shuffle) {
+                    this.activeQuestions.sort(() => Math.random() - 0.5);
+                }
+
+                // Reset
+                this.currentQIndex = 0;
+                this.score = 0;
+                document.getElementById('start-screen').classList.remove('active');
+                document.getElementById('result-screen').classList.remove('active');
+                document.getElementById('quiz-screen').classList.add('active');
+
+                this.loadQuestion();
+            },
+
+            // Load Question
+            loadQuestion: function() {
+                if (this.currentQIndex >= this.activeQuestions.length) {
+                    this.finishQuiz();
+                    return;
+                }
+
+                const data = this.activeQuestions[this.currentQIndex];
+                
+                // Update UI
+                document.getElementById('q-counter').innerText = `Q: ${this.currentQIndex + 1}/${this.activeQuestions.length}`;
+                document.getElementById('score-counter').innerText = `Score: ${this.score}`;
+                
+                const pct = ((this.currentQIndex) / this.activeQuestions.length) * 100;
+                document.getElementById('progress-bar').style.width = `${pct}%`;
+
+                document.getElementById('question-text').innerHTML = `
+                    ${data.q.en}
+                    <span class="hindi-sub">${data.q.hi}</span>
+                `;
+
+                // Options
+                const container = document.getElementById('options-container');
+                container.innerHTML = '';
+                data.options.forEach((opt, idx) => {
+                    const btn = document.createElement('button');
+                    btn.className = 'option-btn';
+                    btn.innerHTML = `${opt.en}<span class="hindi-sub">${opt.hi}</span>`;
+                    btn.onclick = () => this.handleAnswer(idx, data.ans, btn);
+                    container.appendChild(btn);
+                });
+
+                // Timer logic
+                if (this.settings.time > 0) {
+                    this.startTimer();
+                } else {
+                    document.getElementById('timer-badge').style.display = 'none';
+                }
+            },
+
+            // Timer
+            startTimer: function() {
+                clearInterval(this.timer);
+                this.timeLeft = this.settings.time;
+                const badge = document.getElementById('timer-badge');
+                badge.style.display = 'flex';
+                badge.classList.remove('pulse');
+                badge.innerText = this.timeLeft;
+
+                this.timer = setInterval(() => {
+                    this.timeLeft--;
+                    badge.innerText = this.timeLeft;
+                    
+                    if (this.timeLeft <= 5) badge.classList.add('pulse');
+                    
+                    if (this.timeLeft <= 0) {
+                        clearInterval(this.timer);
+                        this.handleTimeUp();
+                    }
+                }, 1000);
+            },
+
+            // Handle Interaction
+            handleAnswer: function(selectedIdx, correctIdx, btn) {
+                clearInterval(this.timer);
+                
+                // Lock buttons
+                const allBtns = document.querySelectorAll('.option-btn');
+                allBtns.forEach(b => b.disabled = true);
+
+                if (selectedIdx === correctIdx) {
+                    this.score++;
+                    btn.classList.add('correct');
+                    this.playSound('correct');
+                    this.triggerConfetti();
+                } else {
+                    btn.classList.add('wrong');
+                    allBtns[correctIdx].classList.add('correct');
+                    this.playSound('wrong');
+                    this.triggerShake();
+                }
+
+                setTimeout(() => {
+                    this.currentQIndex++;
+                    this.loadQuestion();
+                }, 1500);
+            },
+
+            handleTimeUp: function() {
+                const allBtns = document.querySelectorAll('.option-btn');
+                allBtns.forEach(b => b.disabled = true);
+                const correctIdx = this.activeQuestions[this.currentQIndex].ans;
+                allBtns[correctIdx].classList.add('correct');
+                this.playSound('wrong');
+                this.triggerShake();
+
+                setTimeout(() => {
+                    this.currentQIndex++;
+                    this.loadQuestion();
+                }, 1500);
+            },
+
+            // Sounds (Web Audio API)
+            playSound: function(type) {
+                if (!this.audioCtx) return;
+                const osc = this.audioCtx.createOscillator();
+                const gain = this.audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(this.audioCtx.destination);
+
+                if (type === 'correct') {
+                    // Arpeggio-like sweep
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(600, this.audioCtx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(1200, this.audioCtx.currentTime + 0.1);
+                    gain.gain.setValueAtTime(0.1, this.audioCtx.currentTime);
+                    gain.gain.linearRampToValueAtTime(0, this.audioCtx.currentTime + 0.5);
+                    osc.start();
+                    osc.stop(this.audioCtx.currentTime + 0.5);
+                } else {
+                    // Buzz
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(150, this.audioCtx.currentTime);
+                    osc.frequency.linearRampToValueAtTime(100, this.audioCtx.currentTime + 0.3);
+                    gain.gain.setValueAtTime(0.1, this.audioCtx.currentTime);
+                    gain.gain.linearRampToValueAtTime(0, this.audioCtx.currentTime + 0.3);
+                    osc.start();
+                    osc.stop(this.audioCtx.currentTime + 0.3);
+                }
+            },
+
+            // Visual Effects
+            triggerConfetti: function() {
+                for(let i=0; i<30; i++) {
+                    const p = document.createElement('div');
+                    p.className = 'particle';
+                    p.style.left = Math.random() * 100 + '%';
+                    p.style.top = '-10px';
+                    p.style.backgroundColor = `hsl(${Math.random()*360}, 100%, 50%)`;
+                    
+                    // Simple JS Animation
+                    const speed = 2 + Math.random() * 3;
+                    const angle = Math.random() * 360;
+                    
+                    let y = 0;
+                    let r = 0;
+                    
+                    const fall = () => {
+                        y += speed;
+                        r += 5;
+                        p.style.transform = `translateY(${y}px) rotate(${r}deg)`;
+                        if (y < window.innerHeight) requestAnimationFrame(fall);
+                        else p.remove();
+                    };
+                    
+                    document.body.appendChild(p);
+                    requestAnimationFrame(fall);
+                }
+            },
+
+            triggerShake: function() {
+                const el = document.getElementById('emoji-display');
+                el.classList.add('show');
+                setTimeout(() => el.classList.remove('show'), 1000);
+            },
+
+            // Finish
+            finishQuiz: function() {
+                clearInterval(this.timer);
+                document.getElementById('quiz-screen').classList.remove('active');
+                document.getElementById('result-screen').classList.add('active');
+
+                // Logic: Score based on Total Questions to give accurate grading
+                const total = this.activeQuestions.length;
+                const percentage = Math.round((this.score / total) * 100);
+
+                document.getElementById('final-score').innerText = `${percentage}%`;
+                document.getElementById('stats-detail').innerText = `Correct: ${this.score} | Total: ${total}`;
+
+                let msg = "";
+                if (percentage >= 80) msg = "🏆 Outstanding Performance!";
+                else if (percentage >= 50) msg = "👏 Well Done! Keep it up.";
+                else msg = "📚 Practice makes perfect! Try again.";
+                
+                document.getElementById('result-message').innerText = msg;
+            },
+
+            resetQuiz: function() {
+                document.getElementById('result-screen').classList.remove('active');
+                document.getElementById('start-screen').classList.add('active');
+            }
+        };
+    </script>
+</body>
+</html>

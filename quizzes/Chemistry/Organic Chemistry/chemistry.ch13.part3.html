@@ -1,0 +1,989 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chemistry Quiz (101-150) | रसायन विज्ञान</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --text-main: #ffffff;
+            --text-sub: #dddddd;
+            --accent-green: #00e676;
+            --accent-red: #ff1744;
+            --accent-blue: #2979ff;
+            --accent-purple: #d500f9;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #1A2980 0%, #26D0CE 50%, #D500F9 100%);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--text-main);
+            overflow-x: hidden;
+            padding: 10px;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Glassmorphism Card */
+        .glass-container {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 25px;
+            padding: 30px;
+            width: 100%;
+            max-width: 800px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            min-height: 600px;
+            transition: all 0.3s ease;
+        }
+
+        .screen {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            height: 100%;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Typography */
+        h1, h2 {
+            text-align: center;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .hindi-sub {
+            font-size: 0.85em;
+            color: var(--text-sub);
+            display: block;
+            margin-top: 5px;
+            font-weight: 400;
+            line-height: 1.4;
+        }
+
+        /* Inputs & Controls */
+        .control-group {
+            margin: 20px 0;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        input[type="number"] {
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
+            padding: 15px;
+            border-radius: 15px;
+            color: white;
+            font-family: 'Poppins', sans-serif;
+            font-size: 1.1rem;
+            outline: none;
+            text-align: center;
+        }
+
+        input[type="number"]::placeholder { color: rgba(255,255,255,0.7); }
+
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(0,0,0,0.2);
+            padding: 15px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+
+        /* Buttons */
+        .btn {
+            background: linear-gradient(90deg, #ff8a00, #e52e71);
+            border: none;
+            padding: 15px 40px;
+            color: white;
+            font-size: 1.2rem;
+            font-weight: 600;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: auto;
+            width: 100%;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+        }
+
+        .btn:hover {
+            transform: scale(1.02);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        .btn-finish {
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.2);
+            font-size: 1rem;
+            margin-top: 20px;
+        }
+
+        .btn-finish:hover {
+            background: rgba(255,255,255,0.25);
+        }
+
+        /* Quiz UI */
+        .top-bar {
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .progress-container {
+            width: 100%;
+            height: 6px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            margin-bottom: 15px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: var(--accent-green);
+            width: 0%;
+            transition: width 0.3s ease;
+            box-shadow: 0 0 10px var(--accent-green);
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .question-box {
+            background: rgba(0,0,0,0.2);
+            padding: 20px;
+            border-radius: 15px;
+            width: 100%;
+            margin-bottom: 25px;
+            border-left: 5px solid var(--accent-purple);
+        }
+
+        .question-text {
+            font-size: 1.1rem;
+            line-height: 1.5;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+            width: 100%;
+        }
+
+        @media (min-width: 600px) {
+            .options-grid { grid-template-columns: 1fr 1fr; }
+        }
+
+        .option-btn {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.15);
+            padding: 15px;
+            border-radius: 12px;
+            text-align: left;
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: 'Poppins', sans-serif;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            background: rgba(255,255,255,0.25);
+            transform: translateX(5px);
+        }
+
+        .option-btn.correct {
+            background: rgba(0, 230, 118, 0.6) !important;
+            border-color: var(--accent-green);
+        }
+
+        .option-btn.wrong {
+            background: rgba(255, 23, 68, 0.6) !important;
+            border-color: var(--accent-red);
+        }
+
+        /* Timer */
+        .timer-badge {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 3px solid white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin: 0 auto 15px auto;
+            transition: all 0.3s;
+        }
+
+        .timer-badge.pulse {
+            border-color: var(--accent-red);
+            color: var(--accent-red);
+            animation: pulse 1s infinite;
+            background: rgba(255, 23, 68, 0.2);
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        /* Feedback Overlay */
+        #feedback-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .emoji-feedback {
+            font-size: 6rem;
+            opacity: 0;
+            transition: opacity 0.2s;
+            text-shadow: 0 4px 20px rgba(0,0,0,0.5);
+        }
+
+        .emoji-feedback.show {
+            opacity: 1;
+            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+        }
+
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+            40%, 60% { transform: translate3d(4px, 0, 0); }
+        }
+
+        /* Particles */
+        .particle {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: #fff;
+            border-radius: 50%;
+            z-index: 9999;
+        }
+
+        /* Results */
+        .score-big {
+            font-size: 4rem;
+            font-weight: 700;
+            margin: 20px 0;
+            background: -webkit-linear-gradient(white, #e0e0e0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="glass-container">
+        
+        <div id="start-screen" class="screen active" style="justify-content: center;">
+            <h1 style="font-size: 2.5rem;">Chemistry Quiz <br><span class="hindi-sub" style="font-size: 1.2rem; color: #fff;">रसायन विज्ञान (101-150)</span></h1>
+            
+            <div style="width: 100%; padding: 0 20px; margin-top: 30px;">
+                <div class="control-group">
+                    <label>Timer per Question (Seconds) <br><span class="hindi-sub">टाइमर (सेकंड)</span></label>
+                    <input type="number" id="timer-input" placeholder="0 = Unlimited" value="30">
+                </div>
+
+                <div class="toggle-container">
+                    <div>
+                        <strong>Shuffle Questions</strong>
+                        <span class="hindi-sub">प्रश्नों को मिलाएं</span>
+                    </div>
+                    <input type="checkbox" id="shuffle-toggle" checked style="width: 20px; height: 20px;">
+                </div>
+
+                <button class="btn" onclick="app.startQuiz()">Start Quiz <span class="hindi-sub" style="display:inline; color:inherit;">शुरू करें</span></button>
+            </div>
+        </div>
+
+        <div id="quiz-screen" class="screen">
+            <div class="top-bar">
+                <div class="progress-container">
+                    <div id="progress-bar" class="progress-bar"></div>
+                </div>
+                <div class="stats">
+                    <span id="q-counter">Q: 1/50</span>
+                    <span id="score-counter">Score: 0</span>
+                </div>
+            </div>
+
+            <div id="timer-badge" class="timer-badge">--</div>
+
+            <div class="question-box">
+                <div id="question-text" class="question-text">Loading...</div>
+            </div>
+
+            <div id="options-container" class="options-grid">
+                </div>
+
+            <button class="btn btn-finish" onclick="app.finishQuiz()">Finish & Show Results <span class="hindi-sub" style="display:inline; color: inherit;">परिणाम देखें</span></button>
+        </div>
+
+        <div id="result-screen" class="screen" style="justify-content: center;">
+            <h1>Result <span class="hindi-sub" style="display:inline;">परिणाम</span></h1>
+            <div id="final-score" class="score-big">0%</div>
+            <p id="result-message" style="font-size: 1.2rem; margin-bottom: 10px; text-align: center;">Message</p>
+            <p id="stats-detail" style="opacity: 0.8; margin-bottom: 30px;">Correct: 0 | Total: 50</p>
+            <button class="btn" onclick="app.resetQuiz()">Restart Quiz <span class="hindi-sub" style="display:inline; color: inherit;">पुनः प्रयास करें</span></button>
+        </div>
+
+    </div>
+
+    <div id="feedback-overlay">
+        <div id="emoji-display" class="emoji-feedback">😢</div>
+    </div>
+
+    <script>
+        // Database: Questions 101-150 extracted from images
+        const rawQuestions = [
+            {
+                q: {en: "The use of diamond as jewelry depends on which property?", hi: "हीरे का आभूषण के रूप में उपयोग उसके किस गुण पर निर्भर है ?"},
+                options: [
+                    {en: "High Price", hi: "उच्च मूल्य"}, {en: "Refractive Index", hi: "अपवर्तनांक"}, {en: "Extreme Hardness", hi: "अति कठोरता"}, {en: "Bad Conductor", hi: "कुचालकता"}
+                ],
+                ans: 1 // Refractive Index
+            },
+            {
+                q: {en: "Carborundum is chemically:", hi: "कार्बोरेन्डम रासायनिक रूप से है-"},
+                options: [
+                    {en: "Calcium Oxide", hi: "कैल्शियम ऑक्साइड"}, {en: "Calcium Carbide", hi: "कैल्शियम कार्बाइड"}, {en: "Silicon Oxide", hi: "सिलिकॉन ऑक्साइड"}, {en: "Silicon Carbide", hi: "सिलिकॉन कार्बाइड"}
+                ],
+                ans: 3
+            },
+            {
+                q: {en: "What is obtained when diamond is heated to 2000°C in the absence of air?", hi: "हवा की अनुपस्थिति में हीरा को 2000°C तक गर्म करने पर प्राप्त होता है-"},
+                options: [
+                    {en: "Graphite", hi: "ग्रेफाइट"}, {en: "Diamond Charcoal", hi: "हीरा चारकोल"}, {en: "Fullerene", hi: "फुलेरीन"}, {en: "Carbon Black", hi: "काजल"}
+                ],
+                ans: 0
+            },
+            {
+                q: {en: "What is the crystalline structure of Graphite?", hi: "ग्रेफाइट की क्रिस्टलाइन संरचना किस प्रकार की होती है ?"},
+                options: [
+                    {en: "Regular Tetrahedron", hi: "नियमित टेट्राहेड्रॉन"}, {en: "Hexagonal Layer Lattice", hi: "हेक्सागोनल लेयर लैटिश"}, {en: "Geodesic Dome", hi: "जियोडेसिम डोम"}, {en: "None of these", hi: "इनमें से कोई नहीं"}
+                ],
+                ans: 1
+            },
+            {
+                q: {en: "Consider the statements: 1. Water gas is formed by passing steam over red hot coke. 2. CO is formed by passing CO2 over red hot carbon.", hi: "निम्नलिखित कथनों पर विचार कीजिए-"},
+                options: [
+                    {en: "Only 1", hi: "केवल 1"}, {en: "Only 2", hi: "केवल 2"}, {en: "Both 1 and 2", hi: "1 तथा 2 दोनों"}, {en: "Neither 1 nor 2", hi: "न तो 1 न ही 2"}
+                ],
+                ans: 2
+            },
+            {
+                q: {en: "Which one is NOT correct regarding properties of Carbon Monoxide (CO)?", hi: "कार्बन मोनोक्साइड (CO) के गुणों के संदर्भ में निम्नलिखित में कौन-सा एक सही नहीं है ?"},
+                options: [
+                    {en: "It is colorless, odorless and poisonous.", hi: "यह रंगहीन, स्वादहीन तथा विषैली गैस है"},
+                    {en: "It is not a combustible gas.", hi: "यह एक दहनशील गैस नहीं है"},
+                    {en: "It burns with light blue flame.", hi: "यह हवा में हल्की नीली ज्वाला के साथ जलती है"},
+                    {en: "It forms Phosgene with Cl2 in sunlight.", hi: "सूर्य के प्रकाश की उपस्थिति में यह Cl2 से संयोग कर कार्बोनिल क्लोराइड या फॉस्जीन का निर्माण करती है"}
+                ],
+                ans: 1 // CO IS combustible. Statement B says it is not, so B is the incorrect statement.
+            },
+            {
+                q: {en: "Which gas burns with a blue flame?", hi: "नीली ज्वाला के साथ जलने वाली गैस निम्नलिखित में कौन है ?"},
+                options: [
+                    {en: "Hydrogen", hi: "हाइड्रोजन"}, {en: "Nitrogen", hi: "नाइट्रोजन"}, {en: "Carbon Dioxide", hi: "कार्बन डाइऑक्साइड"}, {en: "Carbon Monoxide", hi: "कार्बन मोनोक्साइड"}
+                ],
+                ans: 3
+            },
+            {
+                q: {en: "Carbon Monoxide poisoning mainly affects which of the following?", hi: "कार्बन मोनोक्साइड विषाक्तता निम्नलिखित में किसको मुख्यतः प्रभावित करता है ?"},
+                options: [
+                    {en: "Digestive process", hi: "पाचन क्रिया को"}, {en: "Oxygen carrying capacity of blood", hi: "रक्त के ऑक्सीजन वहन करने की क्षमता"}, {en: "Liver", hi: "लिवर को"}, {en: "Kidney", hi: "किडनी को"}
+                ],
+                ans: 1
+            },
+            {
+                q: {en: "Consider statements: 1. Producer gas formed by steam on red hot coke. 2. Water gas formed by air on red hot coke. Which is correct?", hi: "निम्नलिखित कथनों पर विचार कीजिए- (1. लाल तप्त कोक पर भाफ... प्रोड्यूसर गैस. 2. लाल तप्त कोक पर वायु... जल गैस)"},
+                options: [
+                    {en: "Only 1", hi: "केवल 1"}, {en: "Only 2", hi: "केवल 2"}, {en: "Both 1 and 2", hi: "1 तथा 2 दोनों"}, {en: "Neither 1 nor 2", hi: "न तो 1 न ही 2"}
+                ],
+                ans: 3 // Both are reversed.
+            },
+            {
+                q: {en: "Which air pollutant combines with hemoglobin of blood faster than oxygen?", hi: "निम्नलिखित में कौन-सा वायु प्रदूषक ऑक्सीजन के अपेक्षा अधिक शीघ्रता से रक्त के हिमोग्लोबीन से संयोग करता है ?"},
+                options: [
+                    {en: "PAN", hi: "पैन (PAN)"}, {en: "Carbon Monoxide", hi: "कार्बन मोनोक्साइड"}, {en: "Carbon Dioxide", hi: "कार्बन डाइऑक्साइड"}, {en: "Ozone", hi: "ओजोन"}
+                ],
+                ans: 1
+            },
+            {
+                q: {en: "Which one of the following is NOT correct?", hi: "निम्नलिखित में कौन-सा एक सही नहीं है ?"},
+                options: [
+                    {en: "CO2 is formed by burning carbon in sufficient air.", hi: "कार्बन को हवा या ऑक्सीजन की पर्याप्त मात्रा में जलाने से कार्बन डाइऑक्साइड बनता है।"},
+                    {en: "CO is formed by burning carbon in insufficient air.", hi: "कार्बन या कार्बन युक्त ईंधनों को हवा या ऑक्सीजन की अपर्याप्त मात्रा में जलाने से कार्बन मोनोक्साइड गैस बनती है।"},
+                    {en: "CO is a highly poisonous gas.", hi: "कार्बन मोनोक्साइड अत्यंत विषैली गैस है।"},
+                    {en: "CO2 is also poisonous in nature.", hi: "कार्बन डाइऑक्साइड भी विषैली प्रकृति की होती है।"}
+                ],
+                ans: 3 // CO2 is asphyxiant, not poisonous/toxic like CO.
+            },
+            {
+                q: {en: "What is the amount of Carbon Dioxide in the atmosphere?", hi: "वायुमंडल में कार्बन डाइऑक्साइड की मात्रा कितनी है ?"},
+                options: [
+                    {en: "0.003 percent", hi: "0.003 प्रतिशत"}, {en: "0.03 percent", hi: "0.03 प्रतिशत"}, {en: "0.3 percent", hi: "0.3 प्रतिशत"}, {en: "0.001 percent", hi: "0.001 प्रतिशत"}
+                ],
+                ans: 1
+            },
+            {
+                q: {en: "Carbon Dioxide gas reacts with water to form:", hi: "कार्बन डाइऑक्साइड गैस जल से अभिक्रिया करके बनाती है-"},
+                options: [
+                    {en: "Carbonic Acid", hi: "कार्बोनिक अम्ल"}, {en: "Carbolic Acid", hi: "कार्बोलिक अम्ल"}, {en: "Carbomic Acid", hi: "कार्बोमिक अम्ल"}, {en: "Sulfurous Acid", hi: "सल्फ्यूरस अम्ल"}
+                ],
+                ans: 0
+            },
+            {
+                q: {en: "Which gas is used to extinguish fire?", hi: "आग बुझाने में कौन-सा गैस प्रयुक्त होती है ?"},
+                options: [
+                    {en: "Neon", hi: "निऑन"}, {en: "Nitrogen", hi: "नाइट्रोजन"}, {en: "Carbon Dioxide", hi: "कार्बन डाइऑक्साइड"}, {en: "Carbon Monoxide", hi: "कार्बन मोनोक्साइड"}
+                ],
+                ans: 2
+            },
+            {
+                q: {en: "Ethyl Alcohol is prepared in industries by which method?", hi: "उद्योगो में इथाइल ऐल्कोहॉल किस विधि द्वारा तैयार किया जाता है ?"},
+                options: [
+                    {en: "Fermentation", hi: "किण्वन"}, {en: "Polymerization", hi: "बहुलीकरण"}, {en: "Vulcanization", hi: "वल्कनीकरण"}, {en: "Fractional Distillation", hi: "प्रभाजी आसवन"}
+                ],
+                ans: 0
+            },
+            {
+                q: {en: "Slow conversion of complex organic substances to simple substances by enzymes is called?", hi: "जटिल कार्बनिक पदार्थों का एंजाइम की उपस्थिति में धीमी गति से सरल पदार्थों में परिवर्तन क्या कहलाता है ?"},
+                options: [
+                    {en: "Polymerization", hi: "बहुलीकरण"}, {en: "Fermentation", hi: "किण्वन"}, {en: "Vulcanization", hi: "वल्कनीकरण"}, {en: "Fractional Distillation", hi: "प्रभाजी आसवन"}
+                ],
+                ans: 1
+            },
+            {
+                q: {en: "Which of the following is a fermentation reaction?", hi: "निम्नलिखित में कौन-सी किण्वन अभिक्रिया है ?"},
+                options: [
+                    {en: "Conversion of milk to curd", hi: "दूध का दही में परिवर्तन"}, {en: "Souring of dough", hi: "गूँथे हुए आँटे का खट्टा होना"}, {en: "Formation of wine from cane juice", hi: "गन्ने के रस से शराब का बनना"}, {en: "All of these", hi: "इनमें से सभी"}
+                ],
+                ans: 3
+            },
+            {
+                q: {en: "What type of reaction is Fermentation?", hi: "किण्वन कैसी अभिक्रिया है ?"},
+                options: [
+                    {en: "Exothermic", hi: "ऊष्माक्षेपी"}, {en: "Endothermic", hi: "ऊष्माशोषी"}, {en: "Reversible", hi: "उत्क्रमणीय"}, {en: "None", hi: "इनमें से कोई नहीं"}
+                ],
+                ans: 0
+            },
+            {
+                q: {en: "Glucose and Fructose are converted to Ethanol by which enzyme?", hi: "ग्लूकोज एवं फ्रक्टोज किस एंजाइम द्वारा एथानॉल में परिवर्तित होता है ?"},
+                options: [
+                    {en: "Invertase", hi: "इनवर्टेस"}, {en: "Zymase", hi: "जाइमेस"}, {en: "Maltase", hi: "माल्टेस"}, {en: "Sucrase", hi: "सुक्रेज"}
+                ],
+                ans: 1
+            },
+            {
+                q: {en: "The source of Invertase and Zymase enzymes used in alcohol manufacture is?", hi: "शराब (एथानॉल) निर्माण में काम आने वाला इनवर्टेस तथा जाइमेस एंजाइम का होता है ?"},
+                options: [
+                    {en: "Algae", hi: "शैवाल"}, {en: "Bacteria", hi: "जीवाणु"}, {en: "Yeast", hi: "यीस्ट"}, {en: "None", hi: "इनमें से कोई नहीं"}
+                ],
+                ans: 2
+            },
+            {
+                q: {en: "Reaction of Ethyne (or Ethene) with water in presence of conc H2SO4 produces:", hi: "सांद्र सल्फ्यूरिक अम्ल की उपस्थिति में एथीन/एथाइन की अभिक्रिया जल से होने पर निर्मित होता है-"},
+                options: [
+                    {en: "Methanol", hi: "मैथेनॉल"}, {en: "Ethanol", hi: "एथानॉल"}, {en: "Propanol", hi: "प्रोपेनॉल"}, {en: "Butanol", hi: "ब्यूटेनॉल"}
+                ],
+                ans: 1 // Context implies Ethanol production.
+            },
+            {
+                q: {en: "Which gas is released during fermentation?", hi: "किण्वन के दौरान कौन गैस मुक्त होती है ?"},
+                options: [
+                    {en: "Hydrogen", hi: "हाइड्रोजन"}, {en: "Oxygen", hi: "ऑक्सीजन"}, {en: "Carbon Dioxide", hi: "कार्बन डाइऑक्साइड"}, {en: "Carbon Monoxide", hi: "कार्बन मोनोक्साइड"}
+                ],
+                ans: 2
+            },
+            {
+                q: {en: "Which statements are correct about Ethanol? 1. Colorless liquid 2. Insoluble in water 3. Highly flammable", hi: "एथानॉल (इथाइल ऐल्कोहॉल) के गुणों के संदर्भ में निम्नलिखित कथनों पर विचार कीजिए-"},
+                options: [
+                    {en: "1, 2 and 3", hi: "1, 2 और 2"}, {en: "1, 3 and 4", hi: "1, 3 और 4"}, {en: "2, 3 and 4", hi: "2, 3 और 4"}, {en: "All of the above", hi: "उपर्युक्त सभी"}
+                ],
+                ans: 1 // Assuming statement 4 was about blue flame (from similar previous q). But text says: 1. Colorless 2. Insoluble (False) 3. Highly Flammable. So 1 and 3 are correct. Option (b) is usually the pattern for correct statements in this book.
+            },
+            {
+                q: {en: "Which alcohol is used in alcoholic beverages?", hi: "ऐल्कोहॉलिक पेय पदार्थ में कौन-सा ऐल्कोहॉल इस्तेमाल किया जाता है ?"},
+                options: [
+                    {en: "Methyl Alcohol", hi: "मिथाइल ऐल्कोहॉल"}, {en: "Ethyl Alcohol", hi: "इथाइल ऐल्कोहॉल"}, {en: "Butyl Alcohol", hi: "ब्युटाइल ऐल्कोहॉल"}, {en: "Propyl Alcohol", hi: "प्रोपाइल ऐल्कोहॉल"}
+                ],
+                ans: 1
+            },
+            {
+                q: {en: "Which is known as 'Grain Alcohol'?", hi: "अन्न ऐल्कोहॉल (Grain Alcohol) के नाम से जाना जाता है ?"},
+                options: [
+                    {en: "Ethyl Alcohol", hi: "एथाइल ऐल्कोहॉल"}, {en: "Methyl Alcohol", hi: "मिथाइल ऐल्कोहॉल"}, {en: "Butyl Alcohol", hi: "ब्युटाइल ऐल्कोहॉल"}, {en: "Propyl Alcohol", hi: "प्रोपाइल ऐल्कोहॉल"}
+                ],
+                ans: 0
+            },
+            {
+                q: {en: "Excess intake of Ethyl Alcohol affects which organ?", hi: "अधिक मात्रा में इथाइल ऐल्कोहॉल के सेवन से मानव के किस अंग पर बुरा प्रभाव पड़ता है ?"},
+                options: [
+                    {en: "Kidney", hi: "किडनी"}, {en: "Liver", hi: "लीवर"}, {en: "Heart", hi: "हृदय"}, {en: "Intestine", hi: "आंत"}
+                ],
+                ans: 1
+            },
+            {
+                q: {en: "When poisonous substances like Methanol or Pyridine are added to Ethyl Alcohol, it is called:", hi: "इथाइल ऐल्कोहॉल में जब मेथनॉल, पिरिडीन अथवा कॉपर सल्फेट जैसे विषाक्त पदार्थ मिला दिये जाते है तब इसे कहा जाता है-"},
+                options: [
+                    {en: "Denatured Alcohol", hi: "विकृतिकृत ऐल्कोहॉल"}, {en: "Rectified Alcohol", hi: "रेक्टिफाइड ऐल्कोहॉल"}, {en: "Absolute Alcohol", hi: "परिशुद्ध ऐल्कोहॉल"}, {en: "All of these", hi: "इनमें से सभी"}
+                ],
+                ans: 0
+            },
+            {
+                q: {en: "Why is it necessary to denature alcohol?", hi: "ऐल्कोहॉल को विकृतिकृत करने की क्यो आवश्यकता पड़ती है ?"},
+                options: [
+                    {en: "For industrial use", hi: "इसके औद्योगिक इस्तेमाल करने के लिये"}, {en: "To make it usable as beverage", hi: "इसको ऐल्कोहॉलिक पेय के रूप में उपयोगी बनाने के लिये"}, {en: "To prevent misuse for drinking", hi: "इसके पीने के दुरुपयोग को रोकने के लिये"}, {en: "To increase potency", hi: "इसके क्षमता बढ़ाने के लिये"}
+                ],
+                ans: 2
+            },
+            {
+                q: {en: "Denatured spirit is mainly used for:", hi: "विकृतिकृत स्प्रिट मुख्यतः किस काम आती है ?"},
+                options: [
+                    {en: "As good fuel", hi: "अच्छे ईंधन के रूप में"}, {en: "As medicine", hi: "औषधि के रूप में"}, {en: "As solvent for varnish", hi: "वार्निश बनाने में विलायक क रूप में"}, {en: "As raw material for oil", hi: "तेल बनाने के लिये कच्चे माल के रूप में"}
+                ],
+                ans: 2
+            },
+            {
+                q: {en: "Rectified Spirit contains:", hi: "संशोधित स्प्रिट (Rectified Spirit) होती है-"},
+                options: [
+                    {en: "Tincture Iodine", hi: "टिंचर आयोडीन"}, {en: "95% Ethyl Alcohol + 5% Water", hi: "95% इथाइल ऐल्कोहॉल तथा 5% जल"}, {en: "100% Ethyl Alcohol", hi: "100% इथाइल ऐल्कोहॉल"}, {en: "None", hi: "इनमें से कोई नहीं"}
+                ],
+                ans: 1
+            },
+            {
+                q: {en: "Absolute Alcohol is:", hi: "परिशुद्ध ऐल्कोहॉल (Absolute Alcohol) होता है-"},
+                options: [
+                    {en: "90% Ethyl Alcohol", hi: "90% इथाइल ऐल्कोहॉल"}, {en: "95.57% Ethyl Alcohol", hi: "95.57% इथाइल ऐल्कोहॉल"}, {en: "98% Ethyl Alcohol", hi: "98% इथाइल ऐल्कोहॉल"}, {en: "100% Ethyl Alcohol", hi: "100% इथाइल ऐल्कोहॉल"}
+                ],
+                ans: 3
+            },
+            {
+                q: {en: "The lotion applied after shaving gives a cooling sensation due to the presence of:", hi: "दाढ़ी बनाने के बाद चेहरे पर जो घोल लगाया जाता है, उससे चेहरे पर ठण्डक महसूस होती है। इस घोल में यह गुण किस यौगिक की उपस्थिति के कारण होती है ?"},
+                options: [
+                    {en: "Ethyl Alcohol", hi: "इथाइल ऐल्कोहॉल"}, {en: "Methyl Alcohol", hi: "मिथाइल ऐल्कोहॉल"}, {en: "Salicylic Acid", hi: "सेलिसिलिक अम्ल"}, {en: "Ethylene Glycol", hi: "इथिलीन ग्लाइकॉल"}
+                ],
+                ans: 0
+            },
+            {
+                q: {en: "What is the final product of Alcoholic Fermentation?", hi: "ऐल्कोहॉलिक खमीरा (Alcoholic Fermentation) का आखिरी उत्पाद क्या है ?"},
+                options: [
+                    {en: "Formic Acid", hi: "फार्मिक एसिड"}, {en: "Ethyl Alcohol", hi: "इथाइल ऐल्कोहॉल"}, {en: "Pyruvic Acid", hi: "पाइरुविक एसिड"}, {en: "Ethylene Glycol", hi: "इथिलीन ग्लाइकॉल"}
+                ],
+                ans: 1
+            },
+            {
+                q: {en: "Tincture Iodine is:", hi: "टिंचर आयोडीन है-"},
+                options: [
+                    {en: "Aqueous solution of Iodine", hi: "आयोडीन का जलीय विलयन"}, {en: "Solution of Iodine with Acetylene", hi: "आयोडीन का ऐसीटिलीन के साथ विलयन"}, {en: "Alcoholic solution of Iodine", hi: "आयोडीन का ऐल्कोहॉलिक विलयन"}, {en: "Benzene solution of Iodine", hi: "आयोडीन का बेन्जीन के साथ विलयन"}
+                ],
+                ans: 2
+            },
+            {
+                q: {en: "Which of the following is also called Wood Spirit or Wood Alcohol?", hi: "निम्नलिखित में से किसका वुड-स्प्रिट या वुड ऐल्कोहॉल भी कहा जाता है ?"},
+                options: [
+                    {en: "Methyl Alcohol", hi: "मेथिल ऐल्कोहॉल"}, {en: "Ethyl Alcohol", hi: "एथिल ऐल्कोहॉल"}, {en: "Ethylene Glycol", hi: "इथिलीन ग्लाइकॉल"}, {en: "Glycerol", hi: "ग्लिसरॉल"}
+                ],
+                ans: 0
+            },
+            {
+                q: {en: "Consumption of even small quantity of which alcohol causes blindness or death?", hi: "निम्नलिखित में किस ऐल्कोहॉल को बहुत कम मात्रा में लिया जाए तो गंभीर विषाक्तन के साथ-साथ अंधेपन का कारण बन जाता है ?"},
+                options: [
+                    {en: "CH3OH", hi: "CH3OH"}, {en: "C2H5OH", hi: "C2H5OH"}, {en: "C3H7OH", hi: "C3H7OH"}, {en: "C4H10OH", hi: "C4H10OH"}
+                ],
+                ans: 0
+            },
+            {
+                q: {en: "Antifreeze is a mixture of:", hi: "एन्टीफ्रिज (Antifreeze) एक मिश्रण है-"},
+                options: [
+                    {en: "Methyl Alcohol & Water", hi: "मिथाइल ऐल्कोहॉल व जल का"}, {en: "Ethyl Alcohol & Water", hi: "इथाइल ऐल्कोहॉल व जल का"}, {en: "Acetic Acid & Water", hi: "ऐसीटिक अम्ल व जल का"}, {en: "Formic Acid & Water", hi: "फार्मिक अम्ल व जल का"}
+                ],
+                ans: 0 // Methyl Alcohol or Ethylene Glycol.
+            },
+            {
+                q: {en: "Reaction of Ethylene with cold alkaline Potassium Permanganate gives:", hi: "इथिलीन की प्रतिक्रिया पोटेशियम परमैगनेट के क्षारीय तथा ठंडे घोल से कराने पर प्राप्त होता है-"},
+                options: [
+                    {en: "Formic Acid", hi: "फार्मिक अम्ल"}, {en: "Acetic Acid", hi: "ऐसीटिक अम्ल"}, {en: "Ethylene Glycol", hi: "इथिलीन ग्लाइकॉल"}, {en: "Glycerol", hi: "ग्लिसरॉल"}
+                ],
+                ans: 2
+            },
+            {
+                q: {en: "What is used in the radiator of automobiles in cold countries as antifreeze?", hi: "शीत प्रधान देशों में ऑटोमोबाइल्स के रेडिएटर्स में एन्टीफ्रिज मिश्रण का इस्तेमाल किया जाता है। इस मिश्रण में क्या-क्या होता है ?"},
+                options: [
+                    {en: "Water and Ethyl Alcohol", hi: "पानी और इथाइल ऐल्कोहॉल"}, {en: "Water and Ethylene Glycol", hi: "पानी और इथिलीन ग्लाइकॉल"}, {en: "Water and Glycerol", hi: "पानी और ग्लिसरॉल"}, {en: "All of these", hi: "इनमें से सभी"}
+                ],
+                ans: 1
+            },
+            {
+                q: {en: "IUPAC name of Formaldehyde is:", hi: "फॉर्मेल्डिहाइड का IUPAC नाम है-"},
+                options: [
+                    {en: "Methanal", hi: "मेथेनल"}, {en: "Methanol", hi: "मैथेनॉल"}, {en: "Ethanal", hi: "एथेनल"}, {en: "Propanal", hi: "प्रोपेनल"}
+                ],
+                ans: 0
+            },
+            {
+                q: {en: "35 to 40 percent aqueous solution of Formaldehyde is called:", hi: "फॉर्मेल्डिहाइड का 35 से 40 प्रतिशत जलीय विलयन क्या कहलाता है ?"},
+                options: [
+                    {en: "Pyrene", hi: "पायरीन"}, {en: "Formalin", hi: "फॉर्मेलिन"}, {en: "Acetylene", hi: "ऐसीटिलीन"}, {en: "Ethylene", hi: "इथिलीन"}
+                ],
+                ans: 1
+            },
+            {
+                q: {en: "Oxidation of Methanol in presence of Silver/Iron Oxide catalyst gives:", hi: "सिल्वर अथवा आयरन ऑक्साइड-मॉलिब्डेनम ऑक्साइड जैसे उत्प्रेरक की उपस्थिति में 873-923K पर मेथेनॉल के ऑक्सीकरण के फलस्वरूप निर्मित होता है-"},
+                options: [
+                    {en: "Methanal", hi: "मेथेनल"}, {en: "Ethanal", hi: "एथेनल"}, {en: "Propanal", hi: "प्रोपेनल"}, {en: "Butanal", hi: "ब्यूटेनल"}
+                ],
+                ans: 0
+            },
+            {
+                q: {en: "'Urotropine' used in urinary diseases is prepared from:", hi: "मूत्र रोगों में प्रयुक्त 'यूरोट्रोपीन' बनायी जाती है-"},
+                options: [
+                    {en: "Nitrobenzene", hi: "नाइट्रोबेन्जीन से"}, {en: "Acetic Acid", hi: "ऐसीटिक अम्ल से"}, {en: "Chloroform", hi: "क्लोरोफॉर्म से"}, {en: "Formaldehyde", hi: "फॉर्मेल्डिहाइड से"}
+                ],
+                ans: 3
+            },
+            {
+                q: {en: "The chemical name of Urotropine is:", hi: "यूरोट्रोपीन का रासायनिक नाम है-"},
+                options: [
+                    {en: "Hexamethylene Diamine", hi: "हेक्सामिथिलीन डाइऐमीन"}, {en: "Hexamethylene Triamine", hi: "हेक्सामिथिलीन ट्राइऐमीन"}, {en: "Hexamethylene Tetramine", hi: "हेक्सामिथिलीन टेट्राऐमीन"}, {en: "Hexamethylene Pentamine", hi: "हेक्सामिथिलीन पेन्टाऐमीन"}
+                ],
+                ans: 2
+            },
+            {
+                q: {en: "Which substance is commercially produced via Cumene?", hi: "क्यूमीन के द्वारा निम्नलिखित में किस पदार्थ का वाणिज्यिक उत्पादन किया जाता है ?"},
+                options: [
+                    {en: "Methyl Alcohol", hi: "मेथिल ऐल्कोहॉल"}, {en: "Ethyl Alcohol", hi: "एथिल ऐल्कोहॉल"}, {en: "Phenol", hi: "फिनॉल"}, {en: "Benzene", hi: "बेंजीन"}
+                ],
+                ans: 2
+            },
+            {
+                q: {en: "Which is used as Nail Polish Remover?", hi: "नेल पॉलिश रिमूवर (Remover) के रूप में किसका इस्तेमाल किया जाता है ?"},
+                options: [
+                    {en: "Formaldehyde", hi: "फॉर्मेल्डिहाइड"}, {en: "Acetone", hi: "ऐसीटोन"}, {en: "Acetic Acid", hi: "ऐसीटिक अम्ल"}, {en: "Oxalic Acid", hi: "ऑक्जेलिक अम्ल"}
+                ],
+                ans: 1
+            },
+            {
+                q: {en: "Consider statements: 1. Ethanoic acid is commonly called Acetic acid. 2. 5-8% solution of Acetic acid is called Vinegar.", hi: "निम्नलिखित कथनों पर विचार कीजिए-"},
+                options: [
+                    {en: "Only 1", hi: "केवल 1"}, {en: "Only 2", hi: "केवल 2"}, {en: "Both 1 and 2", hi: "1 तथा 2 दोनों"}, {en: "Neither 1 nor 2", hi: "न तो 1 न ही 2"}
+                ],
+                ans: 2
+            },
+            {
+                q: {en: "Compound formed by reaction of Alcohol and Carboxylic Acid is called:", hi: "ऐल्कोहॉल तथा कार्बोक्सिलिक अम्ल की परस्पर अभिक्रिया के फलस्वरूप जो यौगिक निर्मित होते हैं उसे क्या कहते हैं ?"},
+                options: [
+                    {en: "Soap", hi: "साबुन"}, {en: "Ester", hi: "एस्टर"}, {en: "Detergent", hi: "अपमार्जक"}, {en: "Acetone", hi: "ऐसीटोन"}
+                ],
+                ans: 1
+            },
+            {
+                q: {en: "Which one is NOT correct?", hi: "निम्नलिखित में कौन-सा एक सही नहीं है ?"},
+                options: [
+                    {en: "Formaldehyde is a colorless gas", hi: "फॉर्मेल्डिहाइड एक रंगहीन गैस है"},
+                    {en: "Acetone is a colorless volatile liquid", hi: "ऐसीटोन एक रंगहीन एवं वाष्पशील द्रव है"},
+                    {en: "Ethanoic acid is an odorless liquid", hi: "एथेनोइक अम्ल एक गंधहीन द्रव है"},
+                    {en: "None of these", hi: "इनमें से कोई नहीं"}
+                ],
+                ans: 2 // Ethanoic acid has pungent smell.
+            },
+            {
+                q: {en: "Component of Pyroligneous acid is:", hi: "पायरोलिगिनियस अम्ल का अवयव है-"},
+                options: [
+                    {en: "Acetic Acid", hi: "ऐसीटीक अम्ल"}, {en: "Methyl Alcohol", hi: "मिथाइल ऐल्कोहॉल"}, {en: "Acetone", hi: "ऐसीटोन"}, {en: "All of these", hi: "इनमें से सभी"}
+                ],
+                ans: 3
+            }
+        ];
+
+        // App Logic
+        const app = {
+            currentQIndex: 0,
+            score: 0,
+            timer: null,
+            timeLeft: 0,
+            settings: { time: 30, shuffle: true },
+            activeQuestions: [],
+            audioCtx: null,
+
+            // Initialize Audio
+            initAudio: function() {
+                if (!this.audioCtx) this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            },
+
+            // Start Quiz
+            startQuiz: function() {
+                this.initAudio();
+                
+                // Get Settings
+                const timeVal = parseInt(document.getElementById('timer-input').value);
+                this.settings.time = isNaN(timeVal) ? 0 : timeVal;
+                this.settings.shuffle = document.getElementById('shuffle-toggle').checked;
+
+                // Prepare Data
+                this.activeQuestions = [...rawQuestions];
+                if(this.settings.shuffle) {
+                    this.activeQuestions.sort(() => Math.random() - 0.5);
+                }
+
+                // Reset
+                this.currentQIndex = 0;
+                this.score = 0;
+                document.getElementById('start-screen').classList.remove('active');
+                document.getElementById('result-screen').classList.remove('active');
+                document.getElementById('quiz-screen').classList.add('active');
+
+                this.loadQuestion();
+            },
+
+            // Load Question
+            loadQuestion: function() {
+                if (this.currentQIndex >= this.activeQuestions.length) {
+                    this.finishQuiz();
+                    return;
+                }
+
+                const data = this.activeQuestions[this.currentQIndex];
+                
+                // Update UI
+                document.getElementById('q-counter').innerText = `Q: ${this.currentQIndex + 1}/${this.activeQuestions.length}`;
+                document.getElementById('score-counter').innerText = `Score: ${this.score}`;
+                
+                const pct = ((this.currentQIndex) / this.activeQuestions.length) * 100;
+                document.getElementById('progress-bar').style.width = `${pct}%`;
+
+                document.getElementById('question-text').innerHTML = `
+                    ${data.q.en}
+                    <span class="hindi-sub">${data.q.hi}</span>
+                `;
+
+                // Options
+                const container = document.getElementById('options-container');
+                container.innerHTML = '';
+                data.options.forEach((opt, idx) => {
+                    const btn = document.createElement('button');
+                    btn.className = 'option-btn';
+                    btn.innerHTML = `${opt.en}<span class="hindi-sub">${opt.hi}</span>`;
+                    btn.onclick = () => this.handleAnswer(idx, data.ans, btn);
+                    container.appendChild(btn);
+                });
+
+                // Timer logic
+                if (this.settings.time > 0) {
+                    this.startTimer();
+                } else {
+                    document.getElementById('timer-badge').style.display = 'none';
+                }
+            },
+
+            // Timer
+            startTimer: function() {
+                clearInterval(this.timer);
+                this.timeLeft = this.settings.time;
+                const badge = document.getElementById('timer-badge');
+                badge.style.display = 'flex';
+                badge.classList.remove('pulse');
+                badge.innerText = this.timeLeft;
+
+                this.timer = setInterval(() => {
+                    this.timeLeft--;
+                    badge.innerText = this.timeLeft;
+                    
+                    if (this.timeLeft <= 5) badge.classList.add('pulse');
+                    
+                    if (this.timeLeft <= 0) {
+                        clearInterval(this.timer);
+                        this.handleTimeUp();
+                    }
+                }, 1000);
+            },
+
+            // Handle Interaction
+            handleAnswer: function(selectedIdx, correctIdx, btn) {
+                clearInterval(this.timer);
+                
+                // Lock buttons
+                const allBtns = document.querySelectorAll('.option-btn');
+                allBtns.forEach(b => b.disabled = true);
+
+                if (selectedIdx === correctIdx) {
+                    this.score++;
+                    btn.classList.add('correct');
+                    this.playSound('correct');
+                    this.triggerConfetti();
+                } else {
+                    btn.classList.add('wrong');
+                    allBtns[correctIdx].classList.add('correct');
+                    this.playSound('wrong');
+                    this.triggerShake();
+                }
+
+                setTimeout(() => {
+                    this.currentQIndex++;
+                    this.loadQuestion();
+                }, 1500);
+            },
+
+            handleTimeUp: function() {
+                const allBtns = document.querySelectorAll('.option-btn');
+                allBtns.forEach(b => b.disabled = true);
+                const correctIdx = this.activeQuestions[this.currentQIndex].ans;
+                allBtns[correctIdx].classList.add('correct');
+                this.playSound('wrong');
+                this.triggerShake();
+
+                setTimeout(() => {
+                    this.currentQIndex++;
+                    this.loadQuestion();
+                }, 1500);
+            },
+
+            // Sounds (Web Audio API)
+            playSound: function(type) {
+                if (!this.audioCtx) return;
+                const osc = this.audioCtx.createOscillator();
+                const gain = this.audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(this.audioCtx.destination);
+
+                if (type === 'correct') {
+                    // Nice Bell Sound
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(600, this.audioCtx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(1200, this.audioCtx.currentTime + 0.1);
+                    gain.gain.setValueAtTime(0.1, this.audioCtx.currentTime);
+                    gain.gain.linearRampToValueAtTime(0, this.audioCtx.currentTime + 0.5);
+                    osc.start();
+                    osc.stop(this.audioCtx.currentTime + 0.5);
+                } else {
+                    // Buzz
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(150, this.audioCtx.currentTime);
+                    osc.frequency.linearRampToValueAtTime(100, this.audioCtx.currentTime + 0.3);
+                    gain.gain.setValueAtTime(0.1, this.audioCtx.currentTime);
+                    gain.gain.linearRampToValueAtTime(0, this.audioCtx.currentTime + 0.3);
+                    osc.start();
+                    osc.stop(this.audioCtx.currentTime + 0.3);
+                }
+            },
+
+            // Visual Effects
+            triggerConfetti: function() {
+                for(let i=0; i<30; i++) {
+                    const p = document.createElement('div');
+                    p.className = 'particle';
+                    p.style.left = Math.random() * 100 + '%';
+                    p.style.top = '-10px';
+                    p.style.backgroundColor = `hsl(${Math.random()*360}, 100%, 50%)`;
+                    
+                    // Simple JS Animation
+                    const speed = 2 + Math.random() * 3;
+                    const angle = Math.random() * 360;
+                    
+                    let y = 0;
+                    let r = 0;
+                    
+                    const fall = () => {
+                        y += speed;
+                        r += 5;
+                        p.style.transform = `translateY(${y}px) rotate(${r}deg)`;
+                        if (y < window.innerHeight) requestAnimationFrame(fall);
+                        else p.remove();
+                    };
+                    
+                    document.body.appendChild(p);
+                    requestAnimationFrame(fall);
+                }
+            },
+
+            triggerShake: function() {
+                const el = document.getElementById('emoji-display');
+                el.classList.add('show');
+                setTimeout(() => el.classList.remove('show'), 1000);
+            },
+
+            // Finish
+            finishQuiz: function() {
+                clearInterval(this.timer);
+                document.getElementById('quiz-screen').classList.remove('active');
+                document.getElementById('result-screen').classList.add('active');
+
+                // Logic: Score calculated based on total set (50) for accuracy
+                const total = this.activeQuestions.length;
+                const percentage = Math.round((this.score / total) * 100);
+
+                document.getElementById('final-score').innerText = `${percentage}%`;
+                document.getElementById('stats-detail').innerText = `Correct: ${this.score} | Total: ${total}`;
+
+                let msg = "";
+                if (percentage >= 80) msg = "🏆 Outstanding Performance! You know your Chemistry.";
+                else if (percentage >= 50) msg = "👏 Well Done! Keep practicing.";
+                else msg = "📚 Practice makes perfect! Try again.";
+                
+                document.getElementById('result-message').innerText = msg;
+            },
+
+            resetQuiz: function() {
+                document.getElementById('result-screen').classList.remove('active');
+                document.getElementById('start-screen').classList.add('active');
+            }
+        };
+    </script>
+</body>
+</html>

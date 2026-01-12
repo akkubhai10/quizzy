@@ -1,0 +1,1106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chemistry Master: Periodic Table</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* --- RESET & BASE STYLES --- */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #ff758c 100%);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #fff;
+            overflow-x: hidden;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* --- GLASSMORPHISM CARD --- */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            width: 95%;
+            max-width: 700px;
+            padding: 30px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            min-height: 500px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* --- SCREENS (Start, Quiz, Result) --- */
+        .screen {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            flex-grow: 1;
+        }
+        .screen.active { display: flex; }
+
+        /* --- START SCREEN --- */
+        h1 {
+            font-size: 2.2rem;
+            text-align: center;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .subtitle {
+            font-size: 1rem;
+            opacity: 0.9;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .settings-group {
+            width: 100%;
+            margin-bottom: 20px;
+        }
+        label { display: block; margin-bottom: 8px; font-weight: 600; }
+        input[type="number"] {
+            width: 100%;
+            padding: 12px;
+            border-radius: 12px;
+            border: none;
+            background: rgba(255, 255, 255, 0.2);
+            color: #fff;
+            font-size: 1.1rem;
+            outline: none;
+        }
+        input[type="number"]::placeholder { color: rgba(255,255,255,0.6); }
+        
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            cursor: pointer;
+        }
+        .toggle-switch {
+            width: 50px;
+            height: 28px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 50px;
+            position: relative;
+            transition: 0.3s;
+        }
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 24px;
+            height: 24px;
+            background: #fff;
+            border-radius: 50%;
+            transition: 0.3s;
+        }
+        .toggle-active .toggle-switch { background: #4fd1c5; }
+        .toggle-active .toggle-switch::after { transform: translateX(22px); }
+
+        .btn-primary {
+            background: linear-gradient(90deg, #ff8a00, #e52e71);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(229, 46, 113, 0.4);
+            transition: transform 0.2s;
+            margin-top: 20px;
+        }
+        .btn-primary:hover { transform: scale(1.05); }
+
+        /* --- QUIZ SCREEN --- */
+        .progress-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 6px;
+            background: rgba(255,255,255,0.1);
+        }
+        .progress-bar {
+            height: 100%;
+            background: #00f260;
+            width: 0%;
+            transition: width 0.5s ease;
+            box-shadow: 0 0 10px #00f260;
+        }
+
+        .header-info {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            margin-bottom: 20px;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+        
+        .timer-box {
+            background: rgba(0,0,0,0.2);
+            padding: 5px 15px;
+            border-radius: 20px;
+            transition: color 0.3s;
+        }
+        .timer-pulse {
+            color: #ff4b4b;
+            animation: pulse 1s infinite;
+        }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+
+        .question-box {
+            background: rgba(255,255,255,0.05);
+            padding: 20px;
+            border-radius: 15px;
+            width: 100%;
+            margin-bottom: 25px;
+            border-left: 5px solid #fff;
+        }
+        .q-en { font-size: 1.15rem; font-weight: 700; margin-bottom: 8px; line-height: 1.4; }
+        .q-hi { font-size: 1rem; color: #ddd; font-weight: 400; line-height: 1.5; }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+            width: 100%;
+        }
+        @media (min-width: 600px) { .options-grid { grid-template-columns: 1fr 1fr; } }
+
+        .option-btn {
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.2);
+            padding: 15px;
+            border-radius: 12px;
+            color: white;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+        }
+        .option-btn:hover:not(:disabled) { background: rgba(255,255,255,0.25); }
+        .op-en { font-size: 1rem; font-weight: 600; margin-bottom: 4px; }
+        .op-hi { font-size: 0.9rem; color: #e0e0e0; }
+
+        .correct-anim { background: rgba(46, 204, 113, 0.8) !important; border-color: #2ecc71 !important; transform: scale(1.02); }
+        .wrong-anim { background: rgba(231, 76, 60, 0.8) !important; border-color: #e74c3c !important; animation: shake 0.4s; }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .feedback-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 5rem;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+            z-index: 10;
+        }
+        .feedback-show { opacity: 1; animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        @keyframes popIn { from { transform: translate(-50%, -50%) scale(0); } to { transform: translate(-50%, -50%) scale(1); } }
+
+        .finish-btn {
+            margin-top: 25px;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: #ccc;
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .finish-btn:hover { background: rgba(231, 76, 60, 0.8); color: white; border-color: transparent; }
+
+        /* --- RESULT SCREEN --- */
+        .score-circle {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            border: 8px solid rgba(255,255,255,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+            background: rgba(0,0,0,0.1);
+        }
+        .result-msg { font-size: 1.5rem; margin-bottom: 10px; color: #ffd700; text-align: center;}
+        .result-desc { font-size: 1.1rem; margin-bottom: 30px; text-align: center; }
+
+        /* --- CONFETTI --- */
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: #f0f;
+            animation: fall linear forwards;
+            top: -10px;
+            z-index: 9999;
+        }
+        @keyframes fall { to { transform: translateY(100vh) rotate(720deg); } }
+
+    </style>
+</head>
+<body>
+
+    <div class="glass-card">
+        <div id="start-screen" class="screen active">
+            <h1>Chemistry Quiz</h1>
+            <p class="subtitle">Periodic Classification of Elements<br>तत्वों का आवर्त वर्गीकरण</p>
+            
+            <div class="settings-group">
+                <label>Timer per Question (Seconds)</label>
+                <input type="number" id="timerInput" placeholder="e.g. 15 (Leave empty for no timer)">
+            </div>
+
+            <div class="toggle-container" id="shuffleToggle">
+                <span>Shuffle Questions (प्रश्नों को मिलाएं)</span>
+                <div class="toggle-switch"></div>
+            </div>
+
+            <button class="btn-primary" onclick="startQuiz()">Start Quiz</button>
+        </div>
+
+        <div id="quiz-screen" class="screen">
+            <div class="progress-container"><div class="progress-bar" id="progressBar"></div></div>
+            
+            <div class="header-info">
+                <span id="q-counter">Q: 01/50</span>
+                <span id="timer-display" class="timer-box">--</span>
+                <span id="score-display">Score: 0</span>
+            </div>
+
+            <div class="question-box">
+                <div class="q-en" id="q-en">Question text here...</div>
+                <div class="q-hi" id="q-hi">हिंदी प्रश्न यहाँ...</div>
+            </div>
+
+            <div class="options-grid" id="options-container">
+                </div>
+
+            <div id="feedback-icon" class="feedback-overlay">😢</div>
+
+            <button class="finish-btn" onclick="finishQuiz()">Finish & Show Results</button>
+        </div>
+
+        <div id="result-screen" class="screen">
+            <div class="score-circle" id="final-score">0%</div>
+            <div class="result-msg" id="result-msg">Well Done!</div>
+            <p class="result-desc" id="result-text">You scored X out of Y</p>
+            <button class="btn-primary" onclick="resetQuiz()">Restart Quiz</button>
+        </div>
+    </div>
+
+<script>
+/* --- DATA: 50 BILINGUAL QUESTIONS (Extracted from Images) --- */
+const originalQuestions = [
+    {
+        en: "Why is the classification of elements necessary?",
+        hi: "तत्वों का आवर्ती वर्गीकरण करना क्यों जरुरी है?",
+        options: [
+            {en: "Too many elements", hi: "तत्वों की संख्या बहुत अधिक है"},
+            {en: "Properties are different", hi: "तत्वों के गुण भिन्न-भिन्न होते हैं"},
+            {en: "Study becomes difficult", hi: "एक-एक करके गुणों का अध्यन करना जटिल है"},
+            {en: "All of these", hi: "इनमें से सभी"}
+        ],
+        correct: 3
+    },
+    {
+        en: "Who first classified elements into metals and non-metals?",
+        hi: "तत्वों का धातु तथा अधातु में वर्गीकरण सर्वप्रथम किसने किया था?",
+        options: [
+            {en: "Lavoisier", hi: "लवाजे"},
+            {en: "Dobereiner", hi: "डोबेरेनर"},
+            {en: "Newlands", hi: "न्यूलैंड"},
+            {en: "Mendeleev", hi: "मेंडलीव"}
+        ],
+        correct: 0
+    },
+    {
+        en: "Who gave the Triad Rule for classification of elements?",
+        hi: "तत्वों के वर्गीकरण हेतु त्रिक नियम किसने दिया है?",
+        options: [
+            {en: "Dobereiner", hi: "डोबेरेनर"},
+            {en: "Newlands", hi: "न्यूलैंड"},
+            {en: "Mendeleev", hi: "मेंडलीव"},
+            {en: "Moseley", hi: "मोसले"}
+        ],
+        correct: 0
+    },
+    {
+        en: "Which set of elements follows Dobereiner's Triad rule?",
+        hi: "निम्नलिखित में तत्वों का कौन-सा सेट डोबेरेनर के त्रिक नियम का पालन करता है?",
+        options: [
+            {en: "Ca, Sr, Ba", hi: "Ca, Sr, Ba"},
+            {en: "Li, Na, K", hi: "Li, Na, K"},
+            {en: "Cl, Br, I", hi: "Cl, Br, I"},
+            {en: "All of these", hi: "इनमें से सभी"}
+        ],
+        correct: 3
+    },
+    {
+        en: "Which group does NOT follow Dobereiner's Triad rule?",
+        hi: "निम्नलिखित में तत्वों का कौन एक समूह डोबेरेनर के त्रिक नियम का पालन नहीं करता है?",
+        options: [
+            {en: "Ca, Sr, Ba", hi: "Ca, Sr, Ba"},
+            {en: "Li, Na, K", hi: "Li, Na, K"},
+            {en: "Fe, Cr, Mn", hi: "Fe, Cr, Mn"},
+            {en: "S, Se, Te", hi: "S, Se, Te"}
+        ],
+        correct: 2
+    },
+    {
+        en: "The German chemist Johann Dobereiner gave which rule?",
+        hi: "जर्मन रसायनज्ञ जॉन डोबेरेनर ने तत्वों के वर्गीकरण हेतु कौन सा नियम दिया?",
+        options: [
+            {en: "Triad Rule", hi: "त्रिक नियम"},
+            {en: "Octave Rule", hi: "अष्टक नियम"},
+            {en: "Periodic Law", hi: "आवर्त नियम"},
+            {en: "Musical Note Rule", hi: "संगीत स्वर नियम"}
+        ],
+        correct: 0
+    },
+    {
+        en: "Who made the very first attempt to classify elements?",
+        hi: "तत्वों का सबसे पहला वर्गीकरण किसने किया था?",
+        options: [
+            {en: "Mendeleev", hi: "मेंडलीव"},
+            {en: "Newlands", hi: "न्यूलैंड"},
+            {en: "Lother Meyer", hi: "लोथर मेयर"},
+            {en: "Dobereiner", hi: "डोबेरेनर"}
+        ],
+        correct: 3
+    },
+    {
+        en: "Who proposed the Octave Rule regarding classification?",
+        hi: "तत्वों के वर्गीकरण सबंधि अष्टक नियम (Octave Rule) का प्रतिपादन किसने किया?",
+        options: [
+            {en: "Newlands", hi: "न्यूलैंड"},
+            {en: "Berzelius", hi: "बर्जीलियस"},
+            {en: "Rutherford", hi: "रदरफोर्ड"},
+            {en: "Mendeleev", hi: "मेंडलीव"}
+        ],
+        correct: 0
+    },
+    {
+        en: "According to which rule does the 8th element resemble the 1st?",
+        hi: "यदि तत्वों को उनके बढ़ते परमाणु द्रव्यमान के आधार पर... आठवे तत्व का गुण पहले तत्व के समान ही होते है। यह नियम है-",
+        options: [
+            {en: "Dobereiner's Triad", hi: "डोबेरेनर का त्रिक नियम"},
+            {en: "Newlands' Octave", hi: "न्यूलैंड का अष्टक नियम"},
+            {en: "Mendeleev's Law", hi: "मेंडलीव का आवर्त नियम"},
+            {en: "None", hi: "कोई नहीं"}
+        ],
+        correct: 1
+    },
+    {
+        en: "Newlands Octave rule was applicable only up to which element?",
+        hi: "न्यूलैंड का अष्टक नियम किस तत्व तक लागु होता था?",
+        options: [
+            {en: "Sulfur", hi: "सल्फर"},
+            {en: "Calcium", hi: "कैल्शियम"},
+            {en: "Potassium", hi: "पोटैशियम"},
+            {en: "Chlorine", hi: "क्लोरिन"}
+        ],
+        correct: 1
+    },
+    {
+        en: "If X, Y, Z are a Triad, mass of X=8, Z=10. What is mass of Y?",
+        hi: "X, Y और Z त्रिक-तत्व हैं। यदि X का द्रव्यमान 8 और Z का 10 है तो Y का द्रव्यमान क्या होगा?",
+        options: [
+            {en: "8", hi: "8"},
+            {en: "9", hi: "9"},
+            {en: "10", hi: "10"},
+            {en: "20", hi: "20"}
+        ],
+        correct: 1
+    },
+    {
+        en: "M and N follow Newlands Octave. How many elements are between them?",
+        hi: "M तथा N समान गुण वाले तत्व हैं जो अष्टक नियम का पालन करता है। M तथा N के बीच कुल तत्वों की संख्या कितनी होगी?",
+        options: [
+            {en: "8", hi: "8"},
+            {en: "7", hi: "7"},
+            {en: "6", hi: "6"},
+            {en: "5", hi: "5"}
+        ],
+        correct: 2
+    },
+    {
+        en: "Who stated 'Properties of elements are periodic functions of their atomic masses'?",
+        hi: "'तत्व के भौतिक एवं रसायनिक गुण उसके परमाणु द्रव्यमानों के आवर्त फलन होते है।' यह नियम किसने दिया?",
+        options: [
+            {en: "Dobereiner", hi: "डोबेरेनर"},
+            {en: "Newlands", hi: "न्यूलैंड"},
+            {en: "Mendeleev", hi: "मेंडलीव"},
+            {en: "Berzelius", hi: "बर्जीलियस"}
+        ],
+        correct: 2
+    },
+    {
+        en: "According to Mendeleev, properties of elements are periodic functions of...?",
+        hi: "मेंडलीव के आवर्त नियम के अनुसार तत्वों के गुण ... के आवर्ती फलन होते हैं।",
+        options: [
+            {en: "Atomic Weight", hi: "परमाणु भार"},
+            {en: "Atomic Number", hi: "परमाणु संख्या"},
+            {en: "Atomic Density", hi: "परमाणु घनत्व"},
+            {en: "Atomic Volume", hi: "परमाणु आयतन"}
+        ],
+        correct: 0
+    },
+    {
+        en: "Who is called the Father of the Periodic Table?",
+        hi: "'आवर्त सारणी' का जनक किसे कहते है?",
+        options: [
+            {en: "Mendeleev", hi: "मेंडलीव"},
+            {en: "Lother Meyer", hi: "लोथर मेयर"},
+            {en: "Niels Bohr", hi: "नील्स बोर"},
+            {en: "Berzelius", hi: "बर्जीलियस"}
+        ],
+        correct: 0
+    },
+    {
+        en: "Mendeleev classified elements based on what?",
+        hi: "मेंडलीव ने अपने आवर्त सारणी में तत्वों का वर्गीकरण किस आधार पर किया है?",
+        options: [
+            {en: "Atomic Mass", hi: "परमाणु द्रव्यमान"},
+            {en: "Atomic Number", hi: "परमाणु संख्या"},
+            {en: "Atomic Volume", hi: "परमाणु आयतन"},
+            {en: "Atomic Density", hi: "परमाणु घनत्व"}
+        ],
+        correct: 0
+    },
+    {
+        en: "Which scientist arranged elements in increasing order of atomic mass?",
+        hi: "किस वैज्ञानिक में तत्वों की आवर्त सारणी में, तत्व को परमाणु द्रव्यमान के बढ़ते क्रम में व्यवस्थित किया था?",
+        options: [
+            {en: "Henry Cavendish", hi: "हेनरी केवेन्डीश"},
+            {en: "Humphry Davy", hi: "हम्फ्री डेवी"},
+            {en: "Jacques Charles", hi: "जैक्स चार्ल्स"},
+            {en: "Dmitri Mendeleev", hi: "दिमित्री मेंडलीव"}
+        ],
+        correct: 3
+    },
+    {
+        en: "In which year did Mendeleev die?",
+        hi: "आवर्त सारणी के जनक मेंडलीव का किस वर्ष निधन हुआ?",
+        options: [
+            {en: "1905", hi: "1905"},
+            {en: "1906", hi: "1906"},
+            {en: "1907", hi: "1907"},
+            {en: "1908", hi: "1908"}
+        ],
+        correct: 2
+    },
+    {
+        en: "When was Mendeleev's Periodic Table first published?",
+        hi: "मेंडलीव के आवर्त सारणी का प्रकाशन सर्वप्रथम किस वर्ष हुआ था?",
+        options: [
+            {en: "1817", hi: "1817"},
+            {en: "1866", hi: "1866"},
+            {en: "1869", hi: "1869"},
+            {en: "1911", hi: "1911"}
+        ],
+        correct: 2
+    },
+    {
+        en: "In 1817, who tried to classify elements with similar properties?",
+        hi: "वर्ष 1817 में ......... ने समान गुण वाले तत्वों को समूहों में क्रमबद्ध करने का प्रयास किया।",
+        options: [
+            {en: "Mendeleev", hi: "मेंडलीव"},
+            {en: "Dobereiner", hi: "डोबेरेनर"},
+            {en: "Newlands", hi: "न्यूलैंड"},
+            {en: "Meyer", hi: "मेयर"}
+        ],
+        correct: 1
+    },
+    {
+        en: "In which year did Newlands propose his Octave Law?",
+        hi: "न्यूलैंड ने अपने अष्टक नियम का प्रतिपादन किस वर्ष किया था?",
+        options: [
+            {en: "1817", hi: "1817"},
+            {en: "1866", hi: "1866"},
+            {en: "1869", hi: "1869"},
+            {en: "1907", hi: "1907"}
+        ],
+        correct: 1
+    },
+    {
+        en: "What are the vertical columns in the periodic table called?",
+        hi: "आवर्त सारणी के उर्ध्वाधर स्तंभ (Vertical Column) को क्या कहते हैं?",
+        options: [
+            {en: "Group", hi: "वर्ग"},
+            {en: "Period", hi: "आवर्त"},
+            {en: "Transition Element", hi: "संक्रमण तत्व"},
+            {en: "Inert Gas", hi: "निष्क्रिय गैस"}
+        ],
+        correct: 0
+    },
+    {
+        en: "What are the horizontal rows in the periodic table called?",
+        hi: "आवर्त सारणी के क्षैतिज स्तंभ (Horizontal Column) का क्या कहते है?",
+        options: [
+            {en: "Period", hi: "आवर्त"},
+            {en: "Group", hi: "वर्ग"},
+            {en: "Metal", hi: "धातु"},
+            {en: "Non-metal", hi: "अधातु"}
+        ],
+        correct: 0
+    },
+    {
+        en: "What was the total number of periods in Mendeleev's table?",
+        hi: "मेंडलीव के आवर्त सारणी में आवर्त्त की कुल संख्या कितनी है?",
+        options: [
+            {en: "5", hi: "5"},
+            {en: "6", hi: "6"},
+            {en: "7", hi: "7"},
+            {en: "8", hi: "8"}
+        ],
+        correct: 2
+    },
+    {
+        en: "Which option is NOT correctly matched?",
+        hi: "निम्नलिखित में कौन-सा विकल्प सुमेलित नहीं है?",
+        options: [
+            {en: "IA : Alkali Metal", hi: "IA : क्षार धातु"},
+            {en: "IB : Alkaline Earth Metal", hi: "IB : क्षारीय मृदा धातु"},
+            {en: "VIA : Chalcogen", hi: "VIA : चालकोजेन"},
+            {en: "VIIA : Halogen", hi: "VIIA : हैलोजन"}
+        ],
+        correct: 1
+    },
+    {
+        en: "Which group elements are called Coinage Metals?",
+        hi: "किस समूह (Group) के तत्व को सिक्का धातु कहा जाता है?",
+        options: [
+            {en: "IA", hi: "IA"},
+            {en: "IB", hi: "IB"},
+            {en: "IIA", hi: "IIA"},
+            {en: "IIIB", hi: "IIIB"}
+        ],
+        correct: 1
+    },
+    {
+        en: "In which group are Inert Gases located in Mendeleev's table?",
+        hi: "मेंडलीव के आवर्त सारणी में निष्क्रिय गैस (Inert Gas) किस वर्ग में स्थित है?",
+        options: [
+            {en: "Zero", hi: "शून्य"},
+            {en: "IIA", hi: "IIA"},
+            {en: "IIIB", hi: "IIIB"},
+            {en: "VIII", hi: "VIII"}
+        ],
+        correct: 0
+    },
+    {
+        en: "Which group was NOT divided into subgroups by Mendeleev?",
+        hi: "मेंडलीव ने अपने आवर्त सारणी के किस वर्ग को उपवर्गो में विभाजित नहीं किया है?",
+        options: [
+            {en: "VI", hi: "VI"},
+            {en: "VII", hi: "VII"},
+            {en: "VIII", hi: "VIII"},
+            {en: "Zero", hi: "शून्य"}
+        ],
+        correct: 2
+    },
+    {
+        en: "How many elements were known during Mendeleev's time?",
+        hi: "मेंडलीव के समय ज्ञात तत्वों की संख्या कितनी थी?",
+        options: [
+            {en: "56", hi: "56"},
+            {en: "63", hi: "63"},
+            {en: "78", hi: "78"},
+            {en: "105", hi: "105"}
+        ],
+        correct: 1
+    },
+    {
+        en: "Which of the following was a predicted element by Mendeleev?",
+        hi: "मेंडलीव के आवर्त नियम ने कुछ तत्वों के अस्तित्व की भविष्यवाणी की थी... निम्नलिखित में वह तत्व है-",
+        options: [
+            {en: "Gallium", hi: "गैलियम"},
+            {en: "Scandium", hi: "स्कैंडियम"},
+            {en: "Germanium", hi: "जर्मेनियम"},
+            {en: "All of these", hi: "इनमें से सभी"}
+        ],
+        correct: 3
+    },
+    {
+        en: "Which element filled the gap left by Mendeleev later?",
+        hi: "मेंडलीव द्वारा छोड़े गए आवर्त सारणी के रिक्त स्थानों में बाद में निम्नलिखित में कौन-सा तत्व पदस्थापित किया गया?",
+        options: [
+            {en: "Silicon", hi: "सिलिकन"},
+            {en: "Gallium", hi: "गैलियम"},
+            {en: "Oxygen", hi: "ऑक्सीजन"},
+            {en: "Phosphorus", hi: "फॉस्फोरस"}
+        ],
+        correct: 1
+    },
+    {
+        en: "What type of oxide would Eka-Aluminium form?",
+        hi: "मेंडलीव का एका एलुमिनियम निम्नलिखित में किस प्रकार के ऑक्साइड का निर्माण कर सकता है?",
+        options: [
+            {en: "EO", hi: "EO"},
+            {en: "E2O3", hi: "E2O3"},
+            {en: "E3O2", hi: "E3O2"},
+            {en: "EO2", hi: "EO2"}
+        ],
+        correct: 1
+    },
+    {
+        en: "In which group are Transition Elements located in Mendeleev's table?",
+        hi: "मेंडलीव आवर्त में संक्रमण तत्व (Transition Element) किस समूह में स्थित है?",
+        options: [
+            {en: "VI", hi: "VI"},
+            {en: "VII", hi: "VII"},
+            {en: "VIII", hi: "VIII"},
+            {en: "II", hi: "II"}
+        ],
+        correct: 2
+    },
+    {
+        en: "Eka-Boron, Eka-Aluminium, Eka-Silicon are known as?",
+        hi: "एका-बोरॉन, एका-एलुमिनियम, और एका-सिलिकॉन रूप में जाने जाते थे। इन तत्वों का क्या नाम दिया गया?",
+        options: [
+            {en: "Sc, Ga, Ge", hi: "Sc, Ga, Ge"},
+            {en: "Fe, Co, Ni", hi: "Fe, Co, Ni"},
+            {en: "K, Na, Li", hi: "K, Na, Li"},
+            {en: "Sc, Ag, Au", hi: "Sc, Ag, Au"}
+        ],
+        correct: 0
+    },
+    {
+        en: "Which anomaly is found in Mendeleev's Periodic Table?",
+        hi: "मेंडलीव के आवर्त सारणी में निम्नलिखित में कौन-सी अनियमितता (Anomalies) पायी जाती है?",
+        options: [
+            {en: "Position of Isotopes", hi: "समस्थानिको की स्थिति"},
+            {en: "Wrong order of mass", hi: "परमाणु द्रव्यमान के अनुचित क्रम"},
+            {en: "Position of Hydrogen", hi: "हाइड्रोजन तत्व का स्थान"},
+            {en: "All of these", hi: "इनमें से सभी"}
+        ],
+        correct: 3
+    },
+    {
+        en: "Which element could not be given a proper place by Mendeleev?",
+        hi: "मेंडलीव का आवर्त सारणी निम्नलिखित में किस तत्व को उचित स्थान प्रदान नहीं कर सका?",
+        options: [
+            {en: "Carbon", hi: "कार्बन"},
+            {en: "Helium", hi: "हिलियम"},
+            {en: "Hydrogen", hi: "हाइड्रोजन"},
+            {en: "Nitrogen", hi: "नाइट्रोजन"}
+        ],
+        correct: 2
+    },
+    {
+        en: "Russian chemist who said properties are periodic function of mass?",
+        hi: "रूसी रसायनज्ञ कौन था, जिसने बताया कि तत्वों के गुणधर्म उनके परमाणु द्रव्यमानों के आवर्ती फलन होते है?",
+        options: [
+            {en: "Mendeleev", hi: "मेंडलीव"},
+            {en: "Rutherford", hi: "रदरफोर्ड"},
+            {en: "Moseley", hi: "मोसले"},
+            {en: "Berzelius", hi: "बर्जीलियस"}
+        ],
+        correct: 0
+    },
+    {
+        en: "According to modern law, what is the fundamental property of an element?",
+        hi: "निम्नलिखित में कौन एक तत्व का मौलिक गुण है?",
+        options: [
+            {en: "Atomic Weight", hi: "अनुभार"},
+            {en: "Atomic Mass", hi: "परमाणु भार"},
+            {en: "Atomic Number", hi: "परमाणु संख्या"},
+            {en: "Neutron Number", hi: "न्यूट्रॉन संख्या"}
+        ],
+        correct: 2
+    },
+    {
+        en: "Who stated 'Atomic Number, not Mass, is the fundamental property'?",
+        hi: "'परमाणु संख्या, न कि परमाणु द्रव्यमान तत्व का अधिक मौलिक गुण है।' यह किसने कहा?",
+        options: [
+            {en: "Mendeleev", hi: "मेंडलीव"},
+            {en: "Henry Moseley", hi: "हेनरी मोसले"},
+            {en: "Thomson", hi: "थॉमसन"},
+            {en: "Glen Seaborg", hi: "ग्लेनसी बोग"}
+        ],
+        correct: 1
+    },
+    {
+        en: "Who proposed the Modern Periodic Law?",
+        hi: "आधुनिक आवर्त नियम किसने प्रतिपादित किया है?",
+        options: [
+            {en: "Moseley", hi: "मोसले"},
+            {en: "Mendeleev", hi: "मेंडलीव"},
+            {en: "Newlands", hi: "न्यूलैंड"},
+            {en: "Dobereiner", hi: "डोबेरेनर"}
+        ],
+        correct: 0
+    },
+    {
+        en: "What is the basis of classification in the Modern Periodic Table?",
+        hi: "आधुनिक आवर्त सारणी में तत्वों के वर्गीकरण का आधार क्या है?",
+        options: [
+            {en: "Atomic Number", hi: "परमाणु संख्या"},
+            {en: "Atomic Mass", hi: "परमाणु द्रव्यमान"},
+            {en: "Molecular Mass", hi: "आणविक द्रव्यमान"},
+            {en: "Mass Number", hi: "द्रव्यमान संख्या"}
+        ],
+        correct: 0
+    },
+    {
+        en: "Henry Moseley studied the properties of X-ray spectra of elements.",
+        hi: "हेनरी मोसले ने तत्वों के X-किरण स्पेक्ट्रम के गुणों की नियमितताओं का अध्यन किया।",
+        options: [
+            {en: "True", hi: "सत्य"},
+            {en: "False", hi: "असत्य"},
+            {en: "Not related", hi: "संबंधित नहीं"},
+            {en: "None", hi: "कोई नहीं"}
+        ],
+        correct: 0
+    },
+    {
+        en: "Horizontal rows and Vertical columns are called... respectively.",
+        hi: "आवर्त सारणी के क्षैतिज पंक्तियों तथा उर्ध्वाधर स्तंभों का क्रमशः कहा जाता है-",
+        options: [
+            {en: "Period, Group", hi: "आवर्त, वर्ग"},
+            {en: "Group, Period", hi: "वर्ग, आवर्त"},
+            {en: "Family, Period", hi: "परिवार, आवर्त"},
+            {en: "Period, Series", hi: "आवृत, श्रेणी"}
+        ],
+        correct: 0
+    },
+    {
+        en: "Total Groups and Periods in Modern Periodic Table?",
+        hi: "आधुनिक आवर्त सारणी में कुल समूह (Group) तथा आवर्त (Period) की संख्या क्रमशः कितनी है?",
+        options: [
+            {en: "16, 9", hi: "16, 9"},
+            {en: "18, 7", hi: "18, 7"},
+            {en: "7, 18", hi: "7, 18"},
+            {en: "9, 16", hi: "9, 16"}
+        ],
+        correct: 1
+    },
+    {
+        en: "Valence electrons in a group remain same.",
+        hi: "एक वर्ग में स्थित सभी तत्वों के परमाणु में संयोजी इलेक्ट्रॉन की संख्या समान होती है।",
+        options: [
+            {en: "True", hi: "सत्य"},
+            {en: "False", hi: "असत्य"},
+            {en: "Varies", hi: "बदलती है"},
+            {en: "None", hi: "कोई नहीं"}
+        ],
+        correct: 0
+    },
+    {
+        en: "Valency of elements in a group is same.",
+        hi: "किसी वर्ग के सभी तत्वों की संयोजकता समान होती है।",
+        options: [
+            {en: "True", hi: "सत्य"},
+            {en: "False", hi: "असत्य"},
+            {en: "Sometimes", hi: "कभी कभी"},
+            {en: "None", hi: "कोई नहीं"}
+        ],
+        correct: 0
+    },
+    {
+        en: "Number of shells increases down the group.",
+        hi: "वर्ग में ऊपर से नीचे आने पर तत्वों के परमाणु में शेली की संख्या समान रहती है। (Correct statement: बढ़ती है)",
+        options: [
+            {en: "True", hi: "सत्य"},
+            {en: "False (It increases)", hi: "असत्य"},
+            {en: "Remains 1", hi: "1 रहती है"},
+            {en: "None", hi: "कोई नहीं"}
+        ],
+        correct: 1
+    },
+    {
+        en: "Elements of Group 1 are called?",
+        hi: "क्षारीय धातु (Alkali Metal) किस वर्ग के तत्व है?",
+        options: [
+            {en: "Group 1", hi: "वर्ग 1"},
+            {en: "Group 2", hi: "वर्ग 2"},
+            {en: "Group 3", hi: "वर्ग 3"},
+            {en: "Group 4", hi: "वर्ग 4"}
+        ],
+        correct: 0
+    },
+    {
+        en: "Elements of Group 3-12 are called?",
+        hi: "आवर्त सारणी के वर्ग 3-12 तक के तत्व कहलाते है-",
+        options: [
+            {en: "Halogens", hi: "हैलोजन"},
+            {en: "Transition Elements", hi: "संक्रमण तत्व"},
+            {en: "Chalcogens", hi: "चालकोजेन"},
+            {en: "Alkali Metals", hi: "क्षारीय धातु"}
+        ],
+        correct: 1
+    },
+    {
+        en: "Which is NOT a characteristic of Transition Elements?",
+        hi: "निम्नलिखित में कौन एक संक्रमण तत्व की विशेषता नहीं है?",
+        options: [
+            {en: "Incomplete d-orbitals", hi: "d ऑर्बिटल अपूर्ण होते है"},
+            {en: "Variable oxidation state", hi: "ऑक्सीकरण अवस्था परिवर्तनशील"},
+            {en: "Mostly non-metals", hi: "अधिकांश अधातु है"},
+            {en: "Colored compounds", hi: "यौगिक रंगीन होते है"}
+        ],
+        correct: 2
+    }
+];
+
+/* --- STATE VARIABLES --- */
+let questions = [];
+let currentQuestionIndex = 0;
+let score = 0;
+let timerValue = 0;
+let timeLeft = 0;
+let timerInterval = null;
+let isShuffled = false;
+
+/* --- AUDIO CONTEXT --- */
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+function playSound(type) {
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    const osc = audioCtx.createOscillator();
+    const gainNode = audioCtx.createGain();
+    osc.connect(gainNode);
+    gainNode.connect(audioCtx.destination);
+
+    if (type === 'correct') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.1);
+        gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.3);
+    } else {
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+        gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+        gainNode.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.4);
+    }
+}
+
+/* --- UTILS --- */
+function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+}
+
+function toggleShuffle() {
+    isShuffled = !isShuffled;
+    document.getElementById('shuffleToggle').classList.toggle('toggle-active');
+}
+
+document.getElementById('shuffleToggle').addEventListener('click', toggleShuffle);
+
+/* --- CONFETTI EFFECT --- */
+function triggerConfetti() {
+    const colors = ['#f0f', '#0ff', '#ff0', '#0f0', '#f00'];
+    for (let i = 0; i < 30; i++) {
+        const conf = document.createElement('div');
+        conf.classList.add('confetti');
+        conf.style.left = Math.random() * 100 + 'vw';
+        conf.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+        conf.style.animationDuration = (Math.random() * 2 + 1) + 's';
+        document.body.appendChild(conf);
+        setTimeout(() => conf.remove(), 3000);
+    }
+}
+
+/* --- CORE QUIZ LOGIC --- */
+function startQuiz() {
+    // Settings
+    const inputTime = document.getElementById('timerInput').value;
+    timerValue = inputTime ? parseInt(inputTime) : 0;
+    
+    // Prepare Questions
+    questions = [...originalQuestions]; // Copy
+    if (isShuffled) shuffleArray(questions);
+    
+    // Reset State
+    currentQuestionIndex = 0;
+    score = 0;
+    scoreDisplay.innerText = `Score: 0`;
+
+    // UI Switch
+    document.getElementById('start-screen').classList.remove('active');
+    document.getElementById('result-screen').classList.remove('active');
+    document.getElementById('quiz-screen').classList.add('active');
+
+    loadQuestion();
+}
+
+const qEn = document.getElementById('q-en');
+const qHi = document.getElementById('q-hi');
+const optionsContainer = document.getElementById('options-container');
+const timerDisplay = document.getElementById('timer-display');
+const scoreDisplay = document.getElementById('score-display');
+const feedbackIcon = document.getElementById('feedback-icon');
+const progressBar = document.getElementById('progressBar');
+const qCounter = document.getElementById('q-counter');
+
+function loadQuestion() {
+    // Reset timer
+    clearInterval(timerInterval);
+    timerDisplay.classList.remove('timer-pulse');
+    feedbackIcon.classList.remove('feedback-show');
+    
+    if (currentQuestionIndex >= questions.length) {
+        finishQuiz();
+        return;
+    }
+
+    const q = questions[currentQuestionIndex];
+    qCounter.innerText = `Q: ${currentQuestionIndex + 1}/${questions.length}`;
+    
+    // Update Progress
+    const progressPercent = ((currentQuestionIndex) / questions.length) * 100;
+    progressBar.style.width = `${progressPercent}%`;
+
+    // Render Text
+    qEn.innerText = q.en;
+    qHi.innerText = q.hi;
+
+    // Render Options
+    optionsContainer.innerHTML = '';
+    q.options.forEach((opt, idx) => {
+        const btn = document.createElement('button');
+        btn.className = 'option-btn';
+        btn.innerHTML = `<span class="op-en">${opt.en}</span><span class="op-hi">${opt.hi}</span>`;
+        btn.onclick = () => checkAnswer(idx, btn);
+        optionsContainer.appendChild(btn);
+    });
+
+    // Start Timer if enabled
+    if (timerValue > 0) {
+        timeLeft = timerValue;
+        timerDisplay.innerText = timeLeft;
+        timerInterval = setInterval(() => {
+            timeLeft--;
+            timerDisplay.innerText = timeLeft;
+            if (timeLeft <= 5) timerDisplay.classList.add('timer-pulse');
+            else timerDisplay.classList.remove('timer-pulse');
+
+            if (timeLeft <= 0) {
+                clearInterval(timerInterval);
+                autoMoveToNext(); // Time up counts as wrong/skip
+            }
+        }, 1000);
+    } else {
+        timerDisplay.innerText = "∞";
+    }
+}
+
+function checkAnswer(selectedIdx, btnElement) {
+    clearInterval(timerInterval);
+    
+    const q = questions[currentQuestionIndex];
+    const allBtns = document.querySelectorAll('.option-btn');
+    
+    // Disable all
+    allBtns.forEach(btn => btn.disabled = true);
+
+    if (selectedIdx === q.correct) {
+        // Correct
+        score++;
+        scoreDisplay.innerText = `Score: ${score}`;
+        btnElement.classList.add('correct-anim');
+        playSound('correct');
+        triggerConfetti();
+    } else {
+        // Wrong
+        btnElement.classList.add('wrong-anim');
+        allBtns[q.correct].classList.add('correct-anim'); // Show correct one
+        playSound('wrong');
+        feedbackIcon.classList.add('feedback-show');
+    }
+
+    setTimeout(() => {
+        currentQuestionIndex++;
+        loadQuestion();
+    }, 1500);
+}
+
+function autoMoveToNext() {
+    // Reveal correct answer then move
+    const q = questions[currentQuestionIndex];
+    const allBtns = document.querySelectorAll('.option-btn');
+    allBtns.forEach(btn => btn.disabled = true);
+    allBtns[q.correct].classList.add('correct-anim');
+    playSound('wrong'); // Time out is 'bad'
+
+    setTimeout(() => {
+        currentQuestionIndex++;
+        loadQuestion();
+    }, 1500);
+}
+
+function finishQuiz() {
+    clearInterval(timerInterval);
+    document.getElementById('quiz-screen').classList.remove('active');
+    document.getElementById('result-screen').classList.add('active');
+
+    const percentage = Math.round((score / currentQuestionIndex) * 100) || 0; // Handle 0 questions answered
+    document.getElementById('final-score').innerText = `${percentage}%`;
+    document.getElementById('result-text').innerText = `You scored ${score} out of ${currentQuestionIndex}`; // Show questions attempted
+
+    const msg = document.getElementById('result-msg');
+    if (percentage >= 80) msg.innerText = "🏆 Outstanding Performance!";
+    else if (percentage >= 50) msg.innerText = "👏 Well Done! Keep it up.";
+    else msg.innerText = "📚 Practice makes perfect! Try again.";
+}
+
+function resetQuiz() {
+    document.getElementById('result-screen').classList.remove('active');
+    document.getElementById('start-screen').classList.add('active');
+}
+
+</script>
+</body>
+</html>

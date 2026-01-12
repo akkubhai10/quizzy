@@ -1,0 +1,1156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Radioactivity Quiz (51-110)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --primary-text: #ffffff;
+            --secondary-text: #e0e0e0;
+            --accent-green: #00e676;
+            --accent-red: #ff1744;
+            --shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            font-family: 'Poppins', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background: linear-gradient(45deg, #6a11cb 0%, #2575fc 50%, #f72585 100%);
+            background-size: 200% 200%;
+            animation: gradientBG 15s ease infinite;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow-x: hidden;
+            color: var(--primary-text);
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Glassmorphism Container */
+        .app-container {
+            width: 95%;
+            max-width: 800px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 25px;
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--shadow);
+            padding: 2rem;
+            position: relative;
+            min-height: 650px;
+            display: flex;
+            flex-direction: column;
+            transition: height 0.3s ease;
+        }
+
+        /* Screen Management */
+        .screen {
+            display: none;
+            flex-direction: column;
+            height: 100%;
+            width: 100%;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* --- Start Screen --- */
+        .start-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            gap: 20px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            line-height: 1.2;
+        }
+
+        .settings-group {
+            background: rgba(0,0,0,0.2);
+            padding: 20px;
+            border-radius: 15px;
+            width: 100%;
+            max-width: 400px;
+            border: 1px solid var(--glass-border);
+        }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        input[type="number"] {
+            width: 100%;
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.3);
+            background: rgba(255,255,255,0.1);
+            color: white;
+            font-size: 1.1rem;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        
+        input[type="number"]:focus { outline: none; background: rgba(255,255,255,0.2); border-color: white; }
+
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 10px;
+        }
+
+        /* Custom Toggle Switch */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(255,255,255,0.2);
+            transition: .4s;
+            border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider { background-color: var(--accent-green); }
+        input:checked + .slider:before { transform: translateX(26px); }
+
+        .btn-primary {
+            background: linear-gradient(90deg, #ff8a00, #e52e71);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 20px;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .btn-primary:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 20px rgba(229, 46, 113, 0.4);
+        }
+
+        /* --- Quiz Screen --- */
+        .hud {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            height: 6px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 10px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: var(--accent-green);
+            width: 0%;
+            transition: width 0.3s ease;
+            box-shadow: 0 0 10px var(--accent-green);
+        }
+
+        .timer-badge {
+            background: rgba(0,0,0,0.3);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-variant-numeric: tabular-nums;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .timer-danger {
+            color: var(--accent-red);
+            font-weight: bold;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .question-box {
+            margin-bottom: 25px;
+            padding: 10px 0;
+        }
+
+        .q-english {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            line-height: 1.4;
+            color: #fff;
+        }
+
+        .q-hindi {
+            font-size: 1.05rem;
+            color: var(--secondary-text);
+            font-weight: 400;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        @media (min-width: 600px) {
+            .options-grid { grid-template-columns: 1fr 1fr; }
+        }
+
+        .option-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 15px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+            border-color: rgba(255,255,255,0.3);
+        }
+
+        .option-btn:disabled {
+            cursor: default;
+            opacity: 0.9;
+        }
+
+        .opt-en { font-weight: 600; font-size: 1rem; margin-bottom: 4px; display: block; }
+        .opt-hi { font-size: 0.9rem; color: #ccc; display: block; }
+
+        .option-btn.correct {
+            background: rgba(0, 230, 118, 0.2); /* Low opacity green */
+            border: 2px solid var(--accent-green);
+            box-shadow: 0 0 15px rgba(0, 230, 118, 0.3);
+        }
+
+        .option-btn.wrong {
+            background: rgba(255, 23, 68, 0.2);
+            border: 2px solid var(--accent-red);
+        }
+
+        .finish-btn {
+            margin-top: auto;
+            align-self: center;
+            background: transparent;
+            color: white;
+            border: 1px solid rgba(255,255,255,0.5);
+            padding: 10px 30px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: 0.3s;
+        }
+        .finish-btn:hover { background: rgba(255,255,255,0.2); border-color: white; }
+
+        /* --- Result Screen --- */
+        .result-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .score-circle {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background: rgba(0,0,0,0.2);
+            border: 5px solid white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 3rem;
+            font-weight: bold;
+            margin: 20px 0;
+            box-shadow: 0 0 30px rgba(255,255,255,0.2);
+        }
+
+        .message {
+            font-size: 1.5rem;
+            margin-bottom: 30px;
+            color: var(--accent-green);
+            text-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+        
+        .stat-box {
+            background: rgba(255,255,255,0.1);
+            padding: 10px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        /* --- Feedback Overlays --- */
+        .feedback-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            overflow: hidden;
+        }
+
+        .sad-emoji {
+            font-size: 8rem;
+            display: none;
+            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+            filter: drop-shadow(0 0 10px rgba(0,0,0,0.5));
+        }
+
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-2px, 0, 0); }
+            20%, 80% { transform: translate3d(4px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-6px, 0, 0); }
+            40%, 60% { transform: translate3d(6px, 0, 0); }
+        }
+
+        .confetti-piece {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            top: -20px;
+            z-index: 9999;
+        }
+
+        @keyframes fall {
+            0% { top: -20px; transform: rotate(0deg) translateX(0px); opacity: 1; }
+            100% { top: 100%; transform: rotate(720deg) translateX(50px); opacity: 0; }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        
+        <div class="feedback-overlay" id="feedbackOverlay">
+            <div class="sad-emoji" id="sadEmoji">😢</div>
+        </div>
+
+        <div class="screen active" id="startScreen">
+            <div class="start-content">
+                <h1>Chemistry Quiz<br><span style="font-size:1.2rem; opacity:0.8;">Questions 51-110</span></h1>
+                
+                <div class="settings-group">
+                    <label>⏱️ Timer (Seconds/Question)</label>
+                    <input type="number" id="timerInput" placeholder="e.g. 20 (Leave empty for none)" min="0">
+                    
+                    <div class="toggle-container">
+                        <label>🔀 Randomize Questions</label>
+                        <label class="switch">
+                            <input type="checkbox" id="shuffleToggle">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+                
+                <button class="btn-primary" onclick="app.startQuiz()">Start Quiz 🚀</button>
+            </div>
+        </div>
+
+        <div class="screen" id="quizScreen">
+            <div class="progress-bar-container">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+            
+            <div class="hud">
+                <span id="questionCounter">Q: 00/00</span>
+                <span id="timerDisplay" class="timer-badge">--</span>
+                <span id="scoreDisplay">Score: 0</span>
+            </div>
+
+            <div class="question-box">
+                <div class="q-english" id="qTextEn">Loading...</div>
+                <div class="q-hindi" id="qTextHi">लोड हो रहा है...</div>
+            </div>
+
+            <div class="options-grid" id="optionsContainer">
+                </div>
+
+            <button class="finish-btn" onclick="app.finishQuiz()">Finish & Show Results</button>
+        </div>
+
+        <div class="screen" id="resultScreen">
+            <div class="result-content">
+                <h2>Quiz Completed</h2>
+                <div class="score-circle" id="finalScoreDisplay">0%</div>
+                <div class="message" id="resultMessage">Message</div>
+                <div class="stat-box" id="statsDisplay">
+                    Correct: 0 | Wrong: 0
+                </div>
+                <button class="btn-primary" onclick="app.restart()">Restart Quiz ↺</button>
+            </div>
+        </div>
+
+    </div>
+
+<script>
+/* DATASET: Questions 51-110 (Extracted from provided images)
+   Note: Some sequence numbers (68-86) were not present in the provided source images. 
+   The list bridges the gap between available sets (51-67 and 87-110).
+*/
+const QUESTION_DATA = [
+    {
+        id: 51,
+        qe: "14-N + Alpha particle -> 17-O + ______ ?",
+        qh: "14-N निम्नलिखित में किससे मिलकर 17-O तथा प्रोटॉन में बदल जाएगा?",
+        options: [
+            { e: "Neutron", h: "न्यूट्रॉन", c: false },
+            { e: "Alpha", h: "अल्फा", c: true }, 
+            { e: "Beta", h: "बीटा", c: false },
+            { e: "Gamma", h: "गामा", c: false }
+        ]
+    },
+    {
+        id: 52,
+        qe: "Radioactive materials should be kept in a container made of:",
+        qh: "रेडियोसक्रिय पदार्थ को किससे निर्मित पात्र में रखना चाहिए?",
+        options: [
+            { e: "Steel", h: "इस्पात", c: false },
+            { e: "Iron", h: "लोहा", c: false },
+            { e: "Lead (Pb)", h: "सीसा", c: true },
+            { e: "Aluminium", h: "एलुमिनियम", c: false }
+        ]
+    },
+    {
+        id: 53,
+        qe: "Due to emission of Beta-particle, the n/p ratio of the nucleus:",
+        qh: "β-कण के उत्सर्जन से नाभिक का n/p का अनुपात-",
+        options: [
+            { e: "Increases", h: "बढ़ता है", c: false },
+            { e: "Decreases", h: "घटता है", c: true },
+            { e: "Remains constant", h: "स्थिर रहता है", c: false },
+            { e: "None of these", h: "इनमें से कोई नहीं", c: false }
+        ]
+    },
+    {
+        id: 54,
+        qe: "Which of the following elements does NOT show natural radioactivity?",
+        qh: "निम्नलिखित में कौन-सा तत्व प्राकृतिक रेडियोसक्रियता नहीं दर्शाता है?",
+        options: [
+            { e: "Uranium (U)", h: "U", c: false },
+            { e: "Thorium (Th)", h: "Th", c: false },
+            { e: "Aluminium (Al)", h: "Al", c: true },
+            { e: "Radium (Ra)", h: "Ra", c: false }
+        ]
+    },
+    {
+        id: 55,
+        qe: "Consider statements: 1. Radioactivity first discovered by Henry Becquerel. 2. The term 'Radioactivity' was first used by Madam Curie.",
+        qh: "कथन: 1. रेडियोसक्रियता की खोज सर्वप्रथम हेनरी बैकेरल ने किया। 2. 'रेडियोसक्रियता' शब्द का प्रथम बार प्रयोग मैडम क्यूरी ने किया। सही है?",
+        options: [
+            { e: "Only 1", h: "केवल 1", c: false },
+            { e: "Only 2", h: "केवल 2", c: false },
+            { e: "Both 1 and 2", h: "1 तथा 2 दोनों", c: true },
+            { e: "Neither 1 nor 2", h: "न तो 1 न ही 2", c: false }
+        ]
+    },
+    {
+        id: 56,
+        qe: "Radioactivity is measured by:",
+        qh: "रेडियोधर्मिता को मापा जाता है-",
+        options: [
+            { e: "Geiger Muller Counter", h: "गिगर मूलर काउण्टर द्वारा", c: true },
+            { e: "Calorimeter", h: "कैलोरीमीटर द्वारा", c: false },
+            { e: "Barometer", h: "बैरोमीटर द्वारा", c: false },
+            { e: "Spectrometer", h: "स्पेक्ट्रोमीटर द्वारा", c: false }
+        ]
+    },
+    {
+        id: 57,
+        qe: "Unit of Radioactivity is:",
+        qh: "रेडियोसक्रियता की इकाई है-",
+        options: [
+            { e: "Curie", h: "क्यूरी", c: true },
+            { e: "Ampere", h: "एम्पियर", c: false },
+            { e: "Volt", h: "वोल्ट", c: false },
+            { e: "Second", h: "सेकेण्ड", c: false }
+        ]
+    },
+    {
+        id: 58,
+        qe: "The SI unit of Radioactivity is:",
+        qh: "रेडियोसक्रियता का SI मात्रक है-",
+        options: [
+            { e: "Curie", h: "क्यूरी", c: false },
+            { e: "Becquerel", h: "बैकेरेल", c: true },
+            { e: "Rutherford", h: "रदरफोर्ड", c: false },
+            { e: "All of these", h: "इनमें से सभी", c: false }
+        ]
+    },
+    {
+        id: 59,
+        qe: "What is the quantity of substance giving 3.7 x 10^10 dps?",
+        qh: "3.7 x 10^10 dps देने वाले पदार्थ की मात्रा क्या होगी?",
+        options: [
+            { e: "One Becquerel", h: "एक बैकेरेल", c: false },
+            { e: "One Curie", h: "एक क्यूरी", c: true },
+            { e: "One Rutherford", h: "एक रदरफोर्ड", c: false },
+            { e: "One Millicurie", h: "एक मिलीक्यूरी", c: false }
+        ]
+    },
+    {
+        id: 60,
+        qe: "If the amount of radioactive substance is doubled, the rate of radioactive disintegration:",
+        qh: "यदि किसी रेडियोसक्रिय पदार्थ की मात्रा दुगुना कर दिया जाए तो रेडियोसक्रिय विघटन की दर-",
+        options: [
+            { e: "Doubles", h: "दोगुनी हो जाएगी", c: true },
+            { e: "Halves", h: "आधी हो जाएगी", c: false },
+            { e: "Remains unchanged", h: "अपरिवर्तित रहेगा", c: false },
+            { e: "Increases root 2 times", h: "√2 गुना बढ़ जाएगी", c: false }
+        ]
+    },
+    {
+        id: 61,
+        qe: "Half life is 4 months. Time taken for 3/4th of the substance to decay?",
+        qh: "एक रेडियोसक्रिय पदार्थ की अर्द्ध आयु 4 महीने का है। इस पदार्थ का तीन-चौथाई भाग क्षय होने में कितना समय लगेगा?",
+        options: [
+            { e: "4 months", h: "4 महीना", c: false },
+            { e: "6 months", h: "6 महीना", c: false },
+            { e: "8 months", h: "8 महीना", c: true },
+            { e: "10 months", h: "10 महीना", c: false }
+        ]
+    },
+    {
+        id: 62,
+        qe: "Half life is 140 days. How much of 1g remains after 560 days?",
+        qh: "किसी रेडियोसक्रिय तत्व की अर्द्धआयु 140 दिन है तो 560 दिनों के बाद इसका 1 ग्राम घटकर कितना हो जाएगा?",
+        options: [
+            { e: "1/2 g", h: "1/2 g", c: false },
+            { e: "1/4 g", h: "1/4 g", c: false },
+            { e: "1/8 g", h: "1/8 g", c: false },
+            { e: "1/16 g", h: "1/16 g", c: true }
+        ]
+    },
+    {
+        id: 63,
+        qe: "Half life is 70 days. How many days for 1g to reduce to 0.25g?",
+        qh: "रेडियोसक्रिय पदार्थ का अर्द्धजीवन काल 70 दिन का है। उस पदार्थ का 1 ग्राम कितने दिन बाद 0.25 gram रह जाएगा?",
+        options: [
+            { e: "70 days", h: "70 दिन", c: false },
+            { e: "140 days", h: "140 दिन", c: true },
+            { e: "210 days", h: "210 दिन", c: false },
+            { e: "280 days", h: "280 दिन", c: false }
+        ]
+    },
+    {
+        id: 64,
+        qe: "1/16th of a radioactive element remains after 2 hours. What is the half-life?",
+        qh: "किसी रेडियोसक्रिय तत्व की मात्रा अपने मूल मात्रा का सोलहवाँ भाग 2 घंटे के बाद पाया जाता है। तत्व की अर्द्धआयु होगा-",
+        options: [
+            { e: "15 min", h: "15 मिनट", c: false },
+            { e: "45 min", h: "45 मिनट", c: false },
+            { e: "75 min", h: "75 मिनट", c: false },
+            { e: "30 min", h: "30 मिनट", c: true } 
+        ]
+    },
+    {
+        id: 65,
+        qe: "If half-life is 1 day, what percentage remains after 4 days?",
+        qh: "यदि किसी रेडियोधर्मी पदार्थ का अर्द्धजीवन काल एक दिन हो, तो 4 दिन पश्चात् उसकी प्रारम्भिक मात्रा का कितना भाग शेष रह जाएगा?",
+        options: [
+            { e: "6.25%", h: "6¼%", c: true },
+            { e: "12.5%", h: "12½%", c: false },
+            { e: "16.25%", h: "16¼%", c: false },
+            { e: "26.25%", h: "26¼%", c: false }
+        ]
+    },
+    {
+        id: 66,
+        qe: "The formula for half-life (t½) of a radioactive substance is:",
+        qh: "किसी रेडियोसक्रिय पदार्थ का t½ है-",
+        options: [
+            { e: "λ / 0.693", h: "λ / 0.693", c: false },
+            { e: "0.693 / λ", h: "0.693 / λ", c: true },
+            { e: "0.693 λ", h: "0.693λ", c: false },
+            { e: "None", h: "इनमें से कोई नहीं", c: false }
+        ]
+    },
+    {
+        id: 67,
+        qe: "The age of the earth is estimated by:",
+        qh: "पृथ्वी के आयु का आकलन किया जाता है-",
+        options: [
+            { e: "Biological clock", h: "जैविक घड़ी से", c: false },
+            { e: "Atomic clock", h: "परमाणु घड़ी से", c: false },
+            { e: "Carbon dating", h: "कार्बन डेटिंग से", c: false },
+            { e: "Uranium dating", h: "यूरेनियम डेटिंग से", c: true }
+        ]
+    },
+    /* JUMP TO 87 (Data Gap in Source Images) */
+    {
+        id: 87,
+        qe: "Consider statements: 1. Nuclear bombs use chain reaction to produce energy, reactors do not. 2. Bomb reaction is uncontrolled, Reactor is controlled. Which is correct?",
+        qh: "कथन: 1. नाभिकीय बमों में... श्रृंखला अभिक्रिया का प्रयोग होता है...। 2. नाभिकीय बमों में अभिक्रिया अनियंत्रित होती है जबकि रिएक्टर में नियंत्रित। सही है?",
+        options: [
+            { e: "Only 1", h: "केवल 1", c: false },
+            { e: "Only 2", h: "केवल 2", c: true },
+            { e: "Both 1 and 2", h: "1 तथा 2 दोनों", c: false },
+            { e: "Neither", h: "न तो 1 न ही 2", c: false }
+        ]
+    },
+    {
+        id: 88,
+        qe: "Who invented the Atomic Bomb?",
+        qh: "परमाणु बम का आविष्कार किसने किया?",
+        options: [
+            { e: "Henry Becquerel", h: "हेनरी बैकेरेल", c: false },
+            { e: "Madam Curie", h: "मैडम क्यूरी", c: false },
+            { e: "Otto Hahn", h: "ऑटो हॉन", c: true },
+            { e: "Newton", h: "न्यूटन", c: false }
+        ]
+    },
+    {
+        id: 89,
+        qe: "Consider statements: 1. Fusion and Fission release equal energy. 2. Fusion releases more energy per unit mass than fission. Which is correct?",
+        qh: "कथन: 1. संलयन एवं विखंडन दोनों में समान ऊर्जा... 2. संलयन में प्रति इकाई द्रव्यमान... विखंडन से अधिक होती है। सही है?",
+        options: [
+            { e: "Only 1", h: "केवल 1", c: false },
+            { e: "Only 2", h: "केवल 2", c: true },
+            { e: "Both 1 and 2", h: "1 तथा 2 दोनों", c: false },
+            { e: "Neither", h: "न तो 1 न ही 2", c: false }
+        ]
+    },
+    {
+        id: 90,
+        qe: "The working principle of a Nuclear Reactor is based on:",
+        qh: "नाभिकीय रिएक्टर की कार्यपद्धति किस सिद्धान्त पर आधारित है?",
+        options: [
+            { e: "Nuclear Fusion", h: "नाभिकीय संलयन", c: false },
+            { e: "Controlled Nuclear Fission", h: "नियंत्रित नाभिकीय विखंडन", c: true },
+            { e: "Uncontrolled Nuclear Fission", h: "अनियंत्रित नाभिकीय विखंडन", c: false },
+            { e: "None", h: "इनमें से कोई नहीं", c: false }
+        ]
+    },
+    {
+        id: 91,
+        qe: "Which particle is required to continue the chain process of Uranium fission?",
+        qh: "यूरेनियम विखंडन की सतत प्रक्रिया को जारी रखने के लिए किस कण की आवश्यकता होती है?",
+        options: [
+            { e: "Electron", h: "इलेक्ट्रॉन", c: false },
+            { e: "Proton", h: "प्रोटॉन", c: false },
+            { e: "Positron", h: "पॉजीट्रॉन", c: false },
+            { e: "Neutron", h: "न्यूट्रॉन", c: true }
+        ]
+    },
+    {
+        id: 92,
+        qe: "Which mineral is used as fuel in Nuclear Energy Centers?",
+        qh: "परमाणु ऊर्जा केन्द्र (नाभिकीय रिएक्टर) में ईंधन के रूप में निम्नलिखित में से कौन-सा खनिज पदार्थ प्रयुक्त होता है?",
+        options: [
+            { e: "Bauxite", h: "बॉक्साइट", c: false },
+            { e: "Quartz", h: "क्वार्ट्ज", c: false },
+            { e: "Feldspar", h: "फेल्डस्पार", c: false },
+            { e: "Pitchblende", h: "पिचब्लैंड", c: true }
+        ]
+    },
+    {
+        id: 93,
+        qe: "Which fuel is generally used in Nuclear Power Stations?",
+        qh: "न्यूक्लियर पॉवर स्टेशन (नाभिकीय रिएक्टर) में उष्मा उत्पन्न करने हेतु साधारणतः किस ईंधन का प्रयोग होता है?",
+        options: [
+            { e: "Coal", h: "कोयला", c: false },
+            { e: "Helium", h: "हीलियम", c: false },
+            { e: "Uranium-235", h: "यूरेनियम-235", c: true },
+            { e: "Heavy Water", h: "भारी पानी", c: false }
+        ]
+    },
+    {
+        id: 94,
+        qe: "The function of the Moderator in a Nuclear Reactor is to:",
+        qh: "नाभिकीय रिएक्टर में मोडरेटर का कार्य होता है-",
+        options: [
+            { e: "Reduce reactor power", h: "रिएक्टर की शक्ति को कम करना", c: false },
+            { e: "Reduce neutron speed", h: "न्यूट्रॉन के लोड को कम करना (गति कम करना)", c: true }, 
+            { e: "Remove heat", h: "रिएक्टर की विखंडन अभिक्रिया के ताप को बाहर निकालना", c: false },
+            { e: "All of above", h: "उपर्युक्त में सभी", c: false }
+        ]
+    },
+    {
+        id: 95,
+        qe: "Statements: 1. Moderator slows down neutrons. 2. Control rod absorbs neutrons. Correct?",
+        qh: "कथन: 1. मंदक का कार्य, न्यूट्रॉन के गति को कम करना है। 2. नियंत्रक छड़ का कार्य, न्यूट्रॉन को अवशोषित करना है। सही है?",
+        options: [
+            { e: "Only 1", h: "केवल 1", c: false },
+            { e: "Only 2", h: "केवल 2", c: false },
+            { e: "Both 1 and 2", h: "1 तथा 2 दोनों", c: true },
+            { e: "Neither", h: "न तो 1 न ही 2", c: false }
+        ]
+    },
+    {
+        id: 96,
+        qe: "What is the phenomenon of atomic nuclei joining to form a new nucleus and releasing energy called?",
+        qh: "परमाणु के नाभिकों के मिलने और नये नाभिक के बनने और ऊर्जा मुक्त होने की घटना को क्या कहेंगे?",
+        options: [
+            { e: "Nuclear Fission", h: "नाभिकीय विखंडन", c: false },
+            { e: "Nuclear Fusion", h: "नाभिकीय संलयन", c: true },
+            { e: "Radioactivity", h: "रेडियोसक्रियता", c: false },
+            { e: "All of these", h: "इनमें से सभी", c: false }
+        ]
+    },
+    {
+        id: 97,
+        qe: "Which is used as a Moderator in a nuclear reactor?",
+        qh: "नाभिकीय रिएक्टर में मंदक के रूप इस्तेमाल किया जाता है-",
+        options: [
+            { e: "Graphite", h: "ग्रेफाइट का", c: false },
+            { e: "Heavy Water", h: "भारी जल का", c: false },
+            { e: "Beryllium Oxide", h: "बेरिलियम ऑक्साइड", c: false },
+            { e: "All of these", h: "इनमें से सभी", c: true }
+        ]
+    },
+    {
+        id: 98,
+        qe: "Which element is necessary for the construction of a nuclear reactor (cladding)?",
+        qh: "नाभिकीय रिएक्टर के निर्माण के लिए, निम्नलिखित में कौन-सा तत्व आवश्यक है?",
+        options: [
+            { e: "Lead", h: "लेड", c: false },
+            { e: "Magnesium", h: "मैग्नीशियम", c: false },
+            { e: "Zirconium", h: "जिरकोनियम", c: true },
+            { e: "Cobalt", h: "कोबाल्ट", c: false }
+        ]
+    },
+    {
+        id: 99,
+        qe: "What is used as a coolant in an atomic reactor?",
+        qh: "परमाणु रिएक्टर में शीतलक के रूप में व्यवहार होता है?",
+        options: [
+            { e: "Normal water", h: "सामान्य जल", c: false },
+            { e: "Heavy water", h: "भारी जल", c: false },
+            { e: "Liquid Sodium", h: "तरल सोडियम", c: false },
+            { e: "All of these", h: "इनमें से सभी", c: true }
+        ]
+    },
+    {
+        id: 100,
+        qe: "Statements: 1. Radioactivity cannot be controlled by external factors. 2. Nuclear fission can be controlled. Correct?",
+        qh: "कथन: 1. रेडियोसक्रियता को किसी बाहरी कारकों के द्वारा नियंत्रित नहीं किया जा सकता है। 2. नाभिकीय विखंडन को बाहरी युक्तियों के माध्यम से नियंत्रित किया जा सकता है।",
+        options: [
+            { e: "Only 1", h: "केवल 1", c: false },
+            { e: "Only 2", h: "केवल 2", c: false },
+            { e: "Both 1 and 2", h: "1 तथा 2 दोनों", c: true },
+            { e: "Neither", h: "न तो 1 न ही 2", c: false }
+        ]
+    },
+    {
+        id: 101,
+        qe: "Which substance is used as both moderator and coolant?",
+        qh: "नाभिकीय रिएक्टर में मंदक तथा शीतलक, दोनों के तरह प्रयुक्त होने वाला पदार्थ है-",
+        options: [
+            { e: "Normal Water", h: "सामान्य जल", c: false },
+            { e: "Heavy Water", h: "भारी जल", c: true },
+            { e: "Liquid Sodium", h: "तरल सोडियम", c: false },
+            { e: "Liquid Ammonia", h: "द्रव अमोनिया", c: false }
+        ]
+    },
+    {
+        id: 102,
+        qe: "What is used as a neutron controller in a nuclear reactor?",
+        qh: "नाभिकीय रिएक्टर में न्यूट्रॉन नियंत्रक के रूप में क्या प्रयोग किया जाता है?",
+        options: [
+            { e: "Heavy water & Graphite", h: "भारीजल एवं ग्रेफाइट", c: false },
+            { e: "Liquid Sodium", h: "तरल सोडियम या पोटेशियम", c: false },
+            { e: "Cadmium or Boron", h: "कैडमियम या बोरोन", c: true },
+            { e: "Aluminium & Iron", h: "एलुमिनियम एवं लोहा", c: false }
+        ]
+    },
+    {
+        id: 103,
+        qe: "What is a Nuclear Reactor?",
+        qh: "परमाणु रिएक्टर क्या है-",
+        options: [
+            { e: "Atomic bomb site", h: "परमाणु बम निर्माण स्थल", c: false },
+            { e: "Molecular Furnace", h: "आणविक भट्ठी", c: true },
+            { e: "Heavy water pond", h: "भारी पानी का तालाब", c: false },
+            { e: "Emitter of U-238", h: "U-238 का उत्सर्जक", c: false }
+        ]
+    },
+    {
+        id: 104,
+        qe: "Difference between Nuclear Reactor and Atomic Bomb is:",
+        qh: "नाभिकीय रिएक्टर तथा परमाणु बम में अंतर यह है कि-",
+        options: [
+            { e: "Reactor=Fission, Bomb=Fusion", h: "नाभिकीय रिएक्टर में विखंडन होता है जबकि परमाणु बम में संलयन", c: false },
+            { e: "Reactor=Controlled, Bomb=Uncontrolled", h: "नाभिकीय रिएक्टर में नियंत्रित विखंडन होता है जबकि परमाणु बम में अनियंत्रित विखण्डन होता है।", c: true },
+            { e: "Reactor=Fusion, Bomb=Fission", h: "नाभिकीय रिएक्टर में संलयन होता है जबकि परमाणु बम में विखंडन", c: false },
+            { e: "None", h: "इनमें से कोई नहीं", c: false }
+        ]
+    },
+    {
+        id: 105,
+        qe: "Beta-particles are deflected in:",
+        qh: "β-कण विक्षेपित होती है-",
+        options: [
+            { e: "Gravitational field", h: "गुरुत्वाकर्षण क्षेत्र में", c: false },
+            { e: "Magnetic field", h: "चुंबकीय क्षेत्र में", c: false },
+            { e: "Electric field", h: "विद्युतीय क्षेत्र में", c: false },
+            { e: "Both Magnetic & Electric", h: "चुंबकीय एवं विद्युतीय क्षेत्र दोनों में", c: true }
+        ]
+    },
+    {
+        id: 106,
+        qe: "Atomic pile is used for:",
+        qh: "परमाणु पाइल का प्रयोग कहाँ होता है?",
+        options: [
+            { e: "Nuclear Fission operation", h: "नाभिकीय विखंडन के प्रचालन में", c: true },
+            { e: "Thermonuclear Fusion", h: "ताप नाभिकीय संलयन के प्रचालन में", c: false },
+            { e: "Producing X-rays", h: "एक्स किरणों के उत्पादन में", c: false },
+            { e: "As Atomic Accelerator", h: "परमाणु त्वरक के रूप में", c: false }
+        ]
+    },
+    {
+        id: 107,
+        qe: "Energy in Atom Bomb and Hydrogen Bomb comes from?",
+        qh: "परमाणु बम तथा हाइड्रोजन बम विस्फोट में भारी मात्रा में ऊर्जा किसके कारण निकलती है?",
+        options: [
+            { e: "Conversion of Mass to Energy", h: "द्रव्य का ऊर्जा में परिवर्तन", c: true },
+            { e: "Chemical to Heat energy", h: "रासायनिक ऊर्जा का ताप ऊर्जा में परिवर्तन", c: false },
+            { e: "Mechanical to Nuclear", h: "यांत्रिक ऊर्जा का नाभिकीय ऊर्जा में परिवर्तन", c: false },
+            { e: "Neutron to Proton", h: "न्यूट्रॉन का प्रोटॉन में परिवर्तन", c: false }
+        ]
+    },
+    {
+        id: 108,
+        qe: "Statements: 1. Atom bomb is based on controlled fusion. 2. Hydrogen bomb is based on uncontrolled fission. Correct?",
+        qh: "कथन: 1. परमाणु बम नियंत्रित नाभिकीय संलयन पर आधारित है। 2. हाइड्रोजन बम अनियंत्रित नाभिकीय विखंडन पर आधारित है। सही है?",
+        options: [
+            { e: "Only 1", h: "केवल 1", c: false },
+            { e: "Only 2", h: "केवल 2", c: false },
+            { e: "Both 1 and 2", h: "1 तथा 2 दोनों", c: false },
+            { e: "Neither 1 nor 2", h: "न तो 1 न ही 2", c: true }
+        ]
+    },
+    {
+        id: 109,
+        qe: "Assertion A: Rutherford told Royal Society nuclear energy never available. Reason R: He believed Einstein's law would fail.",
+        qh: "कथन A: रदरफोर्ड ने... कहा था कि मनुष्य को नाभिकीय शक्ति कभी उपलब्ध नहीं होगी। कारण R: उसे यह विश्वास था कि आइंस्टाइन का नियम फेल हो जाएगा...",
+        options: [
+            { e: "Both True, R explains A", h: "A तथा R दोनों सही है, तथा R, A की सही व्याख्या करता है।", c: true },
+            { e: "Both True, R does not explain", h: "A तथा R दोनों सही है, परन्तु R, A की सही व्याख्या नहीं करता है।", c: false },
+            { e: "A true, R false", h: "A सही है परन्तु R गलत है।", c: false },
+            { e: "A false, R true", h: "A गलत है परन्तु R सही है।", c: false }
+        ]
+    },
+    {
+        id: 110,
+        qe: "Source of inexhaustible energy in stars is:",
+        qh: "सितारों में अक्षय ऊर्जा का स्रोत है-",
+        options: [
+            { e: "Hydrogen converting to Helium", h: "हाइड्रोजन का हिलियम में परिवर्तन", c: true },
+            { e: "Helium converting to Hydrogen", h: "हीलियम का हाइड्रोजन में परिवर्तन", c: false },
+            { e: "Radioactivity", h: "रेडियोसक्रियता", c: false },
+            { e: "Excess Oxygen", h: "ऑक्सीजन की अधिकता जो जलने में सहायक है", c: false }
+        ]
+    }
+];
+
+const app = {
+    questions: [],
+    currentIdx: 0,
+    score: 0,
+    timer: 0,
+    timerInterval: null,
+    audioCtx: null,
+
+    init: function() {
+        this.questions = [...QUESTION_DATA];
+        // Audio Context initialization on first click
+        document.body.addEventListener('click', () => {
+            if (!this.audioCtx) this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }, { once: true });
+    },
+
+    startQuiz: function() {
+        const timerVal = document.getElementById('timerInput').value;
+        const shuffle = document.getElementById('shuffleToggle').checked;
+
+        this.questions = [...QUESTION_DATA];
+        if(shuffle) this.shuffleArray(this.questions);
+
+        this.currentIdx = 0;
+        this.score = 0;
+        this.timer = timerVal ? parseInt(timerVal) : 0;
+        
+        document.getElementById('startScreen').classList.remove('active');
+        document.getElementById('resultScreen').classList.remove('active');
+        document.getElementById('quizScreen').classList.add('active');
+
+        this.loadQuestion();
+    },
+
+    loadQuestion: function() {
+        if(this.currentIdx >= this.questions.length) {
+            this.finishQuiz();
+            return;
+        }
+
+        const q = this.questions[this.currentIdx];
+        const timerVal = document.getElementById('timerInput').value;
+        
+        // Reset UI Text
+        document.getElementById('qTextEn').textContent = `${this.currentIdx + 1}. ${q.qe}`;
+        document.getElementById('qTextHi').textContent = q.qh;
+        document.getElementById('questionCounter').textContent = `Q: ${this.currentIdx + 1}/${this.questions.length}`;
+        document.getElementById('scoreDisplay').textContent = `Score: ${this.score}`;
+        
+        // Update Progress Bar
+        const pct = ((this.currentIdx) / this.questions.length) * 100;
+        document.getElementById('progressBar').style.width = `${pct}%`;
+
+        // Render Options
+        const optContainer = document.getElementById('optionsContainer');
+        optContainer.innerHTML = '';
+        
+        q.options.forEach((opt, idx) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerHTML = `
+                <span class="opt-en">${["A","B","C","D"][idx]}) ${opt.e}</span>
+                <span class="opt-hi">${opt.h}</span>
+            `;
+            btn.onclick = () => this.handleAnswer(idx, btn);
+            optContainer.appendChild(btn);
+        });
+
+        // Timer Logic
+        if(timerVal > 0) {
+            this.startTimer(parseInt(timerVal));
+        } else {
+            document.getElementById('timerDisplay').style.display = 'none';
+        }
+    },
+
+    handleAnswer: function(selectedIndex, btnElement) {
+        clearInterval(this.timerInterval);
+        const q = this.questions[this.currentIdx];
+        const isCorrect = q.options[selectedIndex].c;
+        const allBtns = document.querySelectorAll('.option-btn');
+
+        // Disable all to prevent multiple clicks
+        allBtns.forEach(b => b.disabled = true);
+
+        if(isCorrect) {
+            this.score++;
+            btnElement.classList.add('correct');
+            this.playTone('ting');
+            this.triggerConfetti();
+        } else {
+            btnElement.classList.add('wrong');
+            // Highlight the correct answer
+            q.options.forEach((opt, idx) => {
+                if(opt.c) allBtns[idx].classList.add('correct');
+            });
+            this.playTone('buzz');
+            this.triggerSadEmoji();
+        }
+
+        // Auto transition
+        setTimeout(() => {
+            this.currentIdx++;
+            this.loadQuestion();
+        }, 1500);
+    },
+
+    startTimer: function(seconds) {
+        const display = document.getElementById('timerDisplay');
+        display.style.display = 'flex';
+        display.classList.remove('timer-danger');
+        display.innerHTML = `⏳ ${seconds}s`;
+        
+        let left = seconds;
+        
+        clearInterval(this.timerInterval);
+        this.timerInterval = setInterval(() => {
+            left--;
+            display.innerHTML = `⏳ ${left}s`;
+            
+            if(left <= 5) display.classList.add('timer-danger');
+
+            if(left <= 0) {
+                clearInterval(this.timerInterval);
+                this.timeOut();
+            }
+        }, 1000);
+    },
+
+    timeOut: function() {
+        const allBtns = document.querySelectorAll('.option-btn');
+        allBtns.forEach(b => b.disabled = true);
+        
+        // Show correct answer automatically
+        const q = this.questions[this.currentIdx];
+        q.options.forEach((opt, idx) => {
+            if(opt.c) allBtns[idx].classList.add('correct');
+        });
+
+        this.playTone('buzz');
+        setTimeout(() => {
+            this.currentIdx++;
+            this.loadQuestion();
+        }, 1500);
+    },
+
+    finishQuiz: function() {
+        clearInterval(this.timerInterval);
+        document.getElementById('quizScreen').classList.remove('active');
+        document.getElementById('resultScreen').classList.add('active');
+
+        // Calculate based on "Answered So Far" logic for early exit
+        const questionsSeen = this.currentIdx === 0 ? 1 : this.currentIdx;
+        const percentage = Math.round((this.score / questionsSeen) * 100);
+        
+        document.getElementById('finalScoreDisplay').textContent = `${percentage}%`;
+        
+        let msg = "";
+        if(percentage >= 80) msg = "🏆 Outstanding Performance!";
+        else if(percentage >= 50) msg = "👏 Well Done! Keep it up.";
+        else msg = "📚 Practice makes perfect! Try again.";
+        
+        document.getElementById('resultMessage').textContent = msg;
+        document.getElementById('statsDisplay').innerHTML = 
+            `Questions Seen: <b>${questionsSeen}</b><br>Correct: <span style="color:#00e676">${this.score}</span> | Wrong/Skipped: <span style="color:#ff1744">${questionsSeen - this.score}</span>`;
+    },
+
+    restart: function() {
+        document.getElementById('resultScreen').classList.remove('active');
+        document.getElementById('startScreen').classList.add('active');
+    },
+
+    shuffleArray: function(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+    },
+
+    // --- Audio Synthesis (No external MP3s) ---
+    playTone: function(type) {
+        if(!this.audioCtx) return;
+        const osc = this.audioCtx.createOscillator();
+        const gain = this.audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(this.audioCtx.destination);
+
+        if(type === 'ting') {
+            // High pitched sine wave for correct
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(600, this.audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(1200, this.audioCtx.currentTime + 0.1);
+            gain.gain.setValueAtTime(0.3, this.audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, this.audioCtx.currentTime + 0.5);
+            osc.start();
+            osc.stop(this.audioCtx.currentTime + 0.5);
+        } else {
+            // Low pitched sawtooth for wrong
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(150, this.audioCtx.currentTime);
+            osc.frequency.linearRampToValueAtTime(100, this.audioCtx.currentTime + 0.3);
+            gain.gain.setValueAtTime(0.3, this.audioCtx.currentTime);
+            gain.gain.linearRampToValueAtTime(0.01, this.audioCtx.currentTime + 0.3);
+            osc.start();
+            osc.stop(this.audioCtx.currentTime + 0.3);
+        }
+    },
+
+    // --- Visual Effects ---
+    triggerConfetti: function() {
+        for(let i=0; i<30; i++) {
+            const el = document.createElement('div');
+            el.className = 'confetti-piece';
+            el.style.left = Math.random() * 100 + '%';
+            el.style.backgroundColor = `hsl(${Math.random()*360}, 100%, 60%)`;
+            // Random fall duration and speed
+            el.style.animation = `fall ${Math.random()*1 + 1}s linear forwards`;
+            document.body.appendChild(el);
+            setTimeout(() => el.remove(), 2000);
+        }
+    },
+
+    triggerSadEmoji: function() {
+        const emoji = document.getElementById('sadEmoji');
+        emoji.style.display = 'block';
+        setTimeout(() => {
+            emoji.style.display = 'none';
+        }, 800);
+    }
+};
+
+// Initialize App
+app.init();
+</script>
+</body>
+</html>

@@ -1,0 +1,1110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chemistry Master: Periodic Table (Part 2)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* --- RESET & BASE STYLES --- */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #8E2DE2 0%, #4A00E0 50%, #ff00cc 100%);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #fff;
+            overflow-x: hidden;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* --- GLASSMORPHISM CARD --- */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            width: 95%;
+            max-width: 700px;
+            padding: 30px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            min-height: 550px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* --- SCREENS --- */
+        .screen {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            flex-grow: 1;
+        }
+        .screen.active { display: flex; }
+
+        /* --- START SCREEN --- */
+        h1 {
+            font-size: 2.2rem;
+            text-align: center;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .subtitle {
+            font-size: 1rem;
+            opacity: 0.9;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .settings-group {
+            width: 100%;
+            margin-bottom: 20px;
+        }
+        label { display: block; margin-bottom: 8px; font-weight: 600; }
+        input[type="number"] {
+            width: 100%;
+            padding: 12px;
+            border-radius: 12px;
+            border: none;
+            background: rgba(255, 255, 255, 0.2);
+            color: #fff;
+            font-size: 1.1rem;
+            outline: none;
+        }
+        input[type="number"]::placeholder { color: rgba(255,255,255,0.6); }
+        
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            cursor: pointer;
+            width: 100%;
+        }
+        .toggle-switch {
+            width: 50px;
+            height: 28px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 50px;
+            position: relative;
+            transition: 0.3s;
+        }
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 24px;
+            height: 24px;
+            background: #fff;
+            border-radius: 50%;
+            transition: 0.3s;
+        }
+        .toggle-active .toggle-switch { background: #00f260; }
+        .toggle-active .toggle-switch::after { transform: translateX(22px); }
+
+        .btn-primary {
+            background: linear-gradient(90deg, #ff8a00, #e52e71);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(229, 46, 113, 0.4);
+            transition: transform 0.2s;
+            margin-top: 20px;
+        }
+        .btn-primary:hover { transform: scale(1.05); }
+
+        /* --- QUIZ SCREEN --- */
+        .progress-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 6px;
+            background: rgba(255,255,255,0.1);
+        }
+        .progress-bar {
+            height: 100%;
+            background: #00f260;
+            width: 0%;
+            transition: width 0.5s ease;
+            box-shadow: 0 0 10px #00f260;
+        }
+
+        .header-info {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            margin-bottom: 20px;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+        
+        .timer-box {
+            background: rgba(0,0,0,0.2);
+            padding: 5px 15px;
+            border-radius: 20px;
+            transition: color 0.3s;
+        }
+        .timer-pulse {
+            color: #ff4b4b;
+            animation: pulse 1s infinite;
+        }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+
+        .question-box {
+            background: rgba(255,255,255,0.05);
+            padding: 20px;
+            border-radius: 15px;
+            width: 100%;
+            margin-bottom: 25px;
+            border-left: 5px solid #fff;
+        }
+        .q-en { font-size: 1.15rem; font-weight: 700; margin-bottom: 8px; line-height: 1.4; }
+        .q-hi { font-size: 1rem; color: #ddd; font-weight: 400; line-height: 1.5; }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+            width: 100%;
+        }
+        @media (min-width: 600px) { .options-grid { grid-template-columns: 1fr 1fr; } }
+
+        .option-btn {
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.2);
+            padding: 15px;
+            border-radius: 12px;
+            color: white;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+        .option-btn:hover:not(:disabled) { background: rgba(255,255,255,0.25); }
+        .op-en { font-size: 1rem; font-weight: 600; margin-bottom: 4px; }
+        .op-hi { font-size: 0.9rem; color: #e0e0e0; }
+
+        .correct-anim { background: rgba(46, 204, 113, 0.8) !important; border-color: #2ecc71 !important; transform: scale(1.02); }
+        .wrong-anim { background: rgba(231, 76, 60, 0.8) !important; border-color: #e74c3c !important; animation: shake 0.4s; }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .feedback-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 5rem;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+            z-index: 10;
+        }
+        .feedback-show { opacity: 1; animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        @keyframes popIn { from { transform: translate(-50%, -50%) scale(0); } to { transform: translate(-50%, -50%) scale(1); } }
+
+        .finish-btn {
+            margin-top: 25px;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: #ccc;
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .finish-btn:hover { background: rgba(231, 76, 60, 0.8); color: white; border-color: transparent; }
+
+        /* --- RESULT SCREEN --- */
+        .score-circle {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            border: 8px solid rgba(255,255,255,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+            background: rgba(0,0,0,0.1);
+            box-shadow: 0 0 20px rgba(255,255,255,0.1);
+        }
+        .result-msg { font-size: 1.5rem; margin-bottom: 10px; color: #ffd700; text-align: center; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+        .result-desc { font-size: 1.1rem; margin-bottom: 30px; text-align: center; }
+
+        /* --- CONFETTI --- */
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: #f0f;
+            animation: fall linear forwards;
+            top: -10px;
+            z-index: 9999;
+        }
+        @keyframes fall { to { transform: translateY(100vh) rotate(720deg); } }
+
+    </style>
+</head>
+<body>
+
+    <div class="glass-card">
+        <div id="start-screen" class="screen active">
+            <h1>Chemistry Quiz</h1>
+            <p class="subtitle">Periodic Classification (Part 2)<br>तत्वों का आवर्त वर्गीकरण (भाग 2)</p>
+            
+            <div class="settings-group">
+                <label>Timer per Question (Seconds)</label>
+                <input type="number" id="timerInput" placeholder="e.g. 15 (Leave empty for no timer)">
+            </div>
+
+            <div class="toggle-container" id="shuffleToggle">
+                <span>Shuffle Questions (प्रश्नों को मिलाएं)</span>
+                <div class="toggle-switch"></div>
+            </div>
+
+            <button class="btn-primary" onclick="startQuiz()">Start Quiz</button>
+        </div>
+
+        <div id="quiz-screen" class="screen">
+            <div class="progress-container"><div class="progress-bar" id="progressBar"></div></div>
+            
+            <div class="header-info">
+                <span id="q-counter">Q: 51/100</span>
+                <span id="timer-display" class="timer-box">--</span>
+                <span id="score-display">Score: 0</span>
+            </div>
+
+            <div class="question-box">
+                <div class="q-en" id="q-en">Question text...</div>
+                <div class="q-hi" id="q-hi">हिंदी प्रश्न...</div>
+            </div>
+
+            <div class="options-grid" id="options-container"></div>
+
+            <div id="feedback-icon" class="feedback-overlay">😢</div>
+
+            <button class="finish-btn" onclick="finishQuiz()">Finish & Show Results</button>
+        </div>
+
+        <div id="result-screen" class="screen">
+            <div class="score-circle" id="final-score">0%</div>
+            <div class="result-msg" id="result-msg">Well Done!</div>
+            <p class="result-desc" id="result-text">You scored X out of Y</p>
+            <button class="btn-primary" onclick="resetQuiz()">Restart Quiz</button>
+        </div>
+    </div>
+
+<script>
+/* --- DATA: QUESTIONS 51-100 (Extracted) --- */
+const originalQuestions = [
+    {
+        en: "Alkali Metals belong to which group?",
+        hi: "क्षारीय धातु (Alkali Metal) किस वर्ग के तत्व है?",
+        options: [
+            {en: "Group 1", hi: "वर्ग 1"},
+            {en: "Group 2", hi: "वर्ग 2"},
+            {en: "Group 3", hi: "वर्ग 3"},
+            {en: "Group 4", hi: "वर्ग 4"}
+        ],
+        correct: 0
+    },
+    {
+        en: "What is the repetition of properties of elements called?",
+        hi: "आवर्त सारणी में तत्वों को परमाणु संख्या के बढ़ते क्रम में रखने पर तत्वों के गुणों में पुनरावृत्ति होती है, गुणों की पुनरावृत्ति को क्या कहते हैं?",
+        options: [
+            {en: "Ionization Potential", hi: "आयनन विभव"},
+            {en: "Oxidation", hi: "ऑक्सीकरण"},
+            {en: "Periodicity", hi: "आवर्तिता"},
+            {en: "Ionization Energy", hi: "आयनन ऊर्जा"}
+        ],
+        correct: 2
+    },
+    {
+        en: "Elements of Group 3 to 12 are called?",
+        hi: "आवर्त सारणी के वर्ग 3-12 तक के तत्व कहलाते है-",
+        options: [
+            {en: "Halogen", hi: "हैलोजन"},
+            {en: "Transition Elements", hi: "संक्रमण तत्व"},
+            {en: "Chalcogen", hi: "चालकोजेन"},
+            {en: "Alkali Metal", hi: "क्षारीय धातु"}
+        ],
+        correct: 1
+    },
+    {
+        en: "Which is NOT a characteristic of a transition element?",
+        hi: "निम्नलिखित में कौन एक संक्रमण तत्व की विशेषता नहीं है?",
+        options: [
+            {en: "Incomplete d-orbitals", hi: "इसके परमाणु या आयन में d ऑर्बिटल अपूर्ण होते है"},
+            {en: "Variable oxidation state", hi: "इसकी ऑक्सीकरण अवस्था परिवर्तनशील होती है"},
+            {en: "Most are metals, few non-metals", hi: "संक्रमण तत्व अधिकांश धातु है, अधातु की संख्या मात्र 11 है"},
+            {en: "Form colored compounds", hi: "संक्रमण तत्व के यौगिक रंगीन होते है"}
+        ],
+        correct: 2
+    },
+    {
+        en: "Which option is NOT correctly matched regarding groups?",
+        hi: "निम्नलिखित में कौन-सा विकल्प सही सुमेलित नहीं है?",
+        options: [
+            {en: "Group 1: Alkali Metal", hi: "वर्ग 1 : क्षारीय धातु"},
+            {en: "Group 2: Alkaline Earth Metal", hi: "वर्ग 2 : क्षारीय मृदा धातु"},
+            {en: "Group 3: Chalcogen", hi: "वर्ग 3 : चालकोजेन"},
+            {en: "Group 4: Transition Element", hi: "वर्ग 4 : संक्रमण तत्व"}
+        ],
+        correct: 2
+    },
+    {
+        en: "Consider the following statements:",
+        hi: "निम्नलिखित कथनों पर विचार कीजिए- (1. वर्ग में ऊपर से नीचे आने पर तत्व के परमाणु में शेलो की संख्या बढ़ती है। 2. आवर्त में बाएं से दाएं जाने पर तत्व के परमाणु में शेलो की संख्या समान बनी रहती है।)",
+        options: [
+            {en: "Only 1", hi: "केवल 1"},
+            {en: "Only 2", hi: "केवल 2"},
+            {en: "Both 1 and 2", hi: "1 तथा 2 दोनों"},
+            {en: "Neither 1 nor 2", hi: "न तो 1 न ही 2"}
+        ],
+        correct: 2
+    },
+    {
+        en: "Reactivity of metals down a group?",
+        hi: "आवर्त सारणी में किसी वर्ग में ऊपर से नीचे आने पर धातु की क्रियाशीलता-",
+        options: [
+            {en: "Decreases", hi: "घटती है"},
+            {en: "Increases", hi: "बढ़ती है"},
+            {en: "Remains same", hi: "अपरिवर्तित रहती है"},
+            {en: "None of these", hi: "इनमें से कोई नहीं"}
+        ],
+        correct: 1
+    },
+    {
+        en: "Which is the most reactive metal among these?",
+        hi: "निम्नलिखित में से सबसे अधिक क्रियाशील धातु कौन है?",
+        options: [
+            {en: "Sodium (Na)", hi: "सोडियम (Na)"},
+            {en: "Potassium (K)", hi: "पोटैशियम (K)"},
+            {en: "Rubidium (Rb)", hi: "रुबिडियम (Rb)"},
+            {en: "Cesium (Cs)", hi: "सीजियम (Cs)"}
+        ],
+        correct: 3
+    },
+    {
+        en: "Which is the least reactive metal among these?",
+        hi: "निम्नलिखित में न्यूनतम क्रियाशील धातु है-",
+        options: [
+            {en: "Be", hi: "Be (बेरेलियम)"},
+            {en: "Mg", hi: "Mg (मैग्नेशियम)"},
+            {en: "Ca", hi: "Ca (कैल्शियम)"},
+            {en: "Sr", hi: "Sr (स्ट्रांशियम)"}
+        ],
+        correct: 0
+    },
+    {
+        en: "Which option regarding Period and Number of Elements is NOT matched?",
+        hi: "निम्नलिखित में कौन-सा विकल्प सुमेलित नहीं है? (आवर्त - तत्वों की संख्या)",
+        options: [
+            {en: "First Period - 2", hi: "प्रथम आवर्त - 2"},
+            {en: "Second Period - 8", hi: "द्वितीय आवर्त - 8"},
+            {en: "Sixth Period - 32", hi: "षष्ठ आवर्त - 32"},
+            {en: "Seventh Period - 32", hi: "सप्तम आवर्त - 32"}
+        ],
+        correct: 3
+    },
+    {
+        en: "According to modern law, which period is incomplete?",
+        hi: "आधुनिक आवर्त नियम के अनुसार कौन सा आवर्त अपूर्ण है?",
+        options: [
+            {en: "First Period", hi: "प्रथम आवर्त"},
+            {en: "Fifth Period", hi: "पंचम आवर्त"},
+            {en: "Sixth Period", hi: "षष्ठ आवर्त"},
+            {en: "Seventh Period", hi: "सप्तम आवर्त"}
+        ],
+        correct: 3
+    },
+    {
+        en: "Which one of the following is NOT correct?",
+        hi: "निम्नलिखित में कौन-सा एक सही नहीं है?",
+        options: [
+            {en: "Metallic character increases down a group", hi: "आवर्त सारणी के किसी वर्ग में नीचे जाने पर तत्वों का धात्विक लक्षण बढ़ता है"},
+            {en: "Most metallic element is at bottom of group", hi: "अत्यधिक धात्विक लक्षण आवर्त सारणी के किसी वर्ग के सबसे निचले भाग में पाया जाता है"},
+            {en: "Electropositivity increases down a group", hi: "आवर्त सारणी के किसी वर्ग में नीचे जाने पर तत्वों विधुत धनात्मकता का लक्षण बढ़ता है"},
+            {en: "Electronegativity increases down a group", hi: "आवर्त सारणी के किसी वर्ग में नीचे जाने पर तत्वों की विधुत ऋणात्मकता बढ़ती है"}
+        ],
+        correct: 3
+    },
+    {
+        en: "Tendency to lose electrons down a group?",
+        hi: "आवर्त सारणी के किसी वर्ग में ऊपर से नीचे आने पर तत्वों की इलेक्ट्रॉन त्यागने की प्रवृति-",
+        options: [
+            {en: "Increases", hi: "बढ़ती है"},
+            {en: "Decreases", hi: "घटती है"},
+            {en: "Remains unchanged", hi: "अपरिवर्तित रहती है"},
+            {en: "None of these", hi: "इनमें से सभी"}
+        ],
+        correct: 0
+    },
+    {
+        en: "Which element will show similar chemical reaction to Mg (Magnesium)?",
+        hi: "निम्नलिखित में कौन-सा तत्व Mg (मैग्नीशियम) के समान रसायनिक अभिक्रिया दर्शायेंगे?",
+        options: [
+            {en: "Be", hi: "Be"},
+            {en: "Ca", hi: "Ca"},
+            {en: "Ba", hi: "Ba"},
+            {en: "All of these", hi: "इनमें सभी"}
+        ],
+        correct: 3
+    },
+    {
+        en: "Effect on atomic size/radius when moving down a group?",
+        hi: "आवर्त सारणी में वर्ग में ऊपर से नीचे आने पर परमाणु का आकार/परमाणु त्रिज्या पर क्या प्रभाव पड़ता है?",
+        options: [
+            {en: "Increases", hi: "बढ़ता है"},
+            {en: "Decreases", hi: "घटता है"},
+            {en: "Remains unchanged", hi: "अपरिवर्तित रहता है"},
+            {en: "None of these", hi: "इनमें से कोई नहीं"}
+        ],
+        correct: 0
+    },
+    {
+        en: "Why does atomic radius increase down a group?",
+        hi: "आवर्त सारणी में वर्ग में ऊपर से नीचे आने पर तत्वों की परमाणु त्रिज्या (परमाणु आकार) बढ़ता जाता है क्यों?",
+        options: [
+            {en: "Number of shells increases", hi: "परमाणु में शेलो की संख्या बढ़ती जाती है"},
+            {en: "Number of shells decreases", hi: "परमाणु में शेलो की संख्या घटती जाती है"},
+            {en: "Shells remain constant", hi: "परमाणु में शेलो की संख्या अपरिवर्तित रहता है"},
+            {en: "Valence electrons increase", hi: "परमाणु में संयोजी इलेक्ट्रॉन की संख्या बढ़ती है"}
+        ],
+        correct: 0
+    },
+    {
+        en: "Element X forms solid XCl2 with high MP. X is in same group as?",
+        hi: "एक तत्व X, सूत्र XCl2 वाला क्लोराइड बनाता है जो उच्च गलनांक वाला एक ठोस है। X तत्व आवर्त सारणी के उसी वर्ग में होगा जिसमें है-",
+        options: [
+            {en: "Na", hi: "Na"},
+            {en: "Mg", hi: "Mg"},
+            {en: "Al", hi: "Al"},
+            {en: "P", hi: "P"}
+        ],
+        correct: 1
+    },
+    {
+        en: "Element in Group 3 (13) and 2nd Period exhibits which property?",
+        hi: "एक तत्व आवर्त सारणी के वर्ग 3 (13) तथा द्वितीय आवर्त में स्थित है। यह तत्व निम्नलिखित में कौन-सा गुण प्रदर्शित करेगा?",
+        options: [
+            {en: "Liquid, Most Metallic", hi: "द्रव, सबसे अधिक धातुई"},
+            {en: "Solid, Less Metallic", hi: "ठोस, कम धातुई"},
+            {en: "Solid, Non-metal/Metalloid", hi: "ठोस, अधातुई"},
+            {en: "Gas, Soft Metal", hi: "गैस, मृदु धातुई"}
+        ],
+        correct: 2
+    },
+    {
+        en: "Which element has the minimum atomic radius?",
+        hi: "निम्नलिखित में कौन न्यूनतम परमाणु त्रिज्या वाला तत्व है?",
+        options: [
+            {en: "F", hi: "फ्लोरीन (F)"},
+            {en: "Cl", hi: "क्लोरिन (Cl)"},
+            {en: "Br", hi: "ब्रोमीन (Br)"},
+            {en: "I", hi: "आयोडीन (I)"}
+        ],
+        correct: 0
+    },
+    {
+        en: "Which element will have the largest atomic radius?",
+        hi: "निम्नलिखित में किस तत्व का परमाणु त्रिज्या सबसे अधिक होगा?",
+        options: [
+            {en: "Boron (B)", hi: "बोरॉन (B)"},
+            {en: "Aluminium (Al)", hi: "ऐलुमिनियम (Al)"},
+            {en: "Gallium (Ga)", hi: "गैलियम (Ga)"},
+            {en: "Indium (In)", hi: "इंडियम (In)"}
+        ],
+        correct: 3
+    },
+    {
+        en: "Consider the statements:",
+        hi: "निम्नलिखित कथनों पर विचार कीजिए- (1. वर्ग में ऊपर से नीचे आने पर तत्वों के परमाणु आकार में वृद्धि होती है। 2. किसी आवर्त में बाएँ से दाएँ जाने पर तत्वों के परमाणु आकार घटता जाता है।)",
+        options: [
+            {en: "Only 1", hi: "केवल 1"},
+            {en: "Only 2", hi: "केवल 2"},
+            {en: "Both 1 and 2", hi: "1 तथा 2 दोनों"},
+            {en: "Neither 1 nor 2", hi: "न तो 1 न ही 2"}
+        ],
+        correct: 2
+    },
+    {
+        en: "Where are isotopes of an element placed in the periodic table?",
+        hi: "आवर्त सारणी में किसी तत्व के समस्थानिक को रखा गया है-",
+        options: [
+            {en: "At the same place", hi: "एक ही स्थान पर"},
+            {en: "At different places", hi: "भिन्न-भिन्न स्थान पर"},
+            {en: "In separate row", hi: "अलग एक पंक्ति में"},
+            {en: "Between halogen and inert gas", hi: "हैलोजन तथा अक्रिय गैस के बीच में"}
+        ],
+        correct: 0
+    },
+    {
+        en: "An element has all its shells completely filled. Which group?",
+        hi: "आवर्त सारणी के एक तत्व के परमाणु का सभी शेल इलेक्ट्रॉन से पूर्ण रूप से भरा हुआ है। यह तत्व किस वर्ग का तत्व है?",
+        options: [
+            {en: "Group 1", hi: "वर्ग 1"},
+            {en: "Group 2", hi: "वर्ग 2"},
+            {en: "Group 17", hi: "वर्ग 17"},
+            {en: "Group 18", hi: "वर्ग 18"}
+        ],
+        correct: 3
+    },
+    {
+        en: "Which statement does NOT apply to elements in the same period?",
+        hi: "निम्नलिखित में कौन-सा एक कथन, आवर्त सारणी के एक ही आवर्त के तत्वों के लिये लागू नही होता है?",
+        options: [
+            {en: "Valence electrons increase L to R", hi: "बाएँ से दाएँ जाने पर संयोजी इलेक्ट्रॉन की संख्या बढ़ती है"},
+            {en: "Atomic size decreases L to R", hi: "बाएँ से दाएँ जाने पर परमाणु का आकार घटता है"},
+            {en: "Oxides become basic L to R", hi: "बाएँ से दाएँ जाने पर तत्वों के ऑक्साइड की प्रकृति क्षारीय होती जाती है"},
+            {en: "Metallic character decreases L to R", hi: "बाएँ से दाएँ जाने पर धातुई गुण घटता है"}
+        ],
+        correct: 2
+    },
+    {
+        en: "Lanthanides and Actinides belong to which group?",
+        hi: "लैन्थेनाइड तथा ऐक्टीनाइड तत्व किस वर्ग के तत्व है?",
+        options: [
+            {en: "Group 1", hi: "वर्ग 1"},
+            {en: "Group 2", hi: "वर्ग 2"},
+            {en: "Group 3", hi: "वर्ग 3"},
+            {en: "Group 4", hi: "वर्ग 4"}
+        ],
+        correct: 2
+    },
+    {
+        en: "Which element in Group 15 has the most metallic character?",
+        hi: "आवर्त सारणी के वर्ग 15 में किस तत्व में सबसे अधिक धातुई गुण होगा?",
+        options: [
+            {en: "Bi", hi: "Bi (बिस्मथ)"},
+            {en: "As", hi: "As (आर्सेनिक)"},
+            {en: "P", hi: "P (फॉस्फोरस)"},
+            {en: "N", hi: "N (नाइट्रोजन)"}
+        ],
+        correct: 0
+    },
+    {
+        en: "The last member of every period is?",
+        hi: "आवर्त सारणी के प्रत्येक आवर्त का अंतिम सदस्य होता है-",
+        options: [
+            {en: "Alkali Metal", hi: "क्षार धातु"},
+            {en: "Alkaline Earth Metal", hi: "क्षारीय मृदा धातु"},
+            {en: "Transition Element", hi: "संक्रमण तत्व"},
+            {en: "Inert Gas", hi: "अक्रिय गैस"}
+        ],
+        correct: 3
+    },
+    {
+        en: "The first member of any period is?",
+        hi: "आवर्त सारणी के किसी आवर्त का प्रथम सदस्य कौन होता है?",
+        options: [
+            {en: "Alkali Metal", hi: "क्षार धातु"},
+            {en: "Alkaline Earth Metal", hi: "क्षारीय मृदा धातु"},
+            {en: "Transition Element", hi: "संक्रमण तत्व"},
+            {en: "Halogen", hi: "हैलोजन"}
+        ],
+        correct: 0
+    },
+    {
+        en: "Which pair has similar chemical properties?",
+        hi: "निम्नलिखित में कौन समान रसायनिक गुणों वाला तत्वों का युग्म है?",
+        options: [
+            {en: "Argon - Potassium", hi: "ऑर्गन - पोटैशियम"},
+            {en: "Nitrogen - Phosphorus", hi: "नाइट्रोजन - फॉस्फोरस"},
+            {en: "Boron - Germanium", hi: "बोरॉन - जर्मेनियम"},
+            {en: "Sodium - Aluminium", hi: "सोडियम - ऐलुमिनियम"}
+        ],
+        correct: 1
+    },
+    {
+        en: "Which three groups contain the most metalloids?",
+        hi: "आवर्त सारणी के किन तीन वर्ग में सबसे अधिक उपधातु पाये जाते है?",
+        options: [
+            {en: "1, 2 and 3", hi: "1, 2 और 3"},
+            {en: "2, 13 and 14", hi: "2, 13 और 14"},
+            {en: "14, 15 and 16", hi: "14, 15 और 16"},
+            {en: "16, 17 and 18", hi: "16, 17 और 18"}
+        ],
+        correct: 2
+    },
+    {
+        en: "Ionization energy down a group?",
+        hi: "आवर्त सारणी में वर्ग में ऊपर से नीचे आने पर तत्व का आयनन ऊर्जा का मान-",
+        options: [
+            {en: "Decreases", hi: "घटते जाता है"},
+            {en: "Increases", hi: "बढ़ते जाता है"},
+            {en: "Remains unchanged", hi: "अपरिवर्तित रहता है"},
+            {en: "All of these", hi: "इनमें से सभी"}
+        ],
+        correct: 0
+    },
+    {
+        en: "Ionization energy from left to right in a period?",
+        hi: "आवर्त सारणी के किसी आवर्त में बाएँ से दाएँ जाने पर तत्वों के आयनन ऊर्जा का मान-",
+        options: [
+            {en: "Decreases", hi: "घटते जाता है"},
+            {en: "Increases", hi: "बढ़ते जाता है"},
+            {en: "Remains unchanged", hi: "अपरिवर्तित रहता है"},
+            {en: "None of these", hi: "इनमें से कोई नहीं"}
+        ],
+        correct: 1
+    },
+    {
+        en: "Which element will have maximum ionization energy?",
+        hi: "निम्नलिखित में किस तत्व का आयनन ऊर्जा का मान अधिकतम होगा?",
+        options: [
+            {en: "Li", hi: "Li (लीथियम)"},
+            {en: "Na", hi: "Na (सोडियम)"},
+            {en: "K", hi: "K (पोटैशियम)"},
+            {en: "Rb", hi: "Rb (रूबिडियम)"}
+        ],
+        correct: 0
+    },
+    {
+        en: "Correct order of Ionization Energy for Mg, Na, Al?",
+        hi: "निम्नलिखित में कौन-सा क्रम धातुओं के आयनन ऊर्जा का सही क्रम है?",
+        options: [
+            {en: "Mg > Na > Al", hi: "Mg > Na > Al"},
+            {en: "Mg > Al > Na", hi: "Mg > Al > Na"},
+            {en: "Al > Mg > Na", hi: "Al > Mg > Na"},
+            {en: "Na > Al > Mg", hi: "Na > Al > Mg"}
+        ],
+        correct: 1
+    },
+    {
+        en: "Which statements are correct?",
+        hi: "निम्नलिखित कथनों पर विचार कीजिए- (1. किसी आवर्त के क्षारीय धातु का आयनन विभव न्यूनतम तथा अक्रिय गैस का अधिकतम होता है। 2. किसी आवर्त के धातु के तुलना में अधातुओं का आयनन विभव उच्च होता है।)",
+        options: [
+            {en: "Only 1", hi: "केवल 1"},
+            {en: "Only 2", hi: "केवल 2"},
+            {en: "Both 1 and 2", hi: "1 तथा 2 दोनों"},
+            {en: "Neither 1 nor 2", hi: "न तो 1 न ही 2"}
+        ],
+        correct: 2
+    },
+    {
+        en: "Which ionization energy is the highest for an element?",
+        hi: "किसी तत्व के प्रथम, द्वितीय तथा तृतीय आयनन ऊर्जा का मान क्रमशः E1, E2 तथा E3 है। सर्वाधिक मान होगा-",
+        options: [
+            {en: "E1", hi: "E1 का"},
+            {en: "E2", hi: "E2 का"},
+            {en: "E3", hi: "E3 का"},
+            {en: "All equal", hi: "तीनों का बराबर होगा"}
+        ],
+        correct: 2
+    },
+    {
+        en: "Pick the element with highest Ionization Potential in each triad.",
+        hi: "निम्नलिखित में प्रत्येक त्रिक में उच्चतम आयनन विभव वाले तत्व को चुनिए- (1. Li, Be, B | 2. C, N, O | 3. He, H, Ne)",
+        options: [
+            {en: "He, B, N", hi: "He, B, N"},
+            {en: "He, Be, N", hi: "He, Be, N"},
+            {en: "Ne, B, N", hi: "Ne, B, N"},
+            {en: "H, Be, N", hi: "H, Be, N"}
+        ],
+        correct: 1
+    },
+    {
+        en: "Energy is always required to remove an electron. Thus, Ionization Energy is?",
+        hi: "परमाणु इलेक्ट्रॉन को पृथक करने हेतु सदैव ऊर्जा का आवश्यकता होती है। अतः आयनन ऊर्जा का मान सदैव होता है-",
+        options: [
+            {en: "Negative", hi: "ऋणात्मक"},
+            {en: "Positive", hi: "धनात्मक"},
+            {en: "Both", hi: "धनात्मक एवं ऋणात्मक"},
+            {en: "None", hi: "इनमें से कोई नहीं"}
+        ],
+        correct: 1
+    },
+    {
+        en: "Moving Left to Right in a period, what remains the same?",
+        hi: "आवर्त सारणी में, आवर्त में बाएं से दाएं जाने पर ...... की संख्या समान रहती है?",
+        options: [
+            {en: "Electron", hi: "इलेक्ट्रॉन"},
+            {en: "Proton", hi: "प्रोटॉन"},
+            {en: "Neutron", hi: "न्यूट्रॉन"},
+            {en: "Shell", hi: "शेल"}
+        ],
+        correct: 3
+    },
+    {
+        en: "Moving Top to Bottom in a group, what remains the same?",
+        hi: "आवर्त सारणी में, वर्ग में ऊपर से नीचे आने पर ........ की संख्या समान रहती है?",
+        options: [
+            {en: "Core Electron", hi: "कोर इलेक्ट्रॉन"},
+            {en: "Valence Electron", hi: "संयोजी इलेक्ट्रॉन"},
+            {en: "Shell", hi: "शेल"},
+            {en: "Atomic Radius", hi: "परमाणु त्रिज्या"}
+        ],
+        correct: 1
+    },
+    {
+        en: "What is the basis of classifying elements into s, p, d, f blocks?",
+        hi: "तत्वों को चार ब्लॉक जैसे- s-block, p-block, d-block तथा f-block में वर्गीकृत करने का आधार है-",
+        options: [
+            {en: "Atomic Number", hi: "परमाणु संख्या"},
+            {en: "Atomic Mass", hi: "परमाणु द्रव्यमान"},
+            {en: "Atomic Orbital", hi: "परमाणु कक्षक"},
+            {en: "All of these", hi: "इनमें से सभी"}
+        ],
+        correct: 2
+    },
+    {
+        en: "Elements of Group 13 to 18 are called?",
+        hi: "वर्ग 13 से लेकर 18 तक वाले तत्व क्या कहलाते है?",
+        options: [
+            {en: "s-block", hi: "s-block"},
+            {en: "p-block", hi: "p-block"},
+            {en: "d-block", hi: "d-block"},
+            {en: "f-block", hi: "f-block"}
+        ],
+        correct: 1
+    },
+    {
+        en: "Helium is related to which block?",
+        hi: "आवर्त सारणी के तत्वों को चार ब्लॉक में विभाजित किया गया है, हीलियम कौन से ब्लॉक से संबंधित है?",
+        options: [
+            {en: "s-block", hi: "s-block"},
+            {en: "p-block", hi: "p-block"},
+            {en: "d-block", hi: "d-block"},
+            {en: "f-block", hi: "f-block"}
+        ],
+        correct: 0
+    },
+    {
+        en: "14 elements in 6th and 7th periods are called?",
+        hi: "आवर्त सारणी में छठे आवर्त के 14 तत्व तथा सातवे आवर्त के 14 तत्व को क्रमशः क्या कहा जाता है?",
+        options: [
+            {en: "Lanthanide and Actinide", hi: "लैन्थेनाइड तथा ऐक्टीनाइड"},
+            {en: "Actinide and Halogen", hi: "ऐक्टीनाइड तथा हैलोजन"},
+            {en: "Actinide and Lanthanide", hi: "ऐक्टीनाइड तथा लैन्थेनाइड"},
+            {en: "Chalcogen and Halogen", hi: "चालकोजेन तथा हैलोजन"}
+        ],
+        correct: 0
+    },
+    {
+        en: "Lanthanides and Actinides are elements of which block?",
+        hi: "लैन्थेनाइड तथा ऐक्टीनाइड तत्व किस ब्लॉक के तत्व है?",
+        options: [
+            {en: "s-block", hi: "s-block"},
+            {en: "p-block", hi: "p-block"},
+            {en: "d-block", hi: "d-block"},
+            {en: "f-block", hi: "f-block"}
+        ],
+        correct: 3
+    },
+    {
+        en: "Transition elements belong to which block?",
+        hi: "संक्रमण तत्व किस block के तत्व है?",
+        options: [
+            {en: "s-block", hi: "s-block"},
+            {en: "p-block", hi: "p-block"},
+            {en: "d-block", hi: "d-block"},
+            {en: "f-block", hi: "f-block"}
+        ],
+        correct: 2
+    },
+    {
+        en: "Most radioactive elements are situated in which block?",
+        hi: "आवर्त सारणी में अधिकांश रेडियोसक्रिय तत्व किस ब्लॉक में स्थित है?",
+        options: [
+            {en: "s-block", hi: "s-block"},
+            {en: "p-block", hi: "p-block"},
+            {en: "d-block", hi: "d-block"},
+            {en: "f-block", hi: "f-block"}
+        ],
+        correct: 3
+    },
+    {
+        en: "Strong metallic alkali and alkaline earth metals are in?",
+        hi: "प्रबल धातुई गुण वाला-क्षारीय धातु तथा क्षारीय मृदा धातु किस ब्लॉक के तत्व है?",
+        options: [
+            {en: "s-block", hi: "s-block"},
+            {en: "p-block", hi: "p-block"},
+            {en: "d-block", hi: "d-block"},
+            {en: "f-block", hi: "f-block"}
+        ],
+        correct: 0
+    },
+    {
+        en: "If Group Number = Valence Electron + 10, the element is in?",
+        hi: "एक तत्व के संयोजी इलेक्ट्रॉन की कुल संख्या में 10 जोड़ने पर तत्व का वर्ग संख्या प्राप्त होता है, यह तत्व किस ब्लॉक का तत्व होगा?",
+        options: [
+            {en: "s-block", hi: "s-block"},
+            {en: "p-block", hi: "p-block"},
+            {en: "d-block", hi: "d-block"},
+            {en: "f-block", hi: "f-block"}
+        ],
+        correct: 1
+    },
+    {
+        en: "Non-metals are kept under which block?",
+        hi: "अधातुओं को किस ब्लॉक के अंतर्गत रखा गया है?",
+        options: [
+            {en: "s-block", hi: "s-block"},
+            {en: "p-block", hi: "p-block"},
+            {en: "d-block", hi: "d-block"},
+            {en: "f-block", hi: "f-block"}
+        ],
+        correct: 1
+    }
+];
+
+/* --- STATE VARIABLES --- */
+let questions = [];
+let currentQuestionIndex = 0;
+let score = 0;
+let timerValue = 0;
+let timeLeft = 0;
+let timerInterval = null;
+let isShuffled = false;
+
+/* --- AUDIO CONTEXT --- */
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+function playSound(type) {
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    const osc = audioCtx.createOscillator();
+    const gainNode = audioCtx.createGain();
+    osc.connect(gainNode);
+    gainNode.connect(audioCtx.destination);
+
+    if (type === 'correct') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.1);
+        gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.3);
+    } else {
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+        gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+        gainNode.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.4);
+    }
+}
+
+/* --- UTILS --- */
+function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+}
+
+function toggleShuffle() {
+    isShuffled = !isShuffled;
+    document.getElementById('shuffleToggle').classList.toggle('toggle-active');
+}
+
+document.getElementById('shuffleToggle').addEventListener('click', toggleShuffle);
+
+/* --- CONFETTI EFFECT --- */
+function triggerConfetti() {
+    const colors = ['#f0f', '#0ff', '#ff0', '#0f0', '#f00'];
+    for (let i = 0; i < 30; i++) {
+        const conf = document.createElement('div');
+        conf.classList.add('confetti');
+        conf.style.left = Math.random() * 100 + 'vw';
+        conf.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+        conf.style.animationDuration = (Math.random() * 2 + 1) + 's';
+        document.body.appendChild(conf);
+        setTimeout(() => conf.remove(), 3000);
+    }
+}
+
+/* --- CORE QUIZ LOGIC --- */
+function startQuiz() {
+    // Settings
+    const inputTime = document.getElementById('timerInput').value;
+    timerValue = inputTime ? parseInt(inputTime) : 0;
+    
+    // Prepare Questions
+    questions = [...originalQuestions]; // Copy
+    if (isShuffled) shuffleArray(questions);
+    
+    // Reset State
+    currentQuestionIndex = 0;
+    score = 0;
+    scoreDisplay.innerText = `Score: 0`;
+
+    // UI Switch
+    document.getElementById('start-screen').classList.remove('active');
+    document.getElementById('result-screen').classList.remove('active');
+    document.getElementById('quiz-screen').classList.add('active');
+
+    loadQuestion();
+}
+
+const qEn = document.getElementById('q-en');
+const qHi = document.getElementById('q-hi');
+const optionsContainer = document.getElementById('options-container');
+const timerDisplay = document.getElementById('timer-display');
+const scoreDisplay = document.getElementById('score-display');
+const feedbackIcon = document.getElementById('feedback-icon');
+const progressBar = document.getElementById('progressBar');
+const qCounter = document.getElementById('q-counter');
+
+function loadQuestion() {
+    // Reset timer
+    clearInterval(timerInterval);
+    timerDisplay.classList.remove('timer-pulse');
+    feedbackIcon.classList.remove('feedback-show');
+    
+    if (currentQuestionIndex >= questions.length) {
+        finishQuiz();
+        return;
+    }
+
+    const q = questions[currentQuestionIndex];
+    qCounter.innerText = `Q: ${currentQuestionIndex + 1}/${questions.length}`;
+    
+    // Update Progress
+    const progressPercent = ((currentQuestionIndex) / questions.length) * 100;
+    progressBar.style.width = `${progressPercent}%`;
+
+    // Render Text
+    qEn.innerText = q.en;
+    qHi.innerText = q.hi;
+
+    // Render Options
+    optionsContainer.innerHTML = '';
+    q.options.forEach((opt, idx) => {
+        const btn = document.createElement('button');
+        btn.className = 'option-btn';
+        btn.innerHTML = `<span class="op-en">${opt.en}</span><span class="op-hi">${opt.hi}</span>`;
+        btn.onclick = () => checkAnswer(idx, btn);
+        optionsContainer.appendChild(btn);
+    });
+
+    // Start Timer if enabled
+    if (timerValue > 0) {
+        timeLeft = timerValue;
+        timerDisplay.innerText = timeLeft;
+        timerInterval = setInterval(() => {
+            timeLeft--;
+            timerDisplay.innerText = timeLeft;
+            if (timeLeft <= 5) timerDisplay.classList.add('timer-pulse');
+            else timerDisplay.classList.remove('timer-pulse');
+
+            if (timeLeft <= 0) {
+                clearInterval(timerInterval);
+                autoMoveToNext(); // Time up counts as wrong/skip
+            }
+        }, 1000);
+    } else {
+        timerDisplay.innerText = "∞";
+    }
+}
+
+function checkAnswer(selectedIdx, btnElement) {
+    clearInterval(timerInterval);
+    
+    const q = questions[currentQuestionIndex];
+    const allBtns = document.querySelectorAll('.option-btn');
+    
+    // Disable all
+    allBtns.forEach(btn => btn.disabled = true);
+
+    if (selectedIdx === q.correct) {
+        // Correct
+        score++;
+        scoreDisplay.innerText = `Score: ${score}`;
+        btnElement.classList.add('correct-anim');
+        playSound('correct');
+        triggerConfetti();
+    } else {
+        // Wrong
+        btnElement.classList.add('wrong-anim');
+        allBtns[q.correct].classList.add('correct-anim'); // Show correct one
+        playSound('wrong');
+        feedbackIcon.classList.add('feedback-show');
+    }
+
+    setTimeout(() => {
+        currentQuestionIndex++;
+        loadQuestion();
+    }, 1500);
+}
+
+function autoMoveToNext() {
+    // Reveal correct answer then move
+    const q = questions[currentQuestionIndex];
+    const allBtns = document.querySelectorAll('.option-btn');
+    allBtns.forEach(btn => btn.disabled = true);
+    allBtns[q.correct].classList.add('correct-anim');
+    playSound('wrong'); // Time out is 'bad'
+
+    setTimeout(() => {
+        currentQuestionIndex++;
+        loadQuestion();
+    }, 1500);
+}
+
+function finishQuiz() {
+    clearInterval(timerInterval);
+    document.getElementById('quiz-screen').classList.remove('active');
+    document.getElementById('result-screen').classList.add('active');
+
+    const totalQuestions = currentQuestionIndex || 1; // avoid division by zero
+    const percentage = Math.round((score / totalQuestions) * 100); 
+    document.getElementById('final-score').innerText = `${percentage}%`;
+    document.getElementById('result-text').innerText = `You scored ${score} out of ${totalQuestions}`;
+
+    const msg = document.getElementById('result-msg');
+    if (percentage >= 80) msg.innerText = "🏆 Outstanding Performance!";
+    else if (percentage >= 50) msg.innerText = "👏 Well Done! Keep it up.";
+    else msg.innerText = "📚 Practice makes perfect! Try again.";
+}
+
+function resetQuiz() {
+    document.getElementById('result-screen').classList.remove('active');
+    document.getElementById('start-screen').classList.add('active');
+}
+
+</script>
+</body>
+</html>

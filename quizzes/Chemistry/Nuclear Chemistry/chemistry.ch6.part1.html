@@ -1,0 +1,1164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Radioactivity Master Quiz</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --primary-text: #ffffff;
+            --secondary-text: #e0e0e0;
+            --accent-green: #00e676;
+            --accent-red: #ff1744;
+            --shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(45deg, #6a11cb 0%, #2575fc 50%, #f72585 100%);
+            background-size: 200% 200%;
+            animation: gradientBG 15s ease infinite;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow-x: hidden;
+            color: var(--primary-text);
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Glassmorphism Container */
+        .app-container {
+            width: 95%;
+            max-width: 800px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 25px;
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--shadow);
+            padding: 2rem;
+            position: relative;
+            min-height: 600px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Screen Management */
+        .screen {
+            display: none;
+            flex-direction: column;
+            height: 100%;
+            width: 100%;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* --- Start Screen --- */
+        .start-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            gap: 20px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+
+        .settings-group {
+            background: rgba(0,0,0,0.2);
+            padding: 20px;
+            border-radius: 15px;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            border-radius: 10px;
+            border: none;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            font-size: 1.1rem;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        
+        input[type="number"]:focus { outline: none; background: rgba(255,255,255,0.3); }
+
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 10px;
+        }
+
+        /* Custom Toggle Switch */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(255,255,255,0.2);
+            transition: .4s;
+            border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider { background-color: var(--accent-green); }
+        input:checked + .slider:before { transform: translateX(26px); }
+
+        .btn-primary {
+            background: linear-gradient(90deg, #ff8a00, #e52e71);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 20px;
+            font-weight: bold;
+        }
+
+        .btn-primary:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 20px rgba(229, 46, 113, 0.4);
+        }
+
+        /* --- Quiz Screen --- */
+        .hud {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            height: 6px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 10px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: var(--accent-green);
+            width: 0%;
+            transition: width 0.3s ease;
+            box-shadow: 0 0 10px var(--accent-green);
+        }
+
+        .timer-badge {
+            background: rgba(0,0,0,0.3);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-variant-numeric: tabular-nums;
+        }
+        
+        .timer-danger {
+            color: var(--accent-red);
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .question-box {
+            margin-bottom: 25px;
+        }
+
+        .q-english {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            line-height: 1.4;
+        }
+
+        .q-hindi {
+            font-size: 1.1rem;
+            color: var(--secondary-text);
+            font-weight: 400;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+
+        @media (min-width: 600px) {
+            .options-grid { grid-template-columns: 1fr 1fr; }
+        }
+
+        .option-btn {
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 15px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            color: white;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-2px);
+        }
+
+        .option-btn:disabled {
+            cursor: default;
+            opacity: 0.8;
+        }
+
+        .opt-en { font-weight: 600; font-size: 1rem; margin-bottom: 4px; }
+        .opt-hi { font-size: 0.9rem; color: #ddd; }
+
+        .option-btn.correct {
+            background: rgba(0, 230, 118, 0.4);
+            border-color: var(--accent-green);
+        }
+
+        .option-btn.wrong {
+            background: rgba(255, 23, 68, 0.4);
+            border-color: var(--accent-red);
+        }
+
+        .finish-btn {
+            margin-top: auto;
+            align-self: flex-end;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 1px solid white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        .finish-btn:hover { background: rgba(255,255,255,0.3); }
+
+        /* --- Result Screen --- */
+        .result-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .score-big {
+            font-size: 5rem;
+            font-weight: bold;
+            background: -webkit-linear-gradient(#eee, #333);
+            -webkit-background-clip: text;
+            margin: 20px 0;
+            text-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+
+        .message {
+            font-size: 1.5rem;
+            margin-bottom: 30px;
+            color: var(--accent-green);
+        }
+
+        /* --- Feedback Overlays --- */
+        .feedback-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            overflow: hidden;
+        }
+
+        .sad-emoji {
+            font-size: 8rem;
+            display: none;
+            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+        }
+
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-2px, 0, 0); }
+            20%, 80% { transform: translate3d(4px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-6px, 0, 0); }
+            40%, 60% { transform: translate3d(6px, 0, 0); }
+        }
+
+        .confetti-piece {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: #ffd300;
+            top: -10px;
+            opacity: 0;
+        }
+
+        @keyframes fall {
+            0% { top: -10px; transform: rotate(0deg) translateX(0px); opacity: 1; }
+            100% { top: 100%; transform: rotate(720deg) translateX(50px); opacity: 0; }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        
+        <div class="feedback-overlay" id="feedbackOverlay">
+            <div class="sad-emoji" id="sadEmoji">😢</div>
+        </div>
+
+        <div class="screen active" id="startScreen">
+            <div class="start-content">
+                <h1>Radioactivity<br><span style="font-size:1.5rem">Physics & Chem Quiz</span></h1>
+                <div class="settings-group">
+                    <label>Timer per Question (Seconds)</label>
+                    <input type="number" id="timerInput" placeholder="e.g. 30 (0 for no timer)" min="0">
+                    
+                    <div class="toggle-container">
+                        <label>Shuffle Questions</label>
+                        <label class="switch">
+                            <input type="checkbox" id="shuffleToggle">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+                <button class="btn-primary" onclick="app.startQuiz()">Start Quiz 🚀</button>
+            </div>
+        </div>
+
+        <div class="screen" id="quizScreen">
+            <div class="progress-bar-container">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+            
+            <div class="hud">
+                <span id="questionCounter">Q: 01/50</span>
+                <span id="timerDisplay" class="timer-badge">--</span>
+                <span id="scoreDisplay">Score: 0</span>
+            </div>
+
+            <div class="question-box">
+                <div class="q-english" id="qTextEn">Question English</div>
+                <div class="q-hindi" id="qTextHi">प्रश्न हिंदी</div>
+            </div>
+
+            <div class="options-grid" id="optionsContainer">
+                </div>
+
+            <button class="finish-btn" onclick="app.finishQuiz()">Finish & Show Results</button>
+        </div>
+
+        <div class="screen" id="resultScreen">
+            <div class="result-content">
+                <h2>Quiz Completed!</h2>
+                <div class="score-big" id="finalScoreDisplay">0%</div>
+                <div class="message" id="resultMessage">Message</div>
+                <p id="statsDisplay" style="margin-bottom: 20px;">Correct: 0 | Wrong: 0 | Skipped: 0</p>
+                <button class="btn-primary" onclick="app.restart()">Restart Quiz ↺</button>
+            </div>
+        </div>
+
+    </div>
+
+<script>
+/* DATA EXTRACTION: Questions 1-50
+    Sources: Provided images of Radioactivity/Chemistry Test.
+*/
+const RAW_QUESTIONS = [
+    {
+        qe: "Who discovered radioactivity?",
+        qh: "रेडियोसक्रियता की खोज किसने की?",
+        options: [
+            { e: "Rutherford", h: "रदरफोर्ड", c: false },
+            { e: "Henry Becquerel", h: "हेनरी बेक्वेरेल", c: true },
+            { e: "Madam Curie", h: "मैडम क्यूरी", c: false },
+            { e: "Niels Bohr", h: "नील्स बोर", c: false }
+        ]
+    },
+    {
+        qe: "Who discovered the radioactive elements Radium (Ra) and Polonium (Po)?",
+        qh: "रेडियोसक्रिय तत्व रेडियम (Ra) तथा पोलोनियम (Po) की खोज किसने की?",
+        options: [
+            { e: "Madam Curie", h: "मैडम क्यूरी", c: true },
+            { e: "J.J. Thomson", h: "जे. जे. टॉमसन", c: false },
+            { e: "Ernest Rutherford", h: "अर्नेस्ट रदरफोर्ड", c: false },
+            { e: "Soddy", h: "सॉडी", c: false }
+        ]
+    },
+    {
+        qe: "In which year was Henry Becquerel awarded the Nobel Prize in Physics alongside Madam Curie for the discovery of radioactivity?",
+        qh: "रेडियोसक्रियता की खोज हेतु किस वर्ष हेनरी वैकेरल को मैडम क्यूरी की भागीदारी में भौतिकी का नोबेल प्रदान किया गया?",
+        options: [
+            { e: "1896", h: "1896", c: false },
+            { e: "1898", h: "1898", c: false },
+            { e: "1902", h: "1902", c: false },
+            { e: "1903", h: "1903", c: true }
+        ]
+    },
+    {
+        qe: "Consider the following statements: 1. Radioactivity is a nuclear phenomenon. 2. Electrons play no role in radioactivity. 3. Radioactivity is a natural phenomenon. Which are correct?",
+        qh: "कथनों पर विचार कीजिए: 1. रेडियोसक्रियता एक नाभिकीय घटना है। 2. इसमें इलेक्ट्रॉन की कोई भूमिका नहीं है। 3. यह एक प्राकृतिक घटना है। कौन सही है?",
+        options: [
+            { e: "Only 1", h: "केवल 1", c: false },
+            { e: "1 and 2", h: "1 और 2", c: false },
+            { e: "1 and 3", h: "1 और 3", c: false },
+            { e: "All of the above", h: "उपर्युक्त सभी", c: true }
+        ]
+    },
+    {
+        qe: "What is the cause of an unstable nucleus?",
+        qh: "नाभिक के अस्थायी होने के क्या कारण है?",
+        options: [
+            { e: "High Proton-Electron ratio", h: "प्रोटॉन-इलेक्ट्रॉन का अधिक अनुपात", c: false },
+            { e: "High Proton-Neutron ratio", h: "प्रोटॉन-न्यूट्रॉन का अधिक अनुपात", c: true }, 
+            { e: "Low Proton-Electron ratio", h: "प्रोटॉन-इलेक्ट्रॉन का कम अनुपात", c: false },
+            { e: "Low Proton-Neutron ratio", h: "प्रोटॉन-न्यूट्रॉन का कम अनुपात", c: false }
+        ]
+    },
+    {
+        qe: "Radioactive elements emit which of the following?",
+        qh: "रेडियोसक्रिय तत्व किसका उत्सर्जन करते हैं?",
+        options: [
+            { e: "Alpha particles", h: "अल्फा (α) कण", c: false },
+            { e: "Beta particles", h: "बीटा (β) कण", c: false },
+            { e: "Gamma rays", h: "गामा (γ) कण", c: false },
+            { e: "All of these", h: "इनमें से सभी", c: true }
+        ]
+    },
+    {
+        qe: "Who discovered Artificial Radioactivity?",
+        qh: "कृत्रिम रेडियोसक्रियता की खोज किसने की?",
+        options: [
+            { e: "Becquerel & Curie", h: "हेनरी बेकेरेल तथा मैडम क्यूरी", c: false },
+            { e: "Irene Curie & F. Joliot", h: "आइरीन क्यूरी तथा एफ. जोलियॉट", c: true },
+            { e: "Rutherford & Bohr", h: "रदरफोर्ड तथा नील्स बोर", c: false },
+            { e: "Otto Hahn & Strassmann", h: "ऑटोहॉन तथा फ्रिट्ज स्ट्रॉसमैन", c: false }
+        ]
+    },
+    {
+        qe: "Artificial radioactive elements emit which of the following?",
+        qh: "कृत्रिम रेडियोसक्रिय तत्व किसका उत्सर्जन करते हैं?",
+        options: [
+            { e: "Neutron", h: "न्यूट्रॉन", c: false },
+            { e: "Positron", h: "पॉजीट्रॉन", c: false },
+            { e: "Gamma rays", h: "गामा रे", c: false },
+            { e: "All of these", h: "इनमें से सभी", c: true }
+        ]
+    },
+    {
+        qe: "Elements with light and stable nuclei can be converted into radioactive elements by bombardment with?",
+        qh: "हल्के तथा स्थायी नाभिक वाले तत्व को किसकी सहायता से रेडियोसक्रिय तत्व में परिवर्तित किया जा सकता है?",
+        options: [
+            { e: "Alpha particle impact", h: "α-कणों के आघात से", c: false },
+            { e: "Beta or Gamma impact", h: "β अथवा γ-रे के आघात से", c: false },
+            { e: "Proton impact", h: "प्रोटॉन के आघात से", c: false },
+            { e: "All of these", h: "इनमें से सभी", c: true }
+        ]
+    },
+    {
+        qe: "Which of the following is NOT a radioactive element?",
+        qh: "निम्नलिखित में कौन रेडियोसक्रिय तत्व नहीं है?",
+        options: [
+            { e: "U-235", h: "₉₂U²³⁵", c: false },
+            { e: "Ra-226", h: "₈₈Ra²²⁶", c: false },
+            { e: "Pb-208", h: "₈₂Pb²⁰⁸", c: true },
+            { e: "Th-232", h: "₉₀Th²³²", c: false }
+        ]
+    },
+    {
+        qe: "An Alpha (α) particle is:",
+        qh: "अल्फा (α-कण) है-",
+        options: [
+            { e: "H+", h: "H⁺", c: false },
+            { e: "He+", h: "He⁺", c: false },
+            { e: "H++", h: "H⁺⁺", c: false },
+            { e: "He++", h: "He⁺⁺", c: true }
+        ]
+    },
+    {
+        qe: "The speed of Alpha rays is equal to:",
+        qh: "अल्फा किरणों की गति बराबर है-",
+        options: [
+            { e: "Speed of light", h: "प्रकाश के गति के बराबर", c: false },
+            { e: "10 times speed of light", h: "प्रकाश के गति से 10 गुणा अधिक", c: false },
+            { e: "1/10th of speed of light", h: "प्रकाश के गति का 1/10वाँ भाग", c: true },
+            { e: "Very low", h: "बहुत ही कम", c: false }
+        ]
+    },
+    {
+        qe: "Alpha (α) particle is:",
+        qh: "α-कण (अल्फा) कण है-",
+        options: [
+            { e: "Alpha ray", h: "α-किरण", c: false },
+            { e: "Light ray", h: "प्रकाश किरण", c: false },
+            { e: "Negative particle", h: "ऋणात्मक कण", c: false },
+            { e: "Positive particle", h: "धनात्मक कण", c: true }
+        ]
+    },
+    {
+        qe: "In Alpha decay of a radioactive element, the n/p ratio:",
+        qh: "रेडियोसक्रिय तत्व में α-विघटन में n/p-",
+        options: [
+            { e: "Increases", h: "बढ़ता है", c: true },
+            { e: "Decreases", h: "घटता है", c: false },
+            { e: "Remains unchanged", h: "अपरिवर्तित रहता है", c: false },
+            { e: "None of these", h: "इनमें से कोई नहीं", c: false }
+        ]
+    },
+    {
+        qe: "Statement 1: Penetrating power of Alpha is much higher than Beta/Gamma. Statement 2: Ionizing power of Gamma is higher than Alpha. Which is correct?",
+        qh: "कथन 1: अल्फा कण की भेदन शक्ति β तथा γ से अधिक है। कथन 2: γ-किरण की आयनन क्षमता α से अधिक है। सही है?",
+        options: [
+            { e: "Only 1", h: "केवल 1", c: false },
+            { e: "Only 2", h: "केवल 2", c: false },
+            { e: "Both 1 and 2", h: "1 तथा 2 दोनों", c: false },
+            { e: "Neither 1 nor 2", h: "न तो 1 न ही 2", c: true }
+        ]
+    },
+    {
+        qe: "After emission of an α-particle, the position of the new atom in the periodic table shifts:",
+        qh: "रेडियोसक्रिय परमाणु के α-कण के उत्सर्जन से नवनिर्मित परमाणु का स्थान आवर्त सारणी में हो जाता है-",
+        options: [
+            { e: "Two places left", h: "दो स्थान बायें", c: true },
+            { e: "One place left", h: "एक स्थान बायें", c: false },
+            { e: "Two places right", h: "दो स्थान दायें", c: false },
+            { e: "One place right", h: "एक स्थान दायें", c: false }
+        ]
+    },
+    {
+        qe: "The mass of an α-particle is equal to:",
+        qh: "α-कण का द्रव्यमान बराबर होगा-",
+        options: [
+            { e: "One proton", h: "एक प्रोटॉन के", c: false },
+            { e: "Two protons", h: "दो प्रोटॉन के", c: false },
+            { e: "Three protons", h: "तीन प्रोटॉन के", c: false },
+            { e: "Four protons", h: "चार प्रोटॉन के", c: true }
+        ]
+    },
+    {
+        qe: "Which of the following has the minimum penetrating power?",
+        qh: "निम्नलिखित में किसकी भेदन शक्ति न्यूनतम है-",
+        options: [
+            { e: "Alpha particle", h: "α-कण", c: true },
+            { e: "Beta particle", h: "β-कण", c: false },
+            { e: "Gamma ray", h: "γ-कण", c: false },
+            { e: "All equal", h: "इनमें से सभी के समान है", c: false }
+        ]
+    },
+    {
+        qe: "Which of the following has the maximum ionization power?",
+        qh: "निम्नलिखित में किसकी आयनन शक्ति अधिकतम है?",
+        options: [
+            { e: "Alpha", h: "अल्फा", c: true },
+            { e: "Beta", h: "बीटा", c: false },
+            { e: "Gamma", h: "गामा", c: false },
+            { e: "All equal", h: "इनमें से सभी के समान है", c: false }
+        ]
+    },
+    {
+        qe: "Emission of one alpha particle leads to what change in Atomic Number and Mass?",
+        qh: "रेडियोसक्रिय तत्व से एक अल्फा कण के उत्सर्जन से परमाणु संख्या तथा परमाणु द्रव्यमान में क्या परिवर्तन होता है?",
+        options: [
+            { e: "Z increases by 2, A increases by 4", h: "संख्या में 2 की वृद्धि, द्रव्यमान में 4 की वृद्धि", c: false },
+            { e: "Z decreases by 2, A decreases by 4", h: "संख्या में 2 की कमी, द्रव्यमान में 4 की कमी", c: true },
+            { e: "Z increases by 2, A decreases by 4", h: "संख्या में 2 की वृद्धि, द्रव्यमान में 4 की कमी", c: false },
+            { e: "Z decreases by 2, A increases by 4", h: "संख्या में 2 की कमी, द्रव्यमान में 4 की वृद्धि", c: false }
+        ]
+    },
+    {
+        qe: "Charge present on an Alpha particle is:",
+        qh: "अल्फा कण पर उपस्थित आवेश है-",
+        options: [
+            { e: "One unit +ve", h: "एक इकाई धन आवेश", c: false },
+            { e: "Two units -ve", h: "दो इकाई ऋण आवेश", c: false },
+            { e: "Three units +ve", h: "तीन इकाई धन आवेश", c: false },
+            { e: "Two units +ve", h: "दो इकाई धन आवेश", c: true }
+        ]
+    },
+    {
+        qe: "Who first identified invisible rays from radioactive elements?",
+        qh: "रेडियोसक्रिय तत्व से निकलने वाले अदृश्य किरणों की पहचान सर्वप्रथम किसने की?",
+        options: [
+            { e: "Rutherford", h: "रदरफोर्ड", c: true },
+            { e: "Henry Becquerel", h: "हेनरी बेकेरेल", c: false },
+            { e: "Madam Curie", h: "मैडम क्यूरी", c: false },
+            { e: "Otto Hahn", h: "ऑटोहॉन", c: false }
+        ]
+    },
+    {
+        qe: "Who discovered Alpha and Beta rays?",
+        qh: "अल्फा तथा बीटा किरणों की खोज किसने की?",
+        options: [
+            { e: "Irene Curie", h: "आइरीन क्यूरी", c: false },
+            { e: "Rutherford", h: "रदरफोर्ड", c: true },
+            { e: "Roentgen", h: "रॉन्जन", c: false },
+            { e: "Paul Villard", h: "पॉल विलाई", c: false }
+        ]
+    },
+    {
+        qe: "Who first detected Gamma rays?",
+        qh: "गामा किरणों का पता सर्वप्रथम किसने लगाया?",
+        options: [
+            { e: "Rutherford", h: "रदरफोर्ड", c: false },
+            { e: "John Dalton", h: "जॉन डाल्टन", c: false },
+            { e: "Paul Villard", h: "पॉल विलाई", c: true },
+            { e: "Roentgen", h: "रॉन्जन", c: false }
+        ]
+    },
+    {
+        qe: "Radioactive substances do NOT emit:",
+        qh: "रेडियोसक्रिय पदार्थ उत्सर्जित नहीं करते हैं-",
+        options: [
+            { e: "Electron", h: "इलेक्ट्रॉन", c: false },
+            { e: "Proton", h: "प्रोटॉन", c: true },
+            { e: "Gamma ray", h: "γ-किरण", c: false },
+            { e: "Alpha", h: "अल्फा", c: false }
+        ]
+    },
+    {
+        qe: "In radioactive fission:",
+        qh: "रेडियोसक्रिय विखंडन में-",
+        options: [
+            { e: "Alpha, Beta, Gamma emitted together", h: "अल्फा, बीटा तथा गामा किरणें एक साथ उत्सर्जित होते है।", c: false },
+            { e: "Alpha and Beta together", h: "अल्फा तथा बीटा कण एक साथ उत्सर्जित होते है।", c: false },
+            { e: "First Alpha, then Beta, finally Gamma", h: "पहले अल्फा, फिर बीटा और अंत में गामा उत्सर्जित होते है।", c: true },
+            { e: "First Alpha or Beta, then Gamma", h: "पहले अल्फा अथवा पहले बीटा उसके बाद गामा उत्सर्जित हो है।", c: false }
+        ]
+    },
+    {
+        qe: "Which has properties similar to an electron?",
+        qh: "निम्नलिखित में इलेक्ट्रॉन के समान गुण वाला है-",
+        options: [
+            { e: "Alpha particle", h: "α-कण", c: false },
+            { e: "Beta particle", h: "β-कण", c: true },
+            { e: "Gamma ray", h: "γ-कण", c: false },
+            { e: "He-nucleus", h: "He-नाभिक", c: false }
+        ]
+    },
+    {
+        qe: "What charge is present on Beta rays?",
+        qh: "β-किरणों पर कौन-सा आवेश उपस्थित रहता है?",
+        options: [
+            { e: "Positive", h: "धनात्मक", c: false },
+            { e: "Negative", h: "ऋणात्मक", c: true },
+            { e: "Neutral", h: "उदासीन", c: false },
+            { e: "None", h: "इनमें से कोई नहीं", c: false }
+        ]
+    },
+    {
+        qe: "Emission of one Beta particle causes the new atom to have:",
+        qh: "एक β-कण के उत्सर्जन से निर्मित नवीन परमाणु का-",
+        options: [
+            { e: "Z increases by 1, A unchanged", h: "परमाणु संख्या में 1 की वृद्धि तथा परमाणु द्रव्यमान अपरिवर्तित रहता है।", c: true },
+            { e: "Z decreases by 1, A unchanged", h: "परमाणु संख्या में 1 की कमी तथा परमाणु द्रव्यमान अपरिवर्तित रहता है।", c: false },
+            { e: "Z increases by 1, A decreases by 1", h: "परमाणु संख्या में 1 की वृद्धि तथा परमाणु द्रव्यमान में 1 की कमी होती है।", c: false },
+            { e: "Z decreases by 1, A increases by 1", h: "परमाणु संख्या में 1 की कमी तथा परमाणु द्रव्यमान में 1 की वृद्धि", c: false }
+        ]
+    },
+    {
+        qe: "Match Pairs: 1. Alpha (+), 2. Beta (-), 3. Gamma (Neutral). Which are correct?",
+        qh: "युग्मों पर विचार कीजिए: 1. अल्फा (धन आवेश), 2. बीटा (ऋण आवेश), 3. गामा (आवेशहीन). सही है?",
+        options: [
+            { e: "Only 1", h: "केवल 1", c: false },
+            { e: "Only 2", h: "केवल 2", c: false },
+            { e: "Only 3", h: "केवल 3", c: false },
+            { e: "1, 2 and 3", h: "1, 2 और 3", c: true }
+        ]
+    },
+    {
+        qe: "Beta particles emitted from a radioactive element are:",
+        qh: "किसी रेडियोएक्टिव तत्व से उत्सर्जित β-कण होते है-",
+        options: [
+            { e: "EM Waves", h: "विद्युत चुंबकीय तरंग", c: false },
+            { e: "Charged particle from nucleus", h: "नाभिक से उत्सर्जित आवेशितकण", c: true },
+            { e: "Neutral particle from nucleus", h: "नाभिक से उत्सर्जित अनावेशित कण", c: false },
+            { e: "Orbiting electrons", h: "नाभिक के चारों ओर चक्कर लगा रहे इलेक्ट्रॉन", c: false }
+        ]
+    },
+    {
+        qe: "Properties of Radioactivity are:",
+        qh: "रेडियोसक्रियता गुण है-",
+        options: [
+            { e: "Of atomic nucleus", h: "परमाणु के नाभिक का", c: true },
+            { e: "Of valence electrons", h: "परमाणु के संयोजी इलेक्ट्रॉन का", c: false },
+            { e: "Of core electrons", h: "परमाणु के कोर इलेक्ट्रॉन का", c: false },
+            { e: "All of these", h: "इनमें से सभी", c: false }
+        ]
+    },
+    {
+        qe: "What are Gamma rays made of?",
+        qh: "गामा किरणें किससे बनी होती है?",
+        options: [
+            { e: "Electron", h: "इलेक्ट्रॉन", c: false },
+            { e: "Proton", h: "प्रोटॉन", c: false },
+            { e: "Neutron", h: "न्यूट्रॉन", c: false },
+            { e: "Electromagnetic Waves", h: "विद्युत चुंबकीय तरंग", c: true }
+        ]
+    },
+    {
+        qe: "Emission of one Beta particle produces:",
+        qh: "एक β-कण के उत्सर्जन से उत्पन्न होता है-",
+        options: [
+            { e: "Isotope", h: "समस्थानिक", c: false },
+            { e: "Isobar", h: "समभारिक", c: true },
+            { e: "Isotone", h: "समन्यूट्रॉनिक", c: false },
+            { e: "Isoelectronic", h: "समइलेक्ट्रॉनिक", c: false }
+        ]
+    },
+    {
+        qe: "Gamma rays are:",
+        qh: "गामा किरणे होती है-",
+        options: [
+            { e: "Uncharged particles from outer space", h: "बाहरी अन्तरिक्ष से आने वाले अनावेशित कण।", c: false },
+            { e: "Charged particles from outer space", h: "बाहरी अन्तरिक्ष से आने वाले आवेशित कण।", c: false },
+            { e: "High energy rays emitted by radioactive substances", h: "रेडियोसक्रिय पदार्थ द्वारा उत्सर्जित उच्च ऊर्जा युक्त तरंगें", c: true },
+            { e: "Uncharged particles emitted by radioactive substances", h: "रेडियोसक्रिय पदार्थों द्वारा उत्सर्जित अनावेशित कण", c: false }
+        ]
+    },
+    {
+        qe: "After Gamma ray decay from a radioactive element, the element undergoes:",
+        qh: "किसी रेडियोसक्रिय तत्व से γ-किरण की क्षय के बाद तत्व का-",
+        options: [
+            { e: "Change in Mass only", h: "केवल द्रव्यमान संख्या में बदलाव आता है।", c: false },
+            { e: "Change in Atomic Number only", h: "केवल परमाणु संख्या में बदलाव आता है।", c: false },
+            { e: "Change in both Z and A", h: "परमाणु संख्या तथा द्रव्यमान संख्या दोनों में बदलाव आता है।", c: false },
+            { e: "No change in Z or A", h: "न तो परमाणु संख्या और न ही द्रव्यमान संख्या में बदलाव आता है।", c: true }
+        ]
+    },
+    {
+        qe: "Which of the following has the maximum penetrating power?",
+        qh: "निम्नलिखित में किसकी भेदन शक्ति महत्तम है-",
+        options: [
+            { e: "Alpha (α)", h: "अल्फा (α)", c: false },
+            { e: "Beta (β)", h: "अल्फा (β) - (Typo in source, assumes Beta)", c: false },
+            { e: "Gamma (γ)", h: "अल्फा (γ) - (Typo, assumes Gamma)", c: true },
+            { e: "All of these", h: "इनमें से सभी", c: false }
+        ]
+    },
+    {
+        qe: "Which of the following has minimum Ionization Energy?",
+        qh: "निम्नलिखित में किसकी आयनन ऊर्जा न्यूनतम है-",
+        options: [
+            { e: "Gamma (γ)", h: "गामा (γ)", c: true },
+            { e: "Beta (β)", h: "बीटा (β)", c: false },
+            { e: "Alpha (α)", h: "अल्फा (α)", c: false },
+            { e: "All equal", h: "इनमें से सभी", c: false }
+        ]
+    },
+    {
+        qe: "Statement A: Alpha rays have max penetration. Reason R: Alpha is heavier than Beta and Gamma.",
+        qh: "कथन A: α, β, γ किरणों में, α-किरणों की वेधन क्षमता अधिकतम होती है। कारण R: ...",
+        options: [
+            { e: "A and R true, R explains A", h: "A तथा R दोनों सही है...", c: false },
+            { e: "A and R true, R not explain A", h: "A तथा R दोनों सही है...", c: false },
+            { e: "A is true, R is false", h: "A सही है परन्तु R गलत है।", c: false },
+            { e: "A is false, R is true", h: "A गलत है परन्तु R सही है।", c: true }
+        ]
+    },
+    {
+        qe: "Penetrating power of Beta is higher than Alpha of same energy because:",
+        qh: "समान ऊर्जा की अल्फा कण के तुलना में बीटा किरणों की भेदन क्षमता अधिक होती है। क्यों ?",
+        options: [
+            { e: "Beta is made of electrons", h: "β-कण इलेक्ट्रॉन की बनी है।", c: false },
+            { e: "Electron cloud repulsion", h: "इलेक्ट्रॉन क्लाउड द्वारा β-कण प्रतिकर्षित होती है...", c: false },
+            { e: "Negligible mass of Beta", h: "β-कण का द्रव्यमान नगण्य होने के कारण उनका वेग अधिक होता है।", c: true },
+            { e: "Beta is positively charged", h: "α-कण धन आवेशित होती है...", c: false }
+        ]
+    },
+    {
+        qe: "According to the law of radioactive disintegration:",
+        qh: "रेडियोसक्रिय विघटन के नियमानुसार-",
+        options: [
+            { e: "Rate is proportional to total active atoms", h: "विघटन होने की दर... कुल सक्रिय परमाणुओं की संख्या के समानुपाती होती है।", c: true },
+            { e: "Rate is inversely proportional", h: "विघटन होने की दर... व्युत्क्रमानुपाती होती है।", c: false },
+            { e: "Rate independent of atoms", h: "निर्भर नहीं करता है।", c: false },
+            { e: "None of these", h: "इनमें से कोई नहीं", c: false }
+        ]
+    },
+    {
+        qe: "All radioactive elements finally convert into which stable element?",
+        qh: "सभी रेडियोसक्रिय तत्व क्षय होने के पश्चात् किसमें अंतिम रूप से बदल जाते हैं ?",
+        options: [
+            { e: "Lead (Pb)", h: "सीसा", c: true },
+            { e: "Zinc", h: "जस्ता", c: false },
+            { e: "Gold", h: "स्वर्ण", c: false },
+            { e: "Cadmium", h: "कैडमियम", c: false }
+        ]
+    },
+    {
+        qe: "Which of the following is NOT a radioactive element?",
+        qh: "निम्नलिखित में कौन रेडियोसक्रिय तत्व नहीं है ?",
+        options: [
+            { e: "Astatine", h: "एस्टेटिन", c: false },
+            { e: "Tritium", h: "ट्राइटियम", c: false },
+            { e: "Francium", h: "फ्रान्सियम", c: false },
+            { e: "Zirconium", h: "जर्कोनियम", c: true }
+        ]
+    },
+    {
+        qe: "The most powerful radioactive element is:",
+        qh: "सबसे शक्तिशाली रेडियोसक्रिय तत्व है-",
+        options: [
+            { e: "Radium", h: "रेडियम", c: true },
+            { e: "Uranium", h: "यूरेनियम", c: false },
+            { e: "Uranium Salt", h: "यूरेनियम लवण", c: false },
+            { e: "None", h: "इनमें से कोई नहीं", c: false }
+        ]
+    },
+    {
+        qe: "94-Pu-242 emits 8 Alpha and 5 Beta particles. The resulting atom is:",
+        qh: "₉₄Pu²⁴² से 8α-कण तथा 5β-कण का उत्सर्जन होने पर बनने वाले परमाणु है-",
+        options: [
+            { e: "83-Bi-210", h: "₈₃Bi²¹⁰", c: true },
+            { e: "82-Pb-208", h: "₈₂Pb²⁰⁸", c: false },
+            { e: "83-Bi-210 (Duplicate)", h: "₈₃Bi²¹⁰", c: false },
+            { e: "83-Bi-209", h: "₈₃Bi²⁰⁹", c: false }
+        ]
+    },
+    {
+        qe: "If 92-U-238 decays to 91-Pa-234, how many Alpha and Beta particles are emitted?",
+        qh: "यदि ₉₂U²³⁸ विघटित होकर ₉₁Pa²³⁴ बनाता है, तो कितने अल्फा तथा बीटा कण का उत्सर्जन होता है ?",
+        options: [
+            { e: "1 Alpha, 1 Beta", h: "1α तथा 1β", c: true },
+            { e: "2 Alpha, 2 Beta", h: "2α तथा 2β", c: false },
+            { e: "1 Alpha, 2 Beta", h: "1α तथा 2β", c: false },
+            { e: "2 Alpha, 1 Beta", h: "2α तथा 1β", c: false }
+        ]
+    },
+    {
+        qe: "If a radioactive element emits 1 Alpha and 2 Beta particles, the resulting atom is:",
+        qh: "यदि किसी रेडियोसक्रिय तत्व से एक α-कण तथा दो β-कण का उत्सर्जन होगा तो प्राप्त परमाणु-",
+        options: [
+            { e: "Isotope", h: "समस्थानिक होगा", c: true },
+            { e: "Isobar", h: "समभारिक होगा", c: false },
+            { e: "Isotone", h: "समन्यूट्रॉनिक होगा", c: false },
+            { e: "Isoelectronic", h: "समइलेक्ट्रॉनिक होगा", c: false }
+        ]
+    },
+    {
+        qe: "92-U-236 -> 87-U-224 (Hypothetical decay in Q). How many Alpha and Beta?",
+        qh: "₉₂U²³⁶ -> ₈₇U²²⁴ में कितने α एवं β कण उत्सर्जित होंगे?",
+        options: [
+            { e: "3 Alpha, 3 Beta", h: "3α, 3β", c: false },
+            { e: "3 Alpha, 2 Beta", h: "3α, 2β", c: false },
+            { e: "3 Alpha, 1 Beta", h: "3α, 1β", c: true },
+            { e: "1 Alpha, 3 Beta", h: "1α, 3β", c: false }
+        ]
+    },
+    {
+        qe: "92-X-238 emits one Alpha particle. Number of neutrons in new atom?",
+        qh: "₉₂X²³⁸ से एक α-कण का उत्सर्जन होता है, तो प्राप्त नवीन परमाणु में न्यूट्रॉन की संख्या कितनी होगी-",
+        options: [
+            { e: "134", h: "134", c: false },
+            { e: "140", h: "140", c: false },
+            { e: "144", h: "144", c: true },
+            { e: "150", h: "150", c: false }
+        ]
+    },
+    {
+        qe: "11-Na-22 emits 1 Beta particle. The product is:",
+        qh: "₁₁Na²² से 1β उत्सर्जन के बाद प्रतिफल पदार्थ होगा-",
+        options: [
+            { e: "Mg", h: "Mg", c: true },
+            { e: "Mn", h: "Mn", c: false },
+            { e: "Ag", h: "Ag", c: false },
+            { e: "Pb", h: "Pb", c: false }
+        ]
+    }
+];
+
+// --- APP LOGIC ---
+
+const app = {
+    questions: [],
+    currentIdx: 0,
+    score: 0,
+    timer: 0,
+    timerInterval: null,
+    audioCtx: null,
+
+    init: function() {
+        this.questions = [...RAW_QUESTIONS];
+        // Audio Context on click to satisfy browser policies
+        document.body.addEventListener('click', () => {
+            if (!this.audioCtx) this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }, { once: true });
+    },
+
+    startQuiz: function() {
+        const timerVal = document.getElementById('timerInput').value;
+        const shuffle = document.getElementById('shuffleToggle').checked;
+
+        this.questions = [...RAW_QUESTIONS];
+        if(shuffle) this.shuffleArray(this.questions);
+
+        this.currentIdx = 0;
+        this.score = 0;
+        this.timer = timerVal ? parseInt(timerVal) : 0;
+        
+        document.getElementById('startScreen').classList.remove('active');
+        document.getElementById('resultScreen').classList.remove('active');
+        document.getElementById('quizScreen').classList.add('active');
+
+        this.loadQuestion();
+    },
+
+    loadQuestion: function() {
+        if(this.currentIdx >= this.questions.length) {
+            this.finishQuiz();
+            return;
+        }
+
+        const q = this.questions[this.currentIdx];
+        const timerVal = document.getElementById('timerInput').value;
+        
+        // Reset UI
+        document.getElementById('qTextEn').textContent = `${this.currentIdx + 1}. ${q.qe}`;
+        document.getElementById('qTextHi').textContent = q.qh;
+        document.getElementById('questionCounter').textContent = `Q: ${this.currentIdx + 1}/${this.questions.length}`;
+        document.getElementById('scoreDisplay').textContent = `Score: ${this.score}`;
+        
+        // Update Progress Bar
+        const pct = ((this.currentIdx) / this.questions.length) * 100;
+        document.getElementById('progressBar').style.width = `${pct}%`;
+
+        // Render Options
+        const optContainer = document.getElementById('optionsContainer');
+        optContainer.innerHTML = '';
+        
+        q.options.forEach((opt, idx) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerHTML = `<span class="opt-en">${["A","B","C","D"][idx]}) ${opt.e}</span><span class="opt-hi">${opt.h}</span>`;
+            btn.onclick = () => this.handleAnswer(idx, btn);
+            optContainer.appendChild(btn);
+        });
+
+        // Timer Logic
+        if(timerVal > 0) {
+            this.startTimer(parseInt(timerVal));
+        } else {
+            document.getElementById('timerDisplay').style.display = 'none';
+        }
+    },
+
+    handleAnswer: function(selectedIndex, btnElement) {
+        clearInterval(this.timerInterval);
+        const q = this.questions[this.currentIdx];
+        const isCorrect = q.options[selectedIndex].c;
+        const allBtns = document.querySelectorAll('.option-btn');
+
+        // Disable all
+        allBtns.forEach(b => b.disabled = true);
+
+        if(isCorrect) {
+            this.score++;
+            btnElement.classList.add('correct');
+            this.playTone('ting');
+            this.triggerConfetti();
+        } else {
+            btnElement.classList.add('wrong');
+            // Highlight correct one
+            q.options.forEach((opt, idx) => {
+                if(opt.c) allBtns[idx].classList.add('correct');
+            });
+            this.playTone('buzz');
+            this.triggerSadEmoji();
+        }
+
+        setTimeout(() => {
+            this.currentIdx++;
+            this.loadQuestion();
+        }, 1500);
+    },
+
+    startTimer: function(seconds) {
+        const display = document.getElementById('timerDisplay');
+        display.style.display = 'inline-block';
+        display.classList.remove('timer-danger');
+        let left = seconds;
+        display.textContent = left + 's';
+
+        clearInterval(this.timerInterval);
+        this.timerInterval = setInterval(() => {
+            left--;
+            display.textContent = left + 's';
+            
+            if(left <= 5) display.classList.add('timer-danger');
+
+            if(left <= 0) {
+                clearInterval(this.timerInterval);
+                this.timeOut();
+            }
+        }, 1000);
+    },
+
+    timeOut: function() {
+        const allBtns = document.querySelectorAll('.option-btn');
+        allBtns.forEach(b => b.disabled = true);
+        
+        // Show correct answer
+        const q = this.questions[this.currentIdx];
+        q.options.forEach((opt, idx) => {
+            if(opt.c) allBtns[idx].classList.add('correct');
+        });
+
+        this.playTone('buzz');
+        setTimeout(() => {
+            this.currentIdx++;
+            this.loadQuestion();
+        }, 1500);
+    },
+
+    finishQuiz: function() {
+        clearInterval(this.timerInterval);
+        document.getElementById('quizScreen').classList.remove('active');
+        document.getElementById('resultScreen').classList.add('active');
+
+        const total = this.currentIdx; // Questions attempted/seen (due to early exit)
+        // If finished normally, total is all questions. If early exit, it is current index.
+        // Actually, logic says "based on questions answered so far".
+        
+        const safeTotal = total === 0 ? 1 : total;
+        const percentage = Math.round((this.score / safeTotal) * 100);
+        
+        document.getElementById('finalScoreDisplay').textContent = `${percentage}%`;
+        
+        let msg = "";
+        if(percentage >= 80) msg = "🏆 Outstanding Performance!";
+        else if(percentage >= 50) msg = "👏 Well Done! Keep it up.";
+        else msg = "📚 Practice makes perfect! Try again.";
+        
+        document.getElementById('resultMessage').textContent = msg;
+        document.getElementById('statsDisplay').textContent = 
+            `You answered ${this.score} correctly out of ${total} questions seen.`;
+    },
+
+    restart: function() {
+        document.getElementById('resultScreen').classList.remove('active');
+        document.getElementById('startScreen').classList.add('active');
+    },
+
+    shuffleArray: function(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+    },
+
+    // --- AUDIO & FX ---
+    playTone: function(type) {
+        if(!this.audioCtx) return;
+        const osc = this.audioCtx.createOscillator();
+        const gain = this.audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(this.audioCtx.destination);
+
+        if(type === 'ting') {
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(800, this.audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(1200, this.audioCtx.currentTime + 0.1);
+            gain.gain.setValueAtTime(0.3, this.audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, this.audioCtx.currentTime + 0.5);
+            osc.start();
+            osc.stop(this.audioCtx.currentTime + 0.5);
+        } else {
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(150, this.audioCtx.currentTime);
+            osc.frequency.linearRampToValueAtTime(100, this.audioCtx.currentTime + 0.3);
+            gain.gain.setValueAtTime(0.3, this.audioCtx.currentTime);
+            gain.gain.linearRampToValueAtTime(0.01, this.audioCtx.currentTime + 0.3);
+            osc.start();
+            osc.stop(this.audioCtx.currentTime + 0.3);
+        }
+    },
+
+    triggerConfetti: function() {
+        for(let i=0; i<30; i++) {
+            const el = document.createElement('div');
+            el.className = 'confetti-piece';
+            el.style.left = Math.random() * 100 + '%';
+            el.style.backgroundColor = `hsl(${Math.random()*360}, 100%, 50%)`;
+            el.style.animation = `fall ${Math.random()*1 + 0.5}s linear forwards`;
+            document.body.appendChild(el);
+            setTimeout(() => el.remove(), 2000);
+        }
+    },
+
+    triggerSadEmoji: function() {
+        const overlay = document.getElementById('feedbackOverlay');
+        const emoji = document.getElementById('sadEmoji');
+        emoji.style.display = 'block';
+        setTimeout(() => {
+            emoji.style.display = 'none';
+        }, 1000);
+    }
+};
+
+app.init();
+</script>
+</body>
+</html>

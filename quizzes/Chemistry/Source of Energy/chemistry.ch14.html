@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chemistry & Energy Quiz | रसायन विज्ञान और ऊर्जा</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-glass: rgba(255, 255, 255, 0.1);
+            --border-glass: rgba(255, 255, 255, 0.3);
+            --text-main: #ffffff;
+            --text-dim: #dddddd;
+            --correct: #4ade80;
+            --wrong: #ef4444;
+            --accent: #f472b6;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #4c1d95, #2563eb, #db2777);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--text-main);
+            overflow-x: hidden;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Glassmorphism Container */
+        .glass-card {
+            background: var(--primary-glass);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border-glass);
+            border-radius: 25px;
+            padding: 2rem;
+            width: 90%;
+            max-width: 700px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            position: relative;
+            overflow: hidden;
+            transition: height 0.3s ease;
+        }
+
+        /* Screens */
+        .screen { display: none; animation: fadeIn 0.5s ease; }
+        .screen.active { display: block; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Start Screen */
+        .title { font-size: 2rem; font-weight: 700; text-align: center; margin-bottom: 2rem; text-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        .input-group { margin-bottom: 1.5rem; }
+        .input-group label { display: block; margin-bottom: 0.5rem; font-size: 0.9rem; color: var(--text-dim); }
+        input[type="number"] {
+            width: 100%;
+            padding: 12px;
+            background: rgba(0,0,0,0.2);
+            border: 1px solid var(--border-glass);
+            border-radius: 12px;
+            color: white;
+            font-family: 'Poppins', sans-serif;
+            font-size: 1rem;
+        }
+        .toggle-container { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+        .toggle-switch {
+            position: relative; width: 50px; height: 26px; background: rgba(0,0,0,0.3); border-radius: 20px; transition: 0.3s;
+        }
+        .toggle-switch::after {
+            content: ''; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; background: white; border-radius: 50%; transition: 0.3s;
+        }
+        input[type="checkbox"]:checked + .toggle-switch { background: var(--accent); }
+        input[type="checkbox"]:checked + .toggle-switch::after { transform: translateX(24px); }
+        input[type="checkbox"] { display: none; }
+
+        .btn {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 15px;
+            background: white;
+            color: #4c1d95;
+            font-weight: 700;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 1rem;
+        }
+        .btn:hover { transform: scale(1.02); box-shadow: 0 5px 15px rgba(255,255,255,0.2); }
+        .btn-secondary { background: rgba(255,255,255,0.1); color: white; border: 1px solid white; margin-top: 20px; font-size: 0.9rem;}
+
+        /* Quiz UI */
+        .header-info { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; font-size: 0.9rem; font-weight: 600; }
+        .progress-container { width: 100%; height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; margin-bottom: 1.5rem; overflow: hidden; }
+        .progress-bar { height: 100%; background: var(--accent); width: 0%; transition: width 0.3s ease; box-shadow: 0 0 10px var(--accent); }
+        
+        .timer { font-variant-numeric: tabular-nums; padding: 5px 12px; background: rgba(0,0,0,0.2); border-radius: 20px; }
+        .timer.danger { color: #ff4444; animation: pulse 1s infinite; font-weight: bold;}
+        
+        @keyframes pulse { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(1.1); } 100% { opacity: 1; transform: scale(1); } }
+
+        .question-box { margin-bottom: 1.5rem; }
+        .q-en { font-size: 1.2rem; font-weight: 600; display: block; margin-bottom: 0.3rem; line-height: 1.4; }
+        .q-hi { font-size: 1rem; color: var(--text-dim); display: block; line-height: 1.4; }
+
+        .options-grid { display: grid; gap: 12px; }
+        .option-btn {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 12px 15px;
+            border-radius: 12px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+        }
+        .option-btn:hover:not(:disabled) { background: rgba(255,255,255,0.15); border-color: rgba(255,255,255,0.4); }
+        .opt-en { font-weight: 600; font-size: 1rem; margin-bottom: 2px; }
+        .opt-hi { font-size: 0.85rem; color: var(--text-dim); }
+
+        .option-btn.correct { background: var(--correct); border-color: var(--correct); color: #000; }
+        .option-btn.correct .opt-hi { color: #333; }
+        .option-btn.wrong { background: var(--wrong); border-color: var(--wrong); color: white; animation: shake 0.4s; }
+
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+
+        /* Feedback Emoji */
+        .feedback-overlay {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 5rem; opacity: 0; pointer-events: none; transition: opacity 0.3s;
+        }
+        .feedback-overlay.show { opacity: 1; animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        @keyframes popIn { 0% { transform: translate(-50%, -50%) scale(0); } 80% { transform: translate(-50%, -50%) scale(1.2); } 100% { transform: translate(-50%, -50%) scale(1); } }
+
+        /* Result Screen */
+        .score-circle {
+            width: 150px; height: 150px;
+            border-radius: 50%;
+            border: 8px solid white;
+            display: flex; justify-content: center; align-items: center; flex-direction: column;
+            margin: 0 auto 2rem;
+            background: rgba(255,255,255,0.1);
+        }
+        .score-big { font-size: 3rem; font-weight: 700; line-height: 1; }
+        .score-label { font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; }
+        .msg-box { text-align: center; margin-bottom: 2rem; font-size: 1.2rem; }
+
+        /* Confetti Canvas */
+        #confetti { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            .glass-card { width: 95%; padding: 1.5rem; }
+            .title { font-size: 1.5rem; }
+            .q-en { font-size: 1.1rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="confetti"></canvas>
+
+    <div class="glass-card">
+        <div id="start-screen" class="screen active">
+            <h1 class="title">Sources of Energy<br><span style="font-size:0.6em; opacity:0.8;">ऊर्जा के स्रोत</span></h1>
+            
+            <div class="input-group">
+                <label>Timer per Question (seconds) / समय (सेकंड)</label>
+                <input type="number" id="timeInput" placeholder="e.g. 20 (Leave empty for no timer)">
+            </div>
+
+            <div class="input-group">
+                <label class="toggle-container">
+                    <input type="checkbox" id="shuffleToggle">
+                    <div class="toggle-switch"></div>
+                    <span>Shuffle Questions / प्रश्न शफल करें</span>
+                </label>
+            </div>
+
+            <button class="btn" onclick="startQuiz()">Start Quiz / शुरू करें</button>
+        </div>
+
+        <div id="quiz-screen" class="screen">
+            <div class="header-info">
+                <span id="q-counter">Q: 01/40</span>
+                <span id="timer-display" class="timer">--</span>
+                <span id="score-display">Score: 0</span>
+            </div>
+            
+            <div class="progress-container">
+                <div class="progress-bar" id="progress-bar"></div>
+            </div>
+
+            <div class="question-box">
+                <span class="q-en" id="q-text-en">Question English</span>
+                <span class="q-hi" id="q-text-hi">Question Hindi</span>
+            </div>
+
+            <div class="options-grid" id="options-container">
+                </div>
+
+            <div id="feedback-emoji" class="feedback-overlay">😢</div>
+
+            <button class="btn btn-secondary" onclick="finishQuiz()">Finish & Show Results / समाप्त करें</button>
+        </div>
+
+        <div id="result-screen" class="screen">
+            <h2 style="text-align:center; margin-bottom:20px;">Quiz Completed!</h2>
+            <div class="score-circle">
+                <span class="score-big" id="final-score">0%</span>
+                <span class="score-label">Score</span>
+            </div>
+            <div class="msg-box" id="result-msg"></div>
+            <p style="text-align:center; margin-bottom:20px;" id="stats-text"></p>
+            <button class="btn" onclick="location.reload()">Restart Quiz / फिर से शुरू करें</button>
+        </div>
+    </div>
+
+<script>
+    // --- Data Source (40 Questions from Images) ---
+    const rawData = [
+        {
+            id: 1,
+            q_en: "Which of the following gases supports combustion?",
+            q_hi: "निम्नलिखित गैसों में से कौन-सी एक दहन पोषक है?",
+            options: [
+                { en: "Hydrogen", hi: "हाइड्रोजन", correct: false },
+                { en: "Nitrogen", hi: "नाइट्रोजन", correct: false },
+                { en: "Carbon Dioxide", hi: "कार्बन डाइऑक्साइड", correct: false },
+                { en: "Oxygen", hi: "ऑक्सीजन", correct: true }
+            ]
+        },
+        {
+            id: 2,
+            q_en: "The process of combustion in which heat and light are produced in very small amounts is called:",
+            q_hi: "दहन की वह क्रिया जिसमें ऊष्मा एवं प्रकाश अल्प समय में उत्पन्न हो जाते हैं, कहलाती है-",
+            options: [
+                { en: "Rapid combustion", hi: "द्रुत दहन", correct: false },
+                { en: "Slow combustion", hi: "मन्द दहन", correct: true },
+                { en: "Spontaneous combustion", hi: "स्वतः दहन", correct: false },
+                { en: "Explosion", hi: "विस्फोट", correct: false }
+            ]
+        },
+        {
+            id: 3,
+            q_en: "Producer gas is a mixture of:",
+            q_hi: "प्रोड्यूसर गैस इनका मिश्रण है-",
+            options: [
+                { en: "CO + N2", hi: "CO + N2", correct: true },
+                { en: "CO2 + N2", hi: "CO2 + N2", correct: false },
+                { en: "CO + H2 + N2", hi: "CO + H2 + N2", correct: false },
+                { en: "CO2 + H2", hi: "CO2 + H2", correct: false }
+            ]
+        },
+        {
+            id: 4,
+            q_en: "Gobar gas mainly contains:",
+            q_hi: "गोबर गैस में मुख्यतः होता है-",
+            options: [
+                { en: "Methane", hi: "मिथेन", correct: true },
+                { en: "Ethylene", hi: "इथिलीन", correct: false },
+                { en: "Acetylene", hi: "ऐसीटिलीन", correct: false },
+                { en: "Carbon Monoxide", hi: "कार्बन मोनो ऑक्साइड", correct: false }
+            ]
+        },
+        {
+            id: 5,
+            q_en: "The main component of L.P.G. is:",
+            q_hi: "L.P.G. का मुख्य घटक है-",
+            options: [
+                { en: "Methane", hi: "मिथेन", correct: false },
+                { en: "Ethane", hi: "इथेन", correct: false },
+                { en: "Pentane", hi: "पेन्टेन", correct: false },
+                { en: "Butane", hi: "ब्यूटेन", correct: true }
+            ]
+        },
+        {
+            id: 6,
+            q_en: "Which of the following mixtures is called Coal Gas?",
+            q_hi: "निम्नलिखित में से कौन-सा मिश्रण कोल गैस कहलाता है?",
+            options: [
+                { en: "H2, CH4, CO", hi: "H2, CH4, CO", correct: true },
+                { en: "H2, N2, CO", hi: "H2, N2, CO", correct: false },
+                { en: "H2, N2, O2", hi: "H2, N2, O2", correct: false },
+                { en: "H2, O2, CO2", hi: "H2, O2, CO2", correct: false }
+            ]
+        },
+        {
+            id: 7,
+            q_en: "The fuel used to drive rockets is called:",
+            q_hi: "रॉकेट को चलाने में प्रयुक्त ईंधन कहलाते हैं-",
+            options: [
+                { en: "Biomass", hi: "बायोमास", correct: false },
+                { en: "Coke", hi: "कोक", correct: false },
+                { en: "Propellant", hi: "प्रणोदक", correct: true },
+                { en: "Coal Gas", hi: "कोल गैस", correct: false }
+            ]
+        },
+        {
+            id: 8,
+            q_en: "A mixture of Carbon Monoxide and Hydrogen gases obtained by passing steam over red hot coke is called:",
+            q_hi: "लाल तप्त कोक पर जलवाष्प प्रवाहित करने से कार्बन मोनोक्साइड एवं हाइड्रोजन गैसों का मिश्रण प्राप्त होता है, जिसे कहते हैं-",
+            options: [
+                { en: "Coal Gas", hi: "कोल गैस", correct: false },
+                { en: "Water Gas", hi: "जल गैस", correct: true },
+                { en: "Producer Gas", hi: "प्रोड्यूसर गैस", correct: false },
+                { en: "Biogas", hi: "बायो गैस", correct: false }
+            ]
+        },
+        {
+            id: 9,
+            q_en: "The amount of heat obtained by completely burning one gram of fuel in air or oxygen is called:",
+            q_hi: "ऊष्मा की वह मात्रा जो किसी ईंधन के एक ग्राम की हवा अथवा ऑक्सीजन में पूर्णतः जलाने के फलस्वरूप प्राप्त होती है, कहलाती है-",
+            options: [
+                { en: "Combustion", hi: "दहन", correct: false },
+                { en: "Calorific Value", hi: "कैलोरी मान", correct: true },
+                { en: "Thermal Value", hi: "ऊष्मीय मान", correct: false }, // Note: Technically Thermal/Calorific are similar, but Calorific is the standard term here.
+                { en: "Ignition Temperature", hi: "ज्वलन ताप", correct: false }
+            ]
+        },
+        {
+            id: 10,
+            q_en: "Natural gas mainly consists of:",
+            q_hi: "प्राकृतिक गैस में मुख्यतः रहता है-",
+            options: [
+                { en: "Methane", hi: "मिथेन", correct: true },
+                { en: "Ethane", hi: "इथेन", correct: false },
+                { en: "Propane", hi: "प्रोपेन", correct: false },
+                { en: "Butane", hi: "ब्यूटेन", correct: false }
+            ]
+        },
+        {
+            id: 11,
+            q_en: "Why is C.N.G. called ecologically friendly?",
+            q_hi: "C.N.G. को पारिस्थितिकी मैत्रीपूर्ण क्यों कहा जाता है?",
+            options: [
+                { en: "It has very little Hydrogen", hi: "इसमें हाइड्रोजन अत्यन्त कम मात्रा में है।", correct: false },
+                { en: "Its main component is Ethane", hi: "इसका मुख्य घटक इथेन गैस है।", correct: false },
+                { en: "It has very low Carbon Monoxide", hi: "इसमें कार्बन मोनोक्साइड बहुत ही कम है।", correct: true },
+                { en: "It burns incompletely", hi: "गैस पूर्ण रूप से जलते नहीं हैं", correct: false }
+            ]
+        },
+        {
+            id: 12,
+            q_en: "Which gas released from a biogas plant is used as fuel gas?",
+            q_hi: "बायोगैस संयंत्र से निष्कासित निम्नलिखित में से कौन-सी गैस ईंधन गैस के रूप में उपयोग में आती है?",
+            options: [
+                { en: "Butane", hi: "ब्यूटेन", correct: false },
+                { en: "Propane", hi: "प्रोपेन", correct: false },
+                { en: "Methane", hi: "मिथेन", correct: true },
+                { en: "Ethane", hi: "एथेन", correct: false }
+            ]
+        },
+        {
+            id: 13,
+            q_en: "Water cannot extinguish burning petrol because:",
+            q_hi: "जलते पेट्रोल को पानी नहीं बुझा पाता है, क्योंकि-",
+            options: [
+                { en: "Flammable chemical forms", hi: "ज्वलनशील रसायन उत्पन्न होता है", correct: false },
+                { en: "Petrol evaporates water", hi: "पेट्रोल पानी को तुरन्त भाप बना देता है", correct: false },
+                { en: "Petrol floats on water due to lower density", hi: "अपने सापेक्ष कम घनत्व के कारण पेट्रोल पानी पर तैरता है", correct: true },
+                { en: "Petrol releases oxygen on contact", hi: "जल ऑक्सीजन छोड़ता है", correct: false }
+            ]
+        },
+        {
+            id: 14,
+            q_en: "Necessary conditions for a good fuel are:",
+            q_hi: "एक अच्छे ईंधन के लिए आवश्यक शर्तें हैं-",
+            options: [
+                { en: "High calorific value", hi: "उसका ऊष्मीय मान उच्च होना चाहिए", correct: false },
+                { en: "Easy combustibility", hi: "उसे आसानी से दहनशील होना चाहिए", correct: false },
+                { en: "Appropriate ignition temp", hi: "उसका ज्वलन ताप उपयुक्त होना चाहिए", correct: false },
+                { en: "All of these", hi: "इनमें से सभी", correct: true }
+            ]
+        },
+        {
+            id: 15,
+            q_en: "Which of the following fossil fuels is the cleanest fuel?",
+            q_hi: "निम्नलिखित जीवाश्म ईंधनों में से कौन स्वच्छतम ईंधन है?",
+            options: [
+                { en: "Coal", hi: "कोयला", correct: false },
+                { en: "Petrol", hi: "पेट्रोल", correct: false },
+                { en: "Natural Gas", hi: "प्राकृतिक गैस", correct: true },
+                { en: "Diesel", hi: "डीजल", correct: false }
+            ]
+        },
+        {
+            id: 16,
+            q_en: "What is filled in LPG cylinders to make the gas smelly for safety?",
+            q_hi: "सुरक्षा की दृष्टि से खाना पकाने वाली L.P.G. गैस सिलिंडर में क्या भरकर गैस को गंधयुक्त बनाया जाता है?",
+            options: [
+                { en: "Helium", hi: "हीलियम", correct: false },
+                { en: "Ammonia", hi: "अमोनिया", correct: false },
+                { en: "Mercaptan", hi: "मरकैप्टेन", correct: true },
+                { en: "Ether", hi: "ईथर", correct: false }
+            ]
+        },
+        {
+            id: 17,
+            q_en: "Which is known as Brown Coal?",
+            q_hi: "भूरा कोयला (Brown Coal) के नाम से जाना जाता है?",
+            options: [
+                { en: "Peat", hi: "पीट", correct: false },
+                { en: "Lignite", hi: "लिग्नाइट", correct: true },
+                { en: "Bituminous", hi: "बिटुमिनस", correct: false },
+                { en: "Anthracite", hi: "एन्थ्रासाइट", correct: false }
+            ]
+        },
+        {
+            id: 18,
+            q_en: "What type of combustion process is Respiration?",
+            q_hi: "श्वसन किस प्रकार की दहन क्रिया है?",
+            options: [
+                { en: "Rapid combustion", hi: "द्रुत दहन", correct: false },
+                { en: "Slow combustion", hi: "मन्द दहन", correct: true },
+                { en: "Spontaneous combustion", hi: "स्वतः दहन", correct: false },
+                { en: "Explosion", hi: "विस्फोट", correct: false }
+            ]
+        },
+        {
+            id: 19,
+            q_en: "Which of the following is NOT a fossil fuel element?",
+            q_hi: "निम्न में से कौन जीवाश्म ईंधन तत्व नहीं है?",
+            options: [
+                { en: "Coal", hi: "कोयला", correct: false },
+                { en: "Petroleum", hi: "पेट्रोलियम", correct: false },
+                { en: "Nitrogen", hi: "नाइट्रोजन", correct: true },
+                { en: "Water Gas", hi: "जल गैस", correct: false }
+            ]
+        },
+        {
+            id: 20,
+            q_en: "L.P.G. mainly consists of which gas?",
+            q_hi: "एल.पी.जी. (L.P.G.) में कौन-सी गैस मुख्य रूप से होती है?",
+            options: [
+                { en: "Methane", hi: "मिथेन", correct: false },
+                { en: "CO2", hi: "CO2", correct: false },
+                { en: "Butane", hi: "ब्यूटेन", correct: true },
+                { en: "SO2", hi: "SO2", correct: false }
+            ]
+        },
+        {
+            id: 21,
+            q_en: "Which of the following has the maximum calorific value?",
+            q_hi: "निम्न में से किस एक का ईंधन मान अधिकतम होता है?",
+            options: [
+                { en: "Hydrogen", hi: "हाइड्रोजन", correct: true },
+                { en: "Charcoal", hi: "चारकोल", correct: false },
+                { en: "Natural Gas", hi: "प्राकृतिक गैस", correct: false },
+                { en: "Gasoline", hi: "गैसोलीन", correct: false }
+            ]
+        },
+        {
+            id: 22,
+            q_en: "Necessary conditions for the process of combustion are:",
+            q_hi: "दहन की क्रिया के लिए आवश्यक शर्तें हैं-",
+            options: [
+                { en: "Presence of combustible substance", hi: "दहनशील पदार्थ की उपस्थिति", correct: false },
+                { en: "Presence of supporter of combustion", hi: "दहन के पोषक पदार्थ की उपस्थिति", correct: false },
+                { en: "Attainment of ignition temperature", hi: "ज्वलन ताप की प्राप्ति", correct: false },
+                { en: "All of the above", hi: "उपर्युक्त सभी", correct: true }
+            ]
+        },
+        {
+            id: 23,
+            q_en: "Water Gas is a combination of?",
+            q_hi: "जल गैस किसका संयोजन है?",
+            options: [
+                { en: "CO and H2O", hi: "CO और H2O", correct: false },
+                { en: "CO2 and CO", hi: "CO2 और CO", correct: false },
+                { en: "CO and H2", hi: "CO और H2", correct: true },
+                { en: "CO2 and H2", hi: "CO2 और H2", correct: false }
+            ]
+        },
+        {
+            id: 24,
+            q_en: "CO2 in ordinary fire extinguishers is produced by the reaction of:",
+            q_hi: "साधारण अग्निशामक यंत्र में CO2 निम्नलिखित के प्रतिक्रिया से उत्पन्न होता है?",
+            options: [
+                { en: "Limestone and dilute sulfuric acid", hi: "चुना-पत्थर एवं तनु गंधकाम्ल", correct: false },
+                { en: "Marble and dilute hydrochloric acid", hi: "संगमरमर एवं तनु नमक का अम्ल", correct: false },
+                { en: "Sodium Bicarbonate and dilute sulfuric acid", hi: "सोडियम बाइकार्बोनेट एवं तनु गंधकाम्ल", correct: true },
+                { en: "Sodium Carbonate and dilute hydrochloric acid", hi: "सोडियम कार्बोनेट एवं तनु नमक का अम्ल", correct: false }
+            ]
+        },
+        {
+            id: 25,
+            q_en: "A gaseous mixture of Carbon Monoxide and Nitrogen is called:",
+            q_hi: "कार्बन मोनोक्साइड तथा नाइट्रोजन गैस के गैसीय मिश्रण को कहते हैं-",
+            options: [
+                { en: "Coal Gas", hi: "कोल गैस", correct: false },
+                { en: "Water Gas", hi: "जल गैस", correct: false },
+                { en: "Producer Gas", hi: "प्रोड्यूसर गैस", correct: true },
+                { en: "Natural Gas", hi: "प्राकृतिक गैस", correct: false }
+            ]
+        },
+        {
+            id: 26,
+            q_en: "Which of the following fuels causes minimum environmental pollution?",
+            q_hi: "निम्नलिखित में से कौन-सा ईंधन न्यूनतम पर्यावरण प्रदूषण फैलाता है?",
+            options: [
+                { en: "Hydrogen", hi: "हाइड्रोजन", correct: true },
+                { en: "Coal", hi: "कोयला", correct: false },
+                { en: "Diesel", hi: "डीजल", correct: false },
+                { en: "Kerosene", hi: "केरोसिन", correct: false }
+            ]
+        },
+        {
+            id: 27,
+            q_en: "Match List-I with List-II: (CNG, LPG, Coal Gas, Water Gas)",
+            q_hi: "सूची-I को सूची-II से सुमेलित कीजिए: (CNG, LPG, कोल गैस, जल गैस)",
+            options: [
+                { en: "A-2, B-1, C-3, D-4", hi: "2, 1, 3, 4", correct: false },
+                { en: "A-2, B-4, C-3, D-1", hi: "2, 4, 3, 1", correct: false },
+                { en: "A-3, B-2, C-4, D-1", hi: "3, 2, 4, 1", correct: true }, // CNG-Methane/Ethane(3), LPG-Butane/Propane(2), CoalGas-H2/CH4/CO(4), WaterGas-CO/H2(1) - Note: In options 4 is CO+H2? No, 1 is CO+H2. Let's trace carefully: 1: CO+H2 (Water Gas D). 2: Butane/Propane (LPG B). 3: Methane/Ethane (CNG A). 4: H2/CH4/CO (Coal Gas C). So A3, B2, C4, D1.
+                { en: "A-3, B-2, C-1, D-4", hi: "3, 2, 1, 4", correct: false }
+            ]
+        },
+        {
+            id: 28,
+            q_en: "Substances that burn to provide heat are called:",
+            q_hi: "वे पदार्थ जो जलकर ऊष्मा प्रदान करते हैं, कहलाते हैं-",
+            options: [
+                { en: "Coal", hi: "कोयला", correct: false },
+                { en: "Ignitor", hi: "ज्वालक", correct: false },
+                { en: "Heat Giver", hi: "ऊष्मादायक", correct: false },
+                { en: "Fuel", hi: "ईंधन", correct: true }
+            ]
+        },
+        {
+            id: 29,
+            q_en: "The anti-knock property of a fuel is indicated by:",
+            q_hi: "किसी ईंधन के अपस्फोटिरोधी गुण को दर्शाती है-",
+            options: [
+                { en: "Gold Number", hi: "स्वर्ण संख्या", correct: false },
+                { en: "Natural Number", hi: "प्राकृतिक संख्या", correct: false },
+                { en: "Octane Number", hi: "ऑक्टेन संख्या", correct: true },
+                { en: "Mach Number", hi: "मैक संख्या", correct: false }
+            ]
+        },
+        {
+            id: 30,
+            q_en: "Which of the following can be used as fuel in rockets?",
+            q_hi: "निम्न में किसका प्रयोग नोदक या रॉकेटों में ईंधन के रूप में किया जा सकता है?",
+            options: [
+                { en: "Liquid Hydrogen + Liquid Nitrogen", hi: "द्रव हाइड्रोजन + द्रव नाइट्रोजन", correct: false },
+                { en: "Liquid Oxygen + Liquid Argon", hi: "द्रव ऑक्सीजन + द्रव ऑर्गन", correct: false },
+                { en: "Liquid Nitrogen + Liquid Oxygen", hi: "द्रव नाइट्रोजन + द्रव ऑक्सीजन", correct: false },
+                { en: "Liquid Hydrogen + Liquid Oxygen", hi: "द्रव हाइड्रोजन + द्रव ऑक्सीजन", correct: true }
+            ]
+        },
+        {
+            id: 31,
+            q_en: "The liquefied mixture of Normal Butane and Iso Butane is called:",
+            q_hi: "नार्मल ब्यूटेन तथा आइसो ब्यूटेन का द्रवीभूत किया हुआ मिश्रण कहलाता है-",
+            options: [
+                { en: "Water Gas", hi: "जल गैस", correct: false },
+                { en: "Coal Gas", hi: "कोल गैस", correct: false },
+                { en: "Producer Gas", hi: "प्रोड्यूसर गैस", correct: false },
+                { en: "Liquefied Petroleum Gas", hi: "द्रवित पेट्रोलियम गैस", correct: true }
+            ]
+        },
+        {
+            id: 32,
+            q_en: "What is the full form of L.P.G.?",
+            q_hi: "L.P.G. का पूरा नाम क्या है?",
+            options: [
+                { en: "Liquid Petroleum Gas", hi: "लिक्विड पेट्रोलियम गैस", correct: false },
+                { en: "Liquefied Petroleum Gas", hi: "लिक्विफाइड पेट्रोलियम गैस", correct: true },
+                { en: "Leaded Petroleum Gas", hi: "लेडेड पेट्रोलियम गैस", correct: false },
+                { en: "Low Petroleum Gas", hi: "लो पेट्रोलियम गैस", correct: false }
+            ]
+        },
+        {
+            id: 33,
+            q_en: "The minimum temperature at which a substance starts burning is called:",
+            q_hi: "जिस न्यूनतम ताप पर कोई पदार्थ जलना शुरू करता है उसे उस पदार्थ को कहते हैं-",
+            options: [
+                { en: "Thermal Value", hi: "ऊष्मीय मान", correct: false },
+                { en: "Ignition Temperature", hi: "ज्वलन ताप", correct: true },
+                { en: "Calorific Value", hi: "कैलोरी मान", correct: false },
+                { en: "None of these", hi: "इनमें से कोई नहीं", correct: false }
+            ]
+        },
+        {
+            id: 34,
+            q_en: "Which is the best fuel in terms of energy released per gram?",
+            q_hi: "प्रति ग्राम ईंधन द्वारा मोचित ऊर्जा की दृष्टि से निम्न में से सर्वोत्तम ईंधन कौन-सा है?",
+            options: [
+                { en: "Hydrogen", hi: "हाइड्रोजन", correct: true },
+                { en: "Methane", hi: "मिथेन", correct: false },
+                { en: "Ethanol", hi: "एथेनॉल", correct: false },
+                { en: "Butane", hi: "ब्यूटेन", correct: false }
+            ]
+        },
+        {
+            id: 35,
+            q_en: "In which variety of coal is the percentage of Carbon highest?",
+            q_hi: "कोयले की विभिन्न किस्मों में से किसमें कार्बन की प्रतिशत मात्रा सबसे अधिक होती है?",
+            options: [
+                { en: "Peat", hi: "पीट", correct: false },
+                { en: "Lignite", hi: "लिग्नाइट", correct: false },
+                { en: "Bituminous", hi: "बिटुमिनस", correct: false },
+                { en: "Anthracite", hi: "एन्थ्रासाइट", correct: true }
+            ]
+        },
+        {
+            id: 36,
+            q_en: "Combustion that occurs without external heat is called:",
+            q_hi: "बिना किसी बाहरी ऊष्मा के सम्पादित होने वाली दहन क्रिया को कहते हैं-",
+            options: [
+                { en: "Rapid combustion", hi: "द्रुत दहन", correct: false },
+                { en: "Slow combustion", hi: "मन्द दहन", correct: false },
+                { en: "Spontaneous combustion", hi: "स्वतः दहन", correct: true },
+                { en: "Explosion", hi: "विस्फोट", correct: false }
+            ]
+        },
+        {
+            id: 37,
+            q_en: "Which of the following is NOT a fuel element?",
+            q_hi: "निम्नलिखित में से कौन ईंधन तत्व नहीं है?",
+            options: [
+                { en: "Uranium", hi: "यूरेनियम", correct: false },
+                { en: "Thorium", hi: "थोरियम", correct: false },
+                { en: "Radium", hi: "रेडियम", correct: false },
+                { en: "Helium", hi: "हीलियम", correct: true }
+            ]
+        },
+        {
+            id: 38,
+            q_en: "Which of these is a renewable energy source?",
+            q_hi: "इनमें कौन नवीकरणीय ऊर्जा स्रोत है-",
+            options: [
+                { en: "Petroleum", hi: "पेट्रोलियम", correct: false },
+                { en: "Coal", hi: "कोयला", correct: false },
+                { en: "Biogas", hi: "बायोगैस", correct: true }, // In context of options. Solar/Wind are standard, but Biogas is renewable biomass. Coal/Petrol/NG are non-renewable.
+                { en: "Natural Gas", hi: "प्राकृतिक गैस", correct: false }
+            ]
+        },
+        {
+            id: 39,
+            q_en: "Which of these is NOT an example of biomass energy source?",
+            q_hi: "इनमें कौन जैव मात्रा ऊर्जा स्रोत का उदाहरण नहीं है-",
+            options: [
+                { en: "Wood", hi: "लकड़ी", correct: false },
+                { en: "Gobar Gas", hi: "गोबर गैस", correct: false },
+                { en: "Nuclear Energy", hi: "नाभिकीय ऊर्जा", correct: true },
+                { en: "Coal", hi: "कोयला", correct: false }
+            ]
+        },
+        {
+            id: 40,
+            q_en: "Which is an inexhaustible energy source?",
+            q_hi: "इनमें कौन अक्षय ऊर्जा स्रोत है-",
+            options: [
+                { en: "Coal", hi: "कोयला", correct: false },
+                { en: "Petroleum", hi: "पेट्रोलियम", correct: false },
+                { en: "Solar Energy", hi: "सौर ऊर्जा", correct: true }, // Image option C is Solar Energy
+                { en: "Natural Gas", hi: "प्राकृतिक गैस", correct: false }
+            ]
+        }
+    ];
+
+    // --- State Variables ---
+    let questions = [];
+    let currentIdx = 0;
+    let score = 0;
+    let timerInterval;
+    let totalSeconds = 0;
+    let timeLeft = 0;
+    let userAnswers = 0;
+
+    // --- Audio System (Web Audio API) ---
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    function playSound(type) {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        if (type === 'correct') {
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.1);
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.5);
+        } else if (type === 'wrong') {
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+            osc.frequency.linearRampToValueAtTime(100, audioCtx.currentTime + 0.3);
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.3);
+        }
+    }
+
+    // --- Confetti System ---
+    function fireConfetti() {
+        const canvas = document.getElementById('confetti');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const particles = [];
+        for (let i = 0; i < 100; i++) {
+            particles.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height - canvas.height,
+                color: `hsl(${Math.random() * 360}, 100%, 50%)`,
+                size: Math.random() * 10 + 5,
+                speed: Math.random() * 5 + 2
+            });
+        }
+
+        let animationFrame;
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach((p, index) => {
+                p.y += p.speed;
+                p.x += Math.sin(p.y / 50) * 2;
+                ctx.fillStyle = p.color;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fill();
+                if (p.y > canvas.height) particles.splice(index, 1);
+            });
+            if (particles.length > 0) animationFrame = requestAnimationFrame(animate);
+        }
+        animate();
+    }
+
+    // --- Game Logic ---
+
+    function startQuiz() {
+        const timeVal = document.getElementById('timeInput').value;
+        const shuffle = document.getElementById('shuffleToggle').checked;
+
+        // Clone data
+        questions = [...rawData];
+        if (shuffle) {
+            questions.sort(() => Math.random() - 0.5);
+        }
+
+        totalSeconds = timeVal ? parseInt(timeVal) : 0;
+        
+        // Reset State
+        currentIdx = 0;
+        score = 0;
+        userAnswers = 0;
+        
+        document.getElementById('start-screen').classList.remove('active');
+        document.getElementById('quiz-screen').classList.add('active');
+        
+        renderQuestion();
+    }
+
+    function renderQuestion() {
+        if (currentIdx >= questions.length) {
+            finishQuiz();
+            return;
+        }
+
+        const q = questions[currentIdx];
+        
+        // Update UI Info
+        document.getElementById('q-counter').innerText = `Q: ${String(currentIdx + 1).padStart(2, '0')}/${questions.length}`;
+        document.getElementById('score-display').innerText = `Score: ${String(score).padStart(2, '0')}`;
+        
+        const pct = ((currentIdx) / questions.length) * 100;
+        document.getElementById('progress-bar').style.width = `${pct}%`;
+
+        // Update Text
+        document.getElementById('q-text-en').innerText = q.q_en;
+        document.getElementById('q-text-hi').innerText = q.q_hi;
+
+        // Generate Options
+        const container = document.getElementById('options-container');
+        container.innerHTML = '';
+        
+        q.options.forEach((opt, idx) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerHTML = `<span class="opt-en">${opt.en}</span><span class="opt-hi">${opt.hi}</span>`;
+            btn.onclick = () => checkAnswer(idx, btn);
+            container.appendChild(btn);
+        });
+
+        // Timer Logic
+        clearInterval(timerInterval);
+        const timerDisplay = document.getElementById('timer-display');
+        timerDisplay.classList.remove('danger');
+        
+        if (totalSeconds > 0) {
+            timeLeft = totalSeconds;
+            timerDisplay.innerText = timeLeft;
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                timerDisplay.innerText = timeLeft;
+                if (timeLeft < 5) timerDisplay.classList.add('danger');
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    autoFail();
+                }
+            }, 1000);
+        } else {
+            timerDisplay.innerText = "∞";
+        }
+    }
+
+    function checkAnswer(selectedIndex, btnElement) {
+        clearInterval(timerInterval);
+        const q = questions[currentIdx];
+        const buttons = document.querySelectorAll('.option-btn');
+        
+        // Disable all
+        buttons.forEach(b => b.disabled = true);
+        
+        userAnswers++;
+        const isCorrect = q.options[selectedIndex].correct;
+
+        if (isCorrect) {
+            btnElement.classList.add('correct');
+            score++;
+            document.getElementById('score-display').innerText = `Score: ${String(score).padStart(2, '0')}`;
+            playSound('correct');
+            fireConfetti();
+        } else {
+            btnElement.classList.add('wrong');
+            // Highlight correct one
+            q.options.forEach((opt, idx) => {
+                if (opt.correct) buttons[idx].classList.add('correct');
+            });
+            playSound('wrong');
+            showFeedbackEmoji();
+        }
+
+        setTimeout(() => {
+            currentIdx++;
+            renderQuestion();
+        }, 1500);
+    }
+
+    function autoFail() {
+        const q = questions[currentIdx];
+        const buttons = document.querySelectorAll('.option-btn');
+        buttons.forEach(b => b.disabled = true);
+        
+        // Highlight correct answer
+        q.options.forEach((opt, idx) => {
+            if (opt.correct) buttons[idx].classList.add('correct');
+        });
+        
+        playSound('wrong');
+        showFeedbackEmoji();
+        userAnswers++; // Counted as attempted/processed
+        
+        setTimeout(() => {
+            currentIdx++;
+            renderQuestion();
+        }, 1500);
+    }
+
+    function showFeedbackEmoji() {
+        const el = document.getElementById('feedback-emoji');
+        el.classList.add('show');
+        setTimeout(() => el.classList.remove('show'), 800);
+    }
+
+    function finishQuiz() {
+        clearInterval(timerInterval);
+        document.getElementById('quiz-screen').classList.remove('active');
+        document.getElementById('result-screen').classList.add('active');
+
+        // Logic based on QUESTIONS ANSWERED so far if early exit, 
+        // or total if natural finish.
+        // But normally percentage is based on TOTAL questions. 
+        // Let's stick to standard logic: Score / Total Questions.
+        
+        const finalPct = Math.round((score / questions.length) * 100);
+        document.getElementById('final-score').innerText = `${finalPct}%`;
+        document.getElementById('stats-text').innerText = `You answered ${score} out of ${questions.length} questions correctly.`;
+
+        let msg = "";
+        if (finalPct >= 80) msg = "🏆 Outstanding Performance!";
+        else if (finalPct >= 50) msg = "👏 Well Done! Keep it up.";
+        else msg = "📚 Practice makes perfect! Try again.";
+        
+        document.getElementById('result-msg').innerText = msg;
+    }
+
+</script>
+</body>
+</html>

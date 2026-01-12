@@ -184,7 +184,7 @@
         }
         .modal.active .modal-content { transform: translateY(0); }
 
-        /* --- 10. QUIZ OVERLAY --- */
+        /* --- 10. QUIZ OVERLAY (UPDATED CSS FOR FIX) --- */
         #quiz-overlay {
             position: fixed; inset: 0; background: white; z-index: 1000;
             display: flex; flex-direction: column;
@@ -193,7 +193,16 @@
             height: 50px; background: #fff; border-bottom: 1px solid #eee;
             display: flex; align-items: center; justify-content: space-between; padding: 0 15px;
         }
-        #quiz-frame { flex: 1; border: none; width: 100%; height: 100%; }
+        /* Fix: Opacity transition for smooth load */
+        #quiz-frame { 
+            flex: 1; 
+            border: none; 
+            width: 100%; 
+            height: 100%; 
+            opacity: 0; /* Initially hidden */
+            transition: opacity 0.3s ease-in-out;
+            background: white;
+        }
 
     </style>
 </head>
@@ -554,8 +563,6 @@
                 const div = document.createElement('div');
                 div.className = 'list-item';
                 div.onclick = () => startQuiz(path, quiz.title);
-                
-                // यहाँ बदलाव किया गया है:
                 div.innerHTML = `
                     <div>
                         <div style="font-weight:600;">${quiz.title}</div>
@@ -566,19 +573,44 @@
             });
         }
 
-        // --- 5. QUIZ LOGIC (HISTORY REMOVED) ---
+        // --- 5. UPDATED QUIZ LOGIC (GHOST EFFECT FIX) ---
         function startQuiz(url, title) {
-            document.getElementById('quiz-overlay').classList.remove('hidden');
-            document.getElementById('quiz-frame').src = url;
-            // Removed state.currentQuizSession Logic
+            const overlay = document.getElementById('quiz-overlay');
+            const frame = document.getElementById('quiz-frame');
+
+            // 1. Show Overlay
+            overlay.classList.remove('hidden');
+            
+            // 2. Hide Frame immediately (Ghost effect fix)
+            frame.style.opacity = "0";
+
+            // 3. Clear source first
+            frame.src = "about:blank";
+
+            // 4. Load new URL with slight delay to ensure clear
+            setTimeout(() => {
+                frame.src = url;
+            }, 50);
+
+            // 5. Fade in when loaded
+            frame.onload = () => {
+                if(frame.src !== "about:blank") {
+                    frame.style.opacity = "1";
+                }
+            };
         }
 
         function closeQuiz() {
-            document.getElementById('quiz-overlay').classList.add('hidden');
-            document.getElementById('quiz-frame').src = "";
-        }
+            const overlay = document.getElementById('quiz-overlay');
+            const frame = document.getElementById('quiz-frame');
 
-        // Removed window.addEventListener('message') for saving scores
+            // 1. Hide Overlay
+            overlay.classList.add('hidden');
+
+            // 2. Clear Frame and Reset Opacity
+            frame.style.opacity = "0";
+            frame.src = "about:blank"; 
+        }
 
         // --- 6. MENU & UTILS ---
         function toggleSidebar() {
@@ -593,8 +625,6 @@
                 toast("Logout Error: " + error.message);
             });
         }
-
-        // REMOVED showHistory() function
 
         function shareApp() {
             const adminMessage = state.config.shareText || "Join me on Quizzy!";

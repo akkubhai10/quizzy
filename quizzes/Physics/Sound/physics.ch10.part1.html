@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Physics Sound Quiz - Bilingual</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: 1px solid rgba(255, 255, 255, 0.2);
+            --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            --primary-text: #ffffff;
+            --secondary-text: #dddddd;
+            --accent-green: #2ecc71;
+            --accent-red: #e74c3c;
+            --accent-blue: #3498db;
+        }
+
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #ff6b6b 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary-text);
+            overflow-x: hidden;
+        }
+
+        /* Confetti Canvas */
+        #confetti-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 600px;
+            min-height: 500px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 25px;
+            border: var(--glass-border);
+            box-shadow: var(--glass-shadow);
+            padding: 25px;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        /* Utility Classes */
+        .hidden { display: none !important; }
+        .flex-center { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+        .full-width { width: 100%; }
+
+        /* Start Screen */
+        h1 { margin-bottom: 10px; font-weight: 700; text-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        .subtitle { font-size: 0.9rem; color: var(--secondary-text); margin-bottom: 30px; }
+        
+        .input-group {
+            margin-bottom: 20px;
+            width: 100%;
+            text-align: left;
+        }
+        
+        label { display: block; margin-bottom: 8px; font-size: 0.9rem; font-weight: 600; }
+        
+        input[type="number"] {
+            width: 100%;
+            padding: 12px;
+            border-radius: 12px;
+            border: none;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            font-family: 'Poppins', sans-serif;
+            font-size: 1rem;
+            outline: none;
+        }
+        input[type="number"]::placeholder { color: rgba(255,255,255,0.6); }
+
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(255,255,255,0.1);
+            padding: 10px 15px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            width: 100%;
+        }
+
+        /* Custom Toggle Switch */
+        .switch { position: relative; display: inline-block; width: 50px; height: 26px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(0,0,0,0.3); transition: .4s; border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute; content: ""; height: 18px; width: 18px; left: 4px; bottom: 4px;
+            background-color: white; transition: .4s; border-radius: 50%;
+        }
+        input:checked + .slider { background-color: var(--accent-blue); }
+        input:checked + .slider:before { transform: translateX(24px); }
+
+        .btn-primary {
+            background: linear-gradient(90deg, #ff8a00, #e52e71);
+            border: none;
+            padding: 15px 40px;
+            border-radius: 50px;
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            width: 100%;
+        }
+        .btn-primary:hover { transform: scale(1.05); box-shadow: 0 6px 20px rgba(0,0,0,0.3); }
+
+        /* Quiz UI */
+        .progress-bar-container {
+            position: absolute; top: 0; left: 0; width: 100%; height: 6px;
+            background: rgba(255,255,255,0.1); border-radius: 25px 25px 0 0; overflow: hidden;
+        }
+        .progress-bar { height: 100%; background: var(--accent-green); width: 0%; transition: width 0.3s ease; }
+
+        .header-stats {
+            display: flex; justify-content: space-between; align-items: center;
+            width: 100%; margin-bottom: 20px; font-size: 0.9rem; font-weight: 600;
+        }
+
+        .timer-badge {
+            background: rgba(0,0,0,0.2); padding: 5px 15px; border-radius: 20px;
+            display: flex; align-items: center; gap: 5px;
+        }
+        .timer-pulse { animation: pulse-red 1s infinite; color: #ff6b6b; font-weight: bold; }
+
+        @keyframes pulse-red { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+        
+        .question-card { margin-bottom: 20px; width: 100%; }
+        .q-en { font-size: 1.1rem; font-weight: 600; margin-bottom: 5px; line-height: 1.4; }
+        .q-hi { font-size: 0.95rem; color: var(--secondary-text); margin-bottom: 20px; line-height: 1.4; }
+
+        .options-grid { display: flex; flex-direction: column; gap: 12px; width: 100%; }
+        
+        .option-btn {
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 12px 15px;
+            border-radius: 12px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+        .option-btn:hover { background: rgba(255,255,255,0.25); }
+        .opt-en { font-weight: 600; font-size: 1rem; }
+        .opt-hi { font-size: 0.85rem; color: #ddd; margin-top: 2px; }
+
+        .correct { background: var(--accent-green) !important; border-color: var(--accent-green) !important; color: white; }
+        .wrong { background: var(--accent-red) !important; border-color: var(--accent-red) !important; color: white; animation: shake 0.5s; }
+
+        @keyframes shake {
+            0% { transform: translateX(0); } 25% { transform: translateX(-5px); } 50% { transform: translateX(5px); } 75% { transform: translateX(-5px); } 100% { transform: translateX(0); }
+        }
+
+        .feedback-emoji {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 4rem; z-index: 10; pointer-events: none; animation: popIn 0.3s ease-out;
+        }
+        @keyframes popIn { from { transform: translate(-50%, -50%) scale(0); } to { transform: translate(-50%, -50%) scale(1); } }
+
+        .btn-finish {
+            margin-top: 25px;
+            background: rgba(0,0,0,0.3);
+            font-size: 0.9rem;
+            padding: 10px 20px;
+        }
+        .btn-finish:hover { background: rgba(0,0,0,0.5); }
+
+        /* Result Screen */
+        .score-circle {
+            width: 120px; height: 120px; border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            border: 4px solid white;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 2.5rem; font-weight: 700;
+            margin-bottom: 20px;
+        }
+        .result-msg { font-size: 1.2rem; margin-bottom: 30px; font-weight: 600; }
+        .stats-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 15px; width: 100%; margin-bottom: 30px;
+        }
+        .stat-box {
+            background: rgba(255,255,255,0.1); padding: 15px; border-radius: 12px;
+            text-align: center;
+        }
+        .stat-val { font-size: 1.5rem; font-weight: 700; display: block; }
+        .stat-label { font-size: 0.8rem; color: #ddd; }
+
+        /* Responsive */
+        @media (max-width: 480px) {
+            .container { width: 95%; padding: 20px; min-height: 400px; }
+            h1 { font-size: 1.5rem; }
+            .q-en { font-size: 1rem; }
+            .q-hi { font-size: 0.85rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="confetti-canvas"></canvas>
+
+    <div class="container" id="app-container">
+        
+        <div id="start-screen" class="flex-center">
+            <h1>Physics Quiz</h1>
+            <p class="subtitle">Sound & Waves (ध्वनि और तरंग)</p>
+            
+            <div class="input-group">
+                <label>Timer per Question (Sec) | <small>0 for no timer</small></label>
+                <input type="number" id="time-input" placeholder="e.g. 30" min="0">
+            </div>
+
+            <div class="toggle-container">
+                <label style="margin:0">Shuffle Questions (प्रश्न मिलाएं)</label>
+                <label class="switch">
+                    <input type="checkbox" id="shuffle-toggle">
+                    <span class="slider"></span>
+                </label>
+            </div>
+
+            <button class="btn-primary" onclick="startQuiz()">Start Quiz 🚀</button>
+        </div>
+
+        <div id="quiz-ui" class="hidden">
+            <div class="progress-bar-container">
+                <div class="progress-bar" id="progress"></div>
+            </div>
+            
+            <div class="header-stats">
+                <span id="q-counter">Q: 01/50</span>
+                <div class="timer-badge" id="timer-box">
+                    <span>⏱️</span>
+                    <span id="timer-display">--</span>
+                </div>
+                <span id="score-live">Score: 0</span>
+            </div>
+
+            <div class="question-card">
+                <div class="q-en" id="q-en-text">Question English</div>
+                <div class="q-hi" id="q-hi-text">Question Hindi</div>
+            </div>
+
+            <div class="options-grid" id="options-container">
+                </div>
+
+            <button class="btn-primary btn-finish" onclick="finishEarly()">Finish & Show Results 🏁</button>
+        </div>
+
+        <div id="result-screen" class="hidden flex-center">
+            <div class="score-circle" id="final-score">0%</div>
+            <div class="result-msg" id="result-msg">Well Done!</div>
+            
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <span class="stat-val" id="total-q">0</span>
+                    <span class="stat-label">Questions</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-val" id="correct-a">0</span>
+                    <span class="stat-label">Correct</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-val" id="wrong-a">0</span>
+                    <span class="stat-label">Wrong</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-val" id="skipped-a">0</span>
+                    <span class="stat-label">Skipped</span>
+                </div>
+            </div>
+
+            <button class="btn-primary" onclick="location.reload()">Restart Quiz 🔄</button>
+        </div>
+
+    </div>
+
+    <script>
+        // --- 1. Sound Logic (Web Audio API) ---
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            osc.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+
+            if (type === 'correct') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(500, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(1000, audioCtx.currentTime + 0.1);
+                gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.5);
+            } else {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+                osc.frequency.linearRampToValueAtTime(100, audioCtx.currentTime + 0.3);
+                gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                gainNode.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.3);
+            }
+        }
+
+        // --- 2. Confetti Logic ---
+        const canvas = document.getElementById('confetti-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        function createConfetti() {
+            for(let i=0; i<100; i++) {
+                particles.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height - canvas.height,
+                    vx: Math.random() * 4 - 2,
+                    vy: Math.random() * 4 + 2,
+                    color: `hsl(${Math.random()*360}, 100%, 50%)`,
+                    size: Math.random() * 6 + 2
+                });
+            }
+        }
+
+        function updateConfetti() {
+            ctx.clearRect(0,0, canvas.width, canvas.height);
+            particles.forEach((p, index) => {
+                p.x += p.vx;
+                p.y += p.vy;
+                ctx.fillStyle = p.color;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI*2);
+                ctx.fill();
+                if(p.y > canvas.height) particles.splice(index, 1);
+            });
+            if(particles.length > 0) requestAnimationFrame(updateConfetti);
+        }
+
+        function triggerConfetti() {
+            createConfetti();
+            updateConfetti();
+        }
+
+        // --- 3. Data (50 Questions from Images) ---
+        const rawQuestions = [
+            {
+                q_en: "How much does the speed of sound increase with a 1°C rise in temperature?",
+                q_hi: "1°C ताप बढ़ने से ध्वनि का वेग कितना बढ़ता है?",
+                opt_en: ["0.01 m/s", "0.61 m/s", "0.2 m/s", "None of these"],
+                opt_hi: ["0.01 m", "0.61 m", "0.2 m", "इनमें से कोई नहीं"],
+                ans: 1
+            },
+            {
+                q_en: "Progressive wave differs from stationary wave in that it:",
+                q_hi: "प्रगामी तरंग और अप्रगामी तरंग से भिन्न है-",
+                opt_en: ["Is absorbed by medium", "Transports energy", "In frequency", "In wavelength"],
+                opt_hi: ["इस गुण में कि यह माध्यम द्वारा अवशोषित होती है", "ऊर्जा में जो वहन करती है", "आवृत्ति में", "तरंग दैर्ध्य में"],
+                ans: 1
+            },
+            {
+                q_en: "The intensity of a sound wave in air is proportional to:",
+                q_hi: "हवा में ध्वनि तरंग की तीव्रता-",
+                opt_en: ["Square of frequency", "Square root of frequency", "Inverse of square root of freq", "Independent of frequency"],
+                opt_hi: ["आवृत्ति के वर्ग के अनुक्रमानुपाती होता है", "आवृत्ति के वर्गमूल के अनुक्रमानुपाती", "आवृत्ति के वर्गमूल के व्युत्क्रमानुपाती", "आवृत्ति से स्वतंत्र"],
+                ans: 0
+            },
+            {
+                q_en: "A major similarity between sound waves and light waves is:",
+                q_hi: "ध्वनि-तरंग तथा प्रकाश-तरंग में एक प्रमुख समानता है-",
+                opt_en: ["Velocity is same", "Both are transverse", "Both travel in vacuum", "Both show interference"],
+                opt_hi: ["वायु में इनका वेग समान है", "दोनों ही अनुप्रस्थ तरंग है", "दोनों निर्वात से होकर गति कर सकता है", "दोनों व्यतिकरण प्रदर्शित करता है"],
+                ans: 3
+            },
+            {
+                q_en: "When a sound wave is propagated, what is transported?",
+                q_hi: "जब ध्वनि तरंग का संचरण होता है तो संचरण होता है-",
+                opt_en: ["Particles of medium", "Energy", "Amplitude", "Mass"],
+                opt_hi: ["माध्यम के कण का", "ऊर्जा का", "आयाम का", "द्रव्यमान का"],
+                ans: 1
+            },
+            {
+                q_en: "Ratio of speed of sound in air at 4 atm and 1 atm pressure:",
+                q_hi: "4 तथा 1 वायुमंडलीय दाब पर वायु में ध्वनि के चाल का अनुपात होगा-",
+                opt_en: ["1 : 1", "1 : 4", "4 : 1", "3 : 4"],
+                opt_hi: ["1 : 1", "1 : 4", "4 : 1", "3 : 4"],
+                ans: 0
+            },
+            {
+                q_en: "The product of frequency and time period is:",
+                q_hi: "आवृत्ति और आवर्तकाल का गुणनफल होता है-",
+                opt_en: ["1", "2", "4", "8"],
+                opt_hi: ["1", "2", "4", "8"],
+                ans: 0
+            },
+            {
+                q_en: "Sound energy passing per second through a unit area is called:",
+                q_hi: "किसी एकांक क्षेत्रफल से एक सेकंड में गुजरने वाली ध्वनि ऊर्जा को कहते हैं-",
+                opt_en: ["Pitch", "Intensity", "Ultrasonic", "Sonar"],
+                opt_hi: ["ध्वनि का तारत्व", "ध्वनि की तीव्रता", "पराध्वनि", "सोनार"],
+                ans: 1
+            },
+            {
+                q_en: "In a stethoscope, sound of heartbeats travels through the tube by:",
+                q_hi: "एक स्टेथोस्कोप में हृदय के धड़कन की ध्वनि स्टेथोस्कोप नली में गमन करती है-",
+                opt_en: ["Like a sonic boom", "In a straight line", "By multiple reflection", "Bending in the tube"],
+                opt_hi: ["सोनिक बूम जैसा", "एक सरल रेखा में", "नली में बारंबार परावर्तन द्वारा", "नली में मुड़ जाने के कारण"],
+                ans: 2
+            },
+            {
+                q_en: "The part of the human ear filled with fluid is:",
+                q_hi: "मानव कान का वह भाग जो एक द्रव से भरा रहता है, वह है-",
+                opt_en: ["Cochlea", "Hammer", "Pinna", "Anvil"],
+                opt_hi: ["कर्णावर्त (Cochlea)", "मुग्दरक (Hammer)", "कर्ण पल्लव (Pinna)", "निहाई (Anvil)"],
+                ans: 0
+            },
+            {
+                q_en: "Sound is:",
+                q_hi: "ध्वनि है-",
+                opt_en: ["A form of force", "A form of volume", "A form of energy", "None is correct"],
+                opt_hi: ["बल का एक रूप", "आयतन का एकरूप", "ऊर्जा का एक रूप", "कोई सही नहीं है"],
+                ans: 2
+            },
+            {
+                q_en: "Longitudinal waves are composed of:",
+                q_hi: "अनुदैर्ध्य तरंग की रचना होती है-",
+                opt_en: ["One compression & one rarefaction", "One crest & one trough", "Both A and B", "None of these"],
+                opt_hi: ["एक संपीडन और एक विरलन से", "एक श्रृंग और एक गर्त से", "A तथा B दोनों से", "इनमें से कोई नहीं"],
+                ans: 0
+            },
+            {
+                q_en: "Motion of Transverse waves consists of:",
+                q_hi: "अनुप्रस्थ तरंग की गति-",
+                opt_en: ["Compression & Rarefaction", "Crest & Trough", "Only Compression", "Only Crest"],
+                opt_hi: ["संपीडन और विलयन के रूप में होती है", "श्रृंग और गर्त के रूप होती है", "केवल संपीडन में होती है", "केवल श्रृंग के रूप में होती है"],
+                ans: 1
+            },
+            {
+                q_en: "Distance between two consecutive compressions or rarefactions is:",
+                q_hi: "दो क्रमागत संपीडन अथवा दो क्रमागत विरलनों के बीच की दूरी होती है-",
+                opt_en: ["One Wavelength", "Half Wavelength", "One third Wavelength", "One fourth Wavelength"],
+                opt_hi: ["एक तरंग का तरंगदैर्ध्य", "एक तरंग के तरंगदैर्ध्य का आधा", "एक तरंग के तरंगदैर्ध्य का एक-तिहाई", "एक तरंग के तरंगदैर्ध्य का एक-चौथाई"],
+                ans: 0
+            },
+            {
+                q_en: "Distance between two consecutive crests or troughs is:",
+                q_hi: "दो क्रमिक श्रृंग अथवा गर्तों के बीच की दूरी होती है-",
+                opt_en: ["Wavelength", "Half Wavelength", "One fourth Wavelength", "None"],
+                opt_hi: ["तरंग का तरंगदैर्ध्य", "तरंग के तरंगदैर्ध्य का आधा", "एक तरंग के तरंगदैर्ध्य का एक-चौथाई", "इनमें से कोई नहीं"],
+                ans: 0
+            },
+            {
+                q_en: "Maximum displacement of vibrating particles from mean position is called:",
+                q_hi: "किसी माध्यम में किसी तरंग के कंपित कणों के माध्य स्थिति से महत्तम विस्थापन को कहते हैं-",
+                opt_en: ["Displacement", "Wavelength", "Amplitude", "Frequency"],
+                opt_hi: ["तरंग का विस्थापन", "तरंग का तरंगदैर्ध्य", "तरंग का आयाम", "तरंग की आवृत्ति"],
+                ans: 2
+            },
+            {
+                q_en: "Where can longitudinal waves be generated?",
+                q_hi: "अनुदैर्ध्य तरंग कहाँ उत्पन्न हो सकता है-",
+                opt_en: ["Solid, Liquid, Gas (All)", "Only Solids", "Only Liquids", "Only Gases"],
+                opt_hi: ["ठोस, द्रव, गैस तीनों में", "केवल ठोस में", "केवल द्रव में", "केवल गैस में"],
+                ans: 0
+            },
+            {
+                q_en: "Multiple reflection of sound is used in:",
+                q_hi: "ध्वनि के बहुलित परावर्तन का उपयोग निम्नलिखित में किसमें किया जाता है?",
+                opt_en: ["Stethoscope", "Megaphone", "Horn", "All of these"],
+                opt_hi: ["डॉक्टरी स्टेथोस्कोप में", "मेगाफोन में", "हॉर्न में", "सभी में"],
+                ans: 3
+            },
+            {
+                q_en: "Intensity of sound of a musical instrument is measured in:",
+                q_hi: "किसी संगीत यंत्र की ध्वनि तीव्रता मापी जाती है-",
+                opt_en: ["Mho", "Henry", "Lux", "Decibel"],
+                opt_hi: ["महो", "हेनरी", "लक्स", "डेसीबल"],
+                ans: 3
+            },
+            {
+                q_en: "Which property of sound is affected by change in air temperature?",
+                q_hi: "वायु के तापमान में परिवर्तन से ध्वनि का निम्नलिखित में से कौन-सा गुण प्रभावित होता है?",
+                opt_en: ["Wavelength", "Expansion", "Frequency", "Intensity"],
+                opt_hi: ["तरंगदैर्ध्य", "विस्तार", "आवृत्ति", "तीव्रता"],
+                ans: 0
+            },
+            {
+                q_en: "A person opens their mouth while hearing thunder to:",
+                q_hi: "मेघ गर्जना सुनने पर व्यक्ति अपना मुँह खोलता है, जिससे कि-",
+                opt_en: ["Overcome fear", "Equalize pressure on ear drum", "Receive more sound", "Let air out"],
+                opt_hi: ["डर को दूर कर सके", "दोनों कानों के कर्णपटल पर वायु के दाब को बराबर करने के लिए", "अधिक ध्वनि प्राप्त कर सके", "मुँह से वायु बाहर निकालने के लिए"],
+                ans: 1
+            },
+            {
+                q_en: "Instrument used to detect submerged objects:",
+                q_hi: "निमग्न वस्तुओं का पता लगाने के लिए प्रयुक्त किये जाने वाले उपकरण को कहते हैं-",
+                opt_en: ["RADAR", "SONAR", "Quasar", "Pulsar"],
+                opt_hi: ["राडार", "सोनार", "क्वासर", "स्पंदक"],
+                ans: 1
+            },
+            {
+                q_en: "Standard sound level for humans is:",
+                q_hi: "मनुष्यों के लिए मानक ध्वनि स्तर है-",
+                opt_en: ["90 dB", "60 dB", "120 dB", "100 dB"],
+                opt_hi: ["90 dB", "60 dB", "120 dB", "100 dB"],
+                ans: 1
+            },
+            {
+                q_en: "Acoustic science is related to:",
+                q_hi: "एकॉस्टिक (Acoustic) विज्ञान है-",
+                opt_en: ["Light", "Sound", "Climate", "Metal"],
+                opt_hi: ["प्रकाश से संबंधित", "ध्वनि से संबंधित", "जलवायु से संबंधित", "धातु से संबंधित"],
+                ans: 1
+            },
+            {
+                q_en: "Echo sounding is used for:",
+                q_hi: "इको साउण्डिंग का प्रयोग होता है-",
+                opt_en: ["Creating vibration", "Increasing frequency", "Measuring ocean depth", "None of these"],
+                opt_hi: ["ध्वनि में कम्पन उत्पन्न करने के लिए", "ध्वनि की आवृत्ति बढ़ाने के लिए", "समुद्र की गहराई मापने के लिए", "उपर्युक्त में से कोई नहीं"],
+                ans: 2
+            },
+            {
+                q_en: "Supersonic planes create a shock wave called:",
+                q_hi: "पराध्वनिक विमान ..... नामक एक प्रघाती तरंग पैदा करते हैं।",
+                opt_en: ["Transition wave", "Ultrasonic wave", "Transverse wave", "Sonic Boom"],
+                opt_hi: ["संक्रमण तरंग", "पराध्वनिक तरंग", "अनुप्रस्थ तरंग", "ध्वनि बूम (Sonic Boom)"],
+                ans: 3
+            },
+            {
+                q_en: "Device used for identification and tracking of sound waves:",
+                q_hi: "वह उपकरण जो ध्वनि तरंगों की पहचान तथा ऋजुरेखन के लिए प्रयुक्त है क्या कहलाता है?",
+                opt_en: ["Radar", "Sonar", "Pucker", "None"],
+                opt_hi: ["राडार", "सोनार", "पुकर", "उक्त में कोई नहीं"],
+                ans: 1
+            },
+            {
+                q_en: "Sound waves cannot travel in:",
+                q_hi: "ध्वनि तरंगें नहीं चल सकती हैं-",
+                opt_en: ["Solid medium", "Liquid medium", "Gaseous medium", "Vacuum"],
+                opt_hi: ["ठोस माध्यम में", "द्रव माध्यम में", "गैसीय माध्यम में", "निर्वात में"],
+                ans: 3
+            },
+            {
+                q_en: "Relation of sound speed in Air(a), Water(w), Steel(s):",
+                q_hi: "यदि Va, Vw, Vs क्रमशः वायु, जल एवं इस्पात में ध्वनि का वेग हो तो-",
+                opt_en: ["Va < Vw < Vs", "Vs < Vw < Va", "Vw < Vs < Va", "Vs < Va < Vw"],
+                opt_hi: ["Va < Vw < Vs", "Vs < Vw < Va", "Vw < Vs < Va", "Vs < Va < Vw"],
+                ans: 0
+            },
+            {
+                q_en: "Which waves cannot travel in vacuum?",
+                q_hi: "कौन-सी तरंगें शून्य में संचरण नहीं कर सकती हैं?",
+                opt_en: ["Light", "Heat", "Sound", "Electromagnetic"],
+                opt_hi: ["प्रकाश", "ऊष्मा", "ध्वनि", "इलेक्ट्रोमैग्नेटिक"],
+                ans: 2
+            },
+            {
+                q_en: "Biological method using ultrasonic sound is:",
+                q_hi: "एक जैव पद्धति जिसमें पराश्रव्य ध्वनि का उपयोग किया जाता है?",
+                opt_en: ["Sonography", "ECG", "EEG", "X-Ray"],
+                opt_hi: ["सोनोग्राफी", "ई.सी.जी.", "ई.ई.जी.", "एक्स-रे"],
+                ans: 0
+            },
+            {
+                q_en: "At approx 20°C, speed of sound is maximum in:",
+                q_hi: "लगभग 20°C के तापक्रम पर किस माध्यम में ध्वनि की गति अधिकतम रहेगी?",
+                opt_en: ["Air", "Granite", "Water", "Iron"],
+                opt_hi: ["हवा", "ग्रेनाइट", "पानी", "लोहा"],
+                ans: 3
+            },
+            {
+                q_en: "Jet flies at Mach 2. Sound speed 332 m/s. Jet speed?",
+                q_hi: "एक जेट वायुयान 2 मैक के वेग से हवा में उड़ रहा है। जब ध्वनि का वेग 332 मी./से. है तो वायुयान की चाल कितनी है?",
+                opt_en: ["166 m/s", "66.4 m/s", "332 m/s", "664 m/s"],
+                opt_hi: ["166 मी./से.", "66.4 मी./से.", "332 मी./से.", "664 मी./से."],
+                ans: 3
+            },
+            {
+                q_en: "In which of the following is speed of sound maximum?",
+                q_hi: "निम्नलिखित में से किस एक में ध्वनि चाल सबसे अधिक होती है?",
+                opt_en: ["Air at 0°C", "Air at 100°C", "Water", "Wood"],
+                opt_hi: ["0°C पर वायु में", "100°C पर वायु में", "जल में", "लकड़ी में"],
+                ans: 3
+            },
+            {
+                q_en: "Which wave is used in night vision devices?",
+                q_hi: "निम्नलिखित में से किस एक प्रकार की तरंग का प्रयोग रात्रि दृष्टि उपकरण में किया जाता है?",
+                opt_en: ["Radio wave", "Microwave", "Infrared wave", "None"],
+                opt_hi: ["रेडियो तरंग", "सूक्ष्म तरंग", "अवरक्त तरंग", "उपरोक्त में से कोई नहीं"],
+                ans: 2
+            },
+            {
+                q_en: "Which statement is NOT correct?",
+                q_hi: "निम्नलिखित में से कौन-सा एक सही नहीं है?",
+                opt_en: ["Sound in gases is longitudinal", "Freq < 20Hz is Ultrasonic", "Higher amplitude = louder sound", "High freq sound is shrill"],
+                opt_hi: ["गैसों में ध्वनि तरंगों की प्रकृति अनुदैर्ध्य होती है।", "20 हर्ट्ज से कम आवृत्ति की ध्वनि तरंगें पराश्रव्य तरंगें कहलाती हैं।", "उच्चतर आयामों वाली ध्वनि तरंगें अपेक्षाकृत प्रबल होती हैं।", "उच्च श्रव्य आवृत्तियों वाली ध्वनि तरंगें तीक्ष्ण होती हैं।"],
+                ans: 1
+            },
+            {
+                q_en: "Which statement is correct regarding speed of sound?",
+                q_hi: "निम्नलिखित कथनों में से कौन-सा सही है? ध्वनि का वेग-",
+                opt_en: ["Independent of medium nature", "Max in gas, min in liquid", "Max in solid, min in liquid", "Max in solid, min in gas"],
+                opt_hi: ["माध्यम की प्रकृति पर निर्भर नहीं करता है", "गैसों में अधिकतम और द्रवों में न्यूनतम होता है", "ठोसों में अधिकतम और द्रवों में न्यूनतम होता है", "ठोसों में अधिकतम और गैसों में न्यूनतम होता है"],
+                ans: 3
+            },
+            {
+                q_en: "Speed of sound is higher in humid air than dry air because:",
+                q_hi: "आर्द्र वायु में ध्वनि का वेग शुष्क वायु की तुलना में अधिक होता है, क्योंकि आर्द्र वायु में-",
+                opt_en: ["Density is higher than dry air", "Density is lower than dry air", "Pressure is higher", "Pressure is lower"],
+                opt_hi: ["शुष्क वायु की तुलना में घनत्व अधिक होता है।", "शुष्क वायु की तुलना में घनत्व कम होता है।", "शुष्क वायु की तुलना में दाब अधिक होता है।", "शुष्क वायु की तुलना में दाब कम होता है।"],
+                ans: 1
+            },
+            {
+                q_en: "Whistle pitch of approaching train increases due to:",
+                q_hi: "पास आती हुई रेलगाड़ी की सीटी की आवृत्ति या तीक्ष्णता बढ़ती जाती है, ऐसा किस घटना के कारण होता है?",
+                opt_en: ["Big Bang Theory", "Doppler Effect", "Charles Law", "Archimedes Rule"],
+                opt_hi: ["बिग बैंग सिद्धान्त", "डॉप्लर प्रभाव", "चार्ल्स नियम", "आर्किमिडीज का नियम"],
+                ans: 1
+            },
+            {
+                q_en: "Doppler effect is related to:",
+                q_hi: "डॉप्लर प्रभाव सम्बन्धित है-",
+                opt_en: ["Sound", "Population", "Psychology", "Currency"],
+                opt_hi: ["ध्वनि", "जनसंख्या", "मनोविज्ञान", "मुद्रा प्रचलन"],
+                ans: 0
+            },
+            {
+                q_en: "Fluctuation in frequency of a sound source is called:",
+                q_hi: "किसी ध्वनि स्रोत की आवृत्ति में होने वाले उतार-चढ़ाव को कहते हैं-",
+                opt_en: ["Raman Effect", "Doppler Effect", "Compton Effect", "Photoelectric Effect"],
+                opt_hi: ["रमन प्रभाव", "डॉप्लर प्रभाव", "क्रॉम्पटन प्रभाव", "प्रकाश-विद्युत प्रभाव"],
+                ans: 1
+            },
+            {
+                q_en: "We hear people talking in another room due to:",
+                q_hi: "जब हम कमरे के अंदर बैठे रहते हैं तो... हम बराबर के कमरे में बातचीत... सुन लेते हैं। इसका कारण है-",
+                opt_en: ["Reflection", "Refraction", "Interference", "Diffraction"],
+                opt_hi: ["परावर्तन", "अपवर्तन", "व्यतिकरण", "विवर्तन"],
+                ans: 3
+            },
+            {
+                q_en: "Silence zones in sea near lighthouses are due to:",
+                q_hi: "समुद्र में स्थान-स्थान पर... सायरन की ध्वनि सुनाई नहीं देती है। ये नीरव क्षेत्र ध्वनि तरंगों के किस गुण के कारण निर्मित होते हैं?",
+                opt_en: ["Reflection", "Interference", "Refraction", "Resonance"],
+                opt_hi: ["परावर्तन", "व्यतिकरण", "अपवर्तन", "अनुनाद"],
+                ans: 1
+            },
+            {
+                q_en: "Sound not heard at specific point with two loudspeakers due to:",
+                q_hi: "जब किसी स्थान पर दो लाउडस्पीकर साथ-साथ बजते हैं, तो किसी स्थान विशेष पर बैठे श्रोता को इनकी ध्वनि नहीं सुनाई देती है। इसका कारण है-",
+                opt_en: ["Reflection", "Interference", "Refraction", "Resonance"],
+                opt_hi: ["परावर्तन", "व्यतिकरण", "अपवर्तन", "अनुनाद"],
+                ans: 1
+            },
+            {
+                q_en: "Tuning a radio station is an example of:",
+                q_hi: "रेडियो का समस्वरण स्टेशन उदाहरण है-",
+                opt_en: ["Reflection", "Resonance", "Interference", "Refraction"],
+                opt_hi: ["परावर्तन", "अनुनाद", "व्यतिकरण", "अपवर्तन"],
+                ans: 1
+            },
+            {
+                q_en: "Specific sound heard while filling a pitcher under tap is due to:",
+                q_hi: "जब हम जल के नीचे सुराही भरने के लिए रखते हैं तो जैसे-जैसे सुराही भरती जाती है वैसे-वैसे हमें विशेष प्रकार की ध्वनि सुनाई देती है। इसका कारण है-",
+                opt_en: ["Diffraction", "Interference", "Resonance", "Reflection"],
+                opt_hi: ["विवर्तन", "व्यतिकरण", "अनुनाद", "परावर्तन"],
+                ans: 2
+            },
+            {
+                q_en: "Tansen singing breaking glass is due to which property?",
+                q_hi: "कहा जाता है कि जब तानसेन गाता था तो खिड़की के कांच... के टुकड़े-टुकड़े हो जाते थे। यदि ऐसा संभव भी हो तो वह ध्वनि के किस गुण के कारण होगा?",
+                opt_en: ["Reflection", "Refraction", "Resonance", "Interference"],
+                opt_hi: ["परावर्तन", "अपवर्तन", "अनुनाद", "व्यतिकरण"],
+                ans: 2
+            },
+            {
+                q_en: "We hear different stations by turning radio knob due to:",
+                q_hi: "हम रेडियो की घुण्डी घुमाकर विभिन्न स्टेशनों के कार्यक्रम सुनते हैं। यह सम्भव है-",
+                opt_en: ["Resonance", "Beats", "Interference", "Diffraction"],
+                opt_hi: ["अनुनाद के कारण", "विस्पन्द के कारण", "व्यतिकरण के कारण", "विवर्तन के कारण"],
+                ans: 0
+            },
+            {
+                q_en: "Troops break step on bridge to avoid collapse due to:",
+                q_hi: "जब सेना पुल को पार करती है तो सैनिकों को कदम से कदम मिलाकर न चलने का निर्देश दिया जाता है, क्योंकि-",
+                opt_en: ["Pressure risk", "Resonance risk", "Doppler risk", "None"],
+                opt_hi: ["दाब बढ़ने से पुल टूटने का खतरा रहता है।", "पैरों से उत्पन्न ध्वनि के अनुनाद के कारण पुल टूटने का खतरा रहता है।", "डॉप्लर प्रभाव के कारण पुल टूटने का खतरा रहता है।", "इनमें से कोई नहीं"],
+                ans: 1
+            },
+            {
+                q_en: "Reverberation time of a Dead Hall is:",
+                q_hi: "गूंजहीन हॉल (Dead Hall) का अनुरणन काल होता है-",
+                opt_en: ["Zero seconds", "0.8 seconds", "1.8 seconds", "8 seconds"],
+                opt_hi: ["शून्य सेकण्ड", "0-8 सेकण्ड", "1.8 सेकण्ड", "8 सेकण्ड"],
+                ans: 0
+            }
+        ];
+
+        // --- 4. Quiz Logic ---
+        let currentQuestions = [];
+        let currentIndex = 0;
+        let score = 0;
+        let correctCount = 0;
+        let wrongCount = 0;
+        let timerInterval;
+        let timeLeft = 0;
+        let initialTime = 0;
+        let isProcessing = false;
+
+        function startQuiz() {
+            // Get settings
+            const timeInput = document.getElementById('time-input').value;
+            initialTime = timeInput ? parseInt(timeInput) : 0;
+            const shuffle = document.getElementById('shuffle-toggle').checked;
+
+            // Prepare questions
+            currentQuestions = [...rawQuestions];
+            if(shuffle) {
+                currentQuestions.sort(() => Math.random() - 0.5);
+            }
+            
+            // Reset states
+            currentIndex = 0;
+            score = 0;
+            correctCount = 0;
+            wrongCount = 0;
+            isProcessing = false;
+
+            // UI Transitions
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('quiz-ui').classList.remove('hidden');
+            document.getElementById('result-screen').classList.add('hidden');
+            
+            // Start
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            if (currentIndex >= currentQuestions.length) {
+                finishEarly();
+                return;
+            }
+
+            const q = currentQuestions[currentIndex];
+            const total = currentQuestions.length;
+
+            // Update Header
+            document.getElementById('q-counter').innerText = `Q: ${(currentIndex + 1).toString().padStart(2, '0')}/${total}`;
+            document.getElementById('score-live').innerText = `Score: ${score}`;
+            
+            // Update Progress Bar
+            const percent = ((currentIndex) / total) * 100;
+            document.getElementById('progress').style.width = `${percent}%`;
+
+            // Render Question
+            document.getElementById('q-en-text').innerText = q.q_en;
+            document.getElementById('q-hi-text').innerText = q.q_hi;
+
+            // Render Options
+            const optsContainer = document.getElementById('options-container');
+            optsContainer.innerHTML = '';
+            
+            q.opt_en.forEach((opt, idx) => {
+                const btn = document.createElement('div');
+                btn.className = 'option-btn';
+                btn.onclick = () => checkAnswer(idx, btn);
+                btn.innerHTML = `
+                    <span class="opt-en">${String.fromCharCode(65+idx)}. ${opt}</span>
+                    <span class="opt-hi">${q.opt_hi[idx]}</span>
+                `;
+                optsContainer.appendChild(btn);
+            });
+
+            // Handle Timer
+            clearInterval(timerInterval);
+            const timerBox = document.getElementById('timer-box');
+            const timerDisplay = document.getElementById('timer-display');
+            
+            timerBox.classList.remove('timer-pulse');
+            
+            if (initialTime > 0) {
+                timeLeft = initialTime;
+                timerBox.style.display = 'flex';
+                timerDisplay.innerText = timeLeft + 's';
+                
+                timerInterval = setInterval(() => {
+                    timeLeft--;
+                    timerDisplay.innerText = timeLeft + 's';
+                    
+                    if(timeLeft <= 5) timerBox.classList.add('timer-pulse');
+                    
+                    if(timeLeft <= 0) {
+                        clearInterval(timerInterval);
+                        // Time's up behavior: Mark as wrong/skipped and move on
+                        highlightCorrect(q.ans);
+                        playSound('wrong');
+                        wrongCount++; // Count as wrong/missed
+                        setTimeout(nextQuestion, 1500);
+                    }
+                }, 1000);
+            } else {
+                timerBox.style.display = 'none';
+            }
+            
+            isProcessing = false;
+        }
+
+        function checkAnswer(selectedIdx, btnElement) {
+            if(isProcessing) return;
+            isProcessing = true;
+            clearInterval(timerInterval);
+
+            const correctIdx = currentQuestions[currentIndex].ans;
+            const allBtns = document.querySelectorAll('.option-btn');
+
+            // Disable all clicks
+            allBtns.forEach(b => b.style.pointerEvents = 'none');
+
+            if(selectedIdx === correctIdx) {
+                // Correct
+                btnElement.classList.add('correct');
+                playSound('correct');
+                triggerConfetti();
+                score += 2; // Arbitrary scoring
+                correctCount++;
+            } else {
+                // Wrong
+                btnElement.classList.add('wrong');
+                highlightCorrect(correctIdx);
+                playSound('wrong');
+                showEmoji('😢');
+                wrongCount++;
+            }
+
+            setTimeout(nextQuestion, 1500);
+        }
+
+        function highlightCorrect(idx) {
+            const allBtns = document.querySelectorAll('.option-btn');
+            if(allBtns[idx]) allBtns[idx].classList.add('correct');
+        }
+
+        function showEmoji(char) {
+            const el = document.createElement('div');
+            el.className = 'feedback-emoji';
+            el.innerText = char;
+            document.body.appendChild(el);
+            setTimeout(() => el.remove(), 1000);
+        }
+
+        function nextQuestion() {
+            currentIndex++;
+            loadQuestion();
+        }
+
+        function finishEarly() {
+            clearInterval(timerInterval);
+            const totalQs = currentQuestions.length;
+            const attempted = correctCount + wrongCount;
+            const skipped = totalQs - attempted;
+            
+            // Calculate Percentage based on Correct vs Total Questions
+            // Standard academic logic: (Correct / Total) * 100
+            const percentage = Math.round((correctCount / totalQs) * 100);
+
+            // Hide Quiz, Show Result
+            document.getElementById('quiz-ui').classList.add('hidden');
+            document.getElementById('result-screen').classList.remove('hidden');
+
+            // Update Stats
+            document.getElementById('final-score').innerText = `${percentage}%`;
+            document.getElementById('total-q').innerText = totalQs;
+            document.getElementById('correct-a').innerText = correctCount;
+            document.getElementById('wrong-a').innerText = wrongCount;
+            document.getElementById('skipped-a').innerText = skipped;
+
+            // Message
+            const msgEl = document.getElementById('result-msg');
+            if(percentage >= 80) {
+                msgEl.innerText = "🏆 Outstanding Performance!";
+                msgEl.style.color = "#2ecc71";
+                triggerConfetti(); // Extra confetti for high score
+            } else if (percentage >= 50) {
+                msgEl.innerText = "👏 Well Done! Keep it up.";
+                msgEl.style.color = "#f1c40f";
+            } else {
+                msgEl.innerText = "📚 Practice makes perfect!";
+                msgEl.style.color = "#e74c3c";
+            }
+        }
+    </script>
+</body>
+</html>

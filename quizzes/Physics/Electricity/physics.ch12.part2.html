@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Physics Quiz (51-100) | Bilingual</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --text-main: #ffffff;
+            --text-hindi: #dddddd;
+            --accent-green: #00e676;
+            --accent-red: #ff1744;
+            --mesh-1: #667eea;
+            --mesh-2: #764ba2;
+            --mesh-3: #ff512f;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            background: #0f0c29;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--text-main);
+            overflow-x: hidden;
+            padding: 15px;
+        }
+
+        /* Animated Mesh Background */
+        .bg-mesh {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: 
+                radial-gradient(at 0% 0%, rgba(102, 126, 234, 0.6) 0px, transparent 50%),
+                radial-gradient(at 100% 0%, rgba(255, 81, 47, 0.6) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(118, 75, 162, 0.6) 0px, transparent 50%),
+                radial-gradient(at 0% 100%, rgba(36, 198, 220, 0.6) 0px, transparent 50%);
+            z-index: -1;
+            filter: blur(40px);
+            animation: meshMove 20s infinite alternate;
+        }
+        @keyframes meshMove { 0% { transform: scale(1); } 100% { transform: scale(1.1); } }
+
+        /* Glass Card */
+        .quiz-container {
+            width: 100%;
+            max-width: 800px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid var(--glass-border);
+            border-radius: 25px;
+            padding: 25px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        /* Progress Bar */
+        .progress-track {
+            position: absolute; top: 0; left: 0; width: 100%; height: 5px;
+            background: rgba(255,255,255,0.1);
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00c6ff, #0072ff);
+            width: 0%;
+            transition: width 0.4s ease;
+            box-shadow: 0 0 10px rgba(0, 114, 255, 0.7);
+        }
+
+        /* Header Stats */
+        .header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 25px; font-weight: 600; font-size: 0.95rem;
+        }
+        .timer-badge {
+            background: rgba(0,0,0,0.3); padding: 5px 15px; border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; gap: 8px;
+        }
+        .timer-text.pulse { color: var(--accent-red); animation: pulse 1s infinite; }
+
+        /* Questions */
+        .question-box { margin-bottom: 25px; }
+        .q-en { font-size: 1.25rem; font-weight: 700; margin-bottom: 6px; line-height: 1.3; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+        .q-hi { font-size: 1.05rem; color: var(--text-hindi); font-weight: 400; line-height: 1.4; opacity: 0.9; }
+
+        /* Options */
+        .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        @media (max-width: 600px) { .options-grid { grid-template-columns: 1fr; } }
+
+        .option-btn {
+            background: rgba(255,255,255,0.07);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 15px; border-radius: 15px;
+            color: white; cursor: pointer; text-align: left;
+            transition: all 0.2s; position: relative; overflow: hidden;
+        }
+        .option-btn:hover:not(:disabled) { background: rgba(255,255,255,0.2); transform: translateY(-2px); }
+        .option-btn .opt-en { display: block; font-weight: 600; font-size: 1rem; margin-bottom: 3px; }
+        .option-btn .opt-hi { display: block; font-size: 0.85rem; color: #ccc; }
+
+        /* Feedback Colors */
+        .correct { background: rgba(0, 230, 118, 0.25) !important; border-color: var(--accent-green) !important; box-shadow: 0 0 15px rgba(0, 230, 118, 0.3); }
+        .wrong { background: rgba(255, 23, 68, 0.25) !important; border-color: var(--accent-red) !important; }
+
+        /* Controls */
+        .btn-primary {
+            background: linear-gradient(90deg, #ff512f, #dd2476);
+            border: none; padding: 14px 30px; color: white; border-radius: 50px;
+            font-weight: 600; cursor: pointer; margin-top: 25px; width: 100%;
+            font-size: 1.1rem; box-shadow: 0 4px 15px rgba(221, 36, 118, 0.4);
+            transition: transform 0.2s;
+        }
+        .btn-primary:active { transform: scale(0.98); }
+        .btn-secondary { background: #444; margin-top: 15px; font-size: 0.9rem; padding: 10px; }
+
+        /* Screens */
+        .screen { display: none; text-align: center; }
+        .screen.active { display: block; animation: fadeIn 0.5s; }
+        
+        .input-group { margin: 20px auto; display: flex; flex-direction: column; gap: 12px; width: 100%; max-width: 300px; }
+        input[type="number"] {
+            background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2);
+            padding: 12px; border-radius: 12px; color: white; text-align: center; font-size: 1.1rem;
+        }
+        .toggle-row { display: flex; justify-content: center; align-items: center; gap: 10px; cursor: pointer; }
+        
+        /* Animations */
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); } 75% { transform: translateX(5px); }
+        }
+        .shake { animation: shake 0.4s ease-in-out; }
+
+        /* Confetti */
+        .confetti {
+            position: fixed; width: 10px; height: 10px; top: -10px; z-index: 9999;
+            animation: fall linear forwards;
+        }
+        @keyframes fall { to { transform: translateY(105vh) rotate(720deg); } }
+
+        /* Overlay Emoji */
+        #feedback-overlay {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 6rem; pointer-events: none; opacity: 0; transition: opacity 0.2s; z-index: 100;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="bg-mesh"></div>
+
+    <div class="quiz-container">
+        <div class="progress-track"><div class="progress-fill" id="progressBar"></div></div>
+
+        <div id="startScreen" class="screen active">
+            <h1 style="line-height:1.2; margin-bottom:5px;">Physics Quiz</h1>
+            <h3 style="color:#ccc; font-weight:400; margin-bottom:25px;">विधुत और चुम्बकत्व (Q51-100)</h3>
+            
+            <div class="input-group">
+                <label style="font-size:0.9rem;">Timer (Seconds per Question)</label>
+                <input type="number" id="timerInput" placeholder="0 for no timer" min="0">
+                
+                <label class="toggle-row">
+                    <input type="checkbox" id="shuffleInput" style="width:20px; height:20px;">
+                    <span>Shuffle Questions / प्रश्न मिलाएं</span>
+                </label>
+            </div>
+            
+            <button class="btn-primary" onclick="app.start()">Start Quiz</button>
+        </div>
+
+        <div id="quizScreen" class="screen" style="text-align: left;">
+            <div class="header">
+                <span>Q: <span id="currQ">1</span>/<span id="totalQ">50</span></span>
+                <div class="timer-badge" id="timerBadge">
+                    <span>⏱</span> <span id="timerText">00</span>
+                </div>
+                <span>Score: <span id="scoreVal">0</span></span>
+            </div>
+
+            <div class="question-box">
+                <div class="q-en" id="qTextEn"></div>
+                <div class="q-hi" id="qTextHi"></div>
+            </div>
+
+            <div class="options-grid" id="optionsBox"></div>
+
+            <button class="btn-primary btn-secondary" onclick="app.finishEarly()">Finish & Show Results / समाप्त करें</button>
+            
+            <div id="feedback-overlay"></div>
+        </div>
+
+        <div id="resultScreen" class="screen">
+            <div id="resultEmoji" style="font-size: 5rem; margin-bottom: 10px;"></div>
+            <h2 id="resultTitle"></h2>
+            <h1 style="font-size: 3.5rem; margin: 15px 0; color: var(--accent-green);" id="finalScore"></h1>
+            <p id="resultMsg" style="color: #ddd; margin-bottom: 25px;"></p>
+            <button class="btn-primary" onclick="location.reload()">Restart Quiz</button>
+        </div>
+    </div>
+
+<script>
+    // --- QUESTIONS DATA (51-100) ---
+    const questionData = [
+        { id: 51, qEn: "Why is air completely removed from an electric bulb?", qHi: "बिजली के बल्ब से हवा पूरी तरह से क्यों निकाल दी जाती है ?", opts: [{en:"Prevent oxidation of tungsten", hi:"टंगस्टन तन्तु के उपचयन को रोकने के लिए"}, {en:"Prevent bursting", hi:"बल्ब के फूट जाने को रोकने के लिए"}, {en:"Prevent light loss", hi:"अवशोषण के कारण प्रकाश की हानि को रोकने के लिए"}, {en:"None", hi:"उपर्युक्त में से कोई नहीं"}], ans: 0 },
+        { id: 52, qEn: "Why is there a loud noise when a bulb breaks?", qHi: "बल्ब को तोड़ने पर तेज आवाज होती है, क्योंकि-", opts: [{en:"Air rushes into vacuum", hi:"बल्ब के अन्दर निर्वात में वायु तेजी से प्रवेश करती है।"}, {en:"Explosive gas inside", hi:"बल्ब के अन्दर विस्फोटक गैस होती है।"}, {en:"Filament reacts with air", hi:"बल्ब का फिलामेन्ट वायु से क्रिया करता है।"}, {en:"Gas expands", hi:"बल्ब के अंदर की गैस अचानक प्रसारित होती है"}], ans: 0 },
+        { id: 53, qEn: "The filament of an electric bulb is made of:", qHi: "बिजली के बल्ब का फिलामेन्ट किस तत्व से बना होता है ?", opts: [{en:"Copper", hi:"कॉपर"}, {en:"Iron", hi:"आयरन"}, {en:"Lead", hi:"लेड"}, {en:"Tungsten", hi:"टंगस्टन"}], ans: 3 },
+        { id: 54, qEn: "Which properties are necessary for a Fuse Wire?", qHi: "एक बिजली के फ्यूज तार (Fuse Wire) में... कौन से गुण समूह का होना आवश्यक है ?", opts: [{en:"Thick wire, High MP", hi:"मोटा तार, उच्च गलनांक"}, {en:"Thick wire, Low MP", hi:"मोटा तार, निम्न गलनांक"}, {en:"Low MP, High Resistance", hi:"कम लम्बाई, निम्न गलनांक की मिश्रधातु, पतली तार"}, {en:"High MP, Low Resistance", hi:"अधिक लम्बाई, निम्न गलनांक"}], ans: 2 },
+        { id: 55, qEn: "Fuse wire is generally made of an alloy of:", qHi: "सामान्यतः प्रयुक्त सुरक्षा फ्यूज तार बनायी जाती है-", opts: [{en:"Tin and Nickel", hi:"टिन और निकिल की मिश्रधातु से"}, {en:"Lead and Iron", hi:"लेड और लोहे के मिश्रधातु से"}, {en:"Nickel and Lead", hi:"निकिल और लेड की मिश्रधातु से"}, {en:"Tin and Lead", hi:"टिन और लेड की मिश्रधातु से"}], ans: 3 },
+        { id: 56, qEn: "The principle of Fuse is:", qHi: "फ्यूज (Fuse) का सिद्धान्त है-", opts: [{en:"Chemical effect", hi:"विधुत का रासायनिक प्रभाव"}, {en:"Mechanical effect", hi:"विधुत का यांत्रिक प्रभाव"}, {en:"Heating effect", hi:"विधुत का ऊष्मीय प्रभाव"}, {en:"Magnetic effect", hi:"विधुत का चुम्बकीय प्रभाव"}], ans: 2 },
+        { id: 57, qEn: "A fuse wire is used in an electric circuit to:", qHi: "एक विधुत सर्किट में एक फ्यूज तार का उपयोग किया जाता है-", opts: [{en:"Reduce energy loss", hi:"संचारण में विधुत ऊर्जा के खर्च को कम करने के लिए"}, {en:"Keep voltage steady", hi:"वोल्टेज के स्तर को स्थिर रखने के लिए"}, {en:"Prevent excessive current", hi:"सर्किट में प्रवाहित होने वाले अधिक विधुत धारा को रोकने के लिए"}, {en:"Prevent overheating", hi:"विधुत तार को अधिक गर्म होने से बचाने के लिए"}], ans: 2 },
+        { id: 58, qEn: "Which statement is correct regarding a fuse in domestic supply?", qHi: "बिजली सप्लाई के मेंस में फ्यूज... के संबंध में कौन-सा कथन सही है ?", opts: [{en:"Connected in parallel", hi:"यह मेन्स स्विच के साथ समानान्तर में संयोजित होता है।"}, {en:"Made of silver", hi:"यह मुख्यतः सिल्वर मिश्रधातुओं से बना होता है।"}, {en:"Low melting point", hi:"इसका गलनांक निम्न होता है।"}, {en:"Very high resistance", hi:"इसका प्रतिरोध अति उच्च होता है।"}], ans: 2 },
+        { id: 59, qEn: "A fuse wire is identified by these characteristics:", qHi: "एक फ्यूज की तार को इन लक्षणों के कारण पहचाना जाता है ?", opts: [{en:"Low resistivity, High MP", hi:"न्यूनतम प्रतिरोधकता तथा उच्च गलनांक"}, {en:"High resistivity, High MP", hi:"उच्च प्रतिरोधकता तथा उच्च गलनांक"}, {en:"High resistivity, Low MP", hi:"उच्च प्रतिरोधकता तथा निम्न गलनांक"}, {en:"Low resistivity, Low MP", hi:"न्यूनतम प्रतिरोधकता तथा न्यूनतम गलनांक"}], ans: 2 },
+        { id: 60, qEn: "Safety fuse wire used in domestic appliances is made of metal with:", qHi: "घरेलू विधुत उपकरणों में प्रयुक्त सुरक्षा फ्यूज तार उस धातु से बनी होती है, जिसका-", opts: [{en:"Low Resistance", hi:"प्रतिरोध कम हो"}, {en:"Low Melting Point", hi:"गलनांक कम हो"}, {en:"Low Specific Density", hi:"विशिष्ट घनत्व कम हो"}, {en:"Low Conductance", hi:"चालकत्व कम हो"}], ans: 1 },
+        { id: 61, qEn: "A fuse wire is used for:", qHi: "एक फ्यूज तार का उपयोग.... के लिए होता है", opts: [{en:"Pass high current without loss", hi:"हानि पहुंचाए बिना उच्च विधुत धारा को प्रवाहित करना"}, {en:"Break circuit on high current", hi:"अत्यधिक धारा प्रवाह के समय विधुत परिपथ को तोड़ने"}, {en:"Protect from shock", hi:"किसी व्यक्ति को विधुत झटकों से बचाने"}, {en:"None", hi:"इनमें से कोई नहीं"}], ans: 1 },
+        { id: 62, qEn: "Wire of length L is stretched to 2L. New resistance will be:", qHi: "एक तार की लम्बाई L मीटर है, तार को खींचकर उसकी लम्बाई 2L मीटर कर दी जाती है, अब तार का प्रतिरोध हो जाएगा-", opts: [{en:"Double", hi:"पहले का दोगुना"}, {en:"Four times", hi:"पहले का चार गुना"}, {en:"One fourth", hi:"पहले का एक चौथाई"}, {en:"Unchanged", hi:"अपरिवर्तित रहेगा"}], ans: 1 },
+        { id: 63, qEn: "SI unit of Specific Resistance (Resistivity) is:", qHi: "विशिष्ट प्रतिरोध का SI मात्रक है-", opts: [{en:"Ohm", hi:"ओम"}, {en:"Ohm-meter", hi:"ओम-मीटर"}, {en:"Ohm/meter", hi:"ओम/मीटर"}, {en:"Ohm/meter²", hi:"ओम/मीटर²"}], ans: 1 },
+        { id: 64, qEn: "What does Ohm's law define?", qHi: "ओम का नियम क्या परिभाषित करता है ?", opts: [{en:"Resistance", hi:"प्रतिरोध"}, {en:"Current only", hi:"केवल धारा"}, {en:"Voltage only", hi:"केवल वोल्टा"}, {en:"Both Current and Voltage", hi:"धारा और वोल्टा दोनों"}], ans: 3 },
+        { id: 65, qEn: "If the radius of a wire is halved, its resistance becomes:", qHi: "यदि किसी तार की त्रिज्या आधी कर दी जाए तो इसका प्रतिरोध-", opts: [{en:"Half", hi:"आधा रह जाएगा"}, {en:"Double", hi:"दुगना हो जाएगा"}, {en:"One fourth", hi:"एक चौथाई रह जाएगा"}, {en:"Sixteen times", hi:"सोलह गुना हो जाएगा"}], ans: 3 },
+        { id: 66, qEn: "PD across a conductor is proportional to current. Whose law?", qHi: "“किसी चालक के सिरों के बीच विभवान्तर उसमें बहने वाली धारा के समानुपाती होता है ।” यह नियम है-", opts: [{en:"Coulomb's Law", hi:"कूलॉम का नियम"}, {en:"Faraday's Law", hi:"फैराडे का नियम"}, {en:"Joule's Law", hi:"जूल का नियम"}, {en:"Ohm's Law", hi:"ओम का नियम"}], ans: 3 },
+        { id: 67, qEn: "Fans and bulbs in houses are connected in:", qHi: "घरों में लगे पंखे, बल्ब आदि लगे होते हैं-", opts: [{en:"Series", hi:"श्रेणी क्रम में"}, {en:"Mixed", hi:"मिश्रित क्रम में"}, {en:"Parallel", hi:"समानान्तर क्रम में"}, {en:"Any order", hi:"किसी भी क्रम में"}], ans: 2 },
+        { id: 68, qEn: "The unit of Resistance is:", qHi: "प्रतिरोध (Resistance) का मात्रक है-", opts: [{en:"Ampere", hi:"एम्पीयर"}, {en:"Coulomb", hi:"कूलॉम"}, {en:"Henry", hi:"हेनरी"}, {en:"Ohm", hi:"ओम"}], ans: 3 },
+        { id: 69, qEn: "R = 440 Ohm, V = 110V. Current I = ?", qHi: "एक चालक का प्रतिरोध 440 ओम है। यदि इसे 110 वोल्ट के स्त्रोत से जोड़ा जाए तो इससे कितनी धारा प्रवाहित होगी ?", opts: [{en:"0.5A", hi:"0.5A"}, {en:"0.25A", hi:"0.25A"}, {en:"4A", hi:"4A"}, {en:"1.25A", hi:"1.25A"}], ans: 1 },
+        { id: 70, qEn: "Algebraic sum of currents meeting at a point in a circuit is:", qHi: "किसी परिपथ में एक बिन्दु पर मिलने वाली धाराओं का बीजीय योग होता है-", opts: [{en:"Infinity", hi:"अनंत"}, {en:"Zero", hi:"शून्य"}, {en:"Between 0 and infinity", hi:"शून्य व अनंत के बीच"}, {en:"None", hi:"उपर्युक्त में से कोई नहीं"}], ans: 1 },
+        { id: 71, qEn: "Resistance of an Ideal Voltmeter is:", qHi: "आदर्श वोल्टमीटर की प्रतिरोधिता (Resistance) कितनी होती है?", opts: [{en:"Zero", hi:"शून्य"}, {en:"Low", hi:"निम्न"}, {en:"Infinite", hi:"असीमित"}, {en:"High", hi:"उच्च"}], ans: 2 },
+        { id: 72, qEn: "Current does not flow between two charged bodies if they have same:", qHi: "आपस में जुड़ी दो आवेशित वस्तुओं के बीच विधुत धारा नहीं प्रवाहित होती है, यदि वे हों-", opts: [{en:"Charge", hi:"समान आवेश पर"}, {en:"Capacity", hi:"समान धारिता पर"}, {en:"Resistivity", hi:"समान प्रतिरोधिता पर"}, {en:"Potential", hi:"समान विभव पर"}], ans: 3 },
+        { id: 73, qEn: "Unit of Electric Current is:", qHi: "इलेक्ट्रिक करेंट का यूनिट निम्नलिखित में से कौन-सा है ?", opts: [{en:"Kelvin", hi:"केल्विन"}, {en:"Mole", hi:"मोल"}, {en:"Candela", hi:"केन्डेला"}, {en:"Ampere", hi:"एम्पीयर"}], ans: 3 },
+        { id: 74, qEn: "Force between two electric charges is related to:", qHi: "दो विधुत आवेशों के बीच लगने वाले बल से सम्बन्धित है-", opts: [{en:"Ampere's Law", hi:"एम्पियर का नियम"}, {en:"Coulomb's Law", hi:"कूलॉम का नियम"}, {en:"Faraday's Law", hi:"फैराडे का नियम"}, {en:"Ohm's Law", hi:"ओम का नियम"}], ans: 1 },
+        { id: 75, qEn: "If distance between two charges is halved, force becomes:", qHi: "यदि दो विधुत आवेशों के मध्य दूरी को आधा कर दिया जाए तो उनके मध्य विधुत बल का मान हो जाएगा-", opts: [{en:"Half", hi:"आधा"}, {en:"Double", hi:"दूना"}, {en:"Four times", hi:"चौगुना"}, {en:"One fourth", hi:"एक चौथाई"}], ans: 2 },
+        { id: 76, qEn: "Like charges have:", qHi: "समान आवेशों में होता है-", opts: [{en:"Attraction", hi:"आकर्षण"}, {en:"Adhesion", hi:"आसंजन"}, {en:"Repulsion", hi:"विकर्षण"}, {en:"Cohesion", hi:"संसंजन"}], ans: 2 },
+        { id: 77, qEn: "Ebonite rod rubbed with cat skin becomes:", qHi: "जब एबोनाइट की छड़ को बिल्ली की खाल से रगड़ते हैं तो एबोनाइट की छड़-", opts: [{en:"Negatively charged", hi:"ऋणावेशित हो जाती है"}, {en:"Positively charged", hi:"धनावेशित हो जाती है"}, {en:"Neutral", hi:"उदासीन रहती है"}, {en:"First - then +", hi:"पहले ऋणावेशित होती है फिर धनावेशित"}], ans: 0 },
+        { id: 78, qEn: "Objects get charged due to transfer of:", qHi: "वस्तुओं का आवेशन किसके स्थानान्तरण के फलस्वरूप होता है-", opts: [{en:"Electron", hi:"इलेक्ट्रॉन"}, {en:"Positron", hi:"पोजिट्रॉन"}, {en:"Proton", hi:"प्रोटॉन"}, {en:"Neutron", hi:"न्यूट्रॉन"}], ans: 0 },
+        { id: 79, qEn: "If lightning strikes while you are in a car, to be safe you should:", qHi: "आप कार में जा रहे हैं। यदि आसमान से बिजली गिरने वाली हो तो सुरक्षित रहने के लिए-", opts: [{en:"Close windows", hi:"कार की खिड़कियाँ बन्द कर लेंगे"}, {en:"Open windows", hi:"कार की खिड़कियाँ खोल देंगे"}, {en:"Get out", hi:"कार से उतरकर नीचे बैठ जाएंगे"}, {en:"Sit on top", hi:"कार के ऊपर बैठ जाएंगे"}], ans: 0 },
+        { id: 80, qEn: "Force between two static charges is proportional to product and inverse square of distance. Law?", qHi: "“दो स्थिर आवेशों के बीच लगने वाला बल... वर्ग के व्युत्क्रमानुपाती होता है।”", opts: [{en:"Ohm's Law", hi:"ओम का नियम"}, {en:"Kirchhoff's Law", hi:"किरचॉफ का नियम"}, {en:"Coulomb's Law", hi:"कूलॉम का नियम"}, {en:"Faraday's Law", hi:"फैराडे का नियम"}], ans: 2 },
+        { id: 81, qEn: "Work done to move unit positive charge between two points is measure of:", qHi: "किसी विधुत परिपथ में इकाई धन आवेश को एक बिन्दु से दूसरे बिन्दु तक... कार्य द्वारा मापा जाता है-", opts: [{en:"Resistance", hi:"प्रतिरोध को"}, {en:"Potential Difference", hi:"विभवान्तर को"}, {en:"Current", hi:"धारा का"}, {en:"Current intensity", hi:"विधुत धारा की प्रबलता की"}], ans: 1 },
+        { id: 82, qEn: "Metals are good conductors of electricity because:", qHi: "धातुएं विधुत की सुचालक होती है, क्योंकि-", opts: [{en:"Free electrons", hi:"उनमें मुक्त इलेक्ट्रॉन होते हैं"}, {en:"Atoms are light", hi:"उनके परमाणु हल्के होते हैं"}, {en:"High melting point", hi:"उनका गलनांक ऊंचा होता है"}, {en:"All above", hi:"उपर्युक्त सभी"}], ans: 0 },
+        { id: 83, qEn: "Which of the following is the best conductor of electricity?", qHi: "निम्नलिखित में से कौन सर्वोत्तम विधुत चालक है ?", opts: [{en:"Copper", hi:"तांबा"}, {en:"Iron", hi:"लोहा"}, {en:"Aluminium", hi:"एल्युमीनियम"}, {en:"Silver", hi:"चांदी"}], ans: 3 },
+        { id: 84, qEn: "Which is NOT a semiconductor?", qHi: "निम्नलिखित में अर्द्धचालक नहीं है ?", opts: [{en:"Germanium", hi:"जर्मेनियम"}, {en:"Silicon", hi:"सिलिकॉन"}, {en:"Selenium", hi:"सेलेनियम"}, {en:"Arsenic", hi:"आर्सेनिक"}], ans: 3 },
+        { id: 85, qEn: "Materials with no free electrons usually, but develop them at high temp/impurity:", qHi: "ऐसे पदार्थ जिनमें... मुक्त इलेक्ट्रॉन प्राप्त किये जा सकते हैं कहलाते हैं-", opts: [{en:"Conductor", hi:"सुचालक पदार्थ"}, {en:"Insulator", hi:"कुचालक पदार्थ"}, {en:"Non-conductor", hi:"अचालक पदार्थ"}, {en:"Semiconductor", hi:"अर्द्धचालक पदार्थ"}], ans: 3 },
+        { id: 86, qEn: "Effect of temperature increase on conductors?", qHi: "ताप के बढ़ाने पर चालक पदार्थों का वैद्युत प्रतिरोध एवं वैद्युत चालकता पर क्या प्रभाव पड़ता है ?", opts: [{en:"R increases, C decreases", hi:"वैद्युत प्रतिरोध बढ़ता है जबकि वैद्युत चालकता घटती है"}, {en:"R decreases, C increases", hi:"वैद्युत प्रतिरोध घटता है जबकि वैद्युत चालकता बढ़ती है"}, {en:"Both increase", hi:"वैद्युत प्रतिरोध एवं वैद्युत चालकता दोनों बढ़ता है"}, {en:"Both decrease", hi:"वैद्युत प्रतिरोध एवं वैद्युत चालकता दोनों घटता है।"}], ans: 0 },
+        { id: 87, qEn: "Glass rod rubbed with silk becomes:", qHi: "जब कांच की छड़ की रेशम से रगड़ा जाता है तो छड़-", opts: [{en:"Negative", hi:"ऋणावेशित हो जाती है"}, {en:"Positive", hi:"धनावेशित हो जाती है"}, {en:"Neutral", hi:"उदासीन रहती है"}, {en:"First - then +", hi:"पहले ऋणावेशित होती है फिर धनावेशित"}], ans: 1 },
+        { id: 88, qEn: "Total charge on an isolated conductor resides on:", qHi: "किसी आवेशित चालक का सम्पूर्ण आवेश उसके", opts: [{en:"Inner surface", hi:"आन्तरिक पृष्ठ पर रहता है"}, {en:"Outer surface", hi:"बाहरी पृष्ठ पर रहता है"}, {en:"Some inner some outer", hi:"कुछ आन्तरिक पृष्ठ पर व कुछ बाहरी पृष्ठ पर रहता है"}, {en:"All true", hi:"सभी सत्य है"}], ans: 1 },
+        { id: 89, qEn: "Electric motor converts:", qHi: "विधुत मोटर से रूपान्तरण होता है ।", opts: [{en:"Chemical to Electric", hi:"रासायनिक ऊर्जा विधुत ऊर्जा में"}, {en:"Electric to Mechanical", hi:"विधुत ऊर्जा यांत्रिक ऊर्जा में"}, {en:"Electric to Light", hi:"विधुत ऊर्जा प्रकाश ऊर्जा में"}, {en:"Electric to Chemical", hi:"विधुत ऊर्जा रासायनिक ऊर्जा में"}], ans: 1 },
+        { id: 90, qEn: "Device converting Electrical Energy to Mechanical Energy:", qHi: "विधुत ऊर्जा को यांत्रिक ऊर्जा में बदलने वाली युक्ति को कहते हैं?", opts: [{en:"Motor", hi:"मोटर"}, {en:"Dynamo", hi:"डायनेमो"}, {en:"Heater", hi:"हीटर"}, {en:"Microphone", hi:"माइक्रोफोन"}], ans: 0 },
+        { id: 91, qEn: "Unit of Magnetic Field Intensity is:", qHi: "चुम्बकीय क्षेत्र तीव्रता का मात्रक है-", opts: [{en:"N/A-m²", hi:"N/A – m²"}, {en:"Tesla (N/A-m)", hi:"N/A – m (या T)"}, {en:"N-A-m", hi:"N-A-m"}, {en:"N²/A-m", hi:"N²/A – m"}], ans: 1 },
+        { id: 92, qEn: "Unit of Magnetic Flux is:", qHi: "चुम्बकीय फ्लस्क का मात्रक है-", opts: [{en:"Weber/m²", hi:"वेबर/मी²"}, {en:"Weber-m", hi:"वेबर-मी"}, {en:"Weber", hi:"वेबर"}, {en:"Weber-m²", hi:"वेबर-मी²"}], ans: 2 },
+        { id: 93, qEn: "Conversion in Dynamo (Generator):", qHi: "डायनेमो या जनित्र में रूपान्तर होता है", opts: [{en:"Mech to Heat", hi:"यांत्रिक ऊर्जा का उष्मा में"}, {en:"Heat to Mech", hi:"उष्मा का यांत्रिक ऊर्जा में"}, {en:"Magnetic to Electric", hi:"चुम्बकीय ऊर्जा का विधुत ऊर्जा में"}, {en:"Mechanical to Electrical", hi:"यांत्रिक ऊर्जा का विधुत ऊर्जा में"}], ans: 3 },
+        { id: 94, qEn: "Device producing electric current:", qHi: "विधुत धारा उत्पन्न करनेवाली युक्ति को क्या कहते हैं ?", opts: [{en:"Generator", hi:"जनित्र"}, {en:"Galvanometer", hi:"गैलवेनोमीटर"}, {en:"Ammeter", hi:"एमीटर"}, {en:"Meter", hi:"मीटर"}], ans: 0 },
+        { id: 95, qEn: "Electromagnetic induction is the phenomenon of:", qHi: "विधुत चुम्बकीय प्रेरण की परिघटना है-", opts: [{en:"Charging a body", hi:"किसी वस्तु को आवेशित करने की"}, {en:"Generating magnetic field via current", hi:"धारा के चलते चुम्बकीय क्षेत्र उत्पन्न करने की"}, {en:"Generating current via magnet/coil motion", hi:"किसी चुम्बक और कुंडली (Coil) के परस्पर आपेक्षिक गति द्वारा"}, {en:"Rotation of motor coil", hi:"विधुत मोटर की कुंडली के घूर्णन की"}], ans: 2 },
+        { id: 96, qEn: "Appliances in domestic wiring are connected in:", qHi: "घरेलू वायरिंग में विधुत उपकरणों को जोड़ा जाता है-", opts: [{en:"Parallel", hi:"समांतर क्रम में"}, {en:"Series", hi:"श्रेणी क्रम में"}, {en:"Mixed", hi:"पार्श्व बद्ध (समांतर) या श्रेणी क्रम में"}, {en:"No rule", hi:"कोई नियम नहीं है।"}], ans: 0 },
+        { id: 97, qEn: "Fundamental difference between AC generator and DC generator:", qHi: "किसी व्त्जनित्र (Dynamo) द्वारा DC जनित्र में एक मूलभूत अंतर यह है कि", opts: [{en:"Magnet types differ", hi:"ac जनित्र में विधुत चुंबक होता है जबकि DC में स्थायी चुंबक"}, {en:"DC gen generates high voltage", hi:"dc जनित्र उच्च वोल्टता का जनन करता है।"}, {en:"AC gen generates high voltage", hi:"ac जनित्र उच्च वोल्टता को जनन करता है।"}, {en:"Slip rings vs Commutator", hi:"ac जनित्र में सर्पी वलय होते हैं जबकि dc जनित्र में दिक् परिवर्तक होता है।"}], ans: 3 },
+        { id: 98, qEn: "Current in circuit during short-circuit:", qHi: "लघुपथन (Short Circuit) के समय परिपथ में विधुतधारा का मान", opts: [{en:"Does not change", hi:"परिवर्तित नहीं होता है"}, {en:"Does not change", hi:"परिवर्तित नहीं होता है"}, {en:"Increases heavily", hi:"बहुत अधिक बढ़ जाता है"}, {en:"Varies continuously", hi:"निरंतर परिवर्तित होता है"}], ans: 2 },
+        { id: 99, qEn: "Magnetic field near a long straight current carrying wire:", qHi: "निम्नांकित में कौन लंबे विधुत धारावाही तार के निकट चुंबकीय क्षेत्र का सही वर्णन करता है।", opts: [{en:"Perpendicular lines", hi:"चुंबकीय क्षेत्र की क्षेत्र रेखाएँ तार के लम्बवत् होता है।"}, {en:"Parallel lines", hi:"चुंबकीय क्षेत्र की क्षेत्र रेखाएँ तार के समांतर होती है।"}, {en:"Radial lines", hi:"चुंबकीय क्षेत्र के क्षेत्र रेखाएँ अरीय (radial) होती है जिनका उद्भव तार से होता है।"}, {en:"Concentric circles", hi:"चुम्बक क्षेत्र की संकेन्द्रीय क्षेत्र रेखाओं का केन्द्र तार होता है।"}], ans: 3 },
+        { id: 100, qEn: "Magnetic field inside a current carrying solenoid:", qHi: "किसी विधुत धारावाही सीधी परिनालिका के भीतर चुम्बकीय क्षेत्र-", opts: [{en:"Is Zero", hi:"शून्य होता है"}, {en:"Decreases towards end", hi:"इसके सिरे से होकर जाने से घटता है।"}, {en:"Increases towards end", hi:"इसके सिरे की ओर जाने से बढ़ता है"}, {en:"Is uniform", hi:"सभी बिंदुओं पर समान होता है"}], ans: 3 }
+    ];
+
+    // --- APP LOGIC ---
+    const app = {
+        questions: [],
+        currIndex: 0,
+        score: 0,
+        timer: null,
+        timeLeft: 0,
+        timerSetting: 0,
+        
+        // Audio Synth
+        audioCtx: new (window.AudioContext || window.webkitAudioContext)(),
+        
+        playTone: function(type) {
+            if(this.audioCtx.state === 'suspended') this.audioCtx.resume();
+            const osc = this.audioCtx.createOscillator();
+            const gain = this.audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(this.audioCtx.destination);
+            
+            if(type === 'correct') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(600, this.audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(1200, this.audioCtx.currentTime + 0.2);
+                gain.gain.setValueAtTime(0.2, this.audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.audioCtx.currentTime + 0.3);
+                osc.start(); osc.stop(this.audioCtx.currentTime + 0.3);
+            } else {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(150, this.audioCtx.currentTime);
+                osc.frequency.linearRampToValueAtTime(80, this.audioCtx.currentTime + 0.3);
+                gain.gain.setValueAtTime(0.2, this.audioCtx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.01, this.audioCtx.currentTime + 0.3);
+                osc.start(); osc.stop(this.audioCtx.currentTime + 0.3);
+            }
+        },
+
+        start: function() {
+            // Settings
+            const shuffle = document.getElementById('shuffleInput').checked;
+            this.timerSetting = parseInt(document.getElementById('timerInput').value) || 0;
+            
+            this.questions = [...questionData];
+            if(shuffle) this.questions.sort(() => Math.random() - 0.5);
+            
+            this.currIndex = 0;
+            this.score = 0;
+            document.getElementById('totalQ').innerText = this.questions.length;
+            
+            document.getElementById('startScreen').classList.remove('active');
+            document.getElementById('quizScreen').classList.add('active');
+            
+            this.loadQuestion();
+        },
+
+        loadQuestion: function() {
+            if(this.currIndex >= this.questions.length) return this.finish();
+
+            const q = this.questions[this.currIndex];
+            
+            // UI Updates
+            document.getElementById('currQ').innerText = this.currIndex + 1;
+            document.getElementById('scoreVal').innerText = this.score;
+            document.getElementById('qTextEn').innerText = q.qEn;
+            document.getElementById('qTextHi').innerText = q.qHi;
+            
+            // Progress
+            const pct = (this.currIndex / this.questions.length) * 100;
+            document.getElementById('progressBar').style.width = pct + '%';
+
+            // Options
+            const optBox = document.getElementById('optionsBox');
+            optBox.innerHTML = '';
+            q.opts.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerHTML = `<span class="opt-en">${String.fromCharCode(65+idx)}. ${opt.en}</span><span class="opt-hi">${opt.hi}</span>`;
+                btn.onclick = () => this.handleAnswer(idx, btn);
+                optBox.appendChild(btn);
+            });
+
+            // Timer
+            clearInterval(this.timer);
+            const tBadge = document.getElementById('timerBadge');
+            const tText = document.getElementById('timerText');
+            
+            if(this.timerSetting > 0) {
+                tBadge.style.display = 'flex';
+                this.timeLeft = this.timerSetting;
+                tText.innerText = this.timeLeft;
+                tText.classList.remove('pulse');
+                
+                this.timer = setInterval(() => {
+                    this.timeLeft--;
+                    tText.innerText = this.timeLeft;
+                    if(this.timeLeft < 5) tText.classList.add('pulse');
+                    if(this.timeLeft <= 0) {
+                        clearInterval(this.timer);
+                        this.handleAnswer(-1, null); // Timeout
+                    }
+                }, 1000);
+            } else {
+                tBadge.style.display = 'none';
+            }
+        },
+
+        handleAnswer: function(selectedIndex, btn) {
+            clearInterval(this.timer);
+            const correctIndex = this.questions[this.currIndex].ans;
+            const allBtns = document.querySelectorAll('.option-btn');
+            
+            allBtns.forEach(b => b.disabled = true);
+
+            if(selectedIndex === correctIndex) {
+                this.score++;
+                if(btn) btn.classList.add('correct');
+                this.playTone('correct');
+                this.fireConfetti();
+            } else {
+                if(btn) {
+                    btn.classList.add('wrong');
+                    // Shake effect
+                    btn.classList.add('shake');
+                    setTimeout(() => btn.classList.remove('shake'), 400);
+                }
+                allBtns[correctIndex].classList.add('correct');
+                this.playTone('wrong');
+                this.showOverlay('😢');
+            }
+
+            document.getElementById('scoreVal').innerText = this.score;
+
+            setTimeout(() => {
+                this.currIndex++;
+                this.loadQuestion();
+            }, 1500);
+        },
+
+        finishEarly: function() {
+            // Stop timer and jump to results
+            clearInterval(this.timer);
+            this.finish();
+        },
+
+        finish: function() {
+            document.getElementById('quizScreen').classList.remove('active');
+            document.getElementById('resultScreen').classList.add('active');
+            document.getElementById('progressBar').style.width = '100%';
+
+            // Calculate score based on ATTEMPTED questions if finished early, 
+            // but standard quiz logic usually grades against TOTAL. 
+            // Here we show score against total questions.
+            const total = this.questions.length;
+            const pct = (this.score / total) * 100;
+            
+            document.getElementById('finalScore').innerText = `${this.score} / ${total}`;
+            
+            const emoji = document.getElementById('resultEmoji');
+            const title = document.getElementById('resultTitle');
+            const msg = document.getElementById('resultMsg');
+
+            if(pct >= 80) {
+                emoji.innerText = "🏆";
+                title.innerText = "Outstanding Performance!";
+                title.style.color = "#00e676";
+                msg.innerText = "Excellent command over Physics.";
+            } else if(pct >= 50) {
+                emoji.innerText = "👏";
+                title.innerText = "Well Done!";
+                title.style.color = "#ffd700";
+                msg.innerText = "Good effort. Keep practicing.";
+            } else {
+                emoji.innerText = "📚";
+                title.innerText = "Practice Makes Perfect";
+                title.style.color = "#ff1744";
+                msg.innerText = "Don't give up. Try again!";
+            }
+        },
+
+        showOverlay: function(emoji) {
+            const el = document.getElementById('feedback-overlay');
+            el.innerText = emoji;
+            el.style.opacity = 1;
+            el.classList.add('shake');
+            setTimeout(() => {
+                el.style.opacity = 0;
+                el.classList.remove('shake');
+            }, 800);
+        },
+
+        fireConfetti: function() {
+            for(let i=0; i<30; i++) {
+                const c = document.createElement('div');
+                c.className = 'confetti';
+                c.style.left = Math.random() * 100 + 'vw';
+                c.style.backgroundColor = `hsl(${Math.random()*360}, 100%, 50%)`;
+                c.style.animationDuration = (Math.random() * 2 + 2) + 's';
+                document.body.appendChild(c);
+                setTimeout(() => c.remove(), 4000);
+            }
+        }
+    };
+</script>
+</body>
+</html>

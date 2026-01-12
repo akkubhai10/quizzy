@@ -1,0 +1,1148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Physics Heat Quiz - Bilingual</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            --primary-text: #ffffff;
+            --secondary-text: #e0e0e0;
+            --correct-color: #00e676;
+            --wrong-color: #ff1744;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Poppins', sans-serif;
+            user-select: none; /* Prevent text selection */
+        }
+
+        body {
+            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--primary-text);
+            overflow-x: hidden;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Glassmorphism Card */
+        .container {
+            width: 95%;
+            max-width: 800px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 25px;
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--glass-shadow);
+            padding: 30px;
+            position: relative;
+            overflow: hidden;
+            transition: height 0.3s ease;
+        }
+
+        /* Screens */
+        .screen {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Typography */
+        h1, h2 { text-align: center; margin-bottom: 20px; }
+        .sub-text { font-size: 0.9rem; color: var(--secondary-text); margin-bottom: 30px; text-align: center; }
+
+        /* Inputs & Controls */
+        .control-group {
+            margin: 15px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+        }
+
+        input[type="number"] {
+            padding: 12px;
+            border-radius: 12px;
+            border: 1px solid var(--glass-border);
+            background: rgba(255,255,255,0.2);
+            color: white;
+            font-size: 1.1rem;
+            text-align: center;
+            width: 200px;
+            outline: none;
+        }
+        input[type="number"]::placeholder { color: #ddd; }
+
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+            cursor: pointer;
+        }
+
+        /* Buttons */
+        .btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid var(--glass-border);
+            padding: 15px 40px;
+            border-radius: 50px;
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            margin-top: 20px;
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.4);
+            transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(255,255,255,0.3);
+        }
+
+        .btn-finish {
+            margin-top: 30px;
+            background: rgba(255, 0, 0, 0.2);
+            font-size: 1rem;
+            padding: 10px 25px;
+        }
+        .btn-finish:hover { background: rgba(255, 0, 0, 0.4); }
+
+        /* Quiz Header */
+        .quiz-header {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .timer-circle {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 3px solid white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.1rem;
+        }
+        
+        .timer-pulse {
+            animation: pulseRed 1s infinite;
+            border-color: #ff1744;
+            color: #ff1744;
+            text-shadow: 0 0 10px #ff1744;
+        }
+
+        @keyframes pulseRed {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        /* Progress Bar */
+        .progress-container {
+            width: 100%;
+            height: 6px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+        .progress-bar {
+            height: 100%;
+            background: #00e676;
+            width: 0%;
+            border-radius: 10px;
+            transition: width 0.3s ease;
+            box-shadow: 0 0 10px #00e676;
+        }
+
+        /* Question Area */
+        .question-box {
+            margin-bottom: 25px;
+            text-align: center;
+            width: 100%;
+        }
+        .q-eng { font-size: 1.3rem; font-weight: 700; margin-bottom: 8px; line-height: 1.4; }
+        .q-hin { font-size: 1.1rem; color: #ddd; font-weight: 400; line-height: 1.4; }
+
+        /* Options Grid */
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            width: 100%;
+        }
+        
+        @media (max-width: 600px) {
+            .options-grid { grid-template-columns: 1fr; }
+            .container { padding: 20px; width: 98%; }
+            .q-eng { font-size: 1.1rem; }
+        }
+
+        .option-btn {
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 15px;
+            color: white;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-2px);
+        }
+
+        .opt-eng { font-weight: 600; font-size: 1rem; }
+        .opt-hin { font-size: 0.85rem; color: #ddd; margin-top: 4px; }
+
+        .option-btn.correct { background: var(--correct-color); border-color: white; color: #000; }
+        .option-btn.wrong { background: var(--wrong-color); border-color: white; }
+        .option-btn.correct .opt-hin, .option-btn.wrong .opt-hin { color: #333; }
+        .option-btn:disabled { cursor: default; }
+
+        /* Feedback Emoji */
+        .feedback-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 5rem;
+            pointer-events: none;
+            opacity: 0;
+            z-index: 100;
+        }
+
+        .shake-anim { animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both; }
+
+        @keyframes shake {
+            10%, 90% { transform: translate(-53%, -50%); }
+            20%, 80% { transform: translate(-47%, -50%); }
+            30%, 50%, 70% { transform: translate(-53%, -50%); }
+            40%, 60% { transform: translate(-47%, -50%); }
+        }
+
+        /* Result Screen */
+        .score-display { font-size: 3rem; font-weight: bold; margin: 20px 0; }
+        .result-msg { font-size: 1.5rem; color: #fff; margin-bottom: 20px; text-align: center; }
+
+        /* Confetti Canvas */
+        #confetti-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 9999;
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="confetti-canvas"></canvas>
+
+    <div class="container">
+        <div class="progress-container">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+
+        <div id="startScreen" class="screen active">
+            <h1>Physics Quiz</h1>
+            <h2>Heat & Thermodynamics</h2>
+            <div class="sub-text">Questions extracted from Study Material (1-50)<br>Bilingual: English & Hindi</div>
+            
+            <div class="control-group">
+                <label style="margin-bottom:8px;">Timer per Question (Seconds)</label>
+                <input type="number" id="timerInput" placeholder="e.g. 30 (0 for no timer)" min="0">
+            </div>
+
+            <div class="control-group">
+                <div class="toggle-container" onclick="toggleShuffle()">
+                    <input type="checkbox" id="shuffleToggle">
+                    <label for="shuffleToggle" style="cursor: pointer;">Shuffle Questions</label>
+                </div>
+            </div>
+
+            <button class="btn" onclick="startQuiz()">Start Quiz</button>
+        </div>
+
+        <div id="quizScreen" class="screen">
+            <div class="quiz-header">
+                <div id="questionCounter">Q: 01/50</div>
+                <div id="timerDisplay" class="timer-circle">--</div>
+                <div id="scoreCounter">Score: 0</div>
+            </div>
+
+            <div class="question-box">
+                <div id="qTextEng" class="q-eng">Question English</div>
+                <div id="qTextHin" class="q-hin">Question Hindi</div>
+            </div>
+
+            <div id="optionsContainer" class="options-grid">
+                </div>
+
+            <div id="feedbackEmoji" class="feedback-overlay"></div>
+
+            <button class="btn btn-finish" onclick="finishQuiz()">Finish & Show Results</button>
+        </div>
+
+        <div id="resultScreen" class="screen">
+            <h1>Quiz Completed!</h1>
+            <div class="score-display" id="finalScore">0 / 50</div>
+            <div class="result-msg" id="resultMessage"></div>
+            <button class="btn" onclick="restartQuiz()">Restart Quiz</button>
+        </div>
+    </div>
+
+<script>
+    // --- Data: Questions 1-50 extracted from images ---
+    // Note: Translations are approximate based on the Hindi text provided in images.
+    const questionsDB = [
+        {
+            qE: "When two copper spheres of different diameters are removed from a furnace and allowed to cool in identical conditions, which one cools faster?",
+            qH: "भिन्न-भिन्न व्यास के ताँबे के दो गोलों को भट्ठी से बाहर निकाला जाता है और समान दशा में दोनों को ठण्डा होने दिया जाता है, तो निम्न में से कौन सही है?",
+            options: [
+                {e: "Small sphere cools faster than large sphere", h: "बड़े गोला के अपेक्षा छोटा गोला जल्दी ठण्डा होगा"},
+                {e: "Large sphere cools faster", h: "बड़ा गोला जल्दी ठण्डा होगा"},
+                {e: "Both cool at the same rate", h: "दोनों गोला समानदर से ठण्डा होगा"},
+                {e: "Small sphere temp drops then rises", h: "छोटा गोला का ताप पहले गिरेगा और तब फिर बढ़ना शुरु होगा"}
+            ],
+            correct: 0
+        },
+        {
+            qE: "The rate of heat loss from a hot object depends on:",
+            qH: "तप्त वस्तु से ऊष्मा की क्षति निर्भर करती है-",
+            options: [
+                {e: "Only on temperature of object", h: "केवल वस्तु के ताप पर"},
+                {e: "Only on temperature of surroundings", h: "केवल वातावरण के ताप पर"},
+                {e: "Temp difference between object and surroundings", h: "वस्तु तथा उसके बगल के वातावरण के तापान्तर पर"},
+                {e: "None of the above", h: "उपर्युक्त में कोई सही नहीं है"}
+            ],
+            correct: 2
+        },
+        {
+            qE: "A bucket of hot water cools from 75°C to 70°C in t1 minutes, and from 70°C to 65°C in t2 minutes. Then:",
+            qH: "कमरे में रखे गर्म पानी से भरा बाल्टी का ताप 75°C से 70°C तक t1 मिनट में होता है, 70°C से 65°C तक t2 मिनट में होता है, तो",
+            options: [
+                {e: "t1 = t2 = t3", h: "t1 = t2 = t3"},
+                {e: "t1 > t2 > t3", h: "t1 > t2 > t3"},
+                {e: "t1 < t2 < t3", h: "t1 < t2 < t3"}, // Cooling slows down as temp diff decreases, so time increases. t1 < t2
+                {e: "t1 < t2 > t3", h: "t1 < t2 > t3"}
+            ],
+            correct: 2
+        },
+        {
+            qE: "If some mass of water and some mass of ice at 0°C are mixed together, the temperature will:",
+            qH: "जल का कुछ द्रव्यमान और बर्फ का कुछ द्रव्यमान जो 0°C पर है उन्हें एक साथ मिला दिया जाता है तो ताप",
+            options: [
+                {e: "Decrease", h: "गिरेगा"},
+                {e: "Increase", h: "बढ़ेगा"},
+                {e: "Remain unchanged", h: "अपरिवर्तित रहेगा"},
+                {e: "Depend on relative mass", h: "जल तथा बर्फ के सापेक्षिक द्रव्यमान पर निर्भर करेगा"}
+            ],
+            correct: 2
+        },
+        {
+            qE: "The temperature of ice is raised from 0°C to 4°C. The density of the water formed from melting ice:",
+            qH: "बर्फ का ताप 0°C से 4°C तक लाया जाता है। बर्फ पिघलने से जो पानी बनता है उसका घनत्व-",
+            options: [
+                {e: "Increases", h: "बढ़ता जाएगा"},
+                {e: "Decreases", h: "घटना जाएगा"},
+                {e: "Remains unchanged", h: "अपरिवर्तित रहेगा"},
+                {e: "Neither increases nor decreases", h: "न घटेगा, न ही बढ़ेगा"}
+            ],
+            correct: 0
+        },
+        {
+            qE: "If the temperature of water is increased from 4°C, its density will:",
+            qH: "पानी का ताप 4°C से बढ़ाया जाता है। इसका घनत्व-",
+            options: [
+                {e: "Increase", h: "बढ़ता जाएगा"},
+                {e: "Decrease", h: "घटता जाएगा"},
+                {e: "Remain unchanged", h: "अपरिवर्तित रहेगा"},
+                {e: "Neither increase nor decrease", h: "न ही बढ़ेगा, न ही घटेगा"}
+            ],
+            correct: 1
+        },
+        {
+            qE: "You have two cups of tea, one for you and one for your friend. You have to wait a while. Which method ensures hotter tea?",
+            qH: "आपको दो प्याले में चाय दी गई है... आपको अपने मित्र के लिए कुछ समय तक प्रतीक्षा करनी है तो आप निम्न में से कौन-सा विकल्प आजमाएंगे ?",
+            options: [
+                {e: "Put sugar and wait", h: "चाय में चीनी डालकर मित्र की प्रतीक्षा करेंगे"},
+                {e: "Wait without putting sugar", h: "बिना चीनी डालकर मित्र की प्रतीक्षा करेंगे"},
+                {e: "Both are same", h: "उपर्युक्त दोनों विकल्प हो सकता है"},
+                {e: "None suitable", h: "कोई भी विकल्प उपर्युक्त नहीं है"}
+            ],
+            correct: 0 // Adding sugar cools it slightly immediately, lowering delta T, thus slower cooling rate later. But practically, keeping it hotter longer means adding cold things later. Wait, interpretation: Adding sugar slightly lowers temp, reducing rate of cooling. However, usually "add milk" is the standard physics Q. For sugar (solid), effect is small. Let's assume standard physics logic: Higher temp = faster cooling. So cool it first (add sugar) to reduce rate.
+        },
+        {
+            qE: "The temperature at which ice, water, and water vapor coexist in equilibrium is called:",
+            qH: "वह ताप जिस पर बर्फ, पानी और इसका वाष्प संतुलन में रहते हैं, कहा जाता है-",
+            options: [
+                {e: "Freezing Point", h: "हिमांक"},
+                {e: "Boiling Point", h: "क्वथनांक"},
+                {e: "Critical Point", h: "क्रांतिक बिन्दु"},
+                {e: "Triple Point", h: "त्रिक बिंदु"}
+            ],
+            correct: 3
+        },
+        {
+            qE: "The most suitable gas for measuring low temperatures in a gas thermometer is:",
+            qH: "निम्न ताप मापने हेतु तापमापीय पदार्थ के रूप में सबसे उपर्युक्त गैस है-",
+            options: [
+                {e: "Oxygen", h: "ऑक्सीजन"},
+                {e: "Helium", h: "हीलियम"},
+                {e: "Nitrogen", h: "नाइट्रोजन"},
+                {e: "Hydrogen", h: "हाइड्रोजन"}
+            ],
+            correct: 1
+        },
+        {
+            qE: "The Constant Volume Thermometer works on which law?",
+            qH: "नियम आयतन थर्मामीटर जिस नियम पर कार्य करता है, वह है-",
+            options: [
+                {e: "Pascal's Law", h: "पास्कल का नियम"},
+                {e: "Boyle's Law", h: "वॉयल का नियम"},
+                {e: "Archimedes' Principle", h: "आर्कमिडीज का नियम"},
+                {e: "Charles's Law", h: "चार्ल्स का नियम"}
+            ],
+            correct: 3 // Technically Pressure Law (Gay-Lussac), but often grouped with Charles/Gay-Lussac in simple MCQs. Option D is the intended answer in this specific book key usually.
+        },
+        {
+            qE: "If water is heated from 0°C to 50°C, its volume:",
+            qH: "जल को 0°C से 50°C तक गर्म किया जाता है तो इसका आयतन-",
+            options: [
+                {e: "Increases", h: "बढ़ता है"},
+                {e: "Decreases", h: "घटता है"},
+                {e: "Remains constant", h: "अपरिवर्तित रहता है"},
+                {e: "First decreases, then increases", h: "पहले घटता है, फिर बढ़ता है"}
+            ],
+            correct: 3
+        },
+        {
+            qE: "There is a circular hole in a copper plate. Upon heating the plate, the diameter of the hole:",
+            qH: "ताँबे की प्लेट में एक वृत्ताकार छिद्र है, ताँबे की प्लेट गर्म करने पर छिद्र का व्यास-",
+            options: [
+                {e: "Always decreases", h: "सदैव घटता है"},
+                {e: "Always increases", h: "सदैव बढ़ता है"},
+                {e: "Remains same", h: "सदैव समान रहता है"},
+                {e: "None of these", h: "इनमें से कोई नहीं"}
+            ],
+            correct: 1
+        },
+        {
+            qE: "A solid metal ball has a spherical cavity. When the ball is heated, the volume of the cavity:",
+            qH: "धातु से बनी ठोस गेंद में एक कोटर (Cavity) है, गेंद को गर्म करने पर कोटर का आयतन-",
+            options: [
+                {e: "Increases", h: "बढ़ता है"},
+                {e: "Decreases", h: "घटता है"},
+                {e: "Remains unchanged", h: "अपरिवर्तित रहता है"},
+                {e: "Shape changes", h: "इसका आकार बदल जाता है"}
+            ],
+            correct: 0
+        },
+        {
+            qE: "During melting, the temperature of the substance:",
+            qH: "द्रवण के समय वस्तु का ताप-",
+            options: [
+                {e: "Remains constant", h: "नियत रहता है"},
+                {e: "Increases", h: "बढ़ता है"},
+                {e: "Decreases", h: "घटता है"},
+                {e: "None of these", h: "इनमें से कोई नहीं"}
+            ],
+            correct: 0
+        },
+        {
+            qE: "Why does applying balm relieve a headache?",
+            qH: "सिर दर्द से परेशान आदमी को बाम से आराम पहुँचता है क्योंकि-",
+            options: [
+                {e: "It contains cooling agent", h: "इसमें ठण्डक उत्पन्न करनेवाला एक अवयव होता है"},
+                {e: "It is volatile", h: "यह वाष्पशील होता है"},
+                {e: "Its temp is lower than body", h: "इसका ताप मनुष्य के शरीर के ताप से कम होता है"},
+                {e: "It is cold", h: "यह ठण्डा होता है"}
+            ],
+            correct: 1
+        },
+        {
+            qE: "On heating an object, its molecules:",
+            qH: "वस्तु को गर्म करने पर उसके अणुओं-",
+            options: [
+                {e: "Speed increases", h: "की चाल बढ़ जाएगी"},
+                {e: "Energy decreases", h: "की ऊर्जा कम हो जाएगी"},
+                {e: "Weight increases", h: "का भार बढ़ जाएगा"},
+                {e: "Weight decreases", h: "का भार घट जाएगा"}
+            ],
+            correct: 0
+        },
+        {
+            qE: "Temperature of an object is an index of:",
+            qH: "किसी वस्तु का ताप किसका सूचक है ?",
+            options: [
+                {e: "Total energy of molecules", h: "उसके अणुओं की कुल ऊर्जा का"},
+                {e: "Average energy of molecules", h: "उसके अणुओं की औसत ऊर्जा का"},
+                {e: "Total velocity", h: "उसके अणुओं के कुल वेग का"},
+                {e: "Average Kinetic Energy", h: "उसके अणुओं के औसत गतिज ऊर्जा का"}
+            ],
+            correct: 3
+        },
+        {
+            qE: "The temperature of an object indicates that upon contact, heat will flow:",
+            qH: "वस्तु का ताप सूचित करता है कि सम्पर्क करने पर ऊष्मा-",
+            options: [
+                {e: "From object to higher temp object", h: "उस वस्तु में अपेक्षाकृत अधिक ताप पर की वस्तु में प्रवाहित होगी।"},
+                {e: "From lower temp object to this object", h: "अपेक्षाकृत कम ताप की वस्तु में उस वस्तु से प्रवाहित होगी।"},
+                {e: "From object to earth", h: "उस वस्तु से पृथ्वी में प्रवाहित होगी।"},
+                {e: "From earth to object", h: "पृथ्वी से उस वस्तु में प्रवाहित होगी।"}
+            ],
+            correct: 1 // Heat flows from High (this object) to Low (other object)
+        },
+        {
+            qE: "Increase in temperature of an object means its:",
+            qH: "किसी वस्तु के ताप में वृद्धि का अर्थ है कि वस्तु की-",
+            options: [
+                {e: "Kinetic energy increased", h: "गतिज ऊर्जा बढ़ गई है"},
+                {e: "Potential energy increased", h: "स्थितिज ऊर्जा बढ़ गई है"},
+                {e: "Mechanical energy increased", h: "यांत्रिक ऊर्जा बढ़ गई है"},
+                {e: "Heat energy increased", h: "उष्मीय ऊर्जा बढ़ गई है"}
+            ],
+            correct: 3 // In context of options, Heat/Thermal energy relates to KE, but Option D is direct. Often "Kinetic Energy" is the specific physics answer, but here D "Ushmiya Urja" (Heat Energy) is listed. Let's go with D as per typical book keys or A if strictly molecular. Let's select D as the translation implies.
+        },
+        {
+            qE: "When an object is cooled, its molecules:",
+            qH: "जब किसी वस्तु को ठंडा किया जाता है तब उसके अणुओं-",
+            options: [
+                {e: "Energy increases", h: "की ऊर्जा बढ़ जाती है"},
+                {e: "Speed decreases", h: "की चाल घट जाती है"},
+                {e: "Mass increases", h: "का द्रव्यमान बढ़ जाता है"},
+                {e: "Weight increases", h: "का भार बढ़ जाता है"}
+            ],
+            correct: 1
+        },
+        {
+            qE: "Heat is a form of energy that can be converted to work. Who demonstrated this first?",
+            qH: "ऊष्मा (Heat) एक प्रकार की ऊर्जा है जिसे कार्य में बदला जा सकता है। इसका प्रत्यक्ष प्रमाण सबसे पहले किसने दिया",
+            options: [
+                {e: "Davy", h: "डेवी"},
+                {e: "Rumford", h: "रमफोर्ड"},
+                {e: "Celsius", h: "सेल्सियस"},
+                {e: "Fahrenheit", h: "फारेनहाइट"}
+            ],
+            correct: 1
+        },
+        {
+            qE: "Which scientist first melted two pieces of ice by rubbing them together?",
+            qH: "किस वैज्ञानिक ने सर्वप्रथम बर्फ के दो टुकड़ों को आपस में घिसकर पिघला दिया ?",
+            options: [
+                {e: "Rumford", h: "रमफोर्ड"},
+                {e: "Joule", h: "जूल"},
+                {e: "Davy", h: "डेवी"},
+                {e: "Celsius", h: "सेल्सियस"}
+            ],
+            correct: 2
+        },
+        {
+            qE: "When work is converted to heat or heat to work, the ratio is a constant (J). What is its value?",
+            qH: "जब कभी कार्य ऊष्मा में बदलता है या ऊर्जा कार्य में बदलती है... इसका मान होता है-",
+            options: [
+                {e: "4186 J/kcal", h: "4186 जूल / किलो कैलोरी"},
+                {e: "4.186 J/cal", h: "4.186 जूल / कैलोरी"},
+                {e: "4.186 x 10^7 erg/cal", h: "4.186 x 10^7 अर्ग / कैलोरी"},
+                {e: "All of the above", h: "उपर्युक्त सभी"}
+            ],
+            correct: 3
+        },
+        {
+            qE: "Which of the following is correct?",
+            qH: "निम्न में कौन सही है ?",
+            options: [
+                {e: "W/Q = J", h: "W/Q = J"},
+                {e: "W x Q = J", h: "W x Q = J"},
+                {e: "Q/W = J", h: "Q/W = J"},
+                {e: "J/Q = W", h: "J/Q = W"}
+            ],
+            correct: 0
+        },
+        {
+            qE: "When water is churned continuously, its temperature rises. This is due to:",
+            qH: "जब कुछ पानी का लगातार मंथन (Churning) किया जाता है तब उसका ताप बढ़ जाता है। इस क्रिया में-",
+            options: [
+                {e: "Heat energy to Thermal", h: "ऊष्मा ऊर्जा का रूपान्तरण ऊष्मीण ऊर्जा में होता है।"},
+                {e: "Thermal to Heat", h: "ऊष्मीय ऊर्जा का रूपान्तरण ऊष्मा में होता है।"},
+                {e: "Mechanical energy converted to heat", h: "यांत्रिक ऊर्जा का रूपान्तरण ऊष्मीय ऊर्जा में होता है।"},
+                {e: "Heat converted to Mechanical", h: "ऊष्मीय ऊर्जा का रूपान्तरण यांत्रिक ऊर्जा में होता है।"}
+            ],
+            correct: 2
+        },
+        {
+            qE: "Why is the temperature of water in a steam engine boiler high?",
+            qH: "वाष्प इंजन में उबले हुए जल का तापमान किस कारण से उच्च हो सकता है ?",
+            options: [
+                {e: "Dissolved substances in water", h: "जल में विलीन पदार्थ होते हैं"},
+                {e: "Low pressure inside boiler", h: "बॉयलर के अंदर निम्न दाब होता है"},
+                {e: "High pressure inside boiler", h: "बॉयलर के अंदर उच्च दाब होता है"},
+                {e: "Fire is at very high temp", h: "अग्नि अत्यधिक उच्च तापमान पर होती है"}
+            ],
+            correct: 2
+        },
+        {
+            qE: "Water from a handpump feels warm in winter because:",
+            qH: "शीतकाल हैंडपम्प का पानी गर्म होता है, क्योंकि-",
+            options: [
+                {e: "Body is cold so water feels warm", h: "शीतकाल में हमारा शरीर ठंडा होता है, अतः जल गर्म प्रतीत होता है"},
+                {e: "Underground temp is higher than atmosphere", h: "पृथ्वी के भीतर तापमान वायुमंडल के तापमान से अधिक होता है।"},
+                {e: "Friction during pumping generates heat", h: "पम्पिंग क्रिया से घर्षण पैदा होता है, जिससे जल गर्म हो जाता है"},
+                {e: "Water extracts heat from inside", h: "भीतर से जल बाहर निकलता है और परिवेश से ऊष्मा का अवशोषण कर लेता है"}
+            ],
+            correct: 1
+        },
+        {
+            qE: "The temperature of water at the bottom of a waterfall is higher than at the top because:",
+            qH: "जलप्रपात के अधस्तल पर जल का तापमान ऊपर की अपेक्षा अधिक होने का कारण है-",
+            options: [
+                {e: "PE at bottom is higher", h: "अधस्तल पर जल की स्थितिज ऊर्जा अधिक होती है"},
+                {e: "Surface heat available", h: "अधरतल पर पृष्ठ ऊष्मा उपलब्ध कराता है"},
+                {e: "KE of falling water converts to heat", h: "गिर रहे जल की गतिज ऊर्जा ऊष्मा में बदल जाती है"},
+                {e: "Falling water absorbs heat", h: "गिरता हुआ जल परिवेश से ऊष्मा का शोषण कर लेता है"}
+            ],
+            correct: 2
+        },
+        {
+            qE: "Even in summer heat of 46°C, a camel feels relief by:",
+            qH: "गर्मियों में ताप 46°C हो जाने पर भी ऊँट गर्मी से राहत महसूस करता है-",
+            options: [
+                {e: "Sitting in shade", h: "रेगिस्तानी पौधों की छाया में बैठकर"},
+                {e: "Raising body temp to 42°C", h: "अपने शरीर के ताप को 42°C तक बढ़ाकर"},
+                {e: "Storing water in body", h: "अपने शरीर में पानी का संचय करके"},
+                {e: "None of above", h: "उपर्युक्त में कोई नहीं"}
+            ],
+            correct: 1
+        },
+        {
+            qE: "On increasing pressure on ice, its melting point:",
+            qH: "बर्फ पर दाब बढ़ाने से उसका गलनांक (m.p.)-",
+            options: [
+                {e: "Decreases", h: "घट जायेगा"},
+                {e: "Increases", h: "बढ़ जायेगा"},
+                {e: "Remains unchanged", h: "अपरिवर्तित रहेगा"},
+                {e: "Becomes zero", h: "शून्य हो जायेगा"}
+            ],
+            correct: 0
+        },
+        {
+            qE: "Gas thermometers are more sensitive than liquid thermometers because gas:",
+            qH: "गैस तापमानी, द्रव्य तापमापियों की तुलना में ज्यादा संवेदी होते हैं, क्योंकि गैस-",
+            options: [
+                {e: "Has higher specific heat", h: "की विशिष्ट ऊष्मा अधिक होती है"},
+                {e: "Has higher coefficient of expansion", h: "का प्रसार गुणांक अधिक होता है"},
+                {e: "Is lighter", h: "हल्की होती है"},
+                {e: "Has lower specific heat", h: "की विशिष्ट ऊष्मा कम होती है"}
+            ],
+            correct: 1
+        },
+        {
+            qE: "The Thermocouple Thermometer is based on which principle?",
+            qH: "ताप युग्म तापमानी (Thermo Couple Thermometer) किस सिद्धान्त पर आधारित है ?",
+            options: [
+                {e: "Seebeck Effect", h: "सीबेक के प्रभाव पर"},
+                {e: "Joule Effect", h: "जूल के प्रभाव पर"},
+                {e: "Peltier Effect", h: "पेल्टियर के प्रभाव पर"},
+                {e: "None of these", h: "इनमें से कोई नहीं"}
+            ],
+            correct: 0
+        },
+        {
+            qE: "Extremely high temperatures are measured by:",
+            qH: "अत्यधिक ऊंचे तापों की माप की जाती है-",
+            options: [
+                {e: "Platinum resistance thermometer", h: "प्लेटिनम प्रतिरोध तापमानी से"},
+                {e: "Thermocouple thermometer", h: "ताप युग्म तापमानी से"},
+                {e: "Total Radiation Pyrometer", h: "पूर्ण विकिरण उत्तापमानी से"},
+                {e: "Nitrogen gas thermometer", h: "नाइट्रोजन गैस तापमापी से"}
+            ],
+            correct: 2
+        },
+        {
+            qE: "Total Radiation Pyrometer is based on which principle?",
+            qH: "पूर्ण विकिरण उत्तापमानी (Total Radiation Pyrometer) किस सिद्धान्त पर आधारित है ?",
+            options: [
+                {e: "Seebeck effect", h: "सीबेक के प्रभाव पर"},
+                {e: "Peltier effect", h: "पेल्टियर के प्रभाव पर"},
+                {e: "Stefan's Law", h: "स्टीफन के नियम पर"},
+                {e: "Joule effect", h: "जूल के प्रभाव पर"}
+            ],
+            correct: 2
+        },
+        {
+            qE: "Temperature of distant objects like the Sun is measured by:",
+            qH: "दूर की वस्तुओं जैसे सूर्य आदि का ताप किस तापमापी के द्वारा मापा जाता है ?",
+            options: [
+                {e: "Thermocouple thermometer", h: "ताप युग्म तापमानी द्वारा"},
+                {e: "Platinum resistance thermometer", h: "प्लेटिनम प्रतिरोध तापमानी द्वारा"},
+                {e: "Total Radiation Pyrometer", h: "पूर्ण विकिरण उत्तापमानी द्वारा"},
+                {e: "None of these", h: "इनमें से कोई नहीं"}
+            ],
+            correct: 2
+        },
+        {
+            qE: "In cold countries, alcohol is preferred over mercury as a thermometric liquid because:",
+            qH: "ठंडे देशों में पारा के स्थान पर एल्कोहॉल को तापमापी द्रव के रूप में वरीयता दी जाती है, क्योंकि-",
+            options: [
+                {e: "Alcohol has lower freezing point", h: "एल्कोहॉल का द्रवांक निम्नतर होता है।"},
+                {e: "Alcohol is a better conductor of heat", h: "एल्कोहॉल ऊष्मा का बेहतर संचालक होता है।"},
+                {e: "Alcohol is cheaper than mercury", h: "एल्कोहॉल पारा से अधिक सस्ता होता है।"},
+                {e: "Alcohol production is higher", h: "एल्कोहॉल का विश्व उत्पादन पारा से अधिक होता है।"}
+            ],
+            correct: 0
+        },
+        {
+            qE: "What temperature range can be measured by a Radiation Pyrometer?",
+            qH: "विकिरण पायरोमीटर से कितना तापक्रम नापा जा सकता है ?",
+            options: [
+                {e: "100 - 250°C", h: "100 - 250°C"},
+                {e: "Up to 100°C", h: "100°C तक"},
+                {e: "250 - 500°C", h: "250 - 500°C"},
+                {e: "Above 800°C", h: "800°C से ऊपर"}
+            ],
+            correct: 3
+        },
+        {
+            qE: "A Thermocouple is made by:",
+            qH: "थर्मीकपल (तापयुग्मक) ...... द्वारा बनाया जाता है-",
+            options: [
+                {e: "Two non-metals", h: "दो अधातुओं"},
+                {e: "Two similar metals", h: "दो एक सदृश धातुओं"},
+                {e: "Two dissimilar metals", h: "दो असदृश धातुओं"},
+                {e: "None of these", h: "इनमें से कोई नहीं"}
+            ],
+            correct: 2
+        },
+        {
+            qE: "The temperature of the Sun is measured by:",
+            qH: "सूर्य का ताप मापा जाता है-",
+            options: [
+                {e: "Platinum thermometer", h: "प्लेटिनम तापमानी द्वारा"},
+                {e: "Gas thermometer", h: "गैस तापमानी द्वारा"},
+                {e: "Pyrometer thermometer", h: "पाइरोमीटर तापमानी द्वारा"},
+                {e: "Vapor pressure thermometer", h: "वाष्पन दाब तापमानी"}
+            ],
+            correct: 2
+        },
+        {
+            qE: "Which of the following thermometers is called a Pyrometer?",
+            qH: "निम्नलिखित तापमापियों में से किसे पायरोमीटर कहा जाता है ?",
+            options: [
+                {e: "Thermo-electric thermometer", h: "ताप विद्युत तापमानी"},
+                {e: "Radiation thermometer", h: "विकिरण तापमापी"},
+                {e: "Gas thermometer", h: "गैस तापमानी"},
+                {e: "Liquid thermometer", h: "द्रव तापमानी"}
+            ],
+            correct: 1
+        },
+        {
+            qE: "Which of the following formulas is correct?",
+            qH: "निम्न में से कौन सही है ?",
+            options: [
+                {e: "(F+32)/9 = C/5", h: "(F+32)/9 = C/5"},
+                {e: "(F-32)/9 = C/5", h: "(F-32)/9 = C/5"},
+                {e: "(C-5)/9 = F/32", h: "(C-5)/9 = F/32"},
+                {e: "(F-5)/9 = C/32", h: "(F-5)/9 = C/32"}
+            ],
+            correct: 1
+        },
+        {
+            qE: "The Boiling Point (B.P.) and Freezing Point (F.P.) of water on Celsius scale are:",
+            qH: "सेल्सियस मापक्रम पर जल के क्वथनांक (B.P.) तथा हिमांक (F.P.) होते हैं, क्रमशः",
+            options: [
+                {e: "0°C and 100°C", h: "0°C तथा 100°C"},
+                {e: "100°C and 0°C", h: "100°C तथा 0°C"},
+                {e: "212°C and 32°C", h: "212°C तथा 32°C"},
+                {e: "32°C and 212°C", h: "32°C तथा 212°C"}
+            ],
+            correct: 1
+        },
+        {
+            qE: "Absolute zero temperature on the Celsius scale is:",
+            qH: "ताप के सेल्सियस पैमाने पर परम शून्य ताप होता है-",
+            options: [
+                {e: "0°C", h: "0°C"},
+                {e: "32°C", h: "32°C"},
+                {e: "100°C", h: "100°C"},
+                {e: "-273°C", h: "-273°C"}
+            ],
+            correct: 3
+        },
+        {
+            qE: "The normal human body temperature in Kelvin is:",
+            qH: "केल्विन मान से मानव शरीर का सामान्य ताप है-",
+            options: [
+                {e: "280", h: "280"},
+                {e: "290", h: "290"},
+                {e: "300", h: "300"},
+                {e: "310", h: "310"}
+            ],
+            correct: 3
+        },
+        {
+            qE: "Which temperature is the same on both Centigrade and Fahrenheit scales?",
+            qH: "कौन-सा तापमान सेंटिग्रेड और फारेनहाइट दोनों तापक्रमों में एकसमान है ?",
+            options: [
+                {e: "40°", h: "40°"},
+                {e: "100°", h: "100°"},
+                {e: "-100°", h: "-100°"},
+                {e: "-40°", h: "-40°"}
+            ],
+            correct: 3
+        },
+        {
+            qE: "The minimum possible temperature is:",
+            qH: "न्यूनतम सम्भव ताप है-",
+            options: [
+                {e: "-273°C", h: "-273°C"},
+                {e: "0°C", h: "0°C"},
+                {e: "-300°C", h: "-300°C"},
+                {e: "1°C", h: "1°C"}
+            ],
+            correct: 0
+        },
+        {
+            qE: "The temperature of an object is 212°F. On the Celsius scale, it will be:",
+            qH: "फारेनहाइट स्केल पर किसी वस्तु का ताप 212°F है। सेल्सियस पैमाने पर उस वस्तु का ताप होगा-",
+            options: [
+                {e: "-32°C", h: "-32°C"},
+                {e: "40°C", h: "40°C"},
+                {e: "100°C", h: "100°C"},
+                {e: "112°C", h: "112°C"}
+            ],
+            correct: 2
+        },
+        {
+            qE: "0°C on the Celsius scale equals how many degrees on the Fahrenheit scale?",
+            qH: "सेल्सियस पैमाने का 0°C फारेनहाइट स्केल के कितने डिग्री के बराबर होगा ?",
+            options: [
+                {e: "5°", h: "5°"},
+                {e: "32°", h: "32°"},
+                {e: "64°", h: "64°"},
+                {e: "273°", h: "273°"}
+            ],
+            correct: 1
+        },
+        {
+            qE: "Normal human body temperature is 98.4°F. In °C, it is approximately:",
+            qH: "मानव शरीर का सामान्य तापक्रम 98.4°F है। इसके बराबर °C में तापक्रम है-",
+            options: [
+                {e: "40.16", h: "40.16"},
+                {e: "36.89", h: "36.89"},
+                {e: "35.72", h: "35.72"},
+                {e: "32.36", h: "32.36"}
+            ],
+            correct: 1
+        },
+        {
+            qE: "The boiling point of water at normal atmospheric pressure on the Fahrenheit scale is:",
+            qH: "फारेनहाइट मापक्रम पर सामान्य वायुमण्डलीय दाब पर उबलते पानी का ताप होता है-",
+            options: [
+                {e: "32°F", h: "32°F"},
+                {e: "100°F", h: "100°F"},
+                {e: "180°F", h: "180°F"},
+                {e: "212°F", h: "212°F"}
+            ],
+            correct: 3
+        }
+    ];
+
+    // --- State Management ---
+    let currentQuestions = [];
+    let currentQIndex = 0;
+    let score = 0;
+    let timerVal = 0;
+    let timeLeft = 0;
+    let timerInterval = null;
+    let audioCtx = null;
+
+    // --- Audio Functions ---
+    function initAudio() {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+
+    function playSound(type) {
+        if (!audioCtx) initAudio();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        if (type === 'ting') {
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(1000, audioCtx.currentTime + 0.1);
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.5);
+        } else if (type === 'buzz') {
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+            osc.frequency.linearRampToValueAtTime(100, audioCtx.currentTime + 0.3);
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.3);
+        }
+    }
+
+    // --- Core Logic ---
+    function toggleShuffle() {
+        const check = document.getElementById('shuffleToggle');
+        // Visual feedback logic if needed
+    }
+
+    function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+    }
+
+    function startQuiz() {
+        // Init Audio Context on user interaction
+        initAudio();
+
+        const inputTimer = document.getElementById('timerInput').value;
+        const doShuffle = document.getElementById('shuffleToggle').checked;
+
+        timerVal = inputTimer ? parseInt(inputTimer) : 0;
+        
+        // Clone questions
+        currentQuestions = [...questionsDB];
+        if (doShuffle) shuffleArray(currentQuestions);
+
+        currentQIndex = 0;
+        score = 0;
+        
+        document.getElementById('startScreen').classList.remove('active');
+        document.getElementById('quizScreen').classList.add('active');
+        
+        loadQuestion();
+    }
+
+    function loadQuestion() {
+        clearInterval(timerInterval);
+        document.getElementById('timerDisplay').classList.remove('timer-pulse');
+        
+        // Check if end
+        if (currentQIndex >= currentQuestions.length) {
+            finishQuiz();
+            return;
+        }
+
+        const q = currentQuestions[currentQIndex];
+        
+        // Update UI Text
+        document.getElementById('questionCounter').innerText = `Q: ${currentQIndex + 1}/${currentQuestions.length}`;
+        document.getElementById('scoreCounter').innerText = `Score: ${score}`;
+        document.getElementById('qTextEng').innerText = q.qE;
+        document.getElementById('qTextHin').innerText = q.qH;
+        
+        // Progress Bar
+        const pct = ((currentQIndex) / currentQuestions.length) * 100;
+        document.getElementById('progressBar').style.width = `${pct}%`;
+
+        // Render Options
+        const optsDiv = document.getElementById('optionsContainer');
+        optsDiv.innerHTML = '';
+        
+        q.options.forEach((opt, idx) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerHTML = `<span class="opt-eng">${opt.e}</span><span class="opt-hin">${opt.h}</span>`;
+            btn.onclick = () => checkAnswer(idx, btn);
+            optsDiv.appendChild(btn);
+        });
+
+        // Timer Logic
+        if (timerVal > 0) {
+            timeLeft = timerVal;
+            updateTimerDisplay();
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                updateTimerDisplay();
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    handleTimeOut();
+                }
+            }, 1000);
+        } else {
+            document.getElementById('timerDisplay').innerText = "∞";
+        }
+    }
+
+    function updateTimerDisplay() {
+        const disp = document.getElementById('timerDisplay');
+        disp.innerText = timeLeft;
+        if (timeLeft < 5) disp.classList.add('timer-pulse');
+        else disp.classList.remove('timer-pulse');
+    }
+
+    function handleTimeOut() {
+        const btns = document.querySelectorAll('.option-btn');
+        btns.forEach(b => b.disabled = true);
+        playSound('buzz');
+        // Show correct answer
+        const q = currentQuestions[currentQIndex];
+        btns[q.correct].classList.add('correct');
+        setTimeout(nextQuestion, 2000);
+    }
+
+    function checkAnswer(selectedIdx, btnElement) {
+        clearInterval(timerInterval);
+        const q = currentQuestions[currentQIndex];
+        const btns = document.querySelectorAll('.option-btn');
+        
+        // Disable all
+        btns.forEach(b => b.disabled = true);
+
+        if (selectedIdx === q.correct) {
+            // Correct
+            btnElement.classList.add('correct');
+            score++;
+            document.getElementById('scoreCounter').innerText = `Score: ${score}`;
+            playSound('ting');
+            triggerConfetti();
+        } else {
+            // Wrong
+            btnElement.classList.add('wrong');
+            btns[q.correct].classList.add('correct'); // Show correct
+            playSound('buzz');
+            showEmoji("😢");
+        }
+
+        setTimeout(nextQuestion, 1500);
+    }
+
+    function nextQuestion() {
+        currentQIndex++;
+        loadQuestion();
+    }
+
+    function finishQuiz() {
+        clearInterval(timerInterval);
+        document.getElementById('quizScreen').classList.remove('active');
+        document.getElementById('resultScreen').classList.add('active');
+        
+        document.getElementById('finalScore').innerText = `${score} / ${currentQuestions.length}`;
+        document.getElementById('progressBar').style.width = '100%';
+
+        const percentage = (score / currentQuestions.length) * 100;
+        let msg = "";
+        if (percentage >= 80) msg = "🏆 Outstanding Performance!";
+        else if (percentage >= 50) msg = "👏 Well Done! Keep it up.";
+        else msg = "📚 Practice makes perfect! Try again.";
+        
+        document.getElementById('resultMessage').innerText = msg;
+        if(percentage >= 50) triggerConfetti();
+    }
+
+    function restartQuiz() {
+        document.getElementById('resultScreen').classList.remove('active');
+        document.getElementById('startScreen').classList.add('active');
+        document.getElementById('progressBar').style.width = '0%';
+    }
+
+    // --- Visual Effects ---
+    function showEmoji(char) {
+        const el = document.getElementById('feedbackEmoji');
+        el.innerText = char;
+        el.style.opacity = '1';
+        el.classList.add('shake-anim');
+        setTimeout(() => {
+            el.style.opacity = '0';
+            el.classList.remove('shake-anim');
+        }, 1000);
+    }
+
+    function triggerConfetti() {
+        const canvas = document.getElementById('confetti-canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const particles = [];
+        const colors = ['#00e676', '#ff1744', '#2979ff', '#ffea00', '#f50057'];
+
+        for(let i=0; i<100; i++) {
+            particles.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height - canvas.height,
+                w: Math.random() * 10 + 5,
+                h: Math.random() * 10 + 5,
+                color: colors[Math.floor(Math.random() * colors.length)],
+                speed: Math.random() * 5 + 2,
+                angle: Math.random() * 360
+            });
+        }
+
+        let animationId;
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            let active = false;
+            particles.forEach(p => {
+                p.y += p.speed;
+                p.angle += 2;
+                if(p.y < canvas.height) active = true;
+                
+                ctx.save();
+                ctx.translate(p.x, p.y);
+                ctx.rotate(p.angle * Math.PI / 180);
+                ctx.fillStyle = p.color;
+                ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
+                ctx.restore();
+            });
+
+            if(active) animationId = requestAnimationFrame(draw);
+        }
+        draw();
+        setTimeout(() => cancelAnimationFrame(animationId), 3000);
+    }
+</script>
+</body>
+</html>

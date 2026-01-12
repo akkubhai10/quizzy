@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chemistry Quiz: Alloys, Cement & Glass (351-427)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --text-main: #ffffff;
+            --text-dim: #e0e0e0;
+            --accent-green: #00e676;
+            --accent-red: #ff1744;
+            --gradient-1: #8E2DE2;
+            --gradient-2: #4A00E0;
+            --gradient-3: #00B4DB;
+            --gradient-4: #0083B0;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: radial-gradient(circle at top left, var(--gradient-1), var(--gradient-2)),
+                        radial-gradient(circle at bottom right, var(--gradient-3), var(--gradient-4));
+            background-blend-mode: overlay;
+            background-size: 200% 200%;
+            animation: gradientBG 15s ease infinite;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow-x: hidden;
+            color: var(--text-main);
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Glassmorphism Card */
+        .container {
+            width: 95%;
+            max-width: 800px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid var(--glass-border);
+            border-radius: 25px;
+            padding: 2.5rem;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        /* Screens */
+        .screen { display: none; flex-direction: column; gap: 20px; animation: fadeIn 0.5s ease; }
+        .screen.active { display: flex; }
+
+        h1 { font-size: 2.2rem; text-align: center; text-shadow: 0 4px 6px rgba(0,0,0,0.3); margin-bottom: 5px; }
+        .subtitle { text-align: center; color: var(--text-dim); font-size: 1rem; margin-bottom: 20px; }
+
+        /* Controls */
+        .control-panel { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
+        
+        .input-group {
+            background: rgba(0,0,0,0.25);
+            padding: 15px;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        label { font-size: 0.9rem; font-weight: 500; }
+        
+        input[type="number"] {
+            background: transparent; border: 1px solid rgba(255,255,255,0.5); color: white;
+            padding: 8px; border-radius: 8px; width: 70px; text-align: center; font-family: inherit; font-size: 1rem;
+        }
+        input[type="number"]:focus { outline: none; border-color: #fff; background: rgba(255,255,255,0.1); }
+
+        /* Toggle Switch */
+        .switch { position: relative; display: inline-block; width: 50px; height: 28px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(255,255,255,0.3); transition: .4s; border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute; content: ""; height: 20px; width: 20px; left: 4px; bottom: 4px;
+            background-color: white; transition: .4s; border-radius: 50%;
+        }
+        input:checked + .slider { background-color: var(--accent-green); }
+        input:checked + .slider:before { transform: translateX(22px); }
+
+        /* Buttons */
+        .btn {
+            background: linear-gradient(135deg, #FF512F 0%, #DD2476 100%);
+            border: none; padding: 16px 32px; color: white;
+            font-size: 1.1rem; font-weight: 700; border-radius: 50px;
+            cursor: pointer; transition: transform 0.2s, box-shadow 0.2s, filter 0.2s;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            text-align: center; width: 100%; letter-spacing: 0.5px;
+        }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.4); filter: brightness(1.1); }
+        .btn:active { transform: translateY(1px); }
+        .btn-restart { background: linear-gradient(135deg, #11998e, #38ef7d); }
+
+        /* Quiz UI */
+        .header-info {
+            display: flex; justify-content: space-between; align-items: center;
+            font-weight: 600; font-size: 1.1rem; margin-top: 10px;
+        }
+        
+        .progress-track {
+            width: 100%; height: 8px; background: rgba(255,255,255,0.15);
+            border-radius: 10px; overflow: hidden; margin-bottom: 25px;
+        }
+        .progress-fill {
+            height: 100%; width: 0%; 
+            background: linear-gradient(90deg, #00c6ff, #0072ff);
+            box-shadow: 0 0 15px rgba(0, 198, 255, 0.5); transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .timer {
+            background: rgba(0,0,0,0.4); padding: 6px 16px; border-radius: 20px;
+            display: flex; align-items: center; gap: 8px; font-variant-numeric: tabular-nums;
+        }
+        .timer.pulse { color: #ff5252; animation: pulse 1s infinite; font-weight: 700; }
+
+        .question-box {
+            background: rgba(255,255,255,0.07);
+            padding: 25px; border-radius: 20px;
+            border-left: 6px solid #fff;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+        .q-eng { font-size: 1.2rem; font-weight: 700; margin-bottom: 12px; display: block; line-height: 1.4; }
+        .q-hindi { font-size: 1rem; color: var(--text-dim); font-weight: 400; display: block; line-height: 1.5; }
+
+        .options-grid { display: grid; grid-template-columns: 1fr; gap: 15px; }
+        
+        .option-btn {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.15);
+            padding: 18px; border-radius: 16px;
+            color: white; text-align: left; cursor: pointer;
+            transition: all 0.2s ease; position: relative; overflow: hidden;
+        }
+        .option-btn:hover:not(:disabled) { background: rgba(255,255,255,0.2); transform: translateX(5px); border-color: rgba(255,255,255,0.4); }
+        .option-btn:disabled { cursor: default; opacity: 0.9; }
+
+        .option-btn.correct { background: rgba(0, 230, 118, 0.25); border: 2px solid #00e676; }
+        .option-btn.wrong { background: rgba(255, 23, 68, 0.25); border: 2px solid #ff1744; }
+
+        .opt-eng { font-weight: 600; display: block; margin-bottom: 4px; font-size: 1rem; }
+        .opt-hindi { font-size: 0.9rem; color: #ddd; display: block; font-weight: 300; }
+
+        .footer-nav { margin-top: 30px; display: flex; justify-content: flex-end; }
+        .btn-early { 
+            background: transparent; border: 1px solid rgba(255,255,255,0.4); 
+            font-size: 0.95rem; padding: 10px 24px; border-radius: 30px;
+        }
+        .btn-early:hover { background: rgba(255,255,255,0.1); }
+
+        /* Animations */
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+        @keyframes shake { 
+            0%, 100% { transform: translateX(0); } 
+            20% { transform: translateX(-12px); } 
+            40% { transform: translateX(12px); }
+            60% { transform: translateX(-8px); }
+            80% { transform: translateX(8px); }
+        }
+        @keyframes fall {
+            0% { transform: translateY(-10vh) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+        }
+
+        /* Feedback Overlay */
+        #feedback-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 9999; display: flex;
+            justify-content: center; align-items: center;
+        }
+        .emoji-feedback { font-size: 6rem; animation: shake 0.6s cubic-bezier(.36,.07,.19,.97) both; display: none; filter: drop-shadow(0 0 20px rgba(0,0,0,0.5)); }
+        .confetti {
+            position: absolute; width: 12px; height: 12px;
+            background: #f00; animation: fall 3s linear forwards;
+            border-radius: 3px;
+        }
+
+        /* Result Screen */
+        .score-circle {
+            width: 180px; height: 180px; border-radius: 50%;
+            background: rgba(255,255,255,0.05); border: 8px solid rgba(255,255,255,0.8);
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            margin: 0 auto 25px; 
+            box-shadow: 0 0 30px rgba(255,255,255,0.2);
+        }
+        .score-val { font-size: 3.5rem; font-weight: 800; line-height: 1; }
+        .score-label { font-size: 1rem; font-weight: 400; text-transform: uppercase; letter-spacing: 2px; margin-top: 5px; opacity: 0.8; }
+        .score-msg { font-size: 1.5rem; margin-bottom: 10px; color: #ffd700; text-align: center; font-weight: 600; }
+
+        @media (min-width: 600px) {
+            .options-grid { grid-template-columns: 1fr 1fr; }
+            .container { padding: 3rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div id="feedback-overlay">
+        <div class="emoji-feedback" id="sad-emoji">😢</div>
+    </div>
+
+    <div id="start-screen" class="screen active">
+        <h1>Chemistry Quiz</h1>
+        <p class="subtitle">Alloys, Cement & Glass [351-427]</p>
+        
+        <div class="control-panel">
+            <div class="input-group">
+                <label>Timer (sec)<br><span style="font-size:0.75rem; color:#aaa">0 = No Timer</span></label>
+                <input type="number" id="time-input" placeholder="0" min="0">
+            </div>
+
+            <div class="input-group">
+                <label>Shuffle<br><span style="font-size:0.75rem; color:#aaa">Random Order</span></label>
+                <label class="switch">
+                    <input type="checkbox" id="shuffle-input">
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </div>
+
+        <button class="btn" onclick="startQuiz()">Start Quiz 🚀</button>
+    </div>
+
+    <div id="quiz-screen" class="screen">
+        <div class="progress-track"><div class="progress-fill" id="progress-bar"></div></div>
+        
+        <div class="header-info">
+            <span id="q-counter">Q 01/50</span>
+            <div class="timer" id="timer-display"><span>⏱️</span> <span id="time-left">--</span></div>
+            <span id="score-display">Score: 00</span>
+        </div>
+
+        <div class="question-box">
+            <span class="q-eng" id="q-text-eng">Loading...</span>
+            <span class="q-hindi" id="q-text-hindi">Loading...</span>
+        </div>
+
+        <div class="options-grid" id="options-container"></div>
+
+        <div class="footer-nav">
+            <button class="btn btn-early" onclick="finishEarly()">Finish & Show Results</button>
+        </div>
+    </div>
+
+    <div id="result-screen" class="screen">
+        <h2>Quiz Completed!</h2>
+        <div class="score-circle">
+            <span class="score-val" id="final-score">0%</span>
+            <span class="score-label">Accuracy</span>
+        </div>
+        <div class="score-msg" id="result-msg"></div>
+        <p id="stats-text" style="text-align:center; color:#ddd; font-size:1.1rem;"></p>
+        <button class="btn btn-restart" onclick="location.reload()">Restart Quiz 🔄</button>
+    </div>
+</div>
+
+<script>
+    // --- Data: Questions 351-427 (Extracted from Images) ---
+    const rawQuestions = [
+        {
+            e: "Parts of airplanes, motor cars and bicycles are made of which steel?",
+            h: "हवाई जहाज, मोटरकार एवं बाई-साइकिलों के हिस्से एवं पूर्जे निम्नलिखित में किस इस्पात से निर्मित किये जाते हैं?",
+            opts: [{e:"Manganese Steel", h:"मैंगनीज इस्पात"}, {e:"Chromium-Nickel Steel", h:"क्रोमियम-निकेल इस्पात"}, {e:"Chromium-Vanadium Steel", h:"क्रोमियम-वैनेडियम इस्पात"}, {e:"Silicon Steel", h:"सिलिकॉन इस्पात"}],
+            ans: 2
+        },
+        {
+            e: "What is added to steel to make it hard?",
+            h: "स्टील को कठोरता प्रदान करने के लिये क्या मिलायी जाती है?",
+            opts: [{e:"Carbon", h:"कार्बन"}, {e:"Manganese", h:"मैंगनीज"}, {e:"Silicon", h:"सिलिकॉन"}, {e:"Chromium", h:"क्रोमियम"}],
+            ans: 0
+        },
+        {
+            e: "Which steel is used for high speed machines and drilling tools?",
+            h: "निम्नलिखित में किस इस्पात से उच्च वेग मशीनों एवं वेधन यंत्रों (Drilling tools) का निर्माण किया जाता है?",
+            opts: [{e:"Cobalt Steel", h:"कोबाल्ट इस्पात"}, {e:"Tungsten Steel", h:"टंगस्टन इस्पात"}, {e:"Silicon Steel", h:"सिलिकॉन इस्पात"}, {e:"Stainless Steel", h:"जंगरोधी इस्पात"}],
+            ans: 1
+        },
+        {
+            e: "Consider statements regarding Invar: 1. Contains 36% Ni. 2. Used for scientific instruments.",
+            h: "1. इन्वार (Invar) इस्पात में निकेल 36% होता है। 2. इसका उपयोग वैज्ञानिक उपकरण एवं यंत्र... सही है/हैं?",
+            opts: [{e:"Only 1", h:"केवल 1"}, {e:"Only 2", h:"केवल 2"}, {e:"Both 1 and 2", h:"1 तथा 2 दोनों"}, {e:"Neither", h:"न तो 1 न ही 2"}],
+            ans: 2
+        },
+        {
+            e: "Alloy used for balance beams and light instruments:",
+            h: "तराजू बीमों एवं हल्के उपकरणों के निर्माण के लिये निम्नलिखित में किस मिश्रधातु का प्रयोग किया जाता है?",
+            opts: [{e:"Magnalium", h:"मैग्नेलियम"}, {e:"Duralumin", h:"ड्यूरेलूमिन"}, {e:"Bronze", h:"काँसा"}, {e:"Brass", h:"पीतल"}],
+            ans: 0
+        },
+        {
+            e: "Which is an extremely strong and corrosion resistant 'Bronze' alloy?",
+            h: "अत्यंत शक्तिशाली एवं अत्यंत संक्षारण प्रतिरोधी 'कांसे' मिश्रधातु है-",
+            opts: [{e:"Cu and Zn", h:"कॉपर एवं जिंक का"}, {e:"Cu and Sn", h:"कॉपर एवं टिन का"}, {e:"Cu, Ag and Ni", h:"कॉपर, सिल्वर एवं निकेल का"}, {e:"Al and Cu", h:"ऐलुमिनियम तथा कॉपर का"}],
+            ans: 3
+        },
+        {
+            e: "'Brass' alloy used in making utensils, screws, nuts and bolts is:",
+            h: "बर्त्तन, स्क्रू, नटो एवं बोल्टो के निर्माण में प्रयुक्त होने वाला 'पीतल' मिश्रधातु है-",
+            opts: [{e:"Cu and Zn", h:"कॉपर एवं जिंक का"}, {e:"Cu and Sn", h:"कॉपर एवं टिन का"}, {e:"Cu and Al", h:"कॉपर एवं ऐलुमिनियम का"}, {e:"Cu and Ag", h:"कॉपर एवं सिल्वर का"}],
+            ans: 0
+        },
+        {
+            e: "Elements present in Stainless Steel:",
+            h: "स्टेनलेस स्टील (जंगरोधी इस्पात) में निम्नलिखित में कौन से तत्व शामिल हैं-",
+            opts: [{e:"Fe and C", h:"आयरन एवं कार्बन"}, {e:"Fe, Ni and Cr", h:"आयरन, निकेल एवं क्रोमियम"}, {e:"Fe, Cr and C", h:"आयरन, क्रोमियम एवं कार्बन"}, {e:"Fe, Cu and C", h:"आयरन, कॉपर एवं कार्बन"}],
+            ans: 1
+        },
+        {
+            e: "Alloy used for making heating elements of electric heating devices:",
+            h: "विद्युततापी साधन के लिये तापी घटक बनाने के लिये जिस मिश्रधातु का प्रयोग किया जाता है, वह कौन सी है?",
+            opts: [{e:"German Silver", h:"जर्मन सिल्वर"}, {e:"Solder", h:"सोल्डर"}, {e:"Steel", h:"इस्पात"}, {e:"Nichrome", h:"नाइक्रोम"}],
+            ans: 3
+        },
+        {
+            e: "'German Silver' used in making utensils is an alloy of:",
+            h: "बर्त्तन बनाने में प्रयुक्त 'जर्मन सिल्वर' एक ऐलॉय है-",
+            opts: [{e:"Cu, Ag, Ni", h:"कॉपर, सिल्वर और निकेल का"}, {e:"Cu, Zn, Al", h:"कॉपर, जिंक और ऐलुमिनियम का"}, {e:"Cu, Zn, Ni", h:"कॉपर, जिंक और निकेल का"}, {e:"Cu, Ni, Al", h:"कॉपर, निकेल और ऐलुमिनियम का"}],
+            ans: 2
+        },
+        {
+            e: "Rolled Gold is an alloy of:",
+            h: "रोल्ड गोल्ड (Rolled gold) एक मिश्रधातु है-",
+            opts: [{e:"Cu and Ag", h:"तांबा और चाँदी का"}, {e:"Cu and Au", h:"तांबा और सोना का"}, {e:"Al and Zn", h:"ऐलुमिनियम एवं जस्ता का"}, {e:"Cu and Al", h:"तांबा एवं ऐलुमिनियम का"}],
+            ans: 3
+        },
+        {
+            e: "Which element is NOT present in German Silver?",
+            h: "जर्मन सिल्वर में निम्नलिखित में कौन तत्व नहीं होता है?",
+            opts: [{e:"Silver", h:"सिल्वर"}, {e:"Nickel", h:"निकेल"}, {e:"Zinc", h:"जिंक"}, {e:"Copper", h:"कॉपर"}],
+            ans: 0
+        },
+        {
+            e: "Which is NOT correctly matched?",
+            h: "निम्नलिखित में कौन-सा सुमेलित नहीं है ?",
+            opts: [{e:"Brass - Cu+Zn", h:"पीतल - तांबा और जस्ता"}, {e:"Stainless Steel - Fe+Cr", h:"स्टेनलेस स्टील - लोहा और क्रोमियम"}, {e:"White Gold - Au+Ag", h:"सफेद सोना - सोना और चाँदी"}, {e:"Rose Gold - Au+Cu", h:"गुलाबी सोना - सोना और तांबा"}],
+            ans: 2
+        },
+        {
+            e: "Which is NOT correctly matched?",
+            h: "निम्नलिखित में कौन सा सुमेलित नहीं है ?",
+            opts: [{e:"Brass - Cu+Zn", h:"पीतल - कॉपर एवं जिंक"}, {e:"Bronze - Cu+Sn", h:"कांसा - कॉपर एवं टिन"}, {e:"Duralumin - Al+Cu", h:"दुरैलुमिन - एलुमिनियम एवं कॉपर"}, {e:"Magnalium - Al+Mn", h:"मैग्नेलियम - ऐलुमिनियम एवं मैंगनीज"}],
+            ans: 3
+        },
+        {
+            e: "Gun Metal is a mixture of:",
+            h: "गन मेटल सम्मिश्रण है-",
+            opts: [{e:"Cu, Sn, Fe", h:"तांबा, टिन एवं फेरस का"}, {e:"Cu, Fe, Zn", h:"तांबा, फेरस एवं जिंक का"}, {e:"Cu, Sn, Zn", h:"तांबा, टिन एवं जिंक का"}, {e:"Cu, Zn", h:"तांबा एवं जिंक का"}],
+            ans: 2
+        },
+        {
+            e: "Manganin used for making electrical instruments is an alloy of:",
+            h: "विद्युत यंत्र बनाने में प्रयोग आने वाला मैंगनीज (Manganin) किसका मिश्रधातु है-",
+            opts: [{e:"Cu, Al, Sn", h:"कॉपर, ऐलुमिनियम एवं टीन का"}, {e:"Cu, Zn, Ni", h:"कॉपर, जिंक एवं निकेल का"}, {e:"Cu, Mn, Ni", h:"कॉपर, मैंगनीज एवं निकेल का"}, {e:"Cu, Sn, P", h:"कॉपर, टिन एवं फास्फोरस का"}],
+            ans: 2
+        },
+        {
+            e: "Which option is NOT correctly matched regarding Alloy Composition?",
+            h: "निम्नलिखित में कौन सा विकल्प सही सुमेलित नहीं है?",
+            opts: [{e:"Phosphor Bronze : Cu+Sn+P", h:"फॉस्फर ब्रौंज : Cu + Sn + P"}, {e:"Manganese Bronze : Cu+Mg+Ni", h:"मैंगनीज ब्रौंज : Cu + Mg + Ni"}, {e:"German Silver : Cu+Zn+Ni", h:"जर्मन सिल्वर : Cu + Zn + Ni"}, {e:"Aluminum Bronze : Cu+Al+Sn", h:"ऐलुमिनियम ब्रौंज : Cu + Al + Sn"}],
+            ans: 1
+        },
+        {
+            e: "An alloy contains 90% Cu and 10% Tin. It is:",
+            h: "एक मिश्रधातु में 90 प्रतिशत Cu तथा 10 प्रतिशत टिन है। यह मिश्रधातु है-",
+            opts: [{e:"Brass", h:"पीतल"}, {e:"German Silver", h:"जर्मन सिल्वर"}, {e:"Solder", h:"सोल्डर"}, {e:"Bronze", h:"ब्रोंज"}],
+            ans: 3
+        },
+        {
+            e: "Which process makes metal harder?",
+            h: "निम्नलिखित में किस प्रक्रिया द्वारा धातु अधिक मजबूत हो जाती है ?",
+            opts: [{e:"Electroplating", h:"विद्युत लेपन"}, {e:"Refining", h:"शोधन"}, {e:"Alloying", h:"मिश्रधातु में परिवर्तन"}, {e:"Calcination", h:"निस्तापन"}],
+            ans: 2
+        },
+        {
+            e: "Which statement is true regarding Rusting?",
+            h: "निम्नलिखित में कौन-सा कथन सही है ?",
+            opts: [{e:"Dry O2 rusts iron", h:"शुष्क ऑक्सीजन गैस के संपर्क में आकर लोहे में जंग लग जाता है"}, {e:"Rustless water rusts iron", h:"वायु रहित जल में लोहे में जंग पकड़ लेता है"}, {e:"Needs O2 and Moisture", h:"लोहे में जंग लगने के लिये ऑक्सीजन और जलवाष्प की एक साथ उपस्थिति आवश्यक है"}, {e:"None", h:"इनमें से कोई नहीं"}],
+            ans: 2
+        },
+        {
+            e: "Solder wire used in welding electronic circuits is an alloy of:",
+            h: "इलेक्ट्रोनिक, पाइपलाइन धातु के चादरों एवं विद्युत तारों की वेल्डिंग में काम आने वाला सोल्डर किसका मिश्रधातु है-",
+            opts: [{e:"Pb and Hg", h:"सीसा तथा पारा"}, {e:"Pb and Sn", h:"सीसा तथा टिन"}, {e:"Sn and Hg", h:"टीन तथा पारा"}, {e:"Sn and Zn", h:"टिन तथा जिंक"}],
+            ans: 1
+        },
+        {
+            e: "Besides Al and Cu, which other metals are present in Duralumin used for pressure cookers/aircraft?",
+            h: "प्रेशर कुकर तथा हवाई जहाज के ढाँचा बनाने में प्रयुक्त होने वाला मिश्रधातु 'दुरैलुमिन' में ऐलुमिनियम तथा कॉपर के अलावे कौन सी अन्य धातु हल्की मात्रा में मिश्रित रहती है ?",
+            opts: [{e:"Mg", h:"मैग्निशियम"}, {e:"Mn", h:"मैंगनीज"}, {e:"Both A and B", h:"A तथा B दोनों"}, {e:"Neither", h:"न तो A न ही B"}],
+            ans: 2
+        },
+        {
+            e: "Consider statements about Muntz/Dutch metal: 1. Alloys of Cu+Zn. 2. Muntz=60%Cu. 3. Dutch=80%Cu.",
+            h: "1. मुंज मेटल तथा डच मेटल कॉपर तथा जिंक का मिश्रधातु है। ... कौन-सा/से कथन सही है/हैं ?",
+            opts: [{e:"Only 1", h:"केवल 1"}, {e:"Only 2", h:"केवल 2"}, {e:"Only 3", h:"केवल 3"}, {e:"1, 2 and 3", h:"1, 2 और 3"}],
+            ans: 3
+        },
+        {
+            e: "Rose Metal is an alloy of:",
+            h: "रोज मेटल (Rose Metal) मिश्रधातु है-",
+            opts: [{e:"Bi, Pb, Sn", h:"विस्मथ, सीसा तथा टिन का"}, {e:"Cu, Zn, Sn", h:"कॉपर, जस्ता तथा टिन का"}, {e:"Cu, Sn, Fe", h:"कॉपर, जस्ता तथा लोहा का"}, {e:"Cu, Zn, Ni", h:"कॉपर, जस्ता तथा निके लका"}],
+            ans: 0
+        },
+        {
+            e: "Which option is NOT correctly matched?",
+            h: "निम्नलिखित में कौन-सा विकल्प सही सुमेलित नहीं है?",
+            opts: [{e:"Gun Metal - Cu+Zn+Sn", h:"गन मेटल - Cu + Zn + Sn"}, {e:"Delta Metal - Cu+Zn+Fe", h:"डेल्टा मेटल - Cu + Zn + Fe"}, {e:"Monel Metal - Cu+Ni", h:"मोनेल मेटल - Cu + ZA + Ni (Image error ZA? Should be Ni)"}, {e:"Rose Metal - Bi+Pb+Sn", h:"रोज मेटल - Bi + Pb + Sn"}],
+            ans: 2
+        },
+        {
+            e: "Which alloy is used to make Magnets?",
+            h: "चुम्बक बनाने के लिए किस मिश्रधातु का प्रयोग किया जाता है ?",
+            opts: [{e:"Duralumin", h:"ड्यूरेलूमिन"}, {e:"Stainless Steel", h:"स्टेनलेस स्टील"}, {e:"Alnico", h:"एल्निको"}, {e:"Magnalium", h:"मैग्नेलियम"}],
+            ans: 2
+        },
+        {
+            e: "Alnico is an alloy of:",
+            h: "एल्निको को मिश्रधातु बनाया जाता है-",
+            opts: [{e:"Fe, Ni, Al", h:"लोहा, निकेल तथा ऐलुमिनियम से"}, {e:"Fe, Ti, Ni", h:"लोहा, टिटेनियम तथा निकेल से"}, {e:"Fe, Zn, Ni", h:"लोहा, जस्ता, निकेल से"}, {e:"Ti, Co, Ni, Al", h:"टिटेनियम, कोबाल्ट, निकेल तथा ऐलुमिनियम से"}],
+            ans: 0
+        },
+        {
+            e: "Major metal component of Electron alloy is:",
+            h: "इलेक्ट्रॉन (Electron) मिश्रधातु का प्रमुख धातु अवयव है-",
+            opts: [{e:"Aluminum", h:"ऐलुमिनियम"}, {e:"Magnesium", h:"मैग्नीशियम"}, {e:"Zinc", h:"जिंक"}, {e:"Copper", h:"कॉपर"}],
+            ans: 1
+        },
+        {
+            e: "Britannia metal is an alloy of:",
+            h: "ब्रिटेनिया मेटल मिश्रधातु है-",
+            opts: [{e:"Sb, Sn, Cu", h:"एण्टिमनी, टिन और तांबा का"}, {e:"Sb, Al", h:"एण्टिमनी और ऐलुमिनियम का"}, {e:"Sb, Sn, Pb", h:"एण्टिमनी, टिन और सीसा का"}, {e:"Sb, Mg", h:"एण्टिमनी और मैग्नीशियम का"}],
+            ans: 0
+        },
+        {
+            e: "Which option is NOT correctly matched?",
+            h: "निम्नलिखित में कौन-सा विकल्प सुमेलित नहीं है ?",
+            opts: [{e:"Bronze", h:"काँसा - तांबा, टिन"}, {e:"Brass", h:"पीतल - तांबा, जिंक"}, {e:"German Silver", h:"जर्मन सिल्वर - तांबा, जिंक, निकेल"}, {e:"Type Metal", h:"मुद्रण धातु - सीसा, आर्सेनिक, टिन"}],
+            ans: 3
+        },
+        {
+            e: "Fuse wire is made of?",
+            h: "प्यूज तार किससे बनती है ?",
+            opts: [{e:"Tin and Cu", h:"टिन तथा तांबे की मिश्रधातु"}, {e:"Tin and Pb", h:"टिन तथा सीसा की मिश्रधातु"}, {e:"Tin and Al", h:"टिन तथा ऐलुमिनियम की मिश्रधातु"}, {e:"Ni and Cr", h:"निकेल और क्रोमियम की मिश्रधातु"}],
+            ans: 1
+        },
+        {
+            e: "'Solder' used for joining electronic circuits is made of:",
+            h: "इलेक्ट्रॉनिक सर्किटों को जोड़ने के लिए प्रयुक्त किये जाने वाले 'टांके' (Solder) में होते हैं-",
+            opts: [{e:"Pb and Sn", h:"सीसा और टिन"}, {e:"Sn and Fe", h:"टिन और लोहा"}, {e:"Cu and Pb", h:"तांबा और सीसा"}, {e:"Pb and Al", h:"सीसा और ऐलुमिनियम"}],
+            ans: 0
+        },
+        {
+            e: "Who first applied for the patent of Cement?",
+            h: "सीमेंट का पता सर्वप्रथम किसने लगाया था ?",
+            opts: [{e:"Joseph Aspdin", h:"जोसेफ आस्पडिन"}, {e:"Berzelius", h:"बर्जीलियस"}, {e:"Henry Bessemer", h:"हेनरी बेसेमर"}, {e:"Charles Haber", h:"चार्ल्स हैबर"}],
+            ans: 0
+        },
+        {
+            e: "Consider statements regarding Cement: 1. Joseph Aspdin named it Portland Cement. 2. Modern use is modified Portland Cement.",
+            h: "1. सीमेंट का पता सर्वप्रथम जोसेफ आस्पडिन ने लगाया था। उसने इसका नाम पोर्टलैंड सीमेंट रखा। ... सही है/हैं ?",
+            opts: [{e:"Only 1", h:"केवल 1"}, {e:"Only 2", h:"केवल 2"}, {e:"Both 1 and 2", h:"1 तथा 2 दोनों"}, {e:"Neither", h:"न तो 1 न ही 2"}],
+            ans: 2
+        },
+        {
+            e: "Raw materials used for cement production:",
+            h: "सीमेंट उत्पादन हेतु कच्चे पदार्थ के रूप में उपयोग में लाये जाते हैं-",
+            opts: [{e:"Limestone", h:"चुना पत्थर"}, {e:"Clay", h:"चिकनी मिट्टी"}, {e:"Gypsum", h:"सोडियम हाइड्रॉक्साइड (Image says Gypsum usually, text says NaOH? No, C says Gypsum in knowledge, image text C says NaOH. But usually it's D: a and b)"}, {e:"a and b both", h:"a तथा b दोनों"}],
+            ans: 3
+        },
+        {
+            e: "Correct order of quantity in Portland Cement:",
+            h: "पोर्टलैंड सीमेंट में निम्नलिखित में से कौन-सा एक चूना (CaO), सिलिका (SiO2), एलुमिना (Al2O3) और फेरिक ऑक्साइड (Fe2O3) की मात्रा का सही अनुक्रम है?",
+            opts: [{e:"CaO > SiO2 > Al2O3 > Fe2O3", h:"CaO > SiO2 > Al2O3 > Fe2O3"}, {e:"SiO2 > CaO > Fe2O3 > Al2O3", h:"SiO2 > CaO > Fe2O3 > Al2O3"}, {e:"CaO > SiO2 > Fe2O3 > Al2O3", h:"CaO > SiO2 > Fe2O3 > Al2O3"}, {e:"Al2O3 > SiO2 > CaO > Fe2O3", h:"Al2O3 > SiO2 > CaO > Fe2O3"}],
+            ans: 0
+        },
+        {
+            e: "Maximum component in Cement composition is:",
+            h: "सीमेंट के संघटन में सर्वाधिक मात्रा में उपस्थित रहते हैं-",
+            opts: [{e:"CaO", h:"CaO"}, {e:"SiO2", h:"SiO2"}, {e:"Al2O3", h:"Al2O3"}, {e:"Fe2O3", h:"Fe2O3"}],
+            ans: 0
+        },
+        {
+            e: "Which statement is true?",
+            h: "निम्नलिखित में कौन-सा एक सत्य है ?",
+            opts: [{e:"Cement is an element", h:"सीमेंट एक तत्व है"}, {e:"Cement is a compound", h:"सीमेंट एक यौगिक है"}, {e:"Cement is a mixture", h:"सीमेंट एक मिश्रण है"}, {e:"Cement is not a substance", h:"सीमेंट पदार्थ नहीं है"}],
+            ans: 2
+        },
+        {
+            e: "Raw material burnt automatically in cement manufacturing:",
+            h: "सीमेंट निर्माण में प्रयुक्त कच्चा पदार्थ चूना पत्थर स्वतः प्रदान करती है-",
+            opts: [{e:"CaO", h:"CaO के"}, {e:"SiO2", h:"SiO2 के"}, {e:"Al2O3", h:"Al2O3 के"}, {e:"Fe2O3", h:"Fe2O3 के"}],
+            ans: 0
+        },
+        {
+            e: "Clay provides which raw materials in cement manufacturing?",
+            h: "सीमेंट निर्माण में प्रयुक्त कच्चा पदार्थ चिकनी मिट्टी प्रदान करती है-",
+            opts: [{e:"SiO2", h:"SiO2"}, {e:"Al2O3", h:"Al2O3"}, {e:"Fe2O3", h:"Fe2O3"}, {e:"All of these", h:"इनमें से सभी"}],
+            ans: 3
+        },
+        {
+            e: "Ratio of Limestone and Clay in cement manufacturing:",
+            h: "सीमेंट निर्माण में प्रयुक्त कच्चा पदार्थ चूना पत्थर तथा चिकनी मिट्टी द्रव्यमान के अनुसार किस अनुपात में लिये जाते हैं ?",
+            opts: [{e:"3 : 1", h:"3 : 1"}, {e:"1 : 3", h:"1 : 3"}, {e:"2 : 1", h:"2 : 1"}, {e:"1 : 2", h:"1 : 2"}],
+            ans: 0
+        },
+        {
+            e: "Cement is a mixture of:",
+            h: "सीमेंट एक प्रकार के मिश्रण है, जिसके संघटन में उपस्थित रहते हैं-",
+            opts: [{e:"Dicalcium Silicate", h:"डाइकैल्शियम सिलिकेट"}, {e:"Tricalcium Silicate", h:"ट्राइकैल्शियम सिलिकेट"}, {e:"Tricalcium Aluminate", h:"ट्राइकैल्शियम ऐलुमिनेट"}, {e:"All of these", h:"इनमें से सभी"}],
+            ans: 3
+        },
+        {
+            e: "Purpose of adding Gypsum to Cement:",
+            h: "सीमेंट में जिप्सम मिलाने का प्रायोजन यह है कि-",
+            opts: [{e:"Delay setting process", h:"सीमेंट के शीघ्र जमने की प्रक्रिया को विलंबित करना"}, {e:"Accelerate setting", h:"सीमेंट को शीघ्र जमने योग्य बनाना"}, {e:"Provide strength", h:"सीमेंट को मजबूती प्रदान करना"}, {e:"Make suitable for plastering", h:"सीमेंट को प्लास्टरिंग के योग्य बनाना"}],
+            ans: 0
+        },
+        {
+            e: "Mortar is a mixture of:",
+            h: "चूना लेप (Mortar) मिश्रण है-",
+            opts: [{e:"Cement, Sand, Water", h:"सीमेंट, बालू और पत्थर का (No stone in mortar, usually sand+cement)"}, {e:"Cement and Sand", h:"सीमेंट और बालू का"}, {e:"Steel rods", h:"इस्पात छड़ों और क्रंकीट का"}, {e:"None", h:"इनमें से कोई नहीं"}],
+            ans: 0
+        },
+        {
+            e: "Concrete is made of:",
+            h: "ईंटों एवं पाषाण खंडों को जोड़ने के लिए सीमेंट तथा बालू से तैयार किया गया मिश्रण को क्या कहते हैं ? (Wait, Question 395 asks what is the mixture prepared from cement, sand, gravel/stone)",
+            opts: [{e:"RCC", h:"प्रबलित कंक्रीट सीमेंट (R.C.C.)"}, {e:"Concrete", h:"कंक्रीट"}, {e:"Mortar", h:"मोर्टर"}, {e:"Glass", h:"कांच"}],
+            ans: 1
+        },
+        {
+            e: "Percentage of Gypsum added to clinker:",
+            h: "भट्ठी से प्राप्त सीमेंट के क्लिंकर में कितना प्रतिशत जिप्सम मिलाया जाता है ?",
+            opts: [{e:"5-10%", h:"5-10 प्रतिशत"}, {e:"2-5%", h:"2-5 प्रतिशत"}, {e:"10-25%", h:"10-25 प्रतिशत"}, {e:"Approx 50%", h:"लगभग 50 प्रतिशत"}],
+            ans: 1
+        },
+        {
+            e: "'Concrete' used in building construction is a mixture of:",
+            h: "भवनों के निर्माण में उपयोग होने वाला 'कंक्रीट' (Concrete) मिश्रण है-",
+            opts: [{e:"Sand and Cement", h:"बालू और सीमेंट का"}, {e:"Sand, Cement, Stone", h:"बालू, सीमेंट और पत्थर का"}, {e:"Cement and Lime stone", h:"सीमेंट और चूना पत्थर का"}, {e:"Lime, Stone, Clay", h:"चूना पत्थर और चिकनी मिट्टी का"}],
+            ans: 1
+        },
+        {
+            e: "Mixture heated to make cement:",
+            h: "सीमेंट बनाने के लिए किसके मिश्रण को खूब तप्त किया जाता है ?",
+            opts: [{e:"Lime and Graphite", h:"चूना पत्थर और ग्रेफाइट"}, {e:"Limestone and Clay", h:"चूना पत्थर और मृत्तिका (चिकनी मिट्टी)"}, {e:"Chalk and Graphite", h:"चॉक और ग्रेफाइट"}, {e:"Clay and Graphite", h:"मृत्तिका और ग्रेफाइट"}],
+            ans: 1
+        },
+        {
+            e: "Temperature of mixture in kiln for cement:",
+            h: "सीमेंट बनाने के लिए चूना पत्थर और चिकनी मिट्टी के मिश्रण को भट्ठी में कितने ताप तक गर्म किया जाता है ?",
+            opts: [{e:"1773 K", h:"1773 K"}, {e:"1673 K", h:"1673 K"}, {e:"1278 K", h:"1278 K"}, {e:"3342 K", h:"3342 K"}],
+            ans: 1
+        },
+        {
+            e: "Brass turns colorless in air due to presence of:",
+            h: "पीतल किसकी मौजूदगी में निरंतर रहने से वायु में रंगहीन हो जाता है ?",
+            opts: [{e:"Hydrogen vapor", h:"हाइड्रोजनित वेपर"}, {e:"Hydrogen Sulphide", h:"हाइड्रोजन सल्फाइड"}, {e:"Aluminum Sulphide", h:"ऐलुमिनियम सल्फाइड"}, {e:"Aluminum Phosphide", h:"ऐलुमिनियम फॉस्फाइड"}],
+            ans: 1
+        },
+        {
+            e: "Consider statements about setting of cement: 1. Hydration. 2. Exothermic.",
+            h: "1. जल के साथ सीमेंट को मिलाने पर यह जल अवशोषित कर... 2. सीमेंट का जमना एक जलयोजन प्रक्रिया... सही है?",
+            opts: [{e:"Only 1", h:"केवल 1"}, {e:"Only 2", h:"केवल 2"}, {e:"Both 1 and 2", h:"1 तथा 2 दोनों"}, {e:"Neither", h:"न तो 1 न ही 2"}],
+            ans: 2
+        },
+        {
+            e: "Portland Cement is a mixture of:",
+            h: "पोर्टलैंड सीमेंट मिश्रण है-",
+            opts: [{e:"Ca-Silicate + Ca-Aluminate", h:"कैल्शियम सिलिकेट तथा कैल्शियम ऐलुमिनेट का"}, {e:"Ca-Silicate + Fe-Aluminate", h:"कैल्शियम सिलिकेट तथा फेरस ऐलुमिनेट का"}, {e:"Na-Silicate + Ca-Aluminate", h:"सोडियम सिलिकेट तथा कैल्शियम ऐलुमिनेट का"}, {e:"Ca-Silicate + Na-Aluminate", h:"कैल्शियम सिलिकेट तथा सोडियम ऐलुमिनेट का"}],
+            ans: 0
+        },
+        {
+            e: "Chemical formula representing Ordinary Glass:",
+            h: "सामान्य कांच को निम्नलिखित में किस रासायनिक सूत्र द्वारा प्रदर्शित करते हैं ?",
+            opts: [{e:"K2O.CaO.6SiO2", h:"K2O.CaO.6SiO2"}, {e:"Na2O.CaO.6SiO2", h:"Na2O.CaO.6SiO2"}, {e:"Al2O3.Fe2O3.6SiO2", h:"Al2O3.Fe2O3.6SiO2"}, {e:"Na2SiO3.6H2O", h:"Na2SiO3.6H2O"}],
+            ans: 1
+        },
+        {
+            e: "Raw materials used in Glass manufacturing:",
+            h: "कांच में प्रयुक्त होने वाला कच्चा पदार्थ है-",
+            opts: [{e:"Sodium Carbonate", h:"सोडियम कार्बोनेट"}, {e:"Calcium Carbonate", h:"कैल्शियम कार्बोनेट"}, {e:"Sand (SiO2)", h:"बालू (SiO2)"}, {e:"All of above", h:"उपर्युक्त में सभी"}],
+            ans: 3
+        },
+        {
+            e: "Mixture of Sodium Carbonate, Calcium Carbonate and Sand for glass making is called:",
+            h: "काँच निर्माण हेतु सोडियम कार्बोनेट, कैल्शियम कार्बोनेट तथा बालू के तैयार किये गये मिश्रण को क्या कहते हैं?",
+            opts: [{e:"Batch", h:"बैच (Batch)"}, {e:"Charge", h:"चार्ज"}, {e:"Cullet", h:"क्यूलेट"}, {e:"Turquoise", h:"टरकीिस"}],
+            ans: 0
+        },
+        {
+            e: "Temperature for heating glass batch in furnace:",
+            h: "काँच निर्माण हेतु सोडियम कार्बोनेट, कैल्शियम कार्बोनेट तथा बालू के मिश्रण को भट्ठी में कितने ताप तक गर्म करते हैं ?",
+            opts: [{e:"1773 K", h:"1773 K"}, {e:"1673 K", h:"1673 K"}, {e:"1573 K", h:"1573 K"}, {e:"1473 K", h:"1473 K"}],
+            ans: 1
+        },
+        {
+            e: "Glass is a mixture of:",
+            h: "कांच निम्नलिखित में किसका मिश्रण है ?",
+            opts: [{e:"Ca-Silicate + Ca-Aluminate", h:"कैल्शियम सिलिकेट तथा कैल्शियम ऐलुमिनेट का"}, {e:"Na-Silicate + Na-Aluminate", h:"सोडियम सिलिकेट तथा सोडियम ऐलुमिनेट का"}, {e:"Ca-Silicate + Na-Silicate", h:"कैल्शियम सिलिकेट तथा सोडियम सिलिकेट का"}, {e:"Ca-Silicate + Na-Aluminate", h:"कैल्शियम सिलिकेट तथा सोडियम ऐलुमिनेट का"}],
+            ans: 2
+        },
+        {
+            e: "Gas released from furnace during glass making:",
+            h: "काँच तैयार करने वाले भट्ठी से कौन-सी गैस बाहर निकलती है ?",
+            opts: [{e:"SO2", h:"SO2"}, {e:"CO", h:"CO"}, {e:"SO2 + CO", h:"SO2 + CO"}, {e:"CO2", h:"CO2"}],
+            ans: 3
+        },
+        {
+            e: "Annealing of glass means:",
+            h: "1. भट्ठी से प्राप्त काँच द्रव रूप में प्राप्त होता है... 2. भट्ठी से प्राप्त द्रव कांच को पहले शीतलन कर फिर उससे कांच की विभिन्न वस्तुओं को निर्मित किया जाता है।",
+            opts: [{e:"Only 1", h:"केवल 1"}, {e:"Only 2", h:"केवल 2"}, {e:"Both 1 and 2", h:"1 तथा 2 दोनों"}, {e:"Neither", h:"न तो 1 न ही 2"}], // Note: The question text is cut off but refers to statements about cooling. The answer key typically marks both correct for process descriptions.
+            ans: 2
+        },
+        {
+            e: "Soft Glass is also called:",
+            h: "निम्नलिखित में किस कांच (Glass) को मृदु कांच (Soft Glass) कहा जाता है ?",
+            opts: [{e:"Soda Glass", h:"सोडा कांच"}, {e:"Hard Glass", h:"कठोर कांच"}, {e:"Lead Crystal Glass", h:"सीसा क्रिस्टल कांच"}, {e:"Pyrex Glass", h:"पाइरेक्स कांच"}],
+            ans: 0
+        },
+        {
+            e: "Which is NOT a property of Soda Glass?",
+            h: "निम्नलिखित में कौन सोडा कांच (Soda Glass) का गुण नहीं है ?",
+            opts: [{e:"Cheapest", h:"यह सबसे सस्ता तथा सर्वनिष्ठ कांच है..."}, {e:"Cracks with temp change", h:"ताप में एकाएक परिवर्तनों के फलस्वरूप इस कांच में दरारें पड़ जाती हैं"}, {e:"Chemical resistant", h:"यह रासायनिक पदार्थों से सुगमता पूर्वक प्रभावित हो जाता है (Is NOT resistant)"}, {e:"Shimmers", h:"यह कांच अद्भुत झिलमिलाहट उत्पन्न करते है।"}], // Note: Option C says "It is easily affected by chemicals" which is true for Soda glass. Option D says "Produces amazing shimmer". This is false (Lead crystal shimmers). So D is the answer.
+            ans: 3
+        },
+        {
+            e: "Hard Glass contains:",
+            h: "कठोर कांच (Hard Glass) के संबंध में निम्नलिखित में कौन-सा सही है ?",
+            opts: [{e:"K-Carbonate, Lime, Sand", h:"यह कांच पोटैशियम कार्बोनेट तथा चूना पत्थर को संगलित करके बनाया जाता है।"}, {e:"Acid resistant", h:"यह कांच अम्ल के प्रति अधिक प्रतिरोधी होता है"}, {e:"Both A and B", h:"a तथा b दोनों"}, {e:"Neither", h:"न तो a न ही b"}],
+            ans: 2
+        },
+        {
+            e: "Glass with high Refractive Index and shimmer:",
+            h: "निम्नलिखित में किस कांच का अपवर्त्तनांक काफी अधिक होता है, जिससे यह आकर्षक झिलमिलाहट उत्पन्न करती है ?",
+            opts: [{e:"Soda Glass", h:"सोडा कांच"}, {e:"Hard Glass", h:"कठोर कांच"}, {e:"Lead Crystal Glass", h:"सीसा क्रिस्टल कांच"}, {e:"Pyrex Glass", h:"पाइरेक्स कांच"}],
+            ans: 2
+        },
+        {
+            e: "Raw materials for Lead Crystal Glass:",
+            h: "सीसा क्रिस्टल कांच (Lead Crystal Glass) निर्माण में प्रयुक्त होता है-",
+            opts: [{e:"Soda, Sand, Lime", h:"सोडा क्षार, बालू और चूना पत्थर"}, {e:"Potassium Carbonate, Lime", h:"पोटैशियम कार्बोनेट और चूना पत्थर"}, {e:"Sand, Lime, Borax", h:"बालू, चूना पत्थर और बोरेक्स"}, {e:"K-Carbonate, Lead Oxide, Sand", h:"पोटैशियम कार्बोनेट, लेड ऑक्साइड और बालू"}],
+            ans: 3
+        },
+        {
+            e: "Borosilicate Glass is also called:",
+            h: "निम्नलिखित में किस कांच को बोरोसिलिकेट कांच भी कहते हैं ?",
+            opts: [{e:"Pyrex Glass", h:"पाइरेक्स कांच"}, {e:"Optical Glass", h:"प्रकाशीय कांच"}, {e:"Photochromic Glass", h:"फोटोक्रोमिक कांच"}, {e:"Glass Fiber", h:"ग्लास फाइबर"}],
+            ans: 0
+        },
+        {
+            e: "Laboratory equipment and pharma bottles are made of:",
+            h: "प्रयोगशाला उपकरण, फार्मास्युटिकल पात्रों आदि का निर्माण किस कांच से किया जाता है ?",
+            opts: [{e:"Optical Glass", h:"प्रकाशीय कांच"}, {e:"Pyrex Glass", h:"पाइरेक्स कांच"}, {e:"Photochromic Glass", h:"फोटोक्रोमिक कांच"}, {e:"Glass Fiber", h:"ग्लास फाइबर"}],
+            ans: 1
+        },
+        {
+            e: "Glass with high chemical durability and thermal shock resistance:",
+            h: "निम्नलिखित में से किस कांच की रासायनिक चिरस्थायित्व (Durability) तथा तापीय प्रघात प्रतिरोधक (Thermal Shock resistance) क्षमता अधिक होती है ?",
+            opts: [{e:"Soda Glass", h:"सोडा कांच"}, {e:"Hard Glass", h:"कठोर कांच"}, {e:"Pyrex Glass", h:"पाइरेक्स कांच"}, {e:"Lead Crystal Glass", h:"सीसा क्रिस्टल कांच"}],
+            ans: 2
+        },
+        {
+            e: "Lenses of glasses, cameras and telescopes are made of:",
+            h: "चश्मा, सूक्ष्मदर्शी, कैमरा एवं दूरदर्शियों के लेंसों का उत्पादन किस कांच से किया जाता है ?",
+            opts: [{e:"Pyrex Glass", h:"पाइरेक्स कांच"}, {e:"Optical Glass", h:"प्रकाशीय कांच"}, {e:"Photochromic Glass", h:"फोटोक्रोमिक कांच"}, {e:"Soda Glass", h:"सोडा कांच"}],
+            ans: 1
+        },
+        {
+            e: "Photochromic glass turns black in sun due to:",
+            h: "किसकी उपस्थिति के कारण फोटोक्रोमिक कांच धूप में स्वतः काला हो जाता है ?",
+            opts: [{e:"Silver Bromide", h:"सिल्वर ब्रोमाइड"}, {e:"Lead Oxide", h:"लेड ऑक्साइड"}, {e:"Borax", h:"बोरेक्स"}, {e:"Silver Nitrate", h:"सिल्वर नाइट्रेट"}],
+            ans: 0
+        },
+        {
+            e: "Pyrex glass strength is due to:",
+            h: "पाइरेक्स कांच को अधिक सामर्थ्य बनाने के लिए निम्न में क्या उत्तरदायी है ?",
+            opts: [{e:"Lead Oxide", h:"लेड ऑक्साइड"}, {e:"Potassium Carbonate", h:"पोटैशियम कार्बोनेट"}, {e:"Borax", h:"बोरेक्स"}, {e:"Ferric Oxide", h:"फेरिक ऑक्साइड"}],
+            ans: 2
+        },
+        {
+            e: "Reinforced plastic is made using which glass?",
+            h: "कांच प्रबलित प्लास्टिक बनाने के लिए किस प्रकार का कांच प्रयोग किया जाता है ?",
+            opts: [{e:"Flint Glass", h:"फ्लिन्ट कांच"}, {e:"Pyrex Glass", h:"पाइरेक्स कांच"}, {e:"Quartz Glass", h:"क्वार्ट्ज कांच"}, {e:"Fiber Glass", h:"रेशम कांच (Fiber Glass)"}],
+            ans: 3
+        },
+        {
+            e: "Which glass is a wonderful heat insulator (Glass Wool)?",
+            h: "निम्नलिखित में कौन-सा कांच अद्भुत उष्मारोधी होता है... ग्लास वूल के रूप में ?",
+            opts: [{e:"Pyrex Glass", h:"पाइरेक्स कांच"}, {e:"Flint Glass", h:"फ्लिन्ट कांच"}, {e:"Glass Wool", h:"कांच ऊन (Glass Wool)"}, {e:"Quartz Glass", h:"क्वार्ट्ज कांच"}],
+            ans: 2
+        },
+        {
+            e: "Which glass is used to make Optical Glass?",
+            h: "प्रकाशिक कांच बनाने के लिए निम्नलिखित में से किस प्रकार का कांच प्रयुक्त होता है ?",
+            opts: [{e:"Pyrex Glass", h:"पाइरेक्स कांच"}, {e:"Soft Glass", h:"मृदु कांच"}, {e:"Fiber Glass", h:"रेशम कांच"}, {e:"Flint Glass", h:"फ्लिन्ट कांच"}],
+            ans: 3
+        },
+        {
+            e: "Glass used in Electric Bulbs:",
+            h: "इलेक्ट्रिक बल्ब के निर्माण में किस कांच का उपयोग होता है ?",
+            opts: [{e:"Crown Glass", h:"क्राउन कांच"}, {e:"Pyrex Glass", h:"पाइरेक्स कांच"}, {e:"Flint Glass", h:"फ्लिन्ट कांच"}, {e:"Fiber Glass", h:"फाइबर कांच"}],
+            ans: 2
+        },
+        {
+            e: "Super Cooled Liquid is:",
+            h: "निम्नलिखित में कौन-सा पदार्थ अतिशीतित द्रव (Super Cooled Liquid) है-",
+            opts: [{e:"Cement", h:"सीमेंट"}, {e:"Glass", h:"कांच"}, {e:"Ammonia", h:"अमोनिया"}, {e:"Steel", h:"इस्पात"}],
+            ans: 1
+        },
+        {
+            e: "Hydrofluoric acid is not kept in glass bottles because:",
+            h: "हाइड्रोफ्लोरिक अम्ल कांच की बोतल में नहीं रखा जाता है क्योंकि यह अभिक्रिया करता है-",
+            opts: [{e:"Visible light", h:"दृश्य प्रकाश से"}, {e:"Al2O3", h:"कांच के ऐलुमिनियम ऑक्साइड से"}, {e:"Na2O", h:"कांच की सोडियम ऑक्साइड से"}, {e:"SiO2", h:"कांच के सिलिकॉन डाइ ऑक्साइड से"}],
+            ans: 3
+        }
+    ];
+
+    // --- Config & State ---
+    let currentQuestions = [];
+    let currentIndex = 0;
+    let score = 0;
+    let timerInterval;
+    let timerDuration = 0;
+    let timeLeft = 0;
+
+    // --- Audio System ---
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    
+    function playTone(type) {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        const now = audioCtx.currentTime;
+        if (type === 'correct') {
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(600, now);
+            osc.frequency.exponentialRampToValueAtTime(1000, now + 0.1);
+            gain.gain.setValueAtTime(0.1, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+            osc.start(now);
+            osc.stop(now + 0.3);
+        } else {
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(150, now);
+            osc.frequency.linearRampToValueAtTime(100, now + 0.3);
+            gain.gain.setValueAtTime(0.1, now);
+            gain.gain.linearRampToValueAtTime(0.01, now + 0.3);
+            osc.start(now);
+            osc.stop(now + 0.3);
+        }
+    }
+
+    // --- Core Functions ---
+
+    function startQuiz() {
+        const timeInput = document.getElementById('time-input').value;
+        const shuffle = document.getElementById('shuffle-input').checked;
+        
+        timerDuration = timeInput ? parseInt(timeInput) : 0;
+        
+        currentQuestions = [...rawQuestions];
+        if (shuffle) {
+            currentQuestions.sort(() => Math.random() - 0.5);
+        }
+
+        currentIndex = 0;
+        score = 0;
+        
+        document.getElementById('start-screen').classList.remove('active');
+        document.getElementById('result-screen').classList.remove('active');
+        document.getElementById('quiz-screen').classList.add('active');
+
+        loadQuestion();
+    }
+
+    function loadQuestion() {
+        if (currentIndex >= currentQuestions.length) {
+            finishEarly();
+            return;
+        }
+
+        const q = currentQuestions[currentIndex];
+        const total = currentQuestions.length;
+        
+        // Update UI
+        document.getElementById('q-counter').innerText = `Q ${String(currentIndex + 1).padStart(2, '0')}/${total}`;
+        document.getElementById('score-display').innerText = `Score: ${String(score).padStart(2, '0')}`;
+        document.getElementById('progress-bar').style.width = `${(currentIndex / total) * 100}%`;
+
+        document.getElementById('q-text-eng').innerText = q.e;
+        document.getElementById('q-text-hindi').innerText = q.h;
+
+        // Render Options
+        const optsContainer = document.getElementById('options-container');
+        optsContainer.innerHTML = '';
+        
+        q.opts.forEach((opt, idx) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerHTML = `<span class="opt-eng">${opt.e}</span><span class="opt-hindi">${opt.h}</span>`;
+            btn.onclick = () => checkAnswer(idx, btn, q.ans);
+            optsContainer.appendChild(btn);
+        });
+
+        // Timer
+        clearInterval(timerInterval);
+        document.getElementById('timer-display').classList.remove('pulse');
+        
+        if (timerDuration > 0) {
+            timeLeft = timerDuration;
+            document.getElementById('time-left').innerText = timeLeft;
+            document.getElementById('timer-display').style.display = 'flex';
+            
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                document.getElementById('time-left').innerText = timeLeft;
+                if (timeLeft <= 5) document.getElementById('timer-display').classList.add('pulse');
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    checkAnswer(-1, null, q.ans); // Timeout
+                }
+            }, 1000);
+        } else {
+            document.getElementById('timer-display').style.display = 'none';
+        }
+    }
+
+    function checkAnswer(selectedIdx, btn, correctIdx) {
+        clearInterval(timerInterval);
+        const buttons = document.querySelectorAll('.option-btn');
+        buttons.forEach(b => b.disabled = true);
+
+        if (selectedIdx === correctIdx) {
+            score++;
+            btn.classList.add('correct');
+            playTone('correct');
+            triggerConfetti();
+        } else {
+            if (btn) btn.classList.add('wrong');
+            buttons[correctIdx].classList.add('correct');
+            playTone('wrong');
+            const emoji = document.getElementById('sad-emoji');
+            emoji.style.display = 'block';
+            setTimeout(() => emoji.style.display = 'none', 1000);
+        }
+
+        setTimeout(() => {
+            currentIndex++;
+            loadQuestion();
+        }, 1500);
+    }
+
+    function finishEarly() {
+        clearInterval(timerInterval);
+        document.getElementById('quiz-screen').classList.remove('active');
+        document.getElementById('result-screen').classList.add('active');
+
+        const total = currentQuestions.length;
+        const percentage = Math.round((score / total) * 100);
+        
+        document.getElementById('final-score').innerText = `${percentage}%`;
+        document.getElementById('stats-text').innerText = `You correctly answered ${score} out of ${total} questions.`;
+
+        const msgDisplay = document.getElementById('result-msg');
+        if (percentage >= 80) {
+            msgDisplay.innerText = "🏆 Outstanding Performance!";
+            triggerConfetti();
+        } else if (percentage >= 50) {
+            msgDisplay.innerText = "👏 Well Done! Keep it up.";
+        } else {
+            msgDisplay.innerText = "📚 Practice makes perfect!";
+        }
+    }
+
+    function triggerConfetti() {
+        for (let i = 0; i < 50; i++) {
+            const confetti = document.createElement('div');
+            confetti.classList.add('confetti');
+            confetti.style.left = Math.random() * 100 + 'vw';
+            confetti.style.backgroundColor = `hsl(${Math.random() * 360}, 100%, 50%)`;
+            confetti.style.animationDuration = (Math.random() * 2 + 2) + 's';
+            document.body.appendChild(confetti);
+            setTimeout(() => confetti.remove(), 4000);
+        }
+    }
+</script>
+</body>
+</html>

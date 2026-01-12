@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chemistry Quiz: Precious Metals & Heavy Metals (201-250)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --text-main: #ffffff;
+            --text-dim: #e0e0e0;
+            --accent-green: #00e676;
+            --accent-red: #ff1744;
+            --gradient-1: #11998e;
+            --gradient-2: #38ef7d;
+            --gradient-3: #0f2027;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: radial-gradient(circle at top left, #141E30 0%, #243B55 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow-x: hidden;
+            color: var(--text-main);
+        }
+
+        /* Glassmorphism Card */
+        .container {
+            width: 95%;
+            max-width: 800px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid var(--glass-border);
+            border-radius: 25px;
+            padding: 2.5rem;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        /* Screens */
+        .screen { display: none; flex-direction: column; gap: 20px; animation: fadeIn 0.5s ease; }
+        .screen.active { display: flex; }
+
+        h1 { font-size: 2.2rem; text-align: center; text-shadow: 0 4px 6px rgba(0,0,0,0.3); margin-bottom: 5px; }
+        h2 { font-size: 1.5rem; text-align: center; margin-bottom: 15px; }
+        .subtitle { text-align: center; color: var(--text-dim); font-size: 1rem; margin-bottom: 20px; }
+
+        /* Controls */
+        .control-panel { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
+        
+        .input-group {
+            background: rgba(0,0,0,0.25);
+            padding: 15px;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        label { font-size: 0.9rem; font-weight: 500; }
+        
+        input[type="number"] {
+            background: transparent; border: 1px solid rgba(255,255,255,0.5); color: white;
+            padding: 8px; border-radius: 8px; width: 70px; text-align: center; font-family: inherit; font-size: 1rem;
+        }
+        input[type="number"]:focus { outline: none; border-color: #fff; background: rgba(255,255,255,0.1); }
+
+        /* Toggle Switch */
+        .switch { position: relative; display: inline-block; width: 50px; height: 28px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(255,255,255,0.3); transition: .4s; border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute; content: ""; height: 20px; width: 20px; left: 4px; bottom: 4px;
+            background-color: white; transition: .4s; border-radius: 50%;
+        }
+        input:checked + .slider { background-color: var(--accent-green); }
+        input:checked + .slider:before { transform: translateX(22px); }
+
+        /* Buttons */
+        .btn {
+            background: linear-gradient(135deg, #FF512F 0%, #DD2476 100%);
+            border: none; padding: 16px 32px; color: white;
+            font-size: 1.1rem; font-weight: 700; border-radius: 50px;
+            cursor: pointer; transition: transform 0.2s, box-shadow 0.2s, filter 0.2s;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            text-align: center; width: 100%; letter-spacing: 0.5px;
+        }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.4); filter: brightness(1.1); }
+        .btn:active { transform: translateY(1px); }
+        .btn-restart { background: linear-gradient(135deg, #11998e, #38ef7d); }
+
+        /* Quiz UI */
+        .header-info {
+            display: flex; justify-content: space-between; align-items: center;
+            font-weight: 600; font-size: 1.1rem; margin-top: 10px;
+        }
+        
+        .progress-track {
+            width: 100%; height: 8px; background: rgba(255,255,255,0.15);
+            border-radius: 10px; overflow: hidden; margin-bottom: 25px;
+        }
+        .progress-fill {
+            height: 100%; width: 0%; 
+            background: linear-gradient(90deg, #00c6ff, #0072ff);
+            box-shadow: 0 0 15px rgba(0, 198, 255, 0.5); transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .timer {
+            background: rgba(0,0,0,0.4); padding: 6px 16px; border-radius: 20px;
+            display: flex; align-items: center; gap: 8px; font-variant-numeric: tabular-nums;
+        }
+        .timer.pulse { color: #ff5252; animation: pulse 1s infinite; font-weight: 700; }
+
+        .question-box {
+            background: rgba(255,255,255,0.07);
+            padding: 25px; border-radius: 20px;
+            border-left: 6px solid #fff;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+        .q-eng { font-size: 1.2rem; font-weight: 700; margin-bottom: 12px; display: block; line-height: 1.4; }
+        .q-hindi { font-size: 1rem; color: var(--text-dim); font-weight: 400; display: block; line-height: 1.5; }
+
+        .options-grid { display: grid; grid-template-columns: 1fr; gap: 15px; }
+        
+        .option-btn {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.15);
+            padding: 18px; border-radius: 16px;
+            color: white; text-align: left; cursor: pointer;
+            transition: all 0.2s ease; position: relative; overflow: hidden;
+        }
+        .option-btn:hover:not(:disabled) { background: rgba(255,255,255,0.2); transform: translateX(5px); border-color: rgba(255,255,255,0.4); }
+        .option-btn:disabled { cursor: default; opacity: 0.9; }
+
+        .option-btn.correct { background: rgba(0, 230, 118, 0.25); border: 2px solid #00e676; }
+        .option-btn.wrong { background: rgba(255, 23, 68, 0.25); border: 2px solid #ff1744; }
+
+        .opt-eng { font-weight: 600; display: block; margin-bottom: 4px; font-size: 1rem; }
+        .opt-hindi { font-size: 0.9rem; color: #ddd; display: block; font-weight: 300; }
+
+        .footer-nav { margin-top: 30px; display: flex; justify-content: flex-end; }
+        .btn-early { 
+            background: transparent; border: 1px solid rgba(255,255,255,0.4); 
+            font-size: 0.95rem; padding: 10px 24px; border-radius: 30px;
+        }
+        .btn-early:hover { background: rgba(255,255,255,0.1); }
+
+        /* Animations */
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+        @keyframes shake { 
+            0%, 100% { transform: translateX(0); } 
+            20% { transform: translateX(-12px); } 
+            40% { transform: translateX(12px); }
+            60% { transform: translateX(-8px); }
+            80% { transform: translateX(8px); }
+        }
+        @keyframes fall {
+            0% { transform: translateY(-10vh) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+        }
+
+        /* Feedback Overlay */
+        #feedback-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 9999; display: flex;
+            justify-content: center; align-items: center;
+        }
+        .emoji-feedback { font-size: 6rem; animation: shake 0.6s cubic-bezier(.36,.07,.19,.97) both; display: none; filter: drop-shadow(0 0 20px rgba(0,0,0,0.5)); }
+        .confetti {
+            position: absolute; width: 12px; height: 12px;
+            background: #f00; animation: fall 3s linear forwards;
+            border-radius: 3px;
+        }
+
+        /* Result Screen */
+        .score-circle {
+            width: 180px; height: 180px; border-radius: 50%;
+            background: rgba(255,255,255,0.05); border: 8px solid rgba(255,255,255,0.8);
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            margin: 0 auto 25px; 
+            box-shadow: 0 0 30px rgba(255,255,255,0.2);
+        }
+        .score-val { font-size: 3.5rem; font-weight: 800; line-height: 1; }
+        .score-label { font-size: 1rem; font-weight: 400; text-transform: uppercase; letter-spacing: 2px; margin-top: 5px; opacity: 0.8; }
+        .score-msg { font-size: 1.5rem; margin-bottom: 10px; color: #ffd700; text-align: center; font-weight: 600; }
+
+        @media (min-width: 600px) {
+            .options-grid { grid-template-columns: 1fr 1fr; }
+            .container { padding: 3rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div id="feedback-overlay">
+        <div class="emoji-feedback" id="sad-emoji">😢</div>
+    </div>
+
+    <div id="start-screen" class="screen active">
+        <h1>Chemistry Quiz</h1>
+        <p class="subtitle">Ag, Au, Hg, Pb & Radioactive [201-250]</p>
+        
+        <div class="control-panel">
+            <div class="input-group">
+                <label>Timer (sec)<br><span style="font-size:0.75rem; color:#aaa">0 = No Timer</span></label>
+                <input type="number" id="time-input" placeholder="0" min="0">
+            </div>
+
+            <div class="input-group">
+                <label>Shuffle<br><span style="font-size:0.75rem; color:#aaa">Random Order</span></label>
+                <label class="switch">
+                    <input type="checkbox" id="shuffle-input">
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </div>
+
+        <button class="btn" onclick="startQuiz()">Start Quiz 🚀</button>
+    </div>
+
+    <div id="quiz-screen" class="screen">
+        <div class="progress-track"><div class="progress-fill" id="progress-bar"></div></div>
+        
+        <div class="header-info">
+            <span id="q-counter">Q 01/50</span>
+            <div class="timer" id="timer-display"><span>⏱️</span> <span id="time-left">--</span></div>
+            <span id="score-display">Score: 00</span>
+        </div>
+
+        <div class="question-box">
+            <span class="q-eng" id="q-text-eng">Loading...</span>
+            <span class="q-hindi" id="q-text-hindi">Loading...</span>
+        </div>
+
+        <div class="options-grid" id="options-container"></div>
+
+        <div class="footer-nav">
+            <button class="btn btn-early" onclick="finishEarly()">Finish & Show Results</button>
+        </div>
+    </div>
+
+    <div id="result-screen" class="screen">
+        <h2>Quiz Completed!</h2>
+        <div class="score-circle">
+            <span class="score-val" id="final-score">0%</span>
+            <span class="score-label">Accuracy</span>
+        </div>
+        <div class="score-msg" id="result-msg"></div>
+        <p id="stats-text" style="text-align:center; color:#ddd; font-size:1.1rem;"></p>
+        <button class="btn btn-restart" onclick="location.reload()">Restart Quiz 🔄</button>
+    </div>
+</div>
+
+<script>
+    // --- Data: Questions 201-250 (Extracted) ---
+    const rawQuestions = [
+        {
+            e: "Which sharp substance is used in dyeing?",
+            h: "रंगने में काम आने वाला तीखा पदार्थ है-",
+            opts: [
+                {e:"Aluminum Sulphate", h:"एलुमिनियम सल्फेट"}, {e:"Calcium Hydroxide", h:"कैल्शियम हाइड्रोक्साइड"}, {e:"Calcium Carbonate", h:"कैल्शियम कार्बोनेट"}, {e:"Zinc Phosphate", h:"जिंक फॉस्फेट"}
+            ],
+            ans: 3
+        },
+        {
+            e: "Metal that reacts with hot Sodium Hydroxide to give Hydrogen gas is:",
+            h: "धातु जो गर्म सोडियम हाइड्रोक्साइड विलयन से अभिक्रिया कर हाइड्रोजन गैस देता है, वह है-",
+            opts: [
+                {e:"Zn", h:"Zn"}, {e:"Ag", h:"Ag"}, {e:"Cu", h:"Cu"}, {e:"Fe", h:"Fe"}
+            ],
+            ans: 0
+        },
+        {
+            e: "Which of the following is an ore of Silver?",
+            h: "निम्नलिखित में सिल्वर धातु का अयस्क है-",
+            opts: [
+                {e:"Silver Glance", h:"सिल्वर ग्लांस"}, {e:"Horn Silver", h:"हॉर्न सिल्वर"}, {e:"Pyrargyrite", h:"पाइरार्जीराइट"}, {e:"All of these", h:"इनमें से सभी"}
+            ],
+            ans: 3
+        },
+        {
+            e: "Extraction of Silver and Gold is done by:",
+            h: "सिल्वर तथा गोल्ड धातु का निष्कर्षण किया जाता है-",
+            opts: [
+                {e:"Leaching", h:"निक्षालन क्रिया द्वारा"}, {e:"Hydraulic Washing", h:"द्रवचालित धोवन विधि द्वारा"}, {e:"Magnetic Separation", h:"चुंबकीय सांद्रण विधि द्वारा"}, {e:"Froth Floatation", h:"फेन प्लवन विधि द्वारा"}
+            ],
+            ans: 0
+        },
+        {
+            e: "Which compound is used in Leaching process for Silver/Gold extraction?",
+            h: "निक्षालन क्रिया द्वारा सिल्वर तथा गोल्ड धातु के निष्कर्षण में निम्नलिखित में किसका प्रयोग किया जाता है ?",
+            opts: [
+                {e:"KCN", h:"KCN"}, {e:"NaCN", h:"NaCN"}, {e:"Al2O3", h:"Al2O3"}, {e:"FeCl2", h:"FeCl2"}
+            ],
+            ans: 1
+        },
+        {
+            e: "Calaverite and Sylvanite are ores of which metal?",
+            h: "केलावेराइट तथा सिल्वेनाइट किस धातु का अयस्क है ?",
+            opts: [
+                {e:"Silver", h:"सिल्वर"}, {e:"Gold", h:"गोल्ड"}, {e:"Platinum", h:"प्लैटिनम"}, {e:"All of these", h:"इनमें से सभी"}
+            ],
+            ans: 1
+        },
+        {
+            e: "Which match is NOT correct?",
+            h: "निम्नलिखित में कौन-सा विकल्प सही सुमेलित नहीं है?",
+            opts: [
+                {e:"Horn Silver : Silver Chloride", h:"हॉर्न सिल्वर : सिल्वर क्लोराइड"}, {e:"Lunar Caustic : Silver Nitrate", h:"लूनर कास्टिक : सिल्वर नाइट्रेट"}, {e:"Quick Silver : Silver Bromide", h:"क्विक सिल्वर : सिल्वर ब्रोमाइड"}, {e:"Adam Catalyst : Platinum", h:"एडम उत्प्रेरक : प्लैटिनम"}
+            ],
+            ans: 2
+        },
+        {
+            e: "Which metal is called 'White Gold' and 'Adam's Catalyst'?",
+            h: "निम्नलिखित में किस धातु को सफेद स्वर्ण तथा एडम उत्प्रेरक कहते हैं ?",
+            opts: [
+                {e:"Silver", h:"सिल्वर"}, {e:"Copper", h:"कॉपर"}, {e:"Gold", h:"गोल्ड"}, {e:"Platinum", h:"प्लैटिनम"}
+            ],
+            ans: 3
+        },
+        {
+            e: "Cyanide process is used for extraction of which metal?",
+            h: "निम्नलिखित में किस धातु के निष्कर्षण में सायनाइड विधि का प्रयोग किया जाता है ?",
+            opts: [
+                {e:"Silver", h:"चाँदी"}, {e:"Gold", h:"सोना"}, {e:"Zinc", h:"जस्ता"}, {e:"Copper", h:"तांबा"}
+            ],
+            ans: 1
+        },
+        {
+            e: "Extraction of Silver is mainly done from which ore?",
+            h: "चाँदी का निष्कर्षण मुख्यतः किस अयस्क से किया जाता है ?",
+            opts: [
+                {e:"Argentite", h:"अर्जेंटाइन"}, {e:"Native Silver", h:"नेटिव सिल्वर"}, {e:"Calamine", h:"कैलामिन"}, {e:"Kerargyrite", h:"केरागर्ईराइट"}
+            ],
+            ans: 0
+        },
+        {
+            e: "Which compound is used to mark fingers during voting?",
+            h: "मतदान के समय मतदाताओं की अंगुली पर निशान लगाने में निम्नलिखित में किस यौगिक का इस्तेमाल होता है ?",
+            opts: [
+                {e:"Silver Chloride", h:"सिल्वर क्लोराइड"}, {e:"Silver Bromide", h:"सिल्वर ब्रोमाइड"}, {e:"Silver Iodide", h:"सिल्वर आयोडाइड"}, {e:"Silver Nitrate", h:"सिल्वर नाइट्रेट"}
+            ],
+            ans: 3
+        },
+        {
+            e: "Why is Silver Nitrate kept in colored bottles?",
+            h: "सिल्वर नाइट्रेट को सामान्यतः रंगीन बोतलों में रखा जाता है। क्यों ?",
+            opts: [
+                {e:"Oxidizes in air", h:"यह वायु में ऑक्सीकृत हो जाता है"}, {e:"Sublimates in white bottles", h:"यह सफेद बोतलों में वाष्पीकृत हो जाता है"}, {e:"Explodes in sunlight", h:"यह सूर्य के प्रकाश में विस्फोट करता है"}, {e:"Decomposes in sunlight", h:"यह सूर्य के प्रकाश में अपघटित हो जाता है"}
+            ],
+            ans: 3
+        },
+        {
+            e: "Which compound decomposes in sunlight?",
+            h: "निम्नलिखित में कौन-सा यौगिक सूर्य के प्रकाश में अपघटित हो जाता है ?",
+            opts: [
+                {e:"AgCl", h:"AgCl"}, {e:"AgBr", h:"AgBr"}, {e:"AgI", h:"AgI"}, {e:"None", h:"इनमें से कोई नहीं"}
+            ],
+            ans: 1
+        },
+        {
+            e: "Eating egg with silver spoon is forbidden because:",
+            h: "चाँदी के चम्मच से अंडा खाना वर्जित रहता है। क्यों ?",
+            opts: [
+                {e:"Reacts with sulphur to destroy spoon", h:"चाँदी अंडे में उपस्थित सल्फर से प्रतिक्रिया कर नष्ट होने लगता है।"}, {e:"Saturates fats", h:"चाँदी अंडे में उपस्थित असंतृप्त वसा को संतृप्त कर देता है"}, {e:"Forms poisonous Silver Phosphide", h:"...सिल्वर फॉस्फाइड बनाता है"}, {e:"Turns egg white poisonous", h:"चाँदी अंडे के उजले भाग को विषैला बना देता है"}
+            ],
+            ans: 0
+        },
+        {
+            e: "Which metal is found in free state?",
+            h: "निम्नलिखित में कौन-सी धातु स्वतंत्र अवस्था में पायी जाती है?",
+            opts: [
+                {e:"Gold", h:"सोना"}, {e:"Silver", h:"चाँदी"}, {e:"Platinum", h:"प्लैटिनम"}, {e:"All of these", h:"इनमें से सभी"}
+            ],
+            ans: 0
+        },
+        {
+            e: "Which metal is called the King of Metals?",
+            h: "धातुओं का राजा किस धातु को कहा जाता है ?",
+            opts: [
+                {e:"Gold", h:"सोना"}, {e:"Silver", h:"चाँदी"}, {e:"Aluminum", h:"एलुमिनियम"}, {e:"Iron", h:"लोहा"}
+            ],
+            ans: 0
+        },
+        {
+            e: "Consider statements: 1. Au and Ag are found in free state. 2. Also found in combined state.",
+            h: "1. सोना तथा चाँदी प्रकृति में मुक्त अवस्था में पाये जाते हैं। 2. संयुक्त अवस्था में नहीं पाये जाते हैं।",
+            opts: [
+                {e:"Only 1", h:"केवल 1"}, {e:"Only 2", h:"केवल 2"}, {e:"Both 1 and 2", h:"1 तथा 2 दोनों"}, {e:"Neither", h:"न तो 1 न ही 2"}
+            ],
+            ans: 0
+        },
+        {
+            e: "Which compound is used to make Snake Bite Needle (Antidote)?",
+            h: "निम्नलिखित में किस यौगिक का उपयोग सर्प विष रोधी सुई बनाने में होता है ?",
+            opts: [
+                {e:"Potassium Cyanide", h:"पोटैशियम साइनाइड"}, {e:"Sodium Cyanide", h:"सोडियम साइनाइड"}, {e:"Auric Chloride", h:"औरिक क्लोराइड"}, {e:"Iron Pyrites", h:"आयरन पाइराइट्स"}
+            ],
+            ans: 2
+        },
+        {
+            e: "Which statement is NOT true?",
+            h: "निम्नलिखित में कौन-सा कथन सही नहीं है ?",
+            opts: [
+                {e:"Au/Pt don't react with acids", h:"सोना एवं प्लैटिनम धातु अम्लों के साथ अभिक्रिया नहीं करती है।"}, {e:"Au/Pt dissolve in Aqua Regia", h:"सोना एवं प्लैटिनम धातु अम्ल राज में घुल जाती है।"}, {e:"Aqua Regia is 3:1 conc HNO3:HCl", h:"अम्लराज में आयतन के विचार से 3 भाग सांद्र HNO3 तथा 1 भाग सांद्र HCl है।"}, {e:"Nascent chlorine dissolves Au/Pt", h:"सोना और प्लैटिनम के अम्लराज में घुलने का कारण नवजात क्लोरीन है।"}
+            ],
+            ans: 2
+        },
+        {
+            e: "Which metal is obtained by reacting its ore with dilute Sodium Cyanide?",
+            h: "निम्नलिखित में कौन-सी धातु उसके अयस्क की अभिक्रिया सोडियम सायनाइड के तनु विलयन से कराकर प्राप्त की जाती है ?",
+            opts: [
+                {e:"Cu", h:"Cu"}, {e:"Zn", h:"Zn"}, {e:"Pt", h:"Pt"}, {e:"Ag", h:"Ag"}
+            ],
+            ans: 3
+        },
+        {
+            e: "100% Pure Gold is:",
+            h: "100 प्रतिशत शुद्ध सोना होता है-",
+            opts: [
+                {e:"18 Carat", h:"18 कैरेट"}, {e:"20 Carat", h:"20 कैरेट"}, {e:"24 Carat", h:"24 कैरेट"}, {e:"0.22 Carat", h:"0.22 कैरेट"}
+            ],
+            ans: 2
+        },
+        {
+            e: "What is mixed with Gold to make it hard?",
+            h: "सोना को कठोर बनाने के लिए उसमें क्या मिलाया जाता है ?",
+            opts: [
+                {e:"Copper", h:"ताँबा"}, {e:"Silver", h:"चाँदी"}, {e:"Lead", h:"सीसा"}, {e:"Both A and B", h:"A तथा B दोनों"}
+            ],
+            ans: 3
+        },
+        {
+            e: "Hallmark is used on which products?",
+            h: "हॉलमार्क चिन्ह किन उत्पादों पर लगाया जाता है ?",
+            opts: [
+                {e:"Petroleum", h:"पेट्रोलियम उत्पाद"}, {e:"Gold Jewelry", h:"स्वर्ण आभूषण"}, {e:"Environment friendly", h:"पर्यावरण मित्र उत्पाद"}, {e:"Food items", h:"तरल खाद्य पदार्थ"}
+            ],
+            ans: 1
+        },
+        {
+            e: "What is the percentage of Pure Gold in 18 Carat Gold?",
+            h: "18 कैरेट के मिश्रित सोने में शुद्ध सोने का प्रतिशत कितना होता है ?",
+            opts: [
+                {e:"50%", h:"50 प्रतिशत"}, {e:"75%", h:"75 प्रतिशत"}, {e:"100%", h:"100 प्रतिशत"}, {e:"25%", h:"25 प्रतिशत"}
+            ],
+            ans: 1
+        },
+        {
+            e: "Which metal has the highest density?",
+            h: "निम्नलिखित में किस धातु का घनत्व सर्वाधिक है ?",
+            opts: [
+                {e:"Gold", h:"गोल्ड"}, {e:"Silver", h:"सिल्वर"}, {e:"Iron", h:"आयरन"}, {e:"Zinc", h:"जिंक"}
+            ],
+            ans: 0
+        },
+        {
+            e: "Why are Gold and Silver used for making jewelry?",
+            h: "सोना तथा चाँदी का उपयोग आभूषणों के निर्माण में किस गुण के कारण किया जाता है ?",
+            opts: [
+                {e:"Rare metals", h:"सोना तथा चाँदी दुर्लभ धातु है"}, {e:"Malleable and Ductile", h:"सोना तथा चाँदी बहुत ही आघातवर्ध्य और तन्य होता है"}, {e:"Lustrous", h:"सोना तथा चाँदी सर्वाधिक चमकीली धातु है"}, {e:"Only yellow/white metals", h:"सोना तथा चाँदी एकमात्र धातु है जो पीले तथा सफेद रंग के होते हैं"}
+            ],
+            ans: 1
+        },
+        {
+            e: "Which metal remains liquid at room temperature?",
+            h: "निम्नलिखित में कौन-सी धातु साधारण ताप पर द्रव अवस्था में रहता है ?",
+            opts: [
+                {e:"Cesium", h:"सीजियम"}, {e:"Gallium", h:"गैलियम"}, {e:"Mercury", h:"पारा"}, {e:"Bromine", h:"ब्रोमीन"}
+            ],
+            ans: 2
+        },
+        {
+            e: "Mercury is extracted from which ore?",
+            h: "पारा धातु का निष्कर्षण किस अयस्क से किया जाता है?",
+            opts: [
+                {e:"Galena", h:"गैलेना"}, {e:"Cinnabar", h:"सिनेबार"}, {e:"Calaverite", h:"केलावेराइट"}, {e:"Sylvanite", h:"सिल्वेनाइट"}
+            ],
+            ans: 1
+        },
+        {
+            e: "Which metal is neither malleable nor ductile?",
+            h: "निम्नलिखित में कौन-सी धातु न तो आघातवर्धनीय होता है और न ही तन्य-",
+            opts: [
+                {e:"Mercury", h:"पारा"}, {e:"Iron", h:"लोहा"}, {e:"Copper", h:"तांबा"}, {e:"Gold", h:"सोना"}
+            ],
+            ans: 0
+        },
+        {
+            e: "Which statement regarding Mercury is NOT correct?",
+            h: "निम्नलिखित में कौन-सा एक सही नहीं है ?",
+            opts: [
+                {e:"Also known as Quick Silver", h:"पारा को क्विक सिल्वर के नाम से भी जाना जाता है"}, {e:"Becomes powder with fat/sugar", h:"पारा को चर्बी या चीनी के साथ मिलाकर... धूसर चूर्ण..."}, {e:"Superconductor at 4.12K", h:"पारा 4.12 K ताप पर अतिचालक बन जाता है"}, {e:"Does not dissolve in Aqua Regia", h:"पारा अम्लराज में नहीं घुलता है"}
+            ],
+            ans: 3
+        },
+        {
+            e: "Which match is NOT correct (Chemical Name)?",
+            h: "निम्नलिखित में कौन-सा विकल्प सही सुमेलित नहीं है?",
+            opts: [
+                {e:"Calomel : Mercurous Chloride", h:"कैलोमल : मरक्यूरस क्लोराइड"}, {e:"Corrosive Sublimate : Mercuric Chloride", h:"कोरोसिव सब्लिमेट : मरक्यूरिक क्लोराइड"}, {e:"Vermilion : Mercuric Sulphide", h:"वर्मीलियन : मरक्यूरिक सल्फाइड"}, {e:"Amalgam : Mercuric Oxide", h:"अमलगम : मरक्यूरिक ऑक्साइड"}
+            ],
+            ans: 3
+        },
+        {
+            e: "Which match is NOT correct (Formula)?",
+            h: "निम्नलिखित में कौन-सा विकल्प सही सुमेलित नहीं है?",
+            opts: [
+                {e:"Sindoor : HgO", h:"सिन्दूर : HgO"}, {e:"Cinnabar : HgS", h:"सिनेबार : HgS"}, {e:"Calomel : Hg2Cl2", h:"कैलोमल : Hg2Cl2"}, {e:"Corrosive Sublimate : HgCl2", h:"कोरोसिव सब्लिमेट : HgCl2"}
+            ],
+            ans: 0
+        },
+        {
+            e: "Which metal is generally used in Thermometers and Barometers?",
+            h: "थर्मामीटर, बैरोमीटर यंत्रों में साधारणतया किस धातु का उपयोग किया जाता है ?",
+            opts: [
+                {e:"Barium", h:"बेरियम"}, {e:"Mercury", h:"पारा"}, {e:"Tungsten", h:"टंगस्टन"}, {e:"Silver", h:"सिल्वर"}
+            ],
+            ans: 1
+        },
+        {
+            e: "Why is Mercury generally used in thermometers?",
+            h: "पारे का साधारणतया तापमापी यंत्रों में उपयोग किया जाता है, क्योंकि इसकी विशेषता है-",
+            opts: [
+                {e:"High Density", h:"उच्च घनत्व"}, {e:"Low Liquidity", h:"कम द्रवता"}, {e:"High Specific Heat", h:"उच्च विशिष्ट उष्मा"}, {e:"High Conductivity/Expansion", h:"उच्च संचालन शक्ति"}
+            ],
+            ans: 3
+        },
+        {
+            e: "Which gas is filled in normal tubelights?",
+            h: "सामान्य ट्यूबलाइट में कौन-सी गैस भरी जाती है ?",
+            opts: [
+                {e:"Sodium vapor with Argon", h:"आर्गन के साथ सोडियम वेपर"}, {e:"Sodium vapor with Neon", h:"नियोन के साथ सोडियम वेपर"}, {e:"Mercury vapor with Argon", h:"आर्गन के साथ मरकरी वेपर"}, {e:"Mercury vapor with Neon", h:"नियोन के साथ मरकरी वेपर"}
+            ],
+            ans: 2
+        },
+        {
+            e: "Chemical formula of Makar Dhwaj used in medicine?",
+            h: "औषधियों में 'मकर ध्वज' के रूप में प्रयुक्त होने वाले रसायन का रासायनिक सूत्र है ?",
+            opts: [
+                {e:"HgCl2", h:"HgCl2"}, {e:"HgS", h:"HgS"}, {e:"Hg2Cl2", h:"Hg2Cl2"}, {e:"HgSO4", h:"HgSO4"}
+            ],
+            ans: 1
+        },
+        {
+            e: "Chemically Sindoor (Vermilion) is:",
+            h: "रासायनिक दृष्टि से सिंदूर है-",
+            opts: [
+                {e:"Potassium Nitrate", h:"पोटैशियम नाइट्रेट"}, {e:"Calcium Carbonate", h:"कैल्शियम कार्बोनेट"}, {e:"Potassium Sulphide", h:"पोटैशियम सल्फाइड"}, {e:"Mercury(II) Sulphide", h:"मरकरी II सल्फाइड"}
+            ],
+            ans: 3
+        },
+        {
+            e: "Mercury forms a solution with other metals called:",
+            h: "पारा अन्य धातुओं के साथ मिलकर धातुई घोल बनाता है, जिसे कहते हैं-",
+            opts: [
+                {e:"Quick Silver", h:"क्विक सिल्वर"}, {e:"Amalgam", h:"अमलगम"}, {e:"Calomel", h:"कैलोमल"}, {e:"Corrosive Sublimate", h:"कोरोसिव सब्लिमेट"}
+            ],
+            ans: 1
+        },
+        {
+            e: "Which of the following is an Amalgam?",
+            h: "निम्नलिखित धातु युग्मों में कौन एक अमलगम है ?",
+            opts: [
+                {e:"Zinc-Copper", h:"जस्ता - तांबा"}, {e:"Copper-Tin", h:"तांबा - टिन"}, {e:"Mercury-Zinc", h:"पारा - जस्ता"}, {e:"Mercury-Iron", h:"पारा - लोहा"}
+            ],
+            ans: 2
+        },
+        {
+            e: "In which vessel is Mercury kept?",
+            h: "मरकरी (पारा) को किस धातु के पात्र में रखा जाता है-",
+            opts: [
+                {e:"Silver", h:"सिल्वर"}, {e:"Lead", h:"लेड"}, {e:"Iron", h:"लोहा"}, {e:"Platinum", h:"प्लैटिनम"}
+            ],
+            ans: 2
+        },
+        {
+            e: "Which Mercury compound is used as Antiseptic?",
+            h: "पारे के निम्नलिखित यौगिक में किसका उपयोग कीटाणुनाशक के रूप में किया जाता है ?",
+            opts: [
+                {e:"HgCl2", h:"HgCl2"}, {e:"Hg2Cl2", h:"Hg2Cl2"}, {e:"HgO", h:"HgO"}, {e:"HgS", h:"HgS"}
+            ],
+            ans: 0
+        },
+        {
+            e: "Most stable element is:",
+            h: "सर्वाधिक स्थायी तत्व कौन है-",
+            opts: [
+                {e:"Iron", h:"लोहा"}, {e:"Lead", h:"सीसा"}, {e:"Gold", h:"सोना"}, {e:"Silver", h:"सिल्वर"}
+            ],
+            ans: 1
+        },
+        {
+            e: "Which metal is a bad conductor of heat and electricity?",
+            h: "निम्नलिखित में कौन धातु होकर भी ताप और विद्युत का कुचालक है ?",
+            opts: [
+                {e:"Copper", h:"तांबा"}, {e:"Graphite", h:"ग्रेफाइट"}, {e:"Lead", h:"सीसा"}, {e:"Tungsten", h:"टंगस्टन"}
+            ],
+            ans: 2
+        },
+        {
+            e: "Lead is extracted from which ore?",
+            h: "सीसा का निष्कर्षण किस अयस्क से किया जाता है ?",
+            opts: [
+                {e:"Galena", h:"गैलेना"}, {e:"Cinnabar", h:"सिनेबार"}, {e:"Pyrolusite", h:"पाइरोलुसाइट"}, {e:"Turquoise", h:"टरकीिस"}
+            ],
+            ans: 0
+        },
+        {
+            e: "Nature of Litharge is:",
+            h: "लिथार्ज की प्रकृति होती है-",
+            opts: [
+                {e:"Acidic", h:"अम्लीय"}, {e:"Basic", h:"क्षारीय"}, {e:"Amphoteric", h:"उभयधर्मी"}, {e:"All of these", h:"इनमें से सभी"}
+            ],
+            ans: 2
+        },
+        {
+            e: "Which Lead compound is used in making Match Sticks?",
+            h: "लेड के किस यौगिक का उपयोग दिया सलाई निर्माण में होता है-",
+            opts: [
+                {e:"Lead Oxide", h:"लेड ऑक्साइड"}, {e:"Lead Dioxide", h:"लेड डाइऑक्साइड"}, {e:"Lead Tetraoxide", h:"लेड टेट्राऑक्साइड"}, {e:"Lead Acetate", h:"लेड एसीटेट"}
+            ],
+            ans: 1
+        },
+        {
+            e: "Which compound is called Sugar of Lead?",
+            h: "निम्नलिखित में किस यौगिक को Sugar of Lead या Inorganic Sugar कहते हैं ?",
+            opts: [
+                {e:"Lead Oxide", h:"लेड ऑक्साइड"}, {e:"Lead Dioxide", h:"लेड डाइऑक्साइड"}, {e:"Lead Tetraoxide", h:"लेड टेट्रा ऑक्साइड"}, {e:"Lead Acetate", h:"लेड एसीटेट"}
+            ],
+            ans: 3
+        },
+        {
+            e: "Which metal is used to write on paper?",
+            h: "निम्नलिखित में कौन ऐसा धातु है जिसे कागज पर लिखने का काम लिया जाता है ?",
+            opts: [
+                {e:"Lead", h:"सीसा"}, {e:"Iron", h:"लोहा"}, {e:"Platinum", h:"प्लैटिनम"}, {e:"Mercury", h:"पारा"}
+            ],
+            ans: 0
+        },
+        {
+            e: "Lead pipes are not suitable for drinking water because:",
+            h: "लेड पाइप पीने के जल को ले जाने के लिए उपयुक्त नहीं होते है, क्योंकि ?",
+            opts: [
+                {e:"Forms poisonous Lead Hydroxide", h:"ये वायु मिश्रित जल में घुलकर विषैले लेड हाइड्रोक्साइड उत्पन्न करते हैं।"}, {e:"Forms Lead Oxide", h:"ये वायु मिश्रित जल में घुलकर विषैले लेड ऑक्साइड..."}, {e:"Forms Lead Dioxide", h:"...लेड डाइऑक्साइड..."}, {e:"None", h:"इनमें से कोई नहीं"}
+            ],
+            ans: 0
+        },
+        {
+            e: "Which metal is used in Storage Batteries?",
+            h: "संचायक बैटरी में निम्नलिखित में से कौन-सी धातु का प्रयोग किया जाता है ?",
+            opts: [
+                {e:"Copper", h:"तांबा"}, {e:"Lead", h:"सीसा"}, {e:"Aluminum", h:"एलुमिनियम"}, {e:"Zinc", h:"जस्ता"}
+            ],
+            ans: 1
+        }
+    ];
+
+    // --- Config & State ---
+    let currentQuestions = [];
+    let currentIndex = 0;
+    let score = 0;
+    let timerInterval;
+    let timerDuration = 0;
+    let timeLeft = 0;
+
+    // --- Audio System ---
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    
+    function playTone(type) {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        const now = audioCtx.currentTime;
+        if (type === 'correct') {
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(600, now);
+            osc.frequency.exponentialRampToValueAtTime(1200, now + 0.15);
+            gain.gain.setValueAtTime(0.1, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+            osc.start(now);
+            osc.stop(now + 0.3);
+        } else {
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(150, now);
+            osc.frequency.linearRampToValueAtTime(100, now + 0.2);
+            gain.gain.setValueAtTime(0.1, now);
+            gain.gain.linearRampToValueAtTime(0.001, now + 0.3);
+            osc.start(now);
+            osc.stop(now + 0.3);
+        }
+    }
+
+    // --- Core Functions ---
+
+    function startQuiz() {
+        const timeInput = document.getElementById('time-input').value;
+        const shuffle = document.getElementById('shuffle-input').checked;
+        
+        timerDuration = timeInput ? parseInt(timeInput) : 0;
+        
+        currentQuestions = [...rawQuestions];
+        if (shuffle) {
+            currentQuestions.sort(() => Math.random() - 0.5);
+        }
+
+        currentIndex = 0;
+        score = 0;
+        
+        document.getElementById('start-screen').classList.remove('active');
+        document.getElementById('result-screen').classList.remove('active');
+        document.getElementById('quiz-screen').classList.add('active');
+
+        loadQuestion();
+    }
+
+    function loadQuestion() {
+        if (currentIndex >= currentQuestions.length) {
+            finishEarly();
+            return;
+        }
+
+        const q = currentQuestions[currentIndex];
+        const total = currentQuestions.length;
+        
+        // Update UI
+        document.getElementById('q-counter').innerText = `Q ${String(currentIndex + 1).padStart(2, '0')}/${total}`;
+        document.getElementById('score-display').innerText = `Score: ${String(score).padStart(2, '0')}`;
+        document.getElementById('progress-bar').style.width = `${(currentIndex / total) * 100}%`;
+
+        document.getElementById('q-text-eng').innerText = q.e;
+        document.getElementById('q-text-hindi').innerText = q.h;
+
+        // Render Options
+        const optsContainer = document.getElementById('options-container');
+        optsContainer.innerHTML = '';
+        
+        q.opts.forEach((opt, idx) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerHTML = `<span class="opt-eng">${opt.e}</span><span class="opt-hindi">${opt.h}</span>`;
+            btn.onclick = () => checkAnswer(idx, btn, q.ans);
+            optsContainer.appendChild(btn);
+        });
+
+        // Timer
+        clearInterval(timerInterval);
+        document.getElementById('timer-display').classList.remove('pulse');
+        
+        if (timerDuration > 0) {
+            timeLeft = timerDuration;
+            document.getElementById('time-left').innerText = timeLeft;
+            document.getElementById('timer-display').style.display = 'flex';
+            
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                document.getElementById('time-left').innerText = timeLeft;
+                if (timeLeft <= 5) document.getElementById('timer-display').classList.add('pulse');
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    checkAnswer(-1, null, q.ans); // Timeout
+                }
+            }, 1000);
+        } else {
+            document.getElementById('timer-display').style.display = 'none';
+        }
+    }
+
+    function checkAnswer(selectedIdx, btn, correctIdx) {
+        clearInterval(timerInterval);
+        const buttons = document.querySelectorAll('.option-btn');
+        buttons.forEach(b => b.disabled = true);
+
+        if (selectedIdx === correctIdx) {
+            score++;
+            btn.classList.add('correct');
+            playTone('correct');
+            triggerConfetti();
+        } else {
+            if (btn) btn.classList.add('wrong');
+            buttons[correctIdx].classList.add('correct');
+            playTone('wrong');
+            const emoji = document.getElementById('sad-emoji');
+            emoji.style.display = 'block';
+            setTimeout(() => emoji.style.display = 'none', 1000);
+        }
+
+        setTimeout(() => {
+            currentIndex++;
+            loadQuestion();
+        }, 1500);
+    }
+
+    function finishEarly() {
+        clearInterval(timerInterval);
+        document.getElementById('quiz-screen').classList.remove('active');
+        document.getElementById('result-screen').classList.add('active');
+
+        const total = currentQuestions.length;
+        const percentage = Math.round((score / total) * 100);
+        
+        document.getElementById('final-score').innerText = `${percentage}%`;
+        document.getElementById('stats-text').innerText = `You answered ${score} out of ${total} correctly.`;
+
+        const msgDisplay = document.getElementById('result-msg');
+        if (percentage >= 80) {
+            msgDisplay.innerText = "🏆 Outstanding Performance!";
+            triggerConfetti();
+        } else if (percentage >= 50) {
+            msgDisplay.innerText = "👏 Well Done! Keep it up.";
+        } else {
+            msgDisplay.innerText = "📚 Practice makes perfect!";
+        }
+    }
+
+    function triggerConfetti() {
+        for (let i = 0; i < 50; i++) {
+            const confetti = document.createElement('div');
+            confetti.classList.add('confetti');
+            confetti.style.left = Math.random() * 100 + 'vw';
+            confetti.style.backgroundColor = `hsl(${Math.random() * 360}, 100%, 50%)`;
+            confetti.style.animationDuration = (Math.random() * 2 + 2) + 's';
+            document.body.appendChild(confetti);
+            setTimeout(() => confetti.remove(), 4000);
+        }
+    }
+</script>
+</body>
+</html>

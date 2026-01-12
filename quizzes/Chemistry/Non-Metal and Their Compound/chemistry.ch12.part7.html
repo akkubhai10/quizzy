@@ -1,0 +1,1025 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chemistry Quiz (301-345) | रसायन विज्ञान</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --text-main: #ffffff;
+            --text-hindi: #e0e0e0;
+            --correct: #00e676;
+            --wrong: #ff5252;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Poppins', sans-serif;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            /* Vibrant Mesh Gradient Background */
+            background: radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
+                        radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%), 
+                        radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 50%);
+            background-color: #0f172a; /* Fallback */
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--text-main);
+            overflow-x: hidden;
+            font-size: 16px;
+        }
+
+        /* Glassmorphism Card */
+        .glass-container {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 25px;
+            padding: 2.5rem;
+            width: 95%;
+            max-width: 800px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+            position: relative;
+            z-index: 10;
+            min-height: 600px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Screens */
+        .screen {
+            display: none;
+            flex-direction: column;
+            height: 100%;
+            flex-grow: 1;
+        }
+        
+        .screen.active {
+            display: flex;
+        }
+
+        /* Start Screen */
+        .start-content {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            flex-grow: 1;
+            gap: 1.5rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            text-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            line-height: 1.2;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(to right, #fff, #a5b4fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        h2 {
+            font-size: 1.2rem;
+            color: var(--text-hindi);
+            font-weight: 400;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            align-items: center;
+            width: 100%;
+        }
+
+        label { font-size: 0.9rem; letter-spacing: 0.5px; color: #ccc; }
+
+        input[type="number"] {
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.2);
+            padding: 12px;
+            border-radius: 12px;
+            color: white;
+            font-size: 1.1rem;
+            text-align: center;
+            width: 200px;
+            outline: none;
+            transition: 0.3s;
+        }
+        input[type="number"]:focus { border-color: #00e676; }
+
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 1rem;
+            cursor: pointer;
+            background: rgba(255,255,255,0.05);
+            padding: 10px 25px;
+            border-radius: 50px;
+            transition: 0.3s;
+        }
+        .toggle-container:hover { background: rgba(255,255,255,0.1); }
+
+        /* Custom Switch */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 26px;
+        }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(0,0,0,0.5);
+            transition: .4s;
+            border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider { background-color: #00e676; }
+        input:checked + .slider:before { transform: translateX(24px); }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 50px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            letter-spacing: 1px;
+        }
+
+        .btn-primary:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 25px rgba(118, 75, 162, 0.6);
+        }
+
+        /* Quiz Interface */
+        .quiz-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .progress-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 6px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 25px 25px 0 0;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: #00e676;
+            width: 0%;
+            transition: width 0.3s ease;
+            box-shadow: 0 0 15px #00e676;
+        }
+
+        .timer-circle {
+            width: 55px;
+            height: 55px;
+            border-radius: 50%;
+            border: 3px solid rgba(255,255,255,0.2);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+            transition: all 0.3s;
+            background: rgba(0,0,0,0.2);
+        }
+        .timer-circle.danger {
+            border-color: #ff5252;
+            color: #ff5252;
+            background: rgba(255, 82, 82, 0.15);
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); box-shadow: 0 0 20px rgba(255, 82, 82, 0.6); }
+            100% { transform: scale(1); }
+        }
+
+        .question-box {
+            background: rgba(255,255,255,0.05);
+            padding: 25px;
+            border-radius: 20px;
+            margin-bottom: 25px;
+            border-left: 5px solid #00e676;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+
+        .q-eng {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: white;
+            line-height: 1.4;
+        }
+        .q-hin {
+            font-size: 1.05rem;
+            color: var(--text-hindi);
+            font-weight: 400;
+            line-height: 1.5;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        @media (min-width: 700px) {
+            .options-grid { grid-template-columns: 1fr 1fr; }
+        }
+
+        .option-btn {
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 16px 20px;
+            border-radius: 15px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            background: rgba(255,255,255,0.15);
+            transform: translateY(-3px);
+            border-color: rgba(255,255,255,0.4);
+        }
+
+        .option-btn.correct {
+            background: rgba(0, 230, 118, 0.2);
+            border-color: var(--correct);
+            box-shadow: 0 0 20px rgba(0, 230, 118, 0.2);
+        }
+
+        .option-btn.wrong {
+            background: rgba(255, 82, 82, 0.2);
+            border-color: var(--wrong);
+            animation: shake 0.5s;
+        }
+
+        .opt-eng { font-size: 1rem; font-weight: 600; color: white; margin-bottom: 4px; }
+        .opt-hin { font-size: 0.9rem; color: #ccc; }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-6px); }
+            75% { transform: translateX(6px); }
+        }
+
+        /* Feedback Overlay */
+        .feedback-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 6rem;
+            pointer-events: none;
+            z-index: 20;
+            opacity: 0;
+            transition: opacity 0.2s;
+            filter: drop-shadow(0 0 10px rgba(0,0,0,0.5));
+        }
+        .feedback-overlay.active { opacity: 1; animation: pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+
+        @keyframes pop {
+            0% { transform: translate(-50%, -50%) scale(0); }
+            100% { transform: translate(-50%, -50%) scale(1); }
+        }
+
+        .early-submit-btn {
+            margin-top: auto;
+            align-self: center;
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.4);
+            color: white;
+            padding: 12px 30px;
+            border-radius: 30px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            opacity: 0.8;
+            transition: 0.3s;
+        }
+        .early-submit-btn:hover {
+            opacity: 1;
+            background: rgba(255,255,255,0.1);
+            border-color: white;
+        }
+
+        /* Result Screen */
+        .result-card {
+            background: rgba(255,255,255,0.05);
+            border-radius: 30px;
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 20px;
+            width: 100%;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .score-big {
+            font-size: 5rem;
+            font-weight: 800;
+            background: linear-gradient(to bottom, #fff, #b4c6e7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin: 10px 0;
+        }
+
+        .score-msg {
+            font-size: 1.6rem;
+            margin-bottom: 15px;
+            color: #00e676;
+            font-weight: 600;
+        }
+        
+        /* Confetti Canvas */
+        #confetti-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 9999;
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="confetti-canvas"></canvas>
+
+    <div class="glass-container" id="app-container">
+        
+        <div id="start-screen" class="screen active">
+            <div class="start-content">
+                <div>
+                    <h1>Chemistry Challenge</h1>
+                    <h2>रसायन विज्ञान (Q. 301-345)</h2>
+                </div>
+                
+                <div class="input-group">
+                    <label>⏱️ Timer per Question (Seconds)</label>
+                    <input type="number" id="timer-input" placeholder="e.g. 20 (0 for no timer)" min="0">
+                </div>
+
+                <div class="input-group">
+                    <label class="toggle-container">
+                        <div class="switch">
+                            <input type="checkbox" id="shuffle-toggle">
+                            <span class="slider"></span>
+                        </div>
+                        Randomize (प्रश्नों को मिलाएं)
+                    </label>
+                </div>
+
+                <button class="btn-primary" onclick="startQuiz()">Start Quiz</button>
+            </div>
+        </div>
+
+        <div id="quiz-screen" class="screen">
+            <div class="progress-container">
+                <div class="progress-bar" id="progress-bar"></div>
+            </div>
+
+            <div class="quiz-header">
+                <div id="q-counter">Question 01/45</div>
+                <div class="timer-circle" id="timer-display">--</div>
+                <div id="score-counter">Score: 0</div>
+            </div>
+
+            <div class="question-box">
+                <div class="q-eng" id="q-text-eng">Question English</div>
+                <div class="q-hin" id="q-text-hin">Question Hindi</div>
+            </div>
+
+            <div class="options-grid" id="options-container">
+                </div>
+
+            <div class="feedback-overlay" id="feedback-emoji"></div>
+
+            <button class="early-submit-btn" onclick="endGame()">Finish & Show Results</button>
+        </div>
+
+        <div id="result-screen" class="screen">
+            <div class="start-content">
+                <div class="result-card">
+                    <h2>Final Score</h2>
+                    <div class="score-big" id="final-score">0</div>
+                    <div class="score-msg" id="final-msg">Well Done!</div>
+                    <p id="stats-text" style="color:#ddd; margin-top:10px; font-size: 1.1rem;"></p>
+                </div>
+                <button class="btn-primary" onclick="location.reload()">Restart Quiz</button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        /* ================= DATA (Questions 301-345) ================= */
+        const rawQuestions = [
+            {
+                qE: "What is the by-product in industrial production of Sodium Hydroxide?",
+                qH: "सोडियम हाइड्रोक्साइड के औद्योगिक उत्पादन में सह-उत्पाद है-",
+                optsE: ["Oxygen", "Chlorine", "Sodium Carbonate", "Sodium Chloride"],
+                optsH: ["ऑक्सीजन", "क्लोरिन", "सोडियम कार्बोनेट", "सोडियम क्लोराइड"],
+                ans: 1
+            },
+            {
+                qE: "Which substance is obtained from Deacon's process?",
+                qH: "डीकन विधि से प्राप्त किया जाता है-",
+                optsE: ["Chlorine", "Nitric Acid", "Sulfuric Acid", "Ammonia"],
+                optsH: ["क्लोरिन", "नाइट्रिक अम्ल", "सल्फ्यूरिक अम्ल", "अमोनिया"],
+                ans: 0
+            },
+            {
+                qE: "Which poisonous gas is made by Chlorine?",
+                qH: "निम्नलिखित में कौन-सी विषैली गैस क्लोरीन के द्वारा बनायी जाती है?",
+                optsE: ["Phosgene", "Tear gas", "Mustard gas", "All of these"],
+                optsH: ["फॉस्जीन", "अश्रु-गैस", "मस्टर्ड गैस", "इनमें से सभी"],
+                ans: 3
+            },
+            {
+                qE: "Color of Iodine solution disappears by shaking it with which substance?",
+                qH: "आयोडीन विलयन का रंग निम्नलिखित में किस पदार्थ के साथ हिलाने पर गायब हो जाता है-",
+                optsE: ["NaCl", "Na2SO4", "Na2S2O3", "Na2O2"],
+                optsH: ["NaCl", "Na2SO4", "Na2S2O3", "Na2O2"],
+                ans: 2
+            },
+            {
+                qE: "What must be added to KBr solution to produce Bromine?",
+                qH: "KBr के विलयन में निम्नलिखित में क्या मिलाने पर ब्रोमीन उत्पन्न होगा?",
+                optsE: ["Cl2", "HI", "I2", "SO2"],
+                optsH: ["Cl2", "HI", "I2", "SO2"],
+                ans: 0
+            },
+            {
+                qE: "What is obtained from electrolysis of aqueous solution of HCl?",
+                qH: "HCl के जलीय विलयन के विद्युत अपघटन से प्राप्त होती है-",
+                optsE: ["H2 gas at cathode", "H2 gas at anode", "Cl2 gas at cathode", "O2 gas at anode"],
+                optsH: ["कैथोड पर H2 गैस", "एनोड पर H2 गैस", "कैथोड पर Cl2 गैस", "एनोड पर O2 गैस"],
+                ans: 0
+            },
+            {
+                qE: "What are elements of Group-18 of periodic table called?",
+                qH: "आवर्त सारणी के वर्ग-18 के तत्वों को कहा जाता है-",
+                optsE: ["Rare Gas", "Inert Gas", "Noble Gas", "All of these"],
+                optsH: ["दुर्लभ गैस (Rare Gas)", "अक्रिय गैस (Inert Gas)", "उत्कृष्ट गैस (Noble Gas)", "इनमें से सभी"],
+                ans: 3
+            },
+            {
+                qE: "Which statement is incorrect regarding Inert Gases?",
+                qH: "अक्रिय गैस के संबंध में निम्न में कौन-सा एक सही नहीं है?",
+                optsE: ["All are mono-atomic", "Colorless, Odorless, Tasteless", "Highly soluble in water", "Have specific heat ratio Cp/Cv = 1.66"],
+                optsH: ["सभी अक्रिय गैस एक-परमाणुक होते हैं", "ये सभी गैस रंगहीन, गंधहीन तथा स्वादहीन होते हैं", "ये सभी गैस जल में अतिविलेय होते हैं", "इन सभी गैसों की एक खास विशेषता यह है कि Cp/Cv = 1.66"],
+                ans: 2
+            },
+            {
+                qE: "Noble gases are chemically inactive because:",
+                qH: "उत्कृष्ट गैसे रासायनिक दृष्टि से अक्रिय होते हैं, क्योंकि-",
+                optsE: ["They are monoatomic", "Their valence shells are completely filled", "They have low MP/BP", "They are rare elements"],
+                optsH: ["ये एक परमाणुक होती है", "इनके संयोजी शेल पूर्णतः भरे हुए होते हैं", "इनके क्वथनांक निम्न होते है", "ये दुर्लभ तत्व है"],
+                ans: 1
+            },
+            {
+                qE: "Which element found in nature has the lowest boiling point?",
+                qH: "प्रकृति में विद्यमान तत्वों में सबसे कम क्वथनांक किस तत्व का है?",
+                optsE: ["Helium", "Hydrogen", "Nitrogen", "Oxygen"],
+                optsH: ["हीलियम", "हाइड्रोजन", "नाइट्रोजन", "ऑक्सीजन"],
+                ans: 0
+            },
+            {
+                qE: "The electronic configuration of outer shell of Noble gases is:",
+                qH: "उत्कृष्ट गैस के बाह्यतम शेल का इलेक्ट्रॉनिक विन्यास होता है-",
+                optsE: ["ns1 np5", "ns2 np7", "ns1 np7", "ns2 np6"],
+                optsH: ["ns1 np5", "ns2 np7", "ns1 np7", "ns2 np6"],
+                ans: 3
+            },
+            {
+                qE: "Lightest and non-flammable gas is:",
+                qH: "सबसे हल्की तथा अज्वलनशील गैस निम्नलिखित में कौन-सा है?",
+                optsE: ["Hydrogen", "Helium", "Argon", "Radon"],
+                optsH: ["हाइड्रोजन", "हीलियम", "ऑर्गन", "रेडॉन"],
+                ans: 1
+            },
+            {
+                qE: "Bright yellow D3 line found in the spectrum of Chromosphere indicated which element?",
+                qH: "सूर्य के क्रोमोस्फियर के स्पेक्ट्रम में जो चमकदार पीली रेखा पायी गई तथा जिसको D3 रेखा कहा गया, वह किस तत्व के उपस्थिति का संकेत थी-",
+                optsE: ["Na", "Ar", "He", "H"],
+                optsH: ["Na", "Ar", "He", "H"],
+                ans: 2
+            },
+            {
+                qE: "Which element has maximum Ionization Potential?",
+                qH: "निम्नलिखित में किस तत्व का आयनन विभव अधिक (महतम) है?",
+                optsE: ["Hydrogen", "Helium", "Fluorine", "Chlorine"],
+                optsH: ["हाइड्रोजन", "हीलियम", "फ्लुओरीन", "क्लोरिन"],
+                ans: 1
+            },
+            {
+                qE: "Gas used in colored discharge tubes in advertisements is:",
+                qH: "विज्ञापनों में प्रयुक्त रंगीन विसर्जन नलियों में प्रयुक्त गैस होती है-",
+                optsE: ["Xe", "Kr", "He", "Ne"],
+                optsH: ["Xe", "Kr", "He", "Ne"],
+                ans: 3
+            },
+            {
+                qE: "Which inert gas forms maximum compounds?",
+                qH: "अधिकतम यौगिक बनाने वाला अक्रिय गैस कौन है?",
+                optsE: ["Xe", "Kr", "Ne", "Rn"],
+                optsH: ["Xe", "Kr", "Ne", "Rn"],
+                ans: 0
+            },
+            {
+                qE: "Which gas is filled in airplane tires?",
+                qH: "वायुयान के टायरों में कौन-सी गैस भरी जाती है?",
+                optsE: ["Hydrogen", "Nitrogen", "Helium", "Argon"],
+                optsH: ["हाइड्रोजन", "नाइट्रोजन", "हीलियम", "ऑर्गन"],
+                ans: 1
+            },
+            {
+                qE: "Gas filled in balloons is:",
+                qH: "गुब्बारे में भरी जाने वाली गैस है?",
+                optsE: ["Helium", "Hydrogen", "Krypton", "Radon"],
+                optsH: ["हीलियम", "हाइड्रोजन", "क्रिप्टॉन", "रेडॉन"],
+                ans: 0
+            },
+            {
+                qE: "Who first prepared a Xenon compound?",
+                qH: "सर्वप्रथम किसने जेनॉन के यौगिक का निर्माण कर इस मिथक को समाप्त कर दिया कि उत्कृष्ट गैस यौगिक नहीं बना सकता है?",
+                optsE: ["Neil Bartlett", "Rayleigh", "Ramsay", "Wohler"],
+                optsH: ["नील्स बार्टलेट", "रैले", "रैमजे", "वोहेलर"],
+                ans: 0
+            },
+            {
+                qE: "Which Noble gas compound did Bartlett prepare first?",
+                qH: "बार्टलेट ने सर्वप्रथम निम्नांकित में किस उत्कृष्ट गैस का यौगिक बनाया?",
+                optsE: ["He", "Ne", "Ar", "Xe"],
+                optsH: ["He", "Ne", "Ar", "Xe"],
+                ans: 3
+            },
+            {
+                qE: "Why is it said 'Chemistry of noble gases is the chemistry of Xenon'?",
+                qH: "किन कारणों से यह कहा जाता है कि 'Chemistry of the noble gases is the chemistry of Xenon'",
+                optsE: ["Study of Xenon is extensive", "Xenon is most rare", "Xenon is most passive", "Xenon forms compounds"],
+                optsH: ["उत्कृष्ट गैस में जेनॉन का ही रसायनिक अध्ययन विस्तृत रूप से हुआ है", "उत्कृष्ट गैस में जेनॉन सर्वाधिक दुर्लभ है", "उत्कृष्ट गैस में जेनॉन ही सबसे ज्यादा निष्क्रिय है", "उत्कृष्ट गैस में जेनॉन ही यौगिक बना सकता है"],
+                ans: 3
+            },
+            {
+                qE: "Which statement is true?",
+                qH: "निम्नलिखित में कौन-सा कथन सत्य है?",
+                optsE: ["Only Radon is radioactive noble gas", "Radon obtained from Radium decay", "Except Radon all noble gases are in atmosphere", "All of these"],
+                optsH: ["उत्कृष्ट गैस में केवल रेडॉन ही रेडियो सक्रिय तत्व है", "रेडॉन रेडियम के विखंडन से प्राप्त होता है", "रेडॉन को छोड़कर सभी उत्कृष्ट गैस वायुमंडल के अवयव है", "इनमें से सभी"],
+                ans: 3
+            },
+            {
+                qE: "Which element shows only +1 oxidation state besides zero?",
+                qH: "निम्नलिखित में कौन शून्य के अतिरिक्त सिर्फ एक ऑक्सीकरण अवस्था प्रदर्शित करता है?",
+                optsE: ["Cl2", "F2", "Br2", "I2"],
+                optsH: ["Cl2", "F2", "Br2", "I2"],
+                ans: 1
+            },
+            {
+                qE: "Inert gases do not react with other elements because:",
+                qH: "अक्रिय गैस अन्य तत्वों से अभिक्रिया नहीं करता है, क्योंकि-",
+                optsE: ["Monoatomic", "Small size", "Not found in abundance", "Completely paired stable shells"],
+                optsH: ["एक परमाणवीय है", "इनके परमाणु का आकार बहुत छोटा है", "यह अधिक मात्रा में नहीं पाया जाता है", "इनमें पूर्णतः युग्मित स्थायी कोश है"],
+                ans: 3
+            },
+            {
+                qE: "Gas filled in balloons used for meteorological observations:",
+                qH: "मौसम विज्ञान संबंधी प्रेक्षण के लिए निम्नलिखित में से किसको गुब्बारों में भरने में उपयोग में लाया जाता है?",
+                optsE: ["Oxygen", "Helium", "Methane", "Hydrogen"],
+                optsH: ["ऑक्सीजन", "हीलियम", "मिथेन", "हाइड्रोजन"],
+                ans: 1
+            },
+            {
+                qE: "The outermost shell of any inert gas is:",
+                qH: "किसी अक्रिय गैस का बाह्यतम कक्षा-",
+                optsE: ["Completely filled", "Has 2 electrons", "Has 8 electrons", "Has 1 electron"],
+                optsH: ["पूर्णतः भरे होते हैं", "में दो इलेक्ट्रॉन होते हैं", "में आठ इलेक्ट्रॉन होते हैं", "में एक इलेक्ट्रॉन होते हैं"],
+                ans: 0
+            },
+            {
+                qE: "Noble gases are passive because:",
+                qH: "उत्कृष्ट गैस निष्क्रिय होते हैं क्योंकि-",
+                optsE: ["Stable electronic configuration", "High ionization potential", "Both a and b", "Neither a nor b"],
+                optsH: ["उनका इलेक्ट्रॉनिक विन्यास स्थायी होता है", "उनका आयनन विभव अधिक होता है", "a तथा b दोनों", "न तो a न ही b"],
+                ans: 2
+            },
+            {
+                qE: "Reason for very low reactivity of Noble gases:",
+                qH: "उत्कृष्ट गैसे अत्यल्प क्रियाशील होते हैं। निम्नलिखित में इसके क्या कारण है?",
+                optsE: ["Full valence shells", "High Ionization Enthalpy", "Positive Electron Gain Enthalpy", "All of these"],
+                optsH: ["उत्कृष्ट गैस के संयोजी शेल के इलेक्ट्रॉनिक विन्यास पूर्ण होते हैं", "उत्कृष्ट गैस के आयनन एंथैल्पी के मान उच्च होने के कारण इनमें इलेक्ट्रॉन खोकर धनायन में परिवर्तित हो जाने की प्रवृत्ति अत्यंत न्यून होती है", "उत्कृष्ट गैस के इलेक्ट्रॉन प्राप्त कर ऋणायन में परिवर्तित हो जाने की प्रवृत्ति अत्यंत कम होती है", "इनमें से सभी"],
+                ans: 3
+            },
+            {
+                qE: "Credit for discovery of inert gases goes to:",
+                qH: "अक्रिय गैस की खोज करने का श्रेय किसे प्राप्त है?",
+                optsE: ["Ramsay", "Scheele", "Cavendish", "Priestley"],
+                optsH: ["रैमजे", "शीले", "कैवेन्डिश", "प्रीस्टले"],
+                ans: 0
+            },
+            {
+                qE: "After discovery of noble gases by Rayleigh and Ramsay, what was suggested?",
+                qH: "रैले तथा रैमजे द्वारा उत्कृष्ट गैसों की खोज के बाद आवर्त सारणी में उनके स्थान के बारे में क्या सुझाव दिया गया?",
+                optsE: ["Place with Hydrogen", "Place with Alkali metals", "Place with Halogens", "Create a new Zero Group"],
+                optsH: ["इसे हाइड्रोजन के साथ रखा जाए", "इस क्षार धातुओं के साथ रखा जाए", "इसे हैलोजन तत्व के साथ रखा जाए", "एक नया समूह बनाया जाए और उसे आवर्त सारणी में जोड़ा जाए।"],
+                ans: 3
+            },
+            {
+                qE: "Which gas has the maximum percentage in air?",
+                qH: "वायु में निम्नलिखित में से किसका प्रतिशत अधिकतम है?",
+                optsE: ["Ar", "He", "Ne", "Kr"],
+                optsH: ["Ar", "He", "Ne", "Kr"],
+                ans: 0
+            },
+            {
+                qE: "Who discovered Helium?",
+                qH: "हीलियम की खोज किसने की थी?",
+                optsE: ["Henry Cavendish", "Scheele & Priestley", "Berzelius", "Lockyer"],
+                optsH: ["हेनरी केवेन्डिश", "शीले व प्रीस्टले", "बर्जीलियस", "लोकेयर"],
+                ans: 3
+            },
+            {
+                qE: "Which liquid can climb up the walls of a glass vessel?",
+                qH: "साधारणतः द्रव ऊँचे तल से नीचे तल की ओर प्रवाहित होता है। निम्न में से कौन-सा द्रव ग्लास में रखने पर ऊपर की ओर चढ़ सकता है?",
+                optsE: ["Liquid Helium", "Liquid Hydrogen", "Petrol", "Water"],
+                optsH: ["द्रव हिलियम", "द्रव हाइड्रोजन", "पेट्रोल", "जल"],
+                ans: 0
+            },
+            {
+                qE: "Helium is preferred over Hydrogen in air balloons because:",
+                qH: "वायु भरे गुब्बारे में हीलियम को हाइड्रोजन की अपेक्षा वरीयता दी जाती है, क्योंकि-",
+                optsE: ["Helium is cheaper", "Helium is less dense", "Helium is stronger", "Helium is non-explosive"],
+                optsH: ["हीलियम सस्ता है", "हीलियम अपेक्षाकृत कम घना है", "हीलियम, हाइड्रोजन के तुलना में अधिक शक्तिशाली है", "हीलियम वायु के साथ विस्फोटक मिश्रण नहीं बनाता है"],
+                ans: 3
+            },
+            {
+                qE: "Which inert gas can form compounds?",
+                qH: "कौन-सी अक्रिय गैस यौगिक बना सकती है?",
+                optsE: ["Krypton", "Xenon", "Argon", "Radon"],
+                optsH: ["क्रिप्टॉन", "जेनॉन", "ऑर्गन", "रेडॉन"],
+                ans: 1
+            },
+            {
+                qE: "Which halogen forms maximum compounds with Xenon?",
+                qH: "कौन-सा हैलोजन तत्व जीनॉन के साथ मिलकर अधिकतम यौगिक बनाता है?",
+                optsE: ["Fluorine", "Chlorine", "Bromine", "Iodine"],
+                optsH: ["फ्लोरीन", "क्लोरीन", "ब्रोमीन", "आयोडीन"],
+                ans: 0
+            },
+            {
+                qE: "Most abundant inert gas in atmosphere:",
+                qH: "वायुमण्डल में सर्वाधिक मात्रा में पाये जाने वाले अक्रिय गैस है-",
+                optsE: ["Helium", "Neon", "Argon", "Krypton"],
+                optsH: ["हीलियम", "नीऑन", "ऑर्गन", "क्रिप्टॉन"],
+                ans: 2
+            },
+            {
+                qE: "Gas commonly filled in tube lights:",
+                qH: "ट्यूब लाइट में सामान्यतः गैस भरी होती है-",
+                optsE: ["Argon + Phosphine", "Mercury vapor + Argon", "Argon + Methane", "Mercury vapor + Helium"],
+                optsH: ["ऑर्गन + फॉस्फीन", "पारे का वाष्प + ऑर्गन", "ऑर्गन + मिथेन", "पारे का वाष्प + हीलियम"],
+                ans: 1
+            },
+            {
+                qE: "Gas used in electric bulbs:",
+                qH: "विद्युत बल्ब में प्रयुक्त गैस है?",
+                optsE: ["Nitrogen", "Hydrogen", "Oxygen", "Inert Gas"],
+                optsH: ["नाइट्रोजन", "हाइड्रोजन", "ऑक्सीजन", "अक्रिय गैस"],
+                ans: 3
+            },
+            {
+                qE: "Nucleus of Helium contains:",
+                qH: "हीलियम के नाभिक में होता है-",
+                optsE: ["1 proton + 2 neutron", "Only 1 proton", "Only 2 protons", "2 protons + 2 neutrons"],
+                optsH: ["एक प्रोटॉन तथा दो न्यूट्रॉन", "केवल एक प्रोटॉन", "केवल दो प्रोटॉन", "दो प्रोटॉन तथा दो न्यूट्रॉन"],
+                ans: 3
+            },
+            {
+                qE: "Inert gas used in treatment of Cancer:",
+                qH: "कैंसर के उपचार में प्रयुक्त होने वाला अक्रिय गैस है-",
+                optsE: ["Helium", "Radon", "Argon", "Xenon"],
+                optsH: ["हीलियम", "रेडॉन", "ऑर्गन", "जेनॉन"],
+                ans: 1
+            },
+            {
+                qE: "Which is also called 'Stranger Gas'?",
+                qH: "निम्नलिखित में किस एक को स्ट्रेन्जर गैस भी कहते हैं?",
+                optsE: ["Argon", "Xenon", "Neon", "Radon"],
+                optsH: ["ऑर्गन", "जीनॉन", "नियॉन", "रेडॉन"],
+                ans: 1
+            },
+            {
+                qE: "Main source of Helium is:",
+                qH: "हीलियम का मुख्य स्रोत है-",
+                optsE: ["Air", "Monazite", "Radium", "Water"],
+                optsH: ["वायु", "मोनाजाइट", "रेडियम", "जल"],
+                ans: 1
+            },
+            {
+                qE: "Gas used to produce Flash in modern photography:",
+                qH: "अत्याधुनिक फोटोग्राफी में क्षण दीप्ति (Flash) उत्पन्न करने में किसका प्रयोग किया जाता है?",
+                optsE: ["Xenon", "Neon", "Argon", "Helium"],
+                optsH: ["जेनॉन", "निऑन", "ऑर्गन", "हीलियम"],
+                ans: 0
+            },
+            {
+                qE: "Consider statement: When Mendeleev classified elements, Inert gases were not discovered.",
+                qH: "विचार कीजिए: 1. मेंडलीफ के जिस समय आवर्त सारणी के रूप में तत्वों का वर्गीकरण किया था उस समय अक्रिय गैस का खोज नहीं हुआ था।",
+                optsE: ["True", "False", "Partially True", "Unknown"],
+                optsH: ["सत्य", "असत्य", "आंशिक सत्य", "अज्ञात"],
+                ans: 0
+            }
+        ];
+
+        /* ================= LOGIC ================= */
+        let currentQuestions = [];
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let timer = null;
+        let timeLeft = 0;
+        let settings = { timePerQ: 0, shuffle: false };
+        let audioContext = null;
+
+        // Sound Synthesis (Web Audio API)
+        function initAudio() {
+            if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
+
+        function playSound(type) {
+            if (!audioContext) initAudio();
+            const osc = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            osc.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            if (type === 'correct') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(600, audioContext.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(1200, audioContext.currentTime + 0.1);
+                gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+                osc.start();
+                osc.stop(audioContext.currentTime + 0.3);
+            } else if (type === 'wrong') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(150, audioContext.currentTime);
+                osc.frequency.linearRampToValueAtTime(100, audioContext.currentTime + 0.3);
+                gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+                osc.start();
+                osc.stop(audioContext.currentTime + 0.3);
+            }
+        }
+
+        // Shuffle Array
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        function startQuiz() {
+            initAudio();
+            const timeInput = document.getElementById('timer-input').value;
+            const shuffleInput = document.getElementById('shuffle-toggle').checked;
+            
+            settings.timePerQ = timeInput ? parseInt(timeInput) : 0;
+            settings.shuffle = shuffleInput;
+
+            // Prepare Data
+            currentQuestions = [...rawQuestions];
+            if (settings.shuffle) shuffleArray(currentQuestions);
+
+            score = 0;
+            currentQuestionIndex = 0;
+
+            // UI Switch
+            document.getElementById('start-screen').classList.remove('active');
+            document.getElementById('result-screen').classList.remove('active');
+            document.getElementById('quiz-screen').classList.add('active');
+
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            // Check limits
+            if (currentQuestionIndex >= currentQuestions.length) {
+                endGame();
+                return;
+            }
+
+            const qData = currentQuestions[currentQuestionIndex];
+            
+            // Update Headers
+            document.getElementById('q-counter').innerText = `Question ${String(currentQuestionIndex + 1).padStart(2, '0')}/${currentQuestions.length}`;
+            document.getElementById('score-counter').innerText = `Score: ${score}`;
+            document.getElementById('progress-bar').style.width = `${((currentQuestionIndex) / currentQuestions.length) * 100}%`;
+
+            // Render Text
+            document.getElementById('q-text-eng').innerText = qData.qE;
+            document.getElementById('q-text-hin').innerText = qData.qH;
+
+            // Render Options
+            const optsContainer = document.getElementById('options-container');
+            optsContainer.innerHTML = '';
+
+            qData.optsE.forEach((optE, idx) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerHTML = `
+                    <span class="opt-eng">${optE}</span>
+                    <span class="opt-hin">${qData.optsH[idx]}</span>
+                `;
+                btn.onclick = () => handleAnswer(idx, btn);
+                optsContainer.appendChild(btn);
+            });
+
+            // Timer Logic
+            clearInterval(timer);
+            const timerDisplay = document.getElementById('timer-display');
+            timerDisplay.classList.remove('danger');
+            
+            if (settings.timePerQ > 0) {
+                timerDisplay.style.display = 'flex';
+                timeLeft = settings.timePerQ;
+                timerDisplay.innerText = timeLeft;
+                
+                timer = setInterval(() => {
+                    timeLeft--;
+                    timerDisplay.innerText = timeLeft;
+                    if (timeLeft <= 5) timerDisplay.classList.add('danger');
+                    if (timeLeft <= 0) {
+                        clearInterval(timer);
+                        handleAnswer(-1, null); // Time out treated as wrong/skip
+                    }
+                }, 1000);
+            } else {
+                timerDisplay.style.display = 'none';
+            }
+        }
+
+        function handleAnswer(selectedIndex, btnElement) {
+            clearInterval(timer);
+            const qData = currentQuestions[currentQuestionIndex];
+            const allBtns = document.querySelectorAll('.option-btn');
+            
+            // Disable all
+            allBtns.forEach(b => b.disabled = true);
+
+            const isCorrect = selectedIndex === qData.ans;
+            const correctBtn = allBtns[qData.ans];
+
+            if (isCorrect) {
+                score++;
+                if(btnElement) btnElement.classList.add('correct');
+                playSound('correct');
+                triggerConfetti();
+                showFeedback('🤩'); // Star eyes for correct
+            } else {
+                if(btnElement) btnElement.classList.add('wrong');
+                if(correctBtn) correctBtn.classList.add('correct'); // Show correct answer
+                playSound('wrong');
+                showFeedback('😢'); // Sad face for wrong
+            }
+
+            // Auto Next
+            setTimeout(() => {
+                currentQuestionIndex++;
+                loadQuestion();
+            }, 1500);
+        }
+
+        function showFeedback(emoji) {
+            const el = document.getElementById('feedback-emoji');
+            el.innerText = emoji;
+            el.classList.add('active');
+            setTimeout(() => el.classList.remove('active'), 1000);
+        }
+
+        function endGame() {
+            clearInterval(timer);
+            document.getElementById('quiz-screen').classList.remove('active');
+            document.getElementById('result-screen').classList.add('active');
+
+            // Calculate percentage based on attempted questions
+            let totalConsidered = currentQuestionIndex === 0 ? 1 : currentQuestionIndex;
+            // If finished naturally, it uses total length
+            if(currentQuestionIndex >= currentQuestions.length) totalConsidered = currentQuestions.length;
+
+            const percentage = (score / totalConsidered) * 100;
+            const scoreEl = document.getElementById('final-score');
+            const msgEl = document.getElementById('final-msg');
+            const statsEl = document.getElementById('stats-text');
+
+            scoreEl.innerText = `${Math.round(percentage)}%`;
+            statsEl.innerText = `You answered ${score} out of ${totalConsidered} questions correctly.`;
+
+            if (percentage >= 80) msgEl.innerText = "🏆 Outstanding Performance!";
+            else if (percentage >= 50) msgEl.innerText = "👏 Well Done! Keep it up.";
+            else msgEl.innerText = "📚 Practice makes perfect! Try again.";
+            
+            if(percentage >= 80) triggerConfetti();
+        }
+
+        /* ================= CONFETTI (Pure JS Canvas) ================= */
+        function triggerConfetti() {
+            const canvas = document.getElementById('confetti-canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            const particles = [];
+            const colors = ['#00e676', '#ff5252', '#a5b4fc', '#ffeb3b', '#e040fb'];
+
+            for (let i = 0; i < 150; i++) {
+                particles.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height - canvas.height,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    size: Math.random() * 8 + 3,
+                    speed: Math.random() * 5 + 2,
+                    angle: Math.random() * 360,
+                    spin: Math.random() * 10 - 5
+                });
+            }
+
+            let animationId;
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                let active = false;
+                
+                particles.forEach(p => {
+                    p.y += p.speed;
+                    p.angle += p.spin;
+                    if (p.y < canvas.height) active = true;
+
+                    ctx.save();
+                    ctx.translate(p.x, p.y);
+                    ctx.rotate(p.angle * Math.PI / 180);
+                    ctx.fillStyle = p.color;
+                    ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size);
+                    ctx.restore();
+                });
+
+                if (active) animationId = requestAnimationFrame(animate);
+                else ctx.clearRect(0, 0, canvas.width, canvas.height);
+            }
+            
+            animate();
+            setTimeout(() => cancelAnimationFrame(animationId), 4000);
+        }
+    </script>
+</body>
+</html>

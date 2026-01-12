@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chemistry Quiz: Iron, Copper & Zinc (151-200)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --text-main: #ffffff;
+            --text-dim: #e0e0e0;
+            --accent-green: #00e676;
+            --accent-red: #ff1744;
+            --gradient-1: #8E2DE2;
+            --gradient-2: #4A00E0;
+            --gradient-3: #ff416c;
+            --gradient-4: #ff4b2b;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: radial-gradient(circle at top left, var(--gradient-1), var(--gradient-2)),
+                        radial-gradient(circle at bottom right, var(--gradient-3), var(--gradient-4));
+            background-blend-mode: overlay;
+            background-size: cover;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow-x: hidden;
+            color: var(--text-main);
+        }
+
+        /* Glassmorphism Card */
+        .container {
+            width: 95%;
+            max-width: 800px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid var(--glass-border);
+            border-radius: 25px;
+            padding: 2.5rem;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        /* Screens */
+        .screen { display: none; flex-direction: column; gap: 20px; animation: fadeIn 0.5s ease; }
+        .screen.active { display: flex; }
+
+        h1 { font-size: 2.2rem; text-align: center; text-shadow: 0 4px 6px rgba(0,0,0,0.3); margin-bottom: 5px; }
+        h2 { font-size: 1.5rem; text-align: center; margin-bottom: 15px; }
+        .subtitle { text-align: center; color: var(--text-dim); font-size: 1rem; margin-bottom: 20px; }
+
+        /* Controls */
+        .control-panel { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
+        
+        .input-group {
+            background: rgba(0,0,0,0.25);
+            padding: 15px;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        label { font-size: 0.9rem; font-weight: 500; }
+        
+        input[type="number"] {
+            background: transparent; border: 1px solid rgba(255,255,255,0.5); color: white;
+            padding: 8px; border-radius: 8px; width: 70px; text-align: center; font-family: inherit; font-size: 1rem;
+        }
+        input[type="number"]:focus { outline: none; border-color: #fff; background: rgba(255,255,255,0.1); }
+
+        /* Toggle Switch */
+        .switch { position: relative; display: inline-block; width: 50px; height: 28px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(255,255,255,0.3); transition: .4s; border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute; content: ""; height: 20px; width: 20px; left: 4px; bottom: 4px;
+            background-color: white; transition: .4s; border-radius: 50%;
+        }
+        input:checked + .slider { background-color: var(--accent-green); }
+        input:checked + .slider:before { transform: translateX(22px); }
+
+        /* Buttons */
+        .btn {
+            background: linear-gradient(135deg, #FF512F 0%, #DD2476 100%);
+            border: none; padding: 16px 32px; color: white;
+            font-size: 1.1rem; font-weight: 700; border-radius: 50px;
+            cursor: pointer; transition: transform 0.2s, box-shadow 0.2s, filter 0.2s;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            text-align: center; width: 100%; letter-spacing: 0.5px;
+        }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.4); filter: brightness(1.1); }
+        .btn:active { transform: translateY(1px); }
+        .btn-restart { background: linear-gradient(135deg, #11998e, #38ef7d); }
+
+        /* Quiz UI */
+        .header-info {
+            display: flex; justify-content: space-between; align-items: center;
+            font-weight: 600; font-size: 1.1rem; margin-top: 10px;
+        }
+        
+        .progress-track {
+            width: 100%; height: 8px; background: rgba(255,255,255,0.15);
+            border-radius: 10px; overflow: hidden; margin-bottom: 25px;
+        }
+        .progress-fill {
+            height: 100%; width: 0%; background: #00c6ff;
+            background: linear-gradient(90deg, #00c6ff, #0072ff);
+            box-shadow: 0 0 15px rgba(0, 198, 255, 0.5); transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .timer {
+            background: rgba(0,0,0,0.4); padding: 6px 16px; border-radius: 20px;
+            display: flex; align-items: center; gap: 8px; font-variant-numeric: tabular-nums;
+        }
+        .timer.pulse { color: #ff5252; animation: pulse 1s infinite; font-weight: 700; }
+
+        .question-box {
+            background: rgba(255,255,255,0.07);
+            padding: 25px; border-radius: 20px;
+            border-left: 6px solid #fff;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+        .q-eng { font-size: 1.2rem; font-weight: 700; margin-bottom: 12px; display: block; line-height: 1.4; }
+        .q-hindi { font-size: 1rem; color: var(--text-dim); font-weight: 400; display: block; line-height: 1.5; }
+
+        .options-grid { display: grid; grid-template-columns: 1fr; gap: 15px; }
+        
+        .option-btn {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.15);
+            padding: 18px; border-radius: 16px;
+            color: white; text-align: left; cursor: pointer;
+            transition: all 0.2s ease; position: relative; overflow: hidden;
+        }
+        .option-btn:hover:not(:disabled) { background: rgba(255,255,255,0.2); transform: translateX(5px); border-color: rgba(255,255,255,0.4); }
+        .option-btn:disabled { cursor: default; opacity: 0.9; }
+
+        .option-btn.correct { background: rgba(0, 230, 118, 0.25); border: 2px solid #00e676; }
+        .option-btn.wrong { background: rgba(255, 23, 68, 0.25); border: 2px solid #ff1744; }
+
+        .opt-eng { font-weight: 600; display: block; margin-bottom: 4px; font-size: 1rem; }
+        .opt-hindi { font-size: 0.9rem; color: #ddd; display: block; font-weight: 300; }
+
+        .footer-nav { margin-top: 30px; display: flex; justify-content: flex-end; }
+        .btn-early { 
+            background: transparent; border: 1px solid rgba(255,255,255,0.4); 
+            font-size: 0.95rem; padding: 10px 24px; border-radius: 30px;
+        }
+        .btn-early:hover { background: rgba(255,255,255,0.1); }
+
+        /* Animations */
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+        @keyframes shake { 
+            0%, 100% { transform: translateX(0); } 
+            20% { transform: translateX(-12px); } 
+            40% { transform: translateX(12px); }
+            60% { transform: translateX(-8px); }
+            80% { transform: translateX(8px); }
+        }
+        @keyframes fall {
+            0% { transform: translateY(-10vh) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+        }
+
+        /* Feedback Overlay */
+        #feedback-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 9999; display: flex;
+            justify-content: center; align-items: center;
+        }
+        .emoji-feedback { font-size: 6rem; animation: shake 0.6s cubic-bezier(.36,.07,.19,.97) both; display: none; filter: drop-shadow(0 0 20px rgba(0,0,0,0.5)); }
+        .confetti {
+            position: absolute; width: 12px; height: 12px;
+            background: #f00; animation: fall 3s linear forwards;
+            border-radius: 3px;
+        }
+
+        /* Result Screen */
+        .score-circle {
+            width: 180px; height: 180px; border-radius: 50%;
+            background: rgba(255,255,255,0.05); border: 8px solid rgba(255,255,255,0.8);
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            margin: 0 auto 25px; 
+            box-shadow: 0 0 30px rgba(255,255,255,0.2);
+        }
+        .score-val { font-size: 3.5rem; font-weight: 800; line-height: 1; }
+        .score-label { font-size: 1rem; font-weight: 400; text-transform: uppercase; letter-spacing: 2px; margin-top: 5px; opacity: 0.8; }
+        .score-msg { font-size: 1.5rem; margin-bottom: 10px; color: #ffd700; text-align: center; font-weight: 600; }
+
+        @media (min-width: 600px) {
+            .options-grid { grid-template-columns: 1fr 1fr; }
+            .container { padding: 3rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div id="feedback-overlay">
+        <div class="emoji-feedback" id="sad-emoji">😢</div>
+    </div>
+
+    <div id="start-screen" class="screen active">
+        <h1>Chemistry Quiz</h1>
+        <p class="subtitle">Iron, Copper & Zinc [151-200]</p>
+        
+        <div class="control-panel">
+            <div class="input-group">
+                <label>Timer (sec)<br><span style="font-size:0.75rem; color:#aaa">0 = No Timer</span></label>
+                <input type="number" id="time-input" placeholder="0" min="0">
+            </div>
+
+            <div class="input-group">
+                <label>Shuffle<br><span style="font-size:0.75rem; color:#aaa">Random Order</span></label>
+                <label class="switch">
+                    <input type="checkbox" id="shuffle-input">
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </div>
+
+        <button class="btn" onclick="startQuiz()">Start Quiz 🚀</button>
+    </div>
+
+    <div id="quiz-screen" class="screen">
+        <div class="progress-track"><div class="progress-fill" id="progress-bar"></div></div>
+        
+        <div class="header-info">
+            <span id="q-counter">Q 01/50</span>
+            <div class="timer" id="timer-display"><span>⏱️</span> <span id="time-left">--</span></div>
+            <span id="score-display">Score: 00</span>
+        </div>
+
+        <div class="question-box">
+            <span class="q-eng" id="q-text-eng">Loading...</span>
+            <span class="q-hindi" id="q-text-hindi">Loading...</span>
+        </div>
+
+        <div class="options-grid" id="options-container"></div>
+
+        <div class="footer-nav">
+            <button class="btn btn-early" onclick="finishEarly()">Finish & Show Results</button>
+        </div>
+    </div>
+
+    <div id="result-screen" class="screen">
+        <h2>Quiz Completed!</h2>
+        <div class="score-circle">
+            <span class="score-val" id="final-score">0%</span>
+            <span class="score-label">Accuracy</span>
+        </div>
+        <div class="score-msg" id="result-msg"></div>
+        <p id="stats-text" style="text-align:center; color:#ddd; font-size:1.1rem;"></p>
+        <button class="btn btn-restart" onclick="location.reload()">Restart Quiz 🔄</button>
+    </div>
+</div>
+
+<script>
+    // --- Data: Questions 151-200 ---
+    const rawQuestions = [
+        {
+            e: "Which major gangue is mixed in the ore Hematite of Iron?",
+            h: "लोहे के अयस्क हेमेटाइट में कौन-से प्रमुख गैंग मिश्रित रहते हैं?",
+            opts: [
+                {e:"Silica", h:"सिलिका"}, {e:"Calcium Carbonate", h:"कैल्शियम कार्बोनेट"}, {e:"Clay", h:"चिकनी मिट्टी"}, {e:"None of these", h:"इनमें से कोई नहीं"}
+            ],
+            ans: 0
+        },
+        {
+            e: "Chemical form of Hematite is:",
+            h: "हेमेटाइट रासायनिक रूप से हैं-",
+            opts: [
+                {e:"Fe3O4", h:"Fe3O4"}, {e:"Fe2O3", h:"Fe2O3"}, {e:"2Fe2O3.3H2O", h:"2Fe2O3.3H2O"}, {e:"FeCO3", h:"FeCO3"}
+            ],
+            ans: 1
+        },
+        {
+            e: "By which method is gangue removed from Hematite ore?",
+            h: "हेमेटाइट अयस्क से गैंग को किस विधि द्वारा हटाया जाता है ?",
+            opts: [
+                {e:"Hydraulic Washing", h:"द्रवचालित धुलाई"}, {e:"Froth Floatation", h:"फेन प्लवन विधि"}, {e:"Magnetic Separation", h:"चुंबकीय पृथक्करण विधि"}, {e:"Leaching", h:"निक्षालन"}
+            ],
+            ans: 0
+        },
+        {
+            e: "Which statement regarding Blast Furnace used in extraction of Iron is NOT correct?",
+            h: "लोहे के निष्कर्षण में प्रयुक्त वात्या भट्ठी के संबंध में कौन-सा एक सही नहीं है ?",
+            opts: [
+                {e:"Iron is obtained by oxidation", h:"वात्या भट्ठी... ऑक्सीकरण के फलस्वरूप आयरन प्राप्त होता है"}, {e:"Outer wall steel, inner fire bricks", h:"बाहरी दीवार इस्पात... भीतरी दीवार अग्निसह ईंटों की"}, {e:"Charge dropped from top", h:"अयस्क, कोक, चूना पत्थर... ऊपर से गिराया जाता है"}, {e:"Temp is max at bottom", h:"निचले वाले भाग का ताप सर्वाधिक..."}
+            ],
+            ans: 0
+        },
+        {
+            e: "Select correct sequence of reactions in Blast Furnace:",
+            h: "वात्या भट्ठी में होने वाले उपर्युक्त अभिक्रियाओं का सही क्रम नीचे दिये विकल्पों से चयन कीजिए ?",
+            opts: [
+                {e:"1, 2, 3, 4, 5", h:"1, 2, 3, 4, 5"}, {e:"1, 3, 4, 2, 5", h:"1, 3, 4, 2, 5"}, {e:"1, 4, 2, 3, 5", h:"1, 4, 2, 3, 5"}, {e:"1, 4, 3, 2, 5", h:"1, 4, 3, 2, 5"}
+            ],
+            ans: 2
+        },
+        {
+            e: "The mixture of Hematite ore, Coke and Limestone put into Blast Furnace is called:",
+            h: "वात्या भट्ठी में डालने से पहले हेमेटाइट अयस्क को कोक तथा चूना पत्थर के साथ मिश्रित किया जाता है, इस मिश्रण को क्या कहते हैं ?",
+            opts: [
+                {e:"Batch", h:"बैच"}, {e:"Charge", h:"चार्ज"}, {e:"Ore Powder", h:"अयस्क चूर्ण"}, {e:"Precipitate", h:"अवक्षेप"}
+            ],
+            ans: 1
+        },
+        {
+            e: "Which flux is used to remove gangue from Hematite ore?",
+            h: "हेमेटाइट अयस्क से गैंग को हटाने के लिए किस फ्लस्क (Flux) का इस्तेमाल किया जाता है ?",
+            opts: [
+                {e:"CaO", h:"CaO"}, {e:"Ca(OH)2", h:"Ca(OH)2"}, {e:"CaCO3", h:"CaCO3"}, {e:"CaOCl2", h:"CaOCl2"}
+            ],
+            ans: 2
+        },
+        {
+            e: "Consider statements: 1. Reducing agent CO is in lower part. 2. Reducing agent C is in upper part. Which is correct?",
+            h: "1. वात्या भट्ठी के निचले भाग में अवकारक कार्बन मोनोक्साइड होता है। 2. सबसे ऊपरी भाग में अवकारक कार्बन होता है। सही है/हैं?",
+            opts: [
+                {e:"Only 1", h:"केवल 1"}, {e:"Only 2", h:"केवल 2"}, {e:"Both 1 and 2", h:"1 तथा 2 दोनों"}, {e:"Neither 1 nor 2", h:"न तो 1 न ही 2"}
+            ],
+            ans: 3
+        },
+        {
+            e: "Iron obtained from Blast Furnace is:",
+            h: "वात्या भट्ठी से प्राप्त लोहा है-",
+            opts: [
+                {e:"Cast Iron", h:"ढलवाँ लोहा"}, {e:"Wrought Iron", h:"पिटवाँ लोहा"}, {e:"Steel", h:"इस्पात"}, {e:"None of these", h:"इनमें से कोई नहीं"}
+            ],
+            ans: 0
+        },
+        {
+            e: "Which statement is NOT true?",
+            h: "निम्नलिखित में कौन-सा एक सत्य नहीं है ?",
+            opts: [
+                {e:"Iron from bottom is called Pig/Cast Iron", h:"निचले तल से प्राप्त लोहा को कच्चा लोहा या ढलवाँ लोहा..."}, {e:"Cast Iron is hard/brittle due to Carbon", h:"ढलवाँ लोहा कार्बन की उपस्थिति के कारण अत्यंत कठोर एवं भंगुर..."}, {e:"Cast Iron is not useful due to impurities", h:"ढलवाँ लोहा में अशुद्धियाँ अधिक होने के कारण यह अधिक उपयोगी नहीं..."}
+            ],
+            ans: 2
+        },
+        {
+            e: "By which method is Wrought Iron obtained from Cast Iron?",
+            h: "ढलवाँ लोहा से पिटवाँ लोहा की प्राप्ति किस विधि द्वारा होता है ?",
+            opts: [
+                {e:"Puddling Process", h:"पडलिंग विधि"}, {e:"Bessemer Process", h:"बेसेमर विधि"}, {e:"Siemens-Martin Process", h:"सिमेंटेशन विधि"}, {e:"None", h:"कोई नहीं"}
+            ],
+            ans: 0
+        },
+        {
+            e: "What is the percentage of Carbon in Wrought Iron?",
+            h: "पिटवाँ लोहा में कार्बन की प्रतिशत मात्रा कितनी होती है?",
+            opts: [
+                {e:"2-5%", h:"2-5%"}, {e:"0.25-1.5%", h:"0.25-1.5%"}, {e:"0.12-0.25%", h:"0.12-0.25%"}, {e:"None", h:"इनमें से कोई नहीं"}
+            ],
+            ans: 2
+        },
+        {
+            e: "In what form is Limestone used in obtaining Iron from Hematite?",
+            h: "हेमेटाइट से लोहा प्राप्त करने में चूना पत्थर का उपयोग किस रूप में किया जाता है ?",
+            opts: [
+                {e:"Flux", h:"फ्लस्क"}, {e:"Slag", h:"धातुमल"}, {e:"Reducing Agent", h:"अवकारक"}, {e:"Oxidizing Agent", h:"ऑक्सीकारक"}
+            ],
+            ans: 0
+        },
+        {
+            e: "Reduction of Iron Oxide in Blast Furnace is done by:",
+            h: "निम्नलिखित में किसके द्वारा वात्या भट्ठी में लौह ऑक्साइड का अवकरण होता है ?",
+            opts: [
+                {e:"Limestone", h:"चूना पत्थर"}, {e:"Silica", h:"सिलिका"}, {e:"Carbon", h:"कार्बन"}, {e:"Carbon Monoxide", h:"कार्बन मोनोक्साइड"}
+            ],
+            ans: 3
+        },
+        {
+            e: "Statements: 1. White Cast Iron has Carbon as Compound. 2. Grey Cast Iron has Carbon as Graphite. Correct?",
+            h: "1. सफेद ढलवाँ लोहा में कार्बन... संयुक्त अवस्था में... 2. भूरा ढलवाँ लोहा में कार्बन... ग्रेफाइट के रूप में... सही है?",
+            opts: [
+                {e:"Only 1", h:"केवल 1"}, {e:"Only 2", h:"केवल 2"}, {e:"Both 1 and 2", h:"1 तथा 2 दोनों"}, {e:"Neither 1 nor 2", h:"न तो 1 न ही 2"}
+            ],
+            ans: 2
+        },
+        {
+            e: "Green Vitriol is:",
+            h: "निम्नलिखित में हरा कसीस या Green Vitriol है-",
+            opts: [
+                {e:"FeSO4.2H2O", h:"FeSO4.2H2O"}, {e:"CuSO4.5H2O", h:"CuSO4.5H2O"}, {e:"ZnSO4.2H2O", h:"ZnSO4.2H2O"}, {e:"FeSO4.7H2O", h:"FeSO4.7H2O"}
+            ],
+            ans: 3
+        },
+        {
+            e: "Which is called 'Fool's Gold'?",
+            h: "निम्नलिखित में किसे झूठा सोना या बेवकूफों का सोना कहा जाता है ?",
+            opts: [
+                {e:"Iron Sulphide", h:"आयरन सल्फाइड"}, {e:"Ferric Chloride", h:"फेरिक क्लोराइड"}, {e:"Copper Pyrites", h:"कॉपर पाइराइट्स"}, {e:"Iron Pyrites", h:"आयरन पाइराइट्स"}
+            ],
+            ans: 3
+        },
+        {
+            e: "Which compound of Iron is used to stop bleeding from cuts?",
+            h: "आयरन के किस यौगिक का उपयोग कटे स्थान से खून का बहाव रोकने के लिए किया जाता है ?",
+            opts: [
+                {e:"Ferrous Sulphate", h:"फेरस सल्फेट"}, {e:"Ferric Chloride", h:"फेरिक क्लोराइड"}, {e:"Ferrous Oxide", h:"फेरस ऑक्साइड"}, {e:"Ferrous Di-oxide", h:"फेरस डाइ ऑक्साइड"}
+            ],
+            ans: 1
+        },
+        {
+            e: "Chemical formula of Mohr's Salt is:",
+            h: "मोहर लवण (Mohr's Salt) का रासायनिक सूत्र है-",
+            opts: [
+                {e:"K2SO4.Al2(SO4)3.24H2O", h:"K2SO4.Al2(SO4)3.24H2O"}, {e:"FeSO4(NH4)2SO4.24H2O", h:"FeSO4(NH4)2SO4.24H2O"}, {e:"FeSO4(NH4)2SO4.6H2O", h:"FeSO4(NH4)2SO4.6H2O (Corrected)"}, {e:"Na2B4O7.10H2O", h:"Na2B4O7.10H2O"}
+            ],
+            ans: 1
+        },
+        {
+            e: "Presence of excess amount of which metal causes Siderosis disease?",
+            h: "किस धातु की अधिक मात्रा की उपस्थिति के कारण मनुष्य को सिडरोसिस नामक बिमारी हो जाती है ?",
+            opts: [
+                {e:"Iron", h:"लोहा"}, {e:"Copper", h:"ताँबा"}, {e:"Potassium", h:"पोटैशियम"}, {e:"Sodium", h:"सोडियम"}
+            ],
+            ans: 0
+        },
+        {
+            e: "Pyrolusite is an ore of which metal?",
+            h: "पाइरोलुसाइट किस धातु का अयस्क है ?",
+            opts: [
+                {e:"Iron", h:"लोहा"}, {e:"Manganese", h:"मैंगनीज"}, {e:"Copper", h:"तांबा"}, {e:"Silver", h:"सिल्वर"}
+            ],
+            ans: 1
+        },
+        {
+            e: "Deep purple compound used as Antiseptic and Disinfectant is:",
+            h: "गहरा जामुनी (बैंगनी) यौगिक जो ऐनटीसेप्टिक एवं डिसइन्फेक्टेंट की तरह उपयोग होता है-",
+            opts: [
+                {e:"Potassium Nitrate", h:"पोटैशियम नाइट्रेट"}, {e:"Sodium Thiosulphate", h:"सोडियम थियोसल्फेट"}, {e:"Potassium Permanganate", h:"पोटैशियम परमैंगनेट"}, {e:"Calcium Phosphate", h:"कैल्शियम फॉस्फेट"}
+            ],
+            ans: 2
+        },
+        {
+            e: "Which is known as 'Lal Dawa' (Red Medicine)?",
+            h: "'लाल दवा' के नाम से जाना जाता है-",
+            opts: [
+                {e:"Calcium Phosphate", h:"कैल्शियम फॉस्फेट"}, {e:"Potassium Permanganate", h:"पोटैशियम परमैंगनेट"}, {e:"Alum", h:"फिटकरी"}, {e:"Green Vitriol", h:"हरा कसीस"}
+            ],
+            ans: 1
+        },
+        {
+            e: "Which statement regarding Copper is NOT correct?",
+            h: "तांबा धातु के संबंध में निम्न में कौन-सा एक सही नहीं है?",
+            opts: [
+                {e:"Found in free & combined state", h:"तांबा मुक्त तथा संयुक्त दोनों अवस्था में..."}, {e:"First metal used by humans", h:"आदिमानव द्वारा सबसे पहले तांबा का ही उपयोग..."}, {e:"Called Noble Metal", h:"तांबा को उत्कृष्ट धातु कहा जाता है"}, {e:"Is yellow like Gold", h:"तांबा सोने के तरह ही पीले रंग का धातु है"}
+            ],
+            ans: 3
+        },
+        {
+            e: "Which two metals are NOT silver colored?",
+            h: "वे कौन-सी दो धातुएँ हैं जो सिल्वर रंग की नहीं होती ?",
+            opts: [
+                {e:"Sodium and Gold", h:"सोडियम और सोना"}, {e:"Copper and Gold", h:"तांबा और सोना"}, {e:"Palladium and Platinum", h:"पैलेडियम और प्लैटिनम"}, {e:"Nickel and Zinc", h:"निकेल और जिंक"}
+            ],
+            ans: 1
+        },
+        {
+            e: "Which is a Sulphide ore of Copper?",
+            h: "निम्नलिखित में तांबा का सल्फाइड अयस्क है-",
+            opts: [
+                {e:"Malachite", h:"मैलेकाइट"}, {e:"Azurite", h:"एजुराइट"}, {e:"Cuprite", h:"क्युप्राइट"}, {e:"Copper Pyrites", h:"कॉपर पाइराइट्स"}
+            ],
+            ans: 3
+        },
+        {
+            e: "Reducing agent used for extraction of Copper from non-sulphide ores?",
+            h: "सल्फाइड रहित अयस्कों से तांबे का निष्कर्षण में अवकारक के रूप में उपयोग होता है-",
+            opts: [
+                {e:"Carbon", h:"कार्बन"}, {e:"Carbon Monoxide", h:"कार्बन मोनोक्साइड"}, {e:"Aluminum", h:"ऐलुमिनियम"}, {e:"Chromium", h:"क्रोमियम"}
+            ],
+            ans: 0
+        },
+        {
+            e: "Extraction of Copper from Copper Pyrites is difficult because:",
+            h: "सल्फाइड अयस्क अर्थात् कॉपर पाइराइट्स से तांबे का निष्कर्षण करना कठिन है। क्यों ?",
+            opts: [
+                {e:"Iron Sulphide is main impurity", h:"इस अयस्क में आयरन सल्फाइड मुख्य अशुद्धि..."}, {e:"High affinity for Sulphur/Oxygen", h:"तांबे में लोहे की अपेक्षा गंधक/ऑक्सीजन के साथ संयोग करने की प्रवृत्ति..."}, {e:"Forms FeS and Cu2S quickly", h:"अयस्क को हवा में गर्म करते समय... Cu2S में बदल जाता है।"}, {e:"All of these", h:"इनमें से सभी"}
+            ],
+            ans: 3
+        },
+        {
+            e: "Consider statements: 1. Mixture of Cu2S and FeS is Copper Matte. 2. Matte has 70% Copper. Correct?",
+            h: "1. Cu2S तथा FeS का मिश्रण को कॉपर मैट कहते हैं। 2. कॉपर मैट में करीब 70 प्रतिशत तांबा रहता है।",
+            opts: [
+                {e:"Only 1", h:"केवल 1"}, {e:"1 and 2", h:"1 और 2"}, {e:"Only 3", h:"केवल 3"}, {e:"1 and 3", h:"1 और 3"}
+            ],
+            ans: 1
+        },
+        {
+            e: "Which method is used for Copper extraction from low grade ores?",
+            h: "अत्यंत निम्न कोटि के अयस्क जिनमें तांबे की मात्रा अत्यंत अल्प हो, से तांबे का निष्कर्षण किस विधि द्वारा किया जाता है?",
+            opts: [
+                {e:"Bacteria/Leaching", h:"हरी लकड़ियों की बल्लियों द्वारा (Bacterial Leaching)"}, {e:"Electrolysis", h:"विद्युत अपघटन द्वारा"}, {e:"Leaching", h:"निक्षालन"}, {e:"All of these", h:"इनमें से सभी"}
+            ],
+            ans: 3
+        },
+        {
+            e: "Uses of Copper metal:",
+            h: "तांबा धातु का उपयोग होता है-",
+            opts: [
+                {e:"Electrical instruments", h:"वैद्युत यंत्रों को बनाने में"}, {e:"Coins and Utensils", h:"सिक्का एवं बर्तन निर्माण में"}, {e:"Electro-plating", h:"इलेक्ट्रो-प्लेटिंग एवं इलेक्ट्रो-टाइपिंग में"}, {e:"All of these", h:"इनमें से सभी"}
+            ],
+            ans: 3
+        },
+        {
+            e: "Consider statements: 1. Copper does not react with dilute HCl/H2SO4. 2. Reacts with Conc HCl/H2SO4.",
+            h: "1. तांबा तनु HCl तथा H2SO4 से अभिक्रिया नहीं करता है। 2. तांबा सांद्र HCl तथा H2SO4 से अभिक्रिया करता है।",
+            opts: [
+                {e:"Only 1", h:"केवल 1"}, {e:"Only 2", h:"केवल 2"}, {e:"Both 1 and 2", h:"1 तथा 2 दोनों"}, {e:"Neither", h:"न तो 1 न ही 2"}
+            ],
+            ans: 2
+        },
+        {
+            e: "Color of Anhydrous Copper Sulphate when put in water?",
+            h: "निर्जल कॉपर सल्फेट को जब जल में डाला जाता है तो जल का रंग-",
+            opts: [
+                {e:"Blue", h:"नीला पड़ जाता है"}, {e:"Green", h:"हरा पड़ जाता है"}, {e:"Violet", h:"बैंगनी पड़ जाता है"}, {e:"Yellow", h:"पीला पड़ जाता है"}
+            ],
+            ans: 0
+        },
+        {
+            e: "Which copper compound is used as Insecticide?",
+            h: "निम्नलिखित तांबे के यौगिक में किसका उपयोग कीटाणुनाशी के रूप में किया जाता है ?",
+            opts: [
+                {e:"Cuprous Oxide", h:"क्युप्रस ऑक्साइड"}, {e:"Cupric Oxide", h:"क्युप्रिक ऑक्साइड"}, {e:"Cupric Sulphate", h:"क्युप्रिक सल्फेट"}, {e:"All of these", h:"इनमें से सभी"}
+            ],
+            ans: 3
+        },
+        {
+            e: "Which is known as Blue Vitriol or Nila Thotha?",
+            h: "नीला थोथा या नीला कसीस के नाम से जाना जाता है-",
+            opts: [
+                {e:"Copper Sulphate", h:"कॉपर सल्फेट"}, {e:"Zinc Sulphate", h:"जिंक सल्फेट"}, {e:"Ferrous Sulphate", h:"फेरस सल्फेट"}, {e:"Ferric Sulphate", h:"फेरिक सल्फेट"}
+            ],
+            ans: 0
+        },
+        {
+            e: "Which disease is caused by increase of Copper in human body?",
+            h: "मानव शरीर में तांबा की मात्रा में वृद्धि होने पर कौन-सा रोग होता है ?",
+            opts: [
+                {e:"Siderosis", h:"सिडेरोसिस"}, {e:"Wilson's Disease", h:"विल्सन"}, {e:"Anemia", h:"ऐनेमिया"}, {e:"Beri-Beri", h:"बेरी-बेरी"}
+            ],
+            ans: 1
+        },
+        {
+            e: "Which chemical is used to destroy Algae in water tanks?",
+            h: "वाटर टैंकों में शैवाल को नष्ट करने के लिए किस रसायन का प्रयोग किया जाता है ?",
+            opts: [
+                {e:"Nitric Acid", h:"नाइट्रिक अम्ल"}, {e:"Zinc Sulphate", h:"जिंक सल्फेट"}, {e:"Copper Sulphate", h:"कॉपर सल्फेट"}, {e:"Magnesium Sulphate", h:"मैग्नीशियम सल्फेट"}
+            ],
+            ans: 2
+        },
+        {
+            e: "Which element is the Enemy of Copper?",
+            h: "तांबा का शत्रु तत्व कौन है-",
+            opts: [
+                {e:"Carbon", h:"कार्बन"}, {e:"Sulphur", h:"गंधक"}, {e:"Nitrogen", h:"नाइट्रोजन"}, {e:"Hydrogen", h:"हाइड्रोजन"}
+            ],
+            ans: 1
+        },
+        {
+            e: "Chemical formula of Tutia (Blue Vitriol)?",
+            h: "तूतिया का रासायनिक सूत्र है-",
+            opts: [
+                {e:"CuS", h:"CuS"}, {e:"Cu(OH)2", h:"Cu(OH)2"}, {e:"CuCl2.2H2O", h:"CuCl2.2H2O"}, {e:"CuSO4.5H2O", h:"CuSO4.5H2O"}
+            ],
+            ans: 3
+        },
+        {
+            e: "Which metal is used to make Calorimeter and Lightning Conductor?",
+            h: "कैलोरीमीटर तथा तड़ित चालक (Lighting Conductor) बनाने हेतु किस धातु का उपयोग होता है ?",
+            opts: [
+                {e:"Iron", h:"लोहा"}, {e:"Copper", h:"तांबा"}, {e:"Aluminum", h:"एलुमिनियम"}, {e:"Steel", h:"इस्पात"}
+            ],
+            ans: 1
+        },
+        {
+            e: "Which is NOT an ore of Zinc?",
+            h: "निम्नलिखित में कौन एक जस्ता का अयस्क नहीं है ?",
+            opts: [
+                {e:"Calamine", h:"कैलेमाइन"}, {e:"Willemite", h:"विलेमाइट"}, {e:"Hemimorphite", h:"हेमिमॉर्फाइट"}, {e:"Tenorite", h:"टेनोराइट"}
+            ],
+            ans: 3
+        },
+        {
+            e: "Which two major ores are used for extraction of Zinc?",
+            h: "निम्नलिखित में किन दो प्रमुख अयस्कों से जस्ते का निष्कर्षण किया जाता है ?",
+            opts: [
+                {e:"Zinc Blend & Calamine", h:"जिंक ब्लेंड तथा कैलामाइन"}, {e:"Zinc Blend & Zincite", h:"जिंक ब्लेंड तथा जिंकाइट"}, {e:"Calamine & Willemite", h:"कैलामाइन तथा विलेमाइट"}, {e:"Calamine & Zinc Spinel", h:"कैलामाइन तथा जिंक स्पिनेल"}
+            ],
+            ans: 0
+        },
+        {
+            e: "What is the amount of Zinc in Snake Venom?",
+            h: "सर्प के विष में कितनी मात्रा में जस्ता उपस्थित रहता है?",
+            opts: [
+                {e:"0.1 to 1%", h:"0.1 से 1 प्रतिशत"}, {e:"0.5 to 2%", h:"0.5 से 2 प्रतिशत"}, {e:"0.1 to 0.6%", h:"0.1 से 0.6 प्रतिशत"}, {e:"1 to 10%", h:"1 से 10 प्रतिशत"}
+            ],
+            ans: 2
+        },
+        {
+            e: "Philosopher's Wool used in ointments is chemically:",
+            h: "मलहम क्रीम आदि बनाने में काम आने वाला फिलॉस्फर ऊल रासायनिक रूप से है-",
+            opts: [
+                {e:"Zinc Sulphate", h:"जिंक सल्फेट"}, {e:"Zinc Oxide", h:"जिंक ऑक्साइड"}, {e:"Zinc Sulphide", h:"जिंक सल्फाइड"}, {e:"Zinc Phosphide", h:"जिंक फॉस्फाइड"}
+            ],
+            ans: 1
+        },
+        {
+            e: "Which option is NOT correctly matched?",
+            h: "निम्नलिखित में कौन-सा विकल्प सही सुमेलित नहीं है?",
+            opts: [
+                {e:"White Vitriol : ZnSO4", h:"सफेद थोथा : जिंक सल्फेट"}, {e:"Philosopher Wool : ZnO", h:"फिलॉस्फर ऊल : जिंक ऑक्साइड"}, {e:"Lithopone : ZnS", h:"लिथोपोन : जिंक सल्फाइड"}, {e:"Rat Poison : Zn3P2", h:"चूहा विष : जिंक फॉस्फाइड"}
+            ],
+            ans: 2
+        },
+        {
+            e: "What is coated on wood to protect it from insects?",
+            h: "लकड़ी की वस्तुओं को कीड़ों से बचाने के लिए उस पर किसका लेपन किया जाता है ?",
+            opts: [
+                {e:"Zinc Chloride", h:"जिंक क्लोराइड"}, {e:"Zinc Oxide", h:"जिंक ऑक्साइड"}, {e:"Zinc Carbonate", h:"जिंक कार्बोनेट"}, {e:"Zinc Sulphide", h:"जिंक सल्फाइड"}
+            ],
+            ans: 0
+        },
+        {
+            e: "Which compound shows Phosphorescence?",
+            h: "निम्नलिखित में कौन-सा एक यौगिक स्फुरदीप्ति का गुण प्रदर्शित करता है ?",
+            opts: [
+                {e:"Zinc Sulphate", h:"जिंक सल्फेट"}, {e:"Zinc Oxide", h:"जिंक ऑक्साइड"}, {e:"Zinc Sulphide", h:"जिंक सल्फाइड"}, {e:"Zinc Chloride", h:"जिंक क्लोराइड"}
+            ],
+            ans: 2
+        },
+        {
+            e: "Chemical formula of White Vitriol is:",
+            h: "सफेद कसीस (White Vitriol) का रासायनिक सूत्र है-",
+            opts: [
+                {e:"CuSO4.5H2O", h:"CuSO4.5H2O"}, {e:"ZnSO4.7H2O", h:"ZnSO4.7H2O"}, {e:"FeSO4.7H2O", h:"FeSO4.7H2O"}, {e:"MgSO4.7H2O", h:"MgSO4.7H2O"}
+            ],
+            ans: 1
+        },
+        {
+            e: "Mixture of Zinc Sulphide (ZnS) and Barium Sulphate (BaSO4) is called:",
+            h: "जिंक सल्फाइड (ZnS) तथा बेरियम सल्फेट (BaSO4) के मिश्रण को क्या कहते हैं ?",
+            opts: [
+                {e:"White Vitriol", h:"सफेद कसीस"}, {e:"Philosopher Wool", h:"फिलॉस्फर ऊल"}, {e:"Zinc White", h:"जिंक ह्वाइट"}, {e:"Lithopone", h:"लिथोपोन"}
+            ],
+            ans: 3
+        },
+        {
+            e: "Which is used as a Rodenticide (Rat Poison)?",
+            h: "कृंतकनाशी (चूहा विष) के रूप में निम्नलिखित में किसका प्रयोग किया जाता है ?",
+            opts: [
+                {e:"Zinc Carbonate", h:"जिंक कार्बोनेट"}, {e:"Zinc Chloride", h:"जिंक क्लोराइड"}, {e:"Zinc Phosphide", h:"जिंक फॉस्फाइड"}, {e:"Zinc Sulphide", h:"जिंक सल्फाइड"}
+            ],
+            ans: 2
+        }
+    ];
+
+    // --- State & Config ---
+    let currentQuestions = [];
+    let currentIndex = 0;
+    let score = 0;
+    let timerInterval;
+    let timerDuration = 0;
+    let timeLeft = 0;
+
+    // --- Audio Context ---
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    
+    function playTone(type) {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        const now = audioCtx.currentTime;
+        if (type === 'correct') {
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(600, now);
+            osc.frequency.exponentialRampToValueAtTime(1000, now + 0.1);
+            gain.gain.setValueAtTime(0.1, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+            osc.start(now);
+            osc.stop(now + 0.3);
+        } else {
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(150, now);
+            osc.frequency.linearRampToValueAtTime(100, now + 0.3);
+            gain.gain.setValueAtTime(0.1, now);
+            gain.gain.linearRampToValueAtTime(0.01, now + 0.3);
+            osc.start(now);
+            osc.stop(now + 0.3);
+        }
+    }
+
+    // --- Core Functions ---
+    
+    function startQuiz() {
+        const timeInput = document.getElementById('time-input').value;
+        const shuffle = document.getElementById('shuffle-input').checked;
+        
+        timerDuration = timeInput ? parseInt(timeInput) : 0;
+        
+        currentQuestions = [...rawQuestions];
+        if (shuffle) {
+            currentQuestions.sort(() => Math.random() - 0.5);
+        }
+
+        currentIndex = 0;
+        score = 0;
+        
+        document.getElementById('start-screen').classList.remove('active');
+        document.getElementById('result-screen').classList.remove('active');
+        document.getElementById('quiz-screen').classList.add('active');
+
+        loadQuestion();
+    }
+
+    function loadQuestion() {
+        if (currentIndex >= currentQuestions.length) {
+            finishEarly();
+            return;
+        }
+
+        const q = currentQuestions[currentIndex];
+        const total = currentQuestions.length;
+        
+        // Update UI
+        document.getElementById('q-counter').innerText = `Q ${String(currentIndex + 1).padStart(2, '0')}/${total}`;
+        document.getElementById('score-display').innerText = `Score: ${String(score).padStart(2, '0')}`;
+        document.getElementById('progress-bar').style.width = `${(currentIndex / total) * 100}%`;
+
+        document.getElementById('q-text-eng').innerText = q.e;
+        document.getElementById('q-text-hindi').innerText = q.h;
+
+        // Options
+        const optsContainer = document.getElementById('options-container');
+        optsContainer.innerHTML = '';
+        
+        q.opts.forEach((opt, idx) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerHTML = `<span class="opt-eng">${opt.e}</span><span class="opt-hindi">${opt.h}</span>`;
+            btn.onclick = () => checkAnswer(idx, btn, q.ans);
+            optsContainer.appendChild(btn);
+        });
+
+        // Timer
+        clearInterval(timerInterval);
+        document.getElementById('timer-display').classList.remove('pulse');
+        
+        if (timerDuration > 0) {
+            timeLeft = timerDuration;
+            document.getElementById('time-left').innerText = timeLeft;
+            document.getElementById('timer-display').style.display = 'flex';
+            
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                document.getElementById('time-left').innerText = timeLeft;
+                if (timeLeft <= 5) document.getElementById('timer-display').classList.add('pulse');
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    checkAnswer(-1, null, q.ans); // Timeout
+                }
+            }, 1000);
+        } else {
+            document.getElementById('timer-display').style.display = 'none';
+        }
+    }
+
+    function checkAnswer(selectedIdx, btn, correctIdx) {
+        clearInterval(timerInterval);
+        const buttons = document.querySelectorAll('.option-btn');
+        buttons.forEach(b => b.disabled = true);
+
+        if (selectedIdx === correctIdx) {
+            score++;
+            btn.classList.add('correct');
+            playTone('correct');
+            triggerConfetti();
+        } else {
+            if (btn) btn.classList.add('wrong');
+            buttons[correctIdx].classList.add('correct');
+            playTone('wrong');
+            const emoji = document.getElementById('sad-emoji');
+            emoji.style.display = 'block';
+            setTimeout(() => emoji.style.display = 'none', 1000);
+        }
+
+        setTimeout(() => {
+            currentIndex++;
+            loadQuestion();
+        }, 1500);
+    }
+
+    function finishEarly() {
+        clearInterval(timerInterval);
+        document.getElementById('quiz-screen').classList.remove('active');
+        document.getElementById('result-screen').classList.add('active');
+
+        // Score based on Total Questions (Standard Quiz Logic)
+        const total = currentQuestions.length;
+        const percentage = Math.round((score / total) * 100);
+        
+        document.getElementById('final-score').innerText = `${percentage}%`;
+        document.getElementById('stats-text').innerText = `You correctly answered ${score} out of ${total} questions.`;
+
+        const msgDisplay = document.getElementById('result-msg');
+        if (percentage >= 80) {
+            msgDisplay.innerText = "🏆 Outstanding Performance!";
+            triggerConfetti();
+        } else if (percentage >= 50) {
+            msgDisplay.innerText = "👏 Well Done! Keep it up.";
+        } else {
+            msgDisplay.innerText = "📚 Practice makes perfect!";
+        }
+    }
+
+    function triggerConfetti() {
+        for (let i = 0; i < 50; i++) {
+            const confetti = document.createElement('div');
+            confetti.classList.add('confetti');
+            confetti.style.left = Math.random() * 100 + 'vw';
+            confetti.style.backgroundColor = `hsl(${Math.random() * 360}, 100%, 50%)`;
+            confetti.style.animationDuration = (Math.random() * 2 + 2) + 's';
+            document.body.appendChild(confetti);
+            setTimeout(() => confetti.remove(), 4000);
+        }
+    }
+</script>
+</body>
+</html>

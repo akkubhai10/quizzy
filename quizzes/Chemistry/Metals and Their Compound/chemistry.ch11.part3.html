@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chemistry Quiz: Aluminum, Calcium & Iron (101-150)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --text-main: #ffffff;
+            --text-dim: #dddddd;
+            --accent-green: #00e676;
+            --accent-red: #ff1744;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: radial-gradient(circle at top left, #8E2DE2 0%, #4A00E0 100%),
+                        radial-gradient(circle at bottom right, #fc4a1a 0%, #f7b733 100%);
+            background-blend-mode: overlay;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow-x: hidden;
+            color: var(--text-main);
+        }
+
+        /* Glassmorphism Card */
+        .container {
+            width: 95%;
+            max-width: 800px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 25px;
+            padding: 2rem;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            position: relative;
+            overflow: hidden;
+            transition: height 0.3s ease;
+        }
+
+        /* Screens */
+        .screen { display: none; flex-direction: column; gap: 20px; animation: fadeIn 0.5s ease; }
+        .screen.active { display: flex; }
+
+        h1 { font-size: 2rem; text-align: center; text-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        h2 { font-size: 1.5rem; text-align: center; margin-bottom: 10px; }
+
+        /* Controls */
+        .input-group {
+            background: rgba(0,0,0,0.2);
+            padding: 15px;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        input[type="number"] {
+            background: transparent; border: 1px solid white; color: white;
+            padding: 8px; border-radius: 8px; width: 80px; text-align: center; font-family: inherit;
+        }
+
+        /* Toggle Switch */
+        .switch { position: relative; display: inline-block; width: 60px; height: 34px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #ccc; transition: .4s; border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute; content: ""; height: 26px; width: 26px; left: 4px; bottom: 4px;
+            background-color: white; transition: .4s; border-radius: 50%;
+        }
+        input:checked + .slider { background-color: #4A00E0; }
+        input:checked + .slider:before { transform: translateX(26px); }
+
+        /* Buttons */
+        .btn {
+            background: linear-gradient(45deg, #FF512F 0%, #DD2476 100%);
+            border: none; padding: 15px 30px; color: white;
+            font-size: 1.1rem; font-weight: 600; border-radius: 50px;
+            cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            text-align: center;
+        }
+        .btn:hover { transform: scale(1.05); box-shadow: 0 6px 20px rgba(0,0,0,0.3); }
+        .btn-restart { background: linear-gradient(45deg, #11998e, #38ef7d); }
+
+        /* Quiz UI */
+        .header-info {
+            display: flex; justify-content: space-between; align-items: center;
+            font-weight: 600; font-size: 1.1rem;
+        }
+        
+        .progress-container {
+            width: 100%; height: 6px; background: rgba(255,255,255,0.2);
+            border-radius: 10px; overflow: hidden;
+        }
+        .progress-bar {
+            height: 100%; width: 0%; background: #00f2fe;
+            box-shadow: 0 0 10px #00f2fe; transition: width 0.3s ease;
+        }
+
+        .timer {
+            background: rgba(0,0,0,0.3); padding: 5px 15px; border-radius: 20px;
+            display: flex; align-items: center; gap: 5px;
+        }
+        .timer.pulse { color: #ff4d4d; animation: pulse 1s infinite; }
+
+        .question-box {
+            background: rgba(255,255,255,0.05);
+            padding: 20px; border-radius: 15px;
+            border-left: 5px solid #fff;
+        }
+        .q-eng { font-size: 1.1rem; font-weight: 700; margin-bottom: 8px; display: block; }
+        .q-hindi { font-size: 0.95rem; color: var(--text-dim); font-weight: 400; display: block; }
+
+        .options-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
+        
+        .option-btn {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 15px; border-radius: 12px;
+            color: white; text-align: left; cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .option-btn:hover:not(:disabled) { background: rgba(255,255,255,0.2); transform: translateX(5px); }
+        .option-btn.correct { background: rgba(0, 230, 118, 0.4); border-color: #00e676; }
+        .option-btn.wrong { background: rgba(255, 23, 68, 0.4); border-color: #ff1744; }
+        .option-btn:disabled { cursor: default; }
+
+        .opt-eng { font-weight: 600; display: block; }
+        .opt-hindi { font-size: 0.85rem; color: #eee; display: block; margin-top: 2px; }
+
+        .footer-nav { margin-top: 20px; display: flex; justify-content: flex-end; }
+        .btn-early { 
+            background: transparent; border: 1px solid rgba(255,255,255,0.4); 
+            font-size: 0.9rem; padding: 10px 20px; 
+        }
+
+        /* Animations */
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+        @keyframes shake { 
+            0%, 100% { transform: translateX(0); } 
+            25% { transform: translateX(-10px); } 
+            75% { transform: translateX(10px); } 
+        }
+        @keyframes fall {
+            0% { transform: translateY(-10vh) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(110vh) rotate(360deg); opacity: 0; }
+        }
+
+        /* Feedback Overlay */
+        #feedback-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 9999; display: flex;
+            justify-content: center; align-items: center;
+        }
+        .emoji-feedback { font-size: 5rem; animation: shake 0.5s ease; display: none; }
+        .confetti {
+            position: absolute; width: 10px; height: 10px;
+            background: #f00; animation: fall 3s linear forwards;
+        }
+
+        /* Result Screen */
+        .score-circle {
+            width: 150px; height: 150px; border-radius: 50%;
+            background: rgba(255,255,255,0.1); border: 5px solid #fff;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            margin: 0 auto; font-size: 2.5rem; font-weight: bold;
+        }
+        .score-msg { font-size: 1.3rem; margin-top: 15px; color: #ffd700; text-align: center; }
+
+        @media (min-width: 600px) {
+            .options-grid { grid-template-columns: 1fr 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div id="feedback-overlay">
+        <div class="emoji-feedback" id="sad-emoji">😢</div>
+    </div>
+
+    <div id="start-screen" class="screen active">
+        <h1>Chemistry Quiz<br><span style="font-size:1rem; font-weight:400; color:#ddd">Aluminum, Calcium & Iron [101-150]</span></h1>
+        
+        <div class="input-group">
+            <label>Timer (sec) <small style="display:block; color:#ccc">0 to disable</small></label>
+            <input type="number" id="time-input" placeholder="0" min="0">
+        </div>
+
+        <div class="input-group">
+            <label>Shuffle Questions</label>
+            <label class="switch">
+                <input type="checkbox" id="shuffle-input">
+                <span class="slider"></span>
+            </label>
+        </div>
+
+        <button class="btn" onclick="startQuiz()">Start Quiz 🚀</button>
+    </div>
+
+    <div id="quiz-screen" class="screen">
+        <div class="progress-container"><div class="progress-bar" id="progress-bar"></div></div>
+        
+        <div class="header-info">
+            <span id="q-counter">Q 01/50</span>
+            <div class="timer" id="timer-display"><span>⏱️</span> <span id="time-left">--</span></div>
+            <span id="score-display">Score: 00</span>
+        </div>
+
+        <div class="question-box">
+            <span class="q-eng" id="q-text-eng"></span>
+            <span class="q-hindi" id="q-text-hindi"></span>
+        </div>
+
+        <div class="options-grid" id="options-container"></div>
+
+        <div class="footer-nav">
+            <button class="btn btn-early" onclick="finishEarly()">Finish & Show Results</button>
+        </div>
+    </div>
+
+    <div id="result-screen" class="screen">
+        <h2>Quiz Completed!</h2>
+        <div class="score-circle">
+            <span id="final-score">0%</span>
+            <span style="font-size:1rem; font-weight:400">Accuracy</span>
+        </div>
+        <div class="score-msg" id="result-msg"></div>
+        <p id="stats-text" style="text-align:center; color:#ddd"></p>
+        <button class="btn btn-restart" onclick="location.reload()">Restart Quiz 🔄</button>
+    </div>
+</div>
+
+<script>
+    // --- Data: Questions 101-150 ---
+    const rawQuestions = [
+        {
+            e: "In the electrolysis of Alumina (Al2O3), what difficulty arises?",
+            h: "एलुमिना (Al2O3) के विद्युत अपघटन द्वारा एलुमिनियम धातु का निष्कर्षण किया जाता है, परन्तु इसके निष्कर्षण में कौन-सी कठिनाई उत्पन्न होती है ?",
+            opts: [
+                {e:"MP of pure Alumina is very high", h:"शुद्ध एलुमिना के गलनांक का मान काफी उच्च होता है (2348 K)"}, {e:"Molten Al2O3 is bad conductor", h:"गलित Al2O3 विद्युत का अच्छा चालक नहीं होता है"}, {e:"Boiling point of Al is low", h:"प्राप्त Al का क्वथनांक 2273K ही है"}, {e:"All of these", h:"इनमें से सभी"}
+            ],
+            ans: 3
+        },
+        {
+            e: "Cryolite (Na3AlF6) is mixed in the electrolysis of Alumina to:",
+            h: "एलुमिना के विद्युत अपघटन में क्रायोलाइट (Na3AlF6) इसलिए मिलाया जाता है-",
+            opts: [
+                {e:"Increase electrical conductivity", h:"वैद्युत चालकता बढ़ाने के लिए"}, {e:"Lower the melting point", h:"एलुमिना का गलनांक घटाने के लिए"}, {e:"Remove impurities", h:"एलुमिना की अशुद्धियाँ पृथक करने के लिए"}, {e:"Reduce anode effect", h:"एनोड प्रभाव कम करने के लिए"}
+            ],
+            ans: 1
+        },
+        {
+            e: "Cryolite (Na3AlF6) and Fluorspar (CaF2) are mixed in Alumina electrolysis to:",
+            h: "एलुमिना के विद्युत अपघटन में क्रायोलाइट (Na3AlF6) तथा थोड़ा फ्लोस्पार (CaF2) इसलिए मिश्रित कर दिया जाता है-",
+            opts: [
+                {e:"Increase electrical conductivity", h:"विद्युत चालकता बढ़ाने के लिए"}, {e:"Lower the melting point", h:"एलुमिना का गलनांक घटाने के लिए"}, {e:"Both a and b", h:"a तथा b दोनों"}, {e:"Neither 1 nor 2", h:"न तो 1 न ही 2"}
+            ],
+            ans: 2
+        },
+        {
+            e: "On electrolysis of Alumina, pure Aluminum is obtained at:",
+            h: "एलुमिना के विद्युत अपघटन करने पर शुद्ध एलुमिनियम प्राप्त होता है-",
+            opts: [
+                {e:"Cathode", h:"कैथोड पर"}, {e:"Anode", h:"एनोड पर"}, {e:"Half at cathode, half at anode", h:"आधा कैथोड पर आधा एनोड पर"}, {e:"Equally at both", h:"कैथोड तथा एनोड दोनों पर समान रूप से"}
+            ],
+            ans: 0
+        },
+        {
+            e: "Which method is used to remove impurities from Bauxite ore?",
+            h: "बॉक्साइट अयस्क से अशुद्धियों को दूर करने हेतु कौन-सी विधि प्रयुक्त की जाती है ?",
+            opts: [
+                {e:"Hall's dry method", h:"हॉल की शुष्क विधि"}, {e:"Bayer's wet method", h:"बायर की आर्द्र विधि"}, {e:"Serpek's method", h:"सरपेक की विधि"}, {e:"All of these", h:"इनमें से सभी"}
+            ],
+            ans: 1
+        },
+        {
+            e: "Which of the following is an ore of Aluminum?",
+            h: "निम्नलिखित में कौन एलुमिनियम का अयस्क है ?",
+            opts: [
+                {e:"Turquoise", h:"टरकीिस"}, {e:"Mica", h:"अबरख (Mica)"}, {e:"Diaspore", h:"डायस्पोर"}, {e:"All of these", h:"इनमें से सभी"}
+            ],
+            ans: 2
+        },
+        {
+            e: "Aluminum is more abundant than Iron in earth's crust, yet it is costlier because:",
+            h: "भू-पर्पटी पर एलुमिनियम की मात्रा लोहे से अधिक है, फिर भी एलुमिनियम लोहे से महँगा है, क्यों-",
+            opts: [
+                {e:"Demand is higher", h:"एलुमिनियम की माँग लोहे के अपेक्षा ज्यादा रहता है"}, {e:"Al is lighter", h:"एलुमिनियम हल्की धातु है जबकि लोहा भारी धातु है"}, {e:"More alloys are made", h:"एलुमिनियम से लोहे के अपेक्षा अधिक मिश्रधातु तैयार किये जाते हैं"}, {e:"Extraction methods are expensive", h:"एलुमिनियम उत्पादन की धात्विक विधियाँ लोहे के अपेक्षा अधिक खर्चीली है"}
+            ],
+            ans: 3
+        },
+        {
+            e: "Which statement regarding Aluminum is NOT correct?",
+            h: "एलुमिनियम के संबंध में निम्नलिखित में कौन-सा कथन सही नहीं है ?",
+            opts: [
+                {e:"Al(OH)3 is amphoteric", h:"एलुमिनियम हाइड्रोक्साइड की प्रकृति एम्फोटरिक होते हैं"}, {e:"Found in free state in nature", h:"एलुमिनियम प्रकृति में स्वतंत्र अवस्था में रहता है"}, {e:"Nitric acid makes it passive", h:"नाइट्रिक अम्ल एलुमिनियम पर कोई प्रभाव नहीं डालता है"}, {e:"Hot conc H2SO4 gives SO2", h:"गर्म सान्द्र गन्धकाम्ल एलुमिनियम के साथ SO2 देता है"}
+            ],
+            ans: 1
+        },
+        {
+            e: "Which metal and its alloy are used for making airplanes and rockets?",
+            h: "वायुयान और रॉकेट बनाने के लिए कौन-सी धातु एवं उसके मिश्रधातु का प्रयोग की जाती है ?",
+            opts: [
+                {e:"Magnesium", h:"मैग्नीशियम"}, {e:"Iron", h:"लोहा"}, {e:"Aluminum", h:"एलुमिनियम"}, {e:"Platinum", h:"प्लैटिनम"}
+            ],
+            ans: 2
+        },
+        {
+            e: "Which method is used to remove impurities from Aluminum obtained by electrolysis of Alumina?",
+            h: "एलुमिना के विद्युत अपघटन से प्राप्त एलुमिनियम में कुछ अशुद्धि उपस्थित रहते हैं, इन अशुद्धि को हटाने के लिए किस विधि का प्रयोग किया जाता है ?",
+            opts: [
+                {e:"Hoope's process", h:"हूप की विधि"}, {e:"Hall's process", h:"हॉल की विधि"}, {e:"Bayer's process", h:"बायर की विधि"}, {e:"Serpek's process", h:"सरपेक की विधि"}
+            ],
+            ans: 0
+        },
+        {
+            e: "Which compound is used to make fireproof and waterproof clothes?",
+            h: "अग्निरोधी तथा जलरोधी कपड़े तैयार करने में निम्नलिखित में से किस यौगिक का उपयोग किया जाता है ?",
+            opts: [
+                {e:"Sodium Sulphate", h:"सोडियम सल्फेट"}, {e:"Magnesium Sulphate", h:"मैग्नीशियम सल्फेट"}, {e:"Ferrous Sulphate", h:"फेरस सल्फेट"}, {e:"Aluminum Sulphate", h:"एलुमिनियम सल्फेट"}
+            ],
+            ans: 3
+        },
+        {
+            e: "The chemical formula of Common Alum (Potash Alum) is:",
+            h: "सामान्य फिटकरी (पोटाश एलम) का रासायनिक सूत्र है-",
+            opts: [
+                {e:"K2SO4.Al2(SO4)3.24H2O", h:"K2SO4.Al2(SO4)3.24H2O"}, {e:"K2SO4.Al2(SO4)3.21H2O", h:"K2SO4.Al2(SO4)3.21H2O"}, {e:"K2SO4.Al2(SO4)3.18H2O", h:"K2SO4.Al2(SO4)3.18H2O"}, {e:"K2SO4.Fe2(SO4)3.24H2O", h:"K2SO4.Fe2(SO4)3.24H2O"}
+            ],
+            ans: 0
+        },
+        {
+            e: "Ruby and Sapphire are oxides of which metal?",
+            h: "माणिक्य और नीलम किसके ऑक्साइड हैं ?",
+            opts: [
+                {e:"Copper", h:"कॉपर"}, {e:"Gold", h:"सोना"}, {e:"Aluminum", h:"एलुमिनियम"}, {e:"Iron", h:"आयरन"}
+            ],
+            ans: 2
+        },
+        {
+            e: "Which Aluminum salt is commonly used to stop bleeding?",
+            h: "रक्त स्त्राव रोकने के लिए आमतौर पर किस एलुमिनियम लवण का प्रयोग किया जाता है ?",
+            opts: [
+                {e:"Aluminum Chloride", h:"एलुमिनियम क्लोराइड"}, {e:"Aluminum Nitrate", h:"एलुमिनियम नाइट्रेट"}, {e:"Aluminum Sulphate", h:"एलुमिनियम सल्फेट"}, {e:"Potash Alum", h:"पोटाश एलम"}
+            ],
+            ans: 3
+        },
+        {
+            e: "By which process does Potash Alum stop bleeding?",
+            h: "फिटकरी (Potash Alum) रक्त-स्त्राव को किस प्रक्रिया द्वारा रोक देती है ?",
+            opts: [
+                {e:"Absorption", h:"अवशोषण"}, {e:"Cohesion", h:"ससंजन"}, {e:"Diffusion", h:"विसरण"}, {e:"Coagulation", h:"स्कन्दन"}
+            ],
+            ans: 3
+        },
+        {
+            e: "Which Aluminum salt is used to clean dirty water?",
+            h: "किस एलुमिनियम लवण का प्रयोग गंदे पानी को स्वच्छ करने में किया जाता है ?",
+            opts: [
+                {e:"Potash Alum", h:"पोटाश एलम"}, {e:"Aluminum Nitrate", h:"एलुमिनियम नाइट्रेट"}, {e:"Aluminum Hydroxide", h:"एलुमिनियम हाइड्रोक्साइड"}, {e:"Aluminum Chloride", h:"एलुमिनियम क्लोराइड"}
+            ],
+            ans: 0
+        },
+        {
+            e: "Which of the following is an Alkaline Earth Metal?",
+            h: "निम्नलिखित में कौन-सा एक क्षारीय मृदा धातु है ?",
+            opts: [
+                {e:"Sodium", h:"सोडियम"}, {e:"Calcium", h:"कैल्शियम"}, {e:"Potassium", h:"पोटैशियम"}, {e:"Lithium", h:"लिथियम"}
+            ],
+            ans: 1
+        },
+        {
+            e: "What is the chemical form of Limestone, Marble, Chalk, etc?",
+            h: "चूने का पत्थर, संगमरमर, खड़िया आदि रासायनिक रूप से क्या है ?",
+            opts: [
+                {e:"Calcium Oxide", h:"कैल्शियम ऑक्साइड"}, {e:"Calcium Dioxide", h:"कैल्शियम डाइऑक्साइड"}, {e:"Calcium Carbonate", h:"कैल्शियम कार्बोनेट"}, {e:"Gypsum", h:"जिप्सम"}
+            ],
+            ans: 2
+        },
+        {
+            e: "The chemical name of Quick-lime (Kali-Chuna) is:",
+            h: "Quick-lime तथा कली-चूना का रासायनिक नाम क्या है?",
+            opts: [
+                {e:"Calcium Oxide", h:"कैल्शियम ऑक्साइड"}, {e:"Calcium Hydroxide", h:"कैल्शियम हाइड्रोक्साइड"}, {e:"Calcium Carbonate", h:"कैल्शियम कार्बोनेट"}, {e:"Gypsum", h:"जिप्सम"}
+            ],
+            ans: 0
+        },
+        {
+            e: "Consider statements: 1. Calcium oxide is called Quick lime. 2. Calcium hydroxide is called Slaked lime.",
+            h: "1. कैल्शियम ऑक्साइड को बिना बुझा हुआ चूना कहते हैं। 2. कैल्शियम हाइड्रोक्साइड को बुझा हुआ चूना कहते हैं।",
+            opts: [
+                {e:"Only 1", h:"केवल 1"}, {e:"Only 2", h:"केवल 2"}, {e:"Both 1 and 2", h:"1 तथा 2 दोनों"}, {e:"Neither 1 nor 2", h:"न तो 1 न ही 2"}
+            ],
+            ans: 2
+        },
+        {
+            e: "What is obtained by heating Limestone (CaCO3)?",
+            h: "चूने का पत्थर (CaCO3) को गर्म करने पर प्राप्त होता है-",
+            opts: [
+                {e:"CaO", h:"CaO"}, {e:"Ca(OH)2", h:"Ca(OH)2"}, {e:"CaC2", h:"CaC2"}, {e:"CaCO3", h:"CaCO3"}
+            ],
+            ans: 0
+        },
+        {
+            e: "What is used for white-washing houses?",
+            h: "मकानों को सफेदी करने में किसका उपयोग किया जाता है ?",
+            opts: [
+                {e:"CaO", h:"CaO"}, {e:"Ca(OH)2", h:"Ca(OH)2"}, {e:"CaC2", h:"CaC2"}, {e:"CaCO3", h:"CaCO3"}
+            ],
+            ans: 1
+        },
+        {
+            e: "Lime Stone is:",
+            h: "लाइम स्टोन है-",
+            opts: [
+                {e:"CaO", h:"CaO"}, {e:"Ca(OH)2", h:"Ca(OH)2"}, {e:"CaCO3", h:"CaCO3"}, {e:"None", h:"इनमें से कोई नहीं"}
+            ],
+            ans: 2
+        },
+        {
+            e: "Chemical formula of Plaster of Paris is:",
+            h: "प्लास्टर ऑफ पेरिस का रासायनिक सूत्र है-",
+            opts: [
+                {e:"CaSO4.1/2H2O", h:"CaSO4.1/2H2O"}, {e:"(CaSO4)2.H2O", h:"(CaSO4)2.H2O"}, {e:"CaSO4.2H2O", h:"CaSO4.2H2O"}, {e:"Both a and b", h:"a तथा b"}
+            ],
+            ans: 3
+        },
+        {
+            e: "Statements: 1. Heating gypsum >393K forms dead burnt plaster. 2. Heating Gypsum carefully to 393K forms Plaster of Paris.",
+            h: "1. जिप्सम को 393 K से अधिक गर्म करने पर... निर्जलीय होकर... 2. जिप्सम को 393 K तक सावधानीपूर्वक गर्म करने के फलस्वरूप प्लास्टर ऑफ पेरिस...",
+            opts: [
+                {e:"Only 1", h:"केवल 1"}, {e:"Only 2", h:"केवल 2"}, {e:"Both 1 and 2", h:"1 तथा 2 दोनों"}, {e:"Neither", h:"न तो 1 न ही 2"}
+            ],
+            ans: 2
+        },
+        {
+            e: "What is used as bandages for setting broken bones in surgery?",
+            h: "शल्य चिकित्सा में टूटी हुई हड्डियों को बैठाने व जोड़ने में पट्टियों के रूप में किसका उपयोग किया जाता है ?",
+            opts: [
+                {e:"Gypsum", h:"जिप्सम"}, {e:"Plaster of Paris", h:"प्लास्टर ऑफ पेरिस"}, {e:"Calcium Carbonate", h:"कैल्शियम कार्बोनेट"}, {e:"Calcium Oxide", h:"कैल्शियम ऑक्साइड"}
+            ],
+            ans: 1
+        },
+        {
+            e: "Which Calcium compound is widely used for making statues?",
+            h: "व्यापक स्तर पर मूर्तियों के निर्माण में कैल्शियम के किस यौगिक का इस्तेमाल किया जाता है ?",
+            opts: [
+                {e:"Calcium Carbonate", h:"कैल्शियम कार्बोनेट"}, {e:"Calcium Oxide", h:"कैल्शियम ऑक्साइड"}, {e:"Gypsum", h:"जिप्सम"}, {e:"Plaster of Paris", h:"प्लास्टर ऑफ पेरिस"}
+            ],
+            ans: 3
+        },
+        {
+            e: "Which statement regarding Plaster of Paris is NOT correct?",
+            h: "प्लास्टर ऑफ पेरिस के संबंध में निम्नलिखित में कौन-सा एक सही नहीं है ?",
+            opts: [
+                {e:"Chemical name is Calcium Sulphate Hemihydrate", h:"इसका रासायनिक नाम कैल्शियम सल्फेट हेमीहाइड्रेट है।"}, {e:"Sets to a hard mass with water", h:"प्लास्टर ऑफ पेरिस के जल के साथ जमने का एक विशेष गुण होता है।"}, {e:"Becomes Gypsum on mixing with water", h:"प्लास्टर ऑफ पेरिस में जल मिलाने के फलस्वरूप मिश्रण तप्त होकर जिप्सम में परिणत हो जाता है।"}, {e:"None of these", h:"इनमें से कोई नहीं"}
+            ],
+            ans: 3
+        },
+        {
+            e: "Adding Sodium Carbonate solution to Calcium Chloride/Nitrate solution gives a white precipitate of?",
+            h: "कैल्शियम क्लोराइड या कैल्शियम नाइट्रेट के जलीय विलयन में सोडियम कार्बोनेट... डालने पर एक उजला अवक्षेप प्राप्त होता है...",
+            opts: [
+                {e:"CaO", h:"CaO"}, {e:"Ca(OH)2", h:"Ca(OH)2"}, {e:"CaCO3", h:"CaCO3"}, {e:"CaC2", h:"CaC2"}
+            ],
+            ans: 2
+        },
+        {
+            e: "What is the amount of Calcium in a normal human body?",
+            h: "एक सामान्य व्यक्ति के शरीर में कैल्शियम की मात्रा कितनी होती है ?",
+            opts: [
+                {e:"25 g", h:"25 g"}, {e:"1200 g", h:"1200 g"}, {e:"90 g", h:"90 g"}, {e:"170 g", h:"170 g"}
+            ],
+            ans: 1
+        },
+        {
+            e: "About 99% of total body Calcium is present in:",
+            h: "शरीर में उपस्थित कुल कैल्शियम का लगभग 99 प्रतिशत भाग उपस्थित होते हैं-",
+            opts: [
+                {e:"Bones and Teeth", h:"हड्डियों तथा दाँतों में"}, {e:"Blood Plasma", h:"रक्त प्लाज्मा में"}, {e:"Cell Membrane", h:"कोशिका-कला में"}, {e:"Hormones", h:"हॉर्मोन में"}
+            ],
+            ans: 0
+        },
+        {
+            e: "Which statement is NOT correct?",
+            h: "निम्नलिखित में कौन-सा एक सही नहीं है ?",
+            opts: [
+                {e:"Reaction of CaO + Water is exothermic", h:"कैल्शियम ऑक्साइड तथा जल के बीच की अभिक्रिया उष्माक्षेपी होता है।"}, {e:"Calcium Oxide is an Amphoteric oxide", h:"कैल्शियम ऑक्साइड एक एम्फोटेरिक ऑक्साइड है।"}, {e:"CaO absorbs moisture (desiccant)", h:"कैल्शियम ऑक्साइड जल के लिए बहुत अधिक प्रीति है..."}, {e:"CaO reacts with NH4Cl to give Ammonia", h:"कैल्शियम ऑक्साइड अमोनियम क्लोराइड से अभिक्रिया कर अमोनिया गैस..."}
+            ],
+            ans: 1
+        },
+        {
+            e: "Which is the main ore of Calcium used for extraction?",
+            h: "कैल्शियम का मुख्य अयस्क कौन है जिससे कैल्शियम धातु का निष्कर्षण किया जाता है ?",
+            opts: [
+                {e:"Calcium Chloride", h:"कैल्शियम क्लोराइड"}, {e:"Calcium Carbonate", h:"कैल्शियम कार्बोनेट"}, {e:"Fluorspar", h:"फ्लुओरस्पार"}, {e:"Phosphorite", h:"फास्फोराइट"}
+            ],
+            ans: 0
+        },
+        {
+            e: "Hydroleth and Nitrolim are compounds of which metal?",
+            h: "हाइड्रोलिथ तथा नाइट्रोलियम निम्नलिखित में किस धातु के यौगिक है ?",
+            opts: [
+                {e:"Hydrogen", h:"हाइड्रोजन"}, {e:"Nitrogen", h:"नाइट्रोजन"}, {e:"Calcium", h:"कैल्शियम"}, {e:"Aluminum", h:"एलुमिनियम"}
+            ],
+            ans: 2
+        },
+        {
+            e: "The chemical formula of Dolomite is:",
+            h: "डोलोमाइट का रासायनिक सूत्र है-",
+            opts: [
+                {e:"Na3AlF6", h:"Na3AlF6"}, {e:"CaCO3.MgCO3", h:"CaCO3.MgCO3"}, {e:"CaSO4.MgSO4", h:"CaSO4.MgSO4"}, {e:"KCl.MgCl2.6H2O", h:"KCl.MgCl2.6H2O"}
+            ],
+            ans: 1
+        },
+        {
+            e: "Calcium Phosphate is used in:",
+            h: "कैल्शियम फॉस्फेट का उपयोग होता है-",
+            opts: [
+                {e:"Making Acetylene gas", h:"एसिटीलीन गैस बनाने में"}, {e:"Toothpaste industry", h:"टूथ-पेस्ट उद्योगों में"}, {e:"As Insecticide", h:"कीटाणुनाशक के रूप में"}, {e:"As Desiccant", h:"शुष्ककारक के रूप में"}
+            ],
+            ans: 1
+        },
+        {
+            e: "Which statement regarding Calcium Oxide is NOT correct?",
+            h: "कैल्शियम ऑक्साइड के संबंध में निम्नलिखित में कौन-सा एक सही नहीं है ?",
+            opts: [
+                {e:"Obtained by heating limestone at 1273K", h:"चूना पत्थर को भट्ठी में 1273K ताप पर गर्म करने पर..."}, {e:"Process is called Calcining", h:"चूना पत्थर से चूना (CaO) बनाने की प्रक्रिया निस्तापन (Calcining)..."}, {e:"Pure CaO is amorphous white solid", h:"शुद्ध कैल्शियम ऑक्साइड एक अक्रिस्टलीय सफेद ठोस होता है।"}, {e:"Melting point is very low 373K", h:"कैल्शियम ऑक्साइड द्रवनांक अत्यंत निम्न 373K होता है।"}
+            ],
+            ans: 3
+        },
+        {
+            e: "Bleaching powder is produced on commercial scale by:",
+            h: "वाणिज्यिक स्तर पर विरंजक चूर्ण (Bleaching Powder) का निर्माण होता है-",
+            opts: [
+                {e:"Chlorine gas on Lime", h:"क्लोरिन गैस की चूने के साथ अभिक्रिया द्वारा"}, {e:"Chlorine on Dry Slaked Lime", h:"क्लोरिन गैस की बुझे हुए चूने के साथ अभिक्रिया द्वारा"}, {e:"Thermal decomp of Calcium Carbonate", h:"कैल्शियम कार्बोनेट के उष्मीय अपघटन द्वारा"}, {e:"Mixing CaO with Water", h:"कैल्शियम ऑक्साइड को जल के साथ मिश्रित करने पर"}
+            ],
+            ans: 1
+        },
+        {
+            e: "Which substance is manufactured by Hasenclever or Bachmann plant?",
+            h: "हॉसेन क्लेवर अथवा बॉखमान संयंत्र द्वारा निम्नलिखित में किस महत्वपूर्ण पदार्थ का निर्माण किया जाता है ?",
+            opts: [
+                {e:"Bleaching Powder", h:"विरंजक चूर्ण"}, {e:"Cement", h:"सीमेंट"}, {e:"Glass", h:"काँच"}, {e:"Soap", h:"साबुन"}
+            ],
+            ans: 0
+        },
+        {
+            e: "Consider statements about Bleaching Powder: 1. Yellowish white powder smelling of Chlorine. 2. Chemically Calcium Oxychloride. 3. Releases Chlorine in open air.",
+            h: "1. विरंजक चूर्ण एक पीत-धवल चूर्ण है... 2. रासायनिक रूप से कैल्शियम ऑक्सीक्लोराइड... 3. वायु में खुला छोड़ देते हैं, तो क्लोरिन...",
+            opts: [
+                {e:"1 and 2", h:"1 और 2"}, {e:"Only 2", h:"केवल 2"}, {e:"1 and 3", h:"1 और 3"}, {e:"1, 2 and 3", h:"1, 2 और 3"}
+            ],
+            ans: 3
+        },
+        {
+            e: "Bleaching powder loses its efficiency when left open in air because:",
+            h: "विरंजक चूर्ण को वायु में खुला छोड़ने पर उसकी कार्यक्षमता नष्ट हो जाती है, क्योंकि-",
+            opts: [
+                {e:"Oxidizes with Oxygen", h:"यह ऑक्सीजन से अभिक्रिया कर ऑक्सीकृत हो जाती है।"}, {e:"Reacts with CO2 to lose Chlorine", h:"यह कार्बनडाइऑक्साइड से अभिक्रिया कर क्लोरीन गैस को त्याग कर देती है"}, {e:"Reacts with Nitrogen", h:"यह नाइट्रोजन से अभिक्रिया कर क्लोरीन गैस मुक्त कर देता है।"}, {e:"None of these", h:"इनमें से कोई नहीं"}
+            ],
+            ans: 1
+        },
+        {
+            e: "Bleaching powder is used for:",
+            h: "विरंजक चूर्ण का उपयोग किया जाता है-",
+            opts: [
+                {e:"Bleaching cotton/linen", h:"वस्त्र उद्योग में कपास एवं सन को विरंजित करने के लिए"}, {e:"As Oxidizing agent", h:"रासायनिक उद्योगों में उपचायक के रूप में"}, {e:"Disinfecting drinking water", h:"पीने के जल को रोगाणुरहित करने में"}, {e:"All of these", h:"इनमें से सभी"}
+            ],
+            ans: 3
+        },
+        {
+            e: "Which is known as 'Chloride of Lime'?",
+            h: "निम्नलिखित में किसे चूने का क्लोराइड कहा जाता है?",
+            opts: [
+                {e:"Bleaching Powder", h:"विरंजक चूर्ण"}, {e:"Calcium Oxide", h:"कैल्शियम ऑक्साइड"}, {e:"Nitrolim", h:"नाइट्रोलियम"}, {e:"Gypsum", h:"जिप्सम"}
+            ],
+            ans: 0
+        },
+        {
+            e: "Which option is NOT correctly matched?",
+            h: "निम्नलिखित में कौन-सा विकल्प सही सुमेलित नहीं है?",
+            opts: [
+                {e:"Bleaching Powder : CaCCl4", h:"विरंजक चूर्ण : CaCCl4"}, {e:"Marble : CaCO3", h:"संगमरमर : CaCO3"}, {e:"Gypsum : CaSO4.2H2O", h:"जिप्सम : CaSO4.2H2O"}, {e:"Quick-lime : CaO", h:"क्विक-लाइम : CaO"}
+            ],
+            ans: 0
+        },
+        {
+            e: "Which statement about Bleaching powder is FALSE?",
+            h: "विरंजक चूर्ण के लिए कौन-सा कथन असत्य है ?",
+            opts: [
+                {e:"Highly soluble in water", h:"यह जल में अधिक विलय है"}, {e:"It is an Oxidizing agent", h:"यह एक ऑक्सीकारक है"}, {e:"It is light yellow powder", h:"यह हल्के पीले रंग का चूर्ण है"}, {e:"Releases Chlorine with dilute acid", h:"तनु अम्ल की प्रतिक्रिया से यह क्लोरीन गैस निष्कासित करता है"}
+            ],
+            ans: 0
+        },
+        {
+            e: "Calcium Fluoride is added to Calcium Chloride in Calcium extraction because:",
+            h: "कैल्शियम धातु के निष्कर्षण में कैल्शियम क्लोराइड में कैल्शियम फ्लोराइड मिलाया जाता है, क्योंकि-",
+            opts: [
+                {e:"Acts as Oxidizer", h:"यह ऑक्सीकारक का काम करता है।"}, {e:"Acts as Reducer", h:"यह अवकारक का काम करता है।"}, {e:"Reduces Melting Point", h:"यह द्रवणांक को घटाता है।"}, {e:"Makes CaCl2 electrolyte", h:"यह कैल्शियम क्लोराइड को विद्युत अपघट्य बनाता है।"}
+            ],
+            ans: 2
+        },
+        {
+            e: "Asbestos is made of?",
+            h: "एस्बेस्टॉस किससे बनती है ?",
+            opts: [
+                {e:"Calcium and Magnesium", h:"कैल्शियम और मैग्नीशियम"}, {e:"Copper, Zinc, Manganese", h:"तांबा, जिंक और मैग्नीज"}, {e:"Lead and Iron", h:"सीसा और लोहा"}, {e:"Calcium and Zinc", h:"कैल्शियम और जिंक"}
+            ],
+            ans: 0
+        },
+        {
+            e: "Which statement regarding Iron is NOT correct?",
+            h: "आयरन (लोहा) के संबंध में निम्नलिखित में कौन-सा एक सही नहीं है ?",
+            opts: [
+                {e:"Most used metal", h:"उपयोग में लाई जाने वाले धातुओं में आयरन का उपयोग सर्वाधिक होता है।"}, {e:"2nd most abundant metal in crust", h:"आयरन भू-पर्पटी में प्रचुर मात्रा में पायी जाने वाली दूसरी धातु है।"}, {e:"Found in free state (non-reactive)", h:"आयरन अभिक्रियाशील नहीं होने के कारण प्रकृति में मुक्त अवस्था में पाये जाते हैं।"}, {e:"Available as sulfide, oxide, carbonate", h:"भू-पर्पटी में आयरन सल्फाइड, ऑक्साइड एवं कार्बोनेट अयस्क के रूप में उपलब्ध रहता है।"}
+            ],
+            ans: 2
+        },
+        {
+            e: "Which is the main ore of Iron used for extraction?",
+            h: "आयरन का सबसे प्रमुख अयस्क कौन है, जिससे आयरन का निष्कर्षण किया जाता है ?",
+            opts: [
+                {e:"Hematite", h:"हेमेटाइट"}, {e:"Magnetite", h:"मैग्नेटाइट"}, {e:"Siderite", h:"सिडेराइट"}, {e:"Iron Pyrites", h:"आयरन पाइराइट"}
+            ],
+            ans: 0
+        },
+        {
+            e: "From which mineral is Iron NOT extracted?",
+            h: "आयरन का किस खनिज से आचरन का निष्कर्षण नहीं किया जाता है ?",
+            opts: [
+                {e:"Hematite", h:"हेमेटाइट"}, {e:"Magnetite", h:"मैग्नेटाइट"}, {e:"Siderite", h:"सिडेराइट"}, {e:"Iron Pyrites", h:"आयरन पाइराइट्स"}
+            ],
+            ans: 3
+        }
+    ];
+
+    // --- State & Logic ---
+    let currentQuestions = [];
+    let currentIndex = 0;
+    let score = 0;
+    let timerInterval;
+    let timerDuration = 0;
+    let timeLeft = 0;
+    
+    // Audio Context
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    
+    function playSound(type) {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        const now = audioCtx.currentTime;
+        if (type === 'correct') {
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(600, now);
+            osc.frequency.exponentialRampToValueAtTime(1200, now + 0.1);
+            gain.gain.setValueAtTime(0.1, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+            osc.start(now);
+            osc.stop(now + 0.3);
+        } else {
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(150, now);
+            osc.frequency.linearRampToValueAtTime(100, now + 0.3);
+            gain.gain.setValueAtTime(0.1, now);
+            gain.gain.linearRampToValueAtTime(0.001, now + 0.3);
+            osc.start(now);
+            osc.stop(now + 0.3);
+        }
+    }
+
+    function startQuiz() {
+        const timeInput = document.getElementById('time-input').value;
+        timerDuration = timeInput ? parseInt(timeInput) : 0;
+        const shuffle = document.getElementById('shuffle-input').checked;
+
+        currentQuestions = [...rawQuestions];
+        if (shuffle) currentQuestions.sort(() => Math.random() - 0.5);
+
+        currentIndex = 0;
+        score = 0;
+
+        document.getElementById('start-screen').classList.remove('active');
+        document.getElementById('result-screen').classList.remove('active');
+        document.getElementById('quiz-screen').classList.add('active');
+        
+        loadQuestion();
+    }
+
+    function loadQuestion() {
+        if (currentIndex >= currentQuestions.length) {
+            finishEarly();
+            return;
+        }
+
+        const q = currentQuestions[currentIndex];
+        
+        // Update UI
+        document.getElementById('q-counter').innerText = `Q ${String(currentIndex + 1).padStart(2,'0')}/${currentQuestions.length}`;
+        document.getElementById('score-display').innerText = `Score: ${String(score).padStart(2,'0')}`;
+        document.getElementById('q-text-eng').innerText = q.e;
+        document.getElementById('q-text-hindi').innerText = q.h;
+        
+        // Progress Bar
+        document.getElementById('progress-bar').style.width = `${(currentIndex / currentQuestions.length) * 100}%`;
+
+        // Render Options
+        const container = document.getElementById('options-container');
+        container.innerHTML = '';
+        q.opts.forEach((opt, idx) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerHTML = `<span class="opt-eng">${opt.e}</span><span class="opt-hindi">${opt.h}</span>`;
+            btn.onclick = () => handleAnswer(idx, btn, q.ans);
+            container.appendChild(btn);
+        });
+
+        // Timer Logic
+        clearInterval(timerInterval);
+        document.getElementById('timer-display').classList.remove('pulse');
+        
+        if (timerDuration > 0) {
+            timeLeft = timerDuration;
+            document.getElementById('time-left').innerText = timeLeft;
+            document.getElementById('timer-display').style.display = 'flex';
+            
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                document.getElementById('time-left').innerText = timeLeft;
+                if(timeLeft <= 5) document.getElementById('timer-display').classList.add('pulse');
+                if(timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    handleAnswer(-1, null, q.ans); // Timeout
+                }
+            }, 1000);
+        } else {
+            document.getElementById('timer-display').style.display = 'none';
+        }
+    }
+
+    function handleAnswer(selectedIndex, btn, correctIndex) {
+        clearInterval(timerInterval);
+        const buttons = document.querySelectorAll('.option-btn');
+        buttons.forEach(b => b.disabled = true);
+
+        if (selectedIndex === correctIndex) {
+            score++;
+            btn.classList.add('correct');
+            playSound('correct');
+            triggerConfetti();
+        } else {
+            if (btn) btn.classList.add('wrong');
+            buttons[correctIndex].classList.add('correct');
+            playSound('wrong');
+            const emoji = document.getElementById('sad-emoji');
+            emoji.style.display = 'block';
+            setTimeout(() => emoji.style.display = 'none', 1000);
+        }
+
+        setTimeout(() => {
+            currentIndex++;
+            loadQuestion();
+        }, 1500);
+    }
+
+    function finishEarly() {
+        clearInterval(timerInterval);
+        document.getElementById('quiz-screen').classList.remove('active');
+        document.getElementById('result-screen').classList.add('active');
+
+        const total = currentQuestions.length;
+        const percentage = Math.round((score / total) * 100);
+        
+        document.getElementById('final-score').innerText = `${percentage}%`;
+        document.getElementById('stats-text').innerText = `You scored ${score} out of ${total}`;
+        
+        const msg = document.getElementById('result-msg');
+        if (percentage >= 80) {
+            msg.innerText = "🏆 Outstanding Performance!";
+            triggerConfetti();
+        } else if (percentage >= 50) {
+            msg.innerText = "👏 Well Done! Keep it up.";
+        } else {
+            msg.innerText = "📚 Practice makes perfect!";
+        }
+    }
+
+    function triggerConfetti() {
+        for (let i = 0; i < 40; i++) {
+            const el = document.createElement('div');
+            el.className = 'confetti';
+            el.style.left = Math.random() * 100 + 'vw';
+            el.style.background = `hsl(${Math.random() * 360}, 100%, 50%)`;
+            el.style.animationDuration = (Math.random() * 2 + 2) + 's';
+            document.body.appendChild(el);
+            setTimeout(() => el.remove(), 4000);
+        }
+    }
+</script>
+</body>
+</html>

@@ -26,7 +26,7 @@
             --border: #E5E7EB;
             --danger: #EF4444;
             --success: #10B981;
-            --warning: #F59E0B; /* Added for Reports */
+            --warning: #F59E0B;
             --sidebar-width: 280px;
             --header-height: 64px;
             --radius: 10px;
@@ -63,9 +63,14 @@
         .btn-outline { border: 1px solid var(--border); background: transparent; color: var(--text); }
         .btn-outline:hover { background: var(--primary-light); color: var(--primary); border-color: var(--primary); }
         
-        /* Success Button for Reports */
+        /* Action Buttons */
         .btn-success { background: var(--success); color: white; }
         .btn-success:hover { opacity: 0.9; }
+        
+        /* Status Badges */
+        .badge { padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
+        .badge-success { background: #d1fae5; color: #065f46; }
+        .badge-danger { background: #fee2e2; color: #991b1b; }
 
         /* Inputs */
         .input-group { margin-bottom: 16px; }
@@ -210,6 +215,9 @@
         <div class="sidebar-header">MENU</div>
         <nav class="nav-links">
             <div class="nav-item active" onclick="switchView('dashboard')"><i class="fas fa-chart-pie"></i> Dashboard</div>
+            
+            <div class="nav-item" onclick="switchView('users')"><i class="fas fa-users-cog"></i> Manage Users</div>
+            
             <div class="nav-item" onclick="switchView('subjects')"><i class="fas fa-book"></i> Subjects & Content</div>
             
             <div class="nav-item" onclick="switchView('reports')">
@@ -250,6 +258,34 @@
                 <div class="stat-box">
                     <div class="stat-icon" style="background:#fee2e2; color:var(--danger);"><i class="fas fa-envelope"></i></div>
                     <div class="stat-info"><h3 id="stat-feedback">0</h3><p>Unread Messages</p></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="view-users" class="view-section hidden">
+            <h2 style="margin-bottom:20px;">Manage Users</h2>
+            <div class="card">
+                <div class="card-header">
+                    <h3>Registered Users</h3>
+                    <input type="text" id="user-search" class="input-field" placeholder="Search by name or email..." style="max-width:300px;">
+                </div>
+                <div class="table-wrap">
+                    <table id="users-table">
+                        <thead>
+                            <tr>
+                                <th>User Info</th>
+                                <th>Email</th>
+                                <th>Status</th>
+                                <th width="140">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="users-body">
+                            </tbody>
+                    </table>
+                </div>
+                <div id="users-empty" class="hidden" style="padding:40px; text-align:center; color:var(--text-muted);">
+                    <i class="fas fa-user-slash fa-3x" style="opacity:0.3; margin-bottom:15px;"></i>
+                    <p>No users found matching your search.</p>
                 </div>
             </div>
         </div>
@@ -305,7 +341,7 @@
         <div id="view-feedback" class="view-section hidden">
             <h2 style="margin-bottom:20px;">Inbox</h2>
             <div class="card" id="feedback-list">
-                </div>
+            </div>
         </div>
 
         <div id="view-settings" class="view-section hidden">
@@ -411,33 +447,26 @@
         let appState = {
             user: null,
             subjectsData: {},
-            view: 'subjects', // subjects | chapters | quizzes | reports
+            view: 'subjects', // subjects | chapters | quizzes | reports | users
             activeSubjectId: null,
-            activeChapterId: null
+            activeChapterId: null,
+            usersData: {} // Local cache for users
         };
 
-        // --- NEW: HISTORY HANDLER FOR BROWSER BACK BUTTON ---
+        // --- HISTORY HANDLER ---
         window.onpopstate = function(event) {
             if (event.state) {
-                // Restore state from history
                 appState.view = event.state.view;
                 appState.activeSubjectId = event.state.subId || null;
                 appState.activeChapterId = event.state.chapId || null;
                 
-                // Render UI (don't push history again)
-                if(appState.view === 'reports') {
-                    switchView('reports');
-                } else if(appState.view === 'feedback') {
-                    switchView('feedback');
-                } else if(appState.view === 'settings') {
-                    switchView('settings');
-                } else if(appState.view === 'dashboard') {
-                    switchView('dashboard');
-                } else {
-                    renderManager(); 
-                }
+                if(appState.view === 'reports') switchView('reports');
+                else if(appState.view === 'feedback') switchView('feedback');
+                else if(appState.view === 'settings') switchView('settings');
+                else if(appState.view === 'dashboard') switchView('dashboard');
+                else if(appState.view === 'users') switchView('users');
+                else renderManager(); 
             } else {
-                // Fallback if no state exists
                 resetManager(false);
             }
         };
@@ -445,7 +474,6 @@
         // --- 3. AUTH & INITIALIZATION ---
         auth.onAuthStateChanged(user => {
             if(user) {
-                // Security Check: Is Admin?
                 db.ref('admins/' + user.uid).once('value', snap => {
                     if(snap.val() === true) {
                         appState.user = user;
@@ -464,19 +492,16 @@
         });
 
         function initApp() {
-            // Theme
             if(localStorage.getItem('quizzy_dark') === 'true') document.body.classList.add('dark-mode');
-
-            // --- INITIAL HISTORY STATE ---
             history.replaceState({ view: 'subjects', subId: null, chapId: null }, null, "");
 
-            // Listeners
             listenToStats();
             listenToSubjects();
             listenToFeedback();
             listenToConfig();
             listenToBanners(); 
-            listenToReports(); // <--- NEW: Listen for reports
+            listenToReports();
+            listenToUsers(); // Initialize User Listener
         }
 
         // --- 4. REALTIME STATS ---
@@ -495,9 +520,7 @@
             Object.values(subs).forEach(sub => {
                 if(sub.chapters) {
                     Object.values(sub.chapters).forEach(chap => {
-                        if(chap.quizzes) {
-                            quizCount += Object.keys(chap.quizzes).length;
-                        }
+                        if(chap.quizzes) quizCount += Object.keys(chap.quizzes).length;
                     });
                 }
             });
@@ -506,15 +529,11 @@
             document.getElementById('stat-quizzes').innerText = quizCount;
         }
 
-        // --- 5. LIVE CONTENT MANAGER ---
+        // --- 5. CONTENT MANAGER ---
         function listenToSubjects() {
             db.ref('subjects').on('value', snap => {
                 appState.subjectsData = snap.val() || {};
-                
-                // 1. Update Dashboard Stats
                 calculateContentStats();
-
-                // 2. Live Update Current View (If user is adding/deleting)
                 if(document.getElementById('view-subjects').classList.contains('hidden') === false) {
                     renderManager(); 
                 }
@@ -525,10 +544,7 @@
             appState.view = 'subjects';
             appState.activeSubjectId = null;
             appState.activeChapterId = null;
-
-            if(pushToHistory) {
-                history.pushState({ view: 'subjects', subId: null, chapId: null }, null, "");
-            }
+            if(pushToHistory) history.pushState({ view: 'subjects', subId: null, chapId: null }, null, "");
             renderManager();
         }
 
@@ -541,7 +557,6 @@
             
             tbody.innerHTML = '';
             
-            // --- VIEW: ALL SUBJECTS ---
             if(appState.view === 'subjects') {
                 title.innerText = 'All Subjects';
                 breadcrumbs.style.display = 'none';
@@ -569,17 +584,12 @@
                     `;
                 });
             }
-            
-            // --- VIEW: CHAPTERS ---
             else if(appState.view === 'chapters') {
-                // Validate if parent still exists
                 if(!appState.subjectsData[appState.activeSubjectId]) return resetManager(false);
-
                 const subject = appState.subjectsData[appState.activeSubjectId];
                 title.innerText = `Chapters`;
                 breadcrumbs.style.display = 'flex';
                 document.getElementById('bc-text').innerText = subject.name;
-                
                 document.getElementById('add-btn').onclick = openAddChapterModal;
                 thead.innerHTML = '<tr><th>Chapter Name</th><th>Quizzes</th><th width="180">Actions</th></tr>';
 
@@ -604,22 +614,12 @@
                     `;
                 });
             }
-
-            // --- VIEW: QUIZZES ---
             else if(appState.view === 'quizzes') {
-                // Validate path
-                if(!appState.subjectsData[appState.activeSubjectId] || 
-                   !appState.subjectsData[appState.activeSubjectId].chapters ||
-                   !appState.subjectsData[appState.activeSubjectId].chapters[appState.activeChapterId]) {
-                    return resetManager(false);
-                }
-
+                if(!appState.subjectsData[appState.activeSubjectId] || !appState.subjectsData[appState.activeSubjectId].chapters || !appState.subjectsData[appState.activeSubjectId].chapters[appState.activeChapterId]) return resetManager(false);
                 const subject = appState.subjectsData[appState.activeSubjectId];
                 const chapter = subject.chapters[appState.activeChapterId];
-
                 title.innerText = 'Manage Quizzes';
                 document.getElementById('bc-text').innerHTML = `${subject.name} <i class="fas fa-chevron-right" style="font-size:0.7rem; margin:0 5px;"></i> ${chapter.name}`;
-                
                 document.getElementById('add-btn').onclick = openAddQuizModal;
                 thead.innerHTML = '<tr><th>Quiz Title</th><th>Filename</th><th>Preview</th><th width="140">Action</th></tr>';
 
@@ -646,42 +646,129 @@
             }
         }
 
-        // UPDATED: openChapters with History Push
         function openChapters(subId) {
             appState.activeSubjectId = subId;
             appState.view = 'chapters';
-            
             history.pushState({ view: 'chapters', subId: subId, chapId: null }, null, "");
-            
             renderManager();
         }
 
-        // UPDATED: openQuizzes with History Push
         function openQuizzes(chapId) {
             appState.activeChapterId = chapId;
             appState.view = 'quizzes';
-            
             history.pushState({ view: 'quizzes', subId: appState.activeSubjectId, chapId: chapId }, null, "");
-            
             renderManager();
         }
 
-        // --- 6. SETTINGS & HELP MSG ---
+        // --- 6. USER MANAGEMENT (FIXED & WORKING) ---
+        function listenToUsers() {
+            db.ref('users').on('value', snap => {
+                appState.usersData = snap.val() || {};
+                if(appState.view === 'users') renderUsers();
+            });
+        }
+
+        // Filter functionality for Users
+        document.getElementById('user-search').addEventListener('input', renderUsers);
+
+        function renderUsers() {
+            const tbody = document.getElementById('users-body');
+            const empty = document.getElementById('users-empty');
+            const search = document.getElementById('user-search').value.toLowerCase();
+            
+            tbody.innerHTML = '';
+            
+            const users = appState.usersData;
+            const keys = Object.keys(users);
+            
+            // Filter logic
+            const filteredKeys = keys.filter(key => {
+                const u = users[key];
+                const name = u.name ? u.name.toLowerCase() : "";
+                const email = u.email ? u.email.toLowerCase() : "";
+                return name.includes(search) || email.includes(search);
+            });
+
+            if (filteredKeys.length === 0) {
+                empty.classList.remove('hidden');
+                return;
+            }
+            
+            empty.classList.add('hidden');
+
+            filteredKeys.forEach(uid => {
+                const user = users[uid];
+                
+                // --- STATUS CHECK (FIXED) ---
+                const isBanned = user.isBanned === true;
+                
+                // --- BADGE RENDERING (FIXED) ---
+                const statusBadge = isBanned 
+                    ? `<span class="badge badge-danger" style="background:#fee2e2; color:#b91c1c;">Banned</span>` 
+                    : `<span class="badge badge-success" style="background:#d1fae5; color:#047857;">Active</span>`;
+                
+                // --- ACTION BUTTON RENDERING (FIXED) ---
+                let actionBtn = '';
+                if(uid === appState.user.uid) {
+                    actionBtn = `<button class="btn" disabled style="opacity:0.5; background:#ddd; cursor:not-allowed;">Admin</button>`;
+                } else {
+                    if (isBanned) {
+                        // Agar Banned hai, toh UNBAN ka button dikhana hai (Green)
+                        actionBtn = `<button class="btn btn-success" style="padding:6px 12px; font-size:0.8rem;" onclick="toggleBan('${uid}')">Unban User</button>`;
+                    } else {
+                        // Agar Active hai, toh BLOCK ka button dikhana hai (Red)
+                        actionBtn = `<button class="btn btn-danger" style="padding:6px 12px; font-size:0.8rem;" onclick="toggleBan('${uid}')">Block/Ban</button>`;
+                    }
+                }
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td>
+                            <div style="font-weight:600;">${user.name || 'Unknown'}</div>
+                            <div style="font-size:0.75rem; color:var(--text-muted); font-family:monospace;">${uid}</div>
+                        </td>
+                        <td>${user.email}</td>
+                        <td>${statusBadge}</td>
+                        <td>${actionBtn}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        // --- BAN LOGIC (FIXED) ---
+        function toggleBan(uid) {
+            if(uid === appState.user.uid) return toast("You cannot ban yourself.");
+            
+            // App state se current status check kar rahe hain taaki latest value mile
+            if (!appState.usersData || !appState.usersData[uid]) {
+                return toast("User data error. Please refresh.");
+            }
+
+            const user = appState.usersData[uid];
+            const currentStatus = user.isBanned === true; 
+            const newStatus = !currentStatus; // Toggle logic
+            
+            db.ref('users/' + uid).update({ isBanned: newStatus })
+                .then(() => {
+                    if (newStatus) {
+                        toast("User Blocked Successfully! 🚫");
+                    } else {
+                        toast("User Unbanned Successfully! ✅");
+                    }
+                })
+                .catch(err => toast("Error: " + err.message));
+        }
+
+        // --- 7. CONFIG & OTHER LISTENERS ---
         function listenToConfig() {
             db.ref('config').on('value', snap => {
                 const c = snap.val() || {};
-                
-                // General
                 document.getElementById('conf-app-name').value = c.appName || '';
                 document.getElementById('conf-logo').value = c.logoUrl || '';
                 document.getElementById('conf-share').value = c.shareText || '';
-                
-                // Help & Privacy
                 document.getElementById('conf-qr').value = (c.help && c.help.qrImageUrl) || '';
                 document.getElementById('conf-help-msg').value = (c.help && c.help.message) || ''; 
                 document.getElementById('conf-privacy').value = c.privacyPolicy || '';
-
-                // Socials
                 renderSocials(c.socialLinks);
             });
         }
@@ -704,7 +791,6 @@
             }).then(() => toast("General Settings Saved"));
         }
 
-        // --- SOCIAL MEDIA ---
         function renderSocials(links) {
             const list = document.getElementById('socials-list');
             list.innerHTML = '';
@@ -732,48 +818,15 @@
             });
         }
 
-        function openSocialModal() {
-            openModal('Add Social Link', [
-                {id:'s-plat', label:'Platform Name'}, {id:'s-url', label:'URL'}, {id:'s-icon', label:'Icon URL (Optional)'}
-            ], () => {
-                const p = document.getElementById('s-plat').value;
-                const u = document.getElementById('s-url').value;
-                const i = document.getElementById('s-icon').value;
-                if(p && u) db.ref('config/socialLinks').push({platform:p, url:u, iconUrl:i}).then(() => { closeModal(); toast("Link Added"); });
-            });
-        }
-
-        function openEditSocialModal(key) {
-            db.ref('config/socialLinks/' + key).once('value', snap => {
-                const data = snap.val();
-                openModal('Edit Social Link', [
-                    {id:'e-plat', label:'Platform Name', value: data.platform}, 
-                    {id:'e-url', label:'URL', value: data.url}, 
-                    {id:'e-icon', label:'Icon URL (Optional)', value: data.iconUrl}
-                ], () => {
-                    const p = document.getElementById('e-plat').value;
-                    const u = document.getElementById('e-url').value;
-                    const i = document.getElementById('e-icon').value;
-                    if(p && u) {
-                        db.ref('config/socialLinks/' + key).update({platform:p, url:u, iconUrl:i})
-                        .then(() => { closeModal(); toast("Link Updated"); });
-                    }
-                });
-            });
-        }
-
-        // --- BANNER MANAGER ---
         function listenToBanners() {
             db.ref('banners').on('value', snap => {
                 const list = document.getElementById('banner-list');
                 list.innerHTML = '';
                 const banners = snap.val() || {};
-                
                 if(Object.keys(banners).length === 0) {
                     list.innerHTML = '<p style="color:var(--text-muted);">No active banners.</p>';
                     return;
                 }
-
                 Object.keys(banners).forEach(key => {
                     const b = banners[key];
                     list.innerHTML += `
@@ -792,44 +845,6 @@
             });
         }
 
-        function openAddBannerModal() {
-            openModal('Add Advertisement Banner', [
-                {id:'b-img', label:'Image URL (Landscape preferred)'},
-                {id:'b-link', label:'Target Link (Where clicking goes)'}
-            ], () => {
-                const img = document.getElementById('b-img').value;
-                const link = document.getElementById('b-link').value;
-                
-                if(img && link) {
-                    db.ref('banners').push({
-                        imageUrl: img,
-                        targetUrl: link
-                    }).then(() => { closeModal(); toast("Banner Added"); });
-                }
-            });
-        }
-
-        function openEditBannerModal(key) {
-            db.ref('banners/' + key).once('value', snap => {
-                const data = snap.val();
-                openModal('Edit Banner', [
-                    {id:'e-img', label:'Image URL', value: data.imageUrl},
-                    {id:'e-link', label:'Target Link', value: data.targetUrl}
-                ], () => {
-                    const img = document.getElementById('e-img').value;
-                    const link = document.getElementById('e-link').value;
-                    
-                    if(img && link) {
-                        db.ref('banners/' + key).update({
-                            imageUrl: img,
-                            targetUrl: link
-                        }).then(() => { closeModal(); toast("Banner Updated"); });
-                    }
-                });
-            });
-        }
-
-        // --- 7. REPORT HANDLING (NEW) ---
         function listenToReports() {
             db.ref('reports').on('value', snap => {
                 const data = snap.val() || {};
@@ -839,8 +854,6 @@
                 
                 tbody.innerHTML = '';
                 const keys = Object.keys(data);
-                
-                // Update Sidebar Badge
                 badge.innerText = keys.length;
                 badge.classList.toggle('hidden', keys.length === 0);
 
@@ -849,17 +862,13 @@
                     document.getElementById('reports-table').classList.add('hidden');
                     return;
                 }
-
                 empty.classList.add('hidden');
                 document.getElementById('reports-table').classList.remove('hidden');
-
-                // Sort by newest first
                 keys.sort((a,b) => data[b].timestamp - data[a].timestamp);
 
                 keys.forEach(key => {
                     const r = data[key];
                     const date = new Date(r.timestamp).toLocaleDateString();
-                    
                     tbody.innerHTML += `
                         <tr>
                             <td>
@@ -890,25 +899,21 @@
             });
         }
 
-        // --- 8. FEEDBACK & INBOX ---
         function listenToFeedback() {
             db.ref('feedback').on('value', snap => {
                 const data = snap.val() || {};
                 const list = document.getElementById('feedback-list');
                 list.innerHTML = '';
                 let unread = 0;
-
                 const sortedKeys = Object.keys(data).sort((a,b) => data[b].timestamp - data[a].timestamp);
 
                 if(sortedKeys.length === 0) {
                     list.innerHTML = '<div style="padding:40px; text-align:center; color:var(--text-muted);">Inbox is empty.</div>';
                     return;
                 }
-
                 sortedKeys.forEach(key => {
                     const item = data[key];
                     if(item.status === 'unread') unread++;
-                    
                     const date = new Date(item.timestamp).toLocaleDateString();
                     list.innerHTML += `
                         <div style="padding:20px; border-bottom:1px solid var(--border); background:${item.status === 'unread' ? 'var(--primary-light)' : 'transparent'};">
@@ -924,7 +929,6 @@
                         </div>
                     `;
                 });
-
                 document.getElementById('stat-feedback').innerText = unread;
                 const badge = document.getElementById('sidebar-badge');
                 badge.innerText = unread;
@@ -932,8 +936,7 @@
             });
         }
 
-        // --- 9. UTILITIES & MODALS ---
-        
+        // --- 8. UTILS & MODALS ---
         function openModal(title, fields, saveCb) {
             document.getElementById('modal-title').innerText = title;
             const container = document.getElementById('modal-fields');
@@ -947,17 +950,13 @@
                             placeholder="${f.placeholder || ''}">
                     </div>`;
             });
-            
-            // Clean up old event listeners by cloning the button
             const oldBtn = document.getElementById('modal-save-btn');
             const newBtn = oldBtn.cloneNode(true);
             oldBtn.parentNode.replaceChild(newBtn, oldBtn);
-            
             newBtn.onclick = saveCb;
             document.getElementById('generic-modal').classList.add('active');
         }
 
-        // --- ADD Functions ---
         function openAddSubjectModal() {
             openModal('New Subject', [{id:'m-name', label:'Subject Name'}, {id:'m-poster', label:'Poster Image URL'}], () => {
                 const n = document.getElementById('m-name').value;
@@ -981,48 +980,69 @@
             });
         }
 
-        // --- EDIT Functions ---
+        function openAddBannerModal() {
+            openModal('Add Advertisement Banner', [{id:'b-img', label:'Image URL'}, {id:'b-link', label:'Target Link'}], () => {
+                const img = document.getElementById('b-img').value;
+                const link = document.getElementById('b-link').value;
+                if(img && link) db.ref('banners').push({imageUrl: img, targetUrl: link}).then(() => { closeModal(); toast("Banner Added"); });
+            });
+        }
+
+        function openSocialModal() {
+            openModal('Add Social Link', [{id:'s-plat', label:'Platform Name'}, {id:'s-url', label:'URL'}, {id:'s-icon', label:'Icon URL (Optional)'}], () => {
+                const p = document.getElementById('s-plat').value;
+                const u = document.getElementById('s-url').value;
+                const i = document.getElementById('s-icon').value;
+                if(p && u) db.ref('config/socialLinks').push({platform:p, url:u, iconUrl:i}).then(() => { closeModal(); toast("Link Added"); });
+            });
+        }
+
         function openEditSubjectModal(key) {
             const sub = appState.subjectsData[key];
-            openModal('Edit Subject', [
-                {id:'e-name', label:'Subject Name', value: sub.name}, 
-                {id:'e-poster', label:'Poster Image URL', value: sub.poster}
-            ], () => {
+            openModal('Edit Subject', [{id:'e-name', label:'Subject Name', value: sub.name}, {id:'e-poster', label:'Poster Image URL', value: sub.poster}], () => {
                 const n = document.getElementById('e-name').value;
                 const p = document.getElementById('e-poster').value;
-                if(n) {
-                    db.ref('subjects/' + key).update({name:n, poster:p})
-                      .then(() => { closeModal(); toast("Subject Updated"); });
-                }
+                if(n) db.ref('subjects/' + key).update({name:n, poster:p}).then(() => { closeModal(); toast("Subject Updated"); });
             });
         }
 
         function openEditChapterModal(key) {
             const chap = appState.subjectsData[appState.activeSubjectId].chapters[key];
-            openModal('Edit Chapter', [
-                {id:'e-name', label:'Chapter Name', value: chap.name}
-            ], () => {
+            openModal('Edit Chapter', [{id:'e-name', label:'Chapter Name', value: chap.name}], () => {
                 const n = document.getElementById('e-name').value;
-                if(n) {
-                    db.ref(`subjects/${appState.activeSubjectId}/chapters/${key}`).update({name:n})
-                      .then(() => { closeModal(); toast("Chapter Updated"); });
-                }
+                if(n) db.ref(`subjects/${appState.activeSubjectId}/chapters/${key}`).update({name:n}).then(() => { closeModal(); toast("Chapter Updated"); });
             });
         }
 
         function openEditQuizModal(key) {
             const quiz = appState.subjectsData[appState.activeSubjectId].chapters[appState.activeChapterId].quizzes[key];
-            openModal('Edit Quiz', [
-                {id:'e-title', label:'Quiz Title', value: quiz.title},
-                {id:'e-file', label:'Filename', value: quiz.fileName}
-            ], () => {
+            openModal('Edit Quiz', [{id:'e-title', label:'Quiz Title', value: quiz.title}, {id:'e-file', label:'Filename', value: quiz.fileName}], () => {
                 const t = document.getElementById('e-title').value;
                 const f = document.getElementById('e-file').value;
-                if(t && f) {
-                    db.ref(`subjects/${appState.activeSubjectId}/chapters/${appState.activeChapterId}/quizzes/${key}`)
-                      .update({title:t, fileName:f})
-                      .then(() => { closeModal(); toast("Quiz Updated"); });
-                }
+                if(t && f) db.ref(`subjects/${appState.activeSubjectId}/chapters/${appState.activeChapterId}/quizzes/${key}`).update({title:t, fileName:f}).then(() => { closeModal(); toast("Quiz Updated"); });
+            });
+        }
+
+        function openEditSocialModal(key) {
+            db.ref('config/socialLinks/' + key).once('value', snap => {
+                const data = snap.val();
+                openModal('Edit Social Link', [{id:'e-plat', label:'Platform Name', value: data.platform}, {id:'e-url', label:'URL', value: data.url}, {id:'e-icon', label:'Icon URL', value: data.iconUrl}], () => {
+                    const p = document.getElementById('e-plat').value;
+                    const u = document.getElementById('e-url').value;
+                    const i = document.getElementById('e-icon').value;
+                    if(p && u) db.ref('config/socialLinks/' + key).update({platform:p, url:u, iconUrl:i}).then(() => { closeModal(); toast("Link Updated"); });
+                });
+            });
+        }
+
+        function openEditBannerModal(key) {
+            db.ref('banners/' + key).once('value', snap => {
+                const data = snap.val();
+                openModal('Edit Banner', [{id:'e-img', label:'Image URL', value: data.imageUrl}, {id:'e-link', label:'Target Link', value: data.targetUrl}], () => {
+                    const img = document.getElementById('e-img').value;
+                    const link = document.getElementById('e-link').value;
+                    if(img && link) db.ref('banners/' + key).update({imageUrl: img, targetUrl: link}).then(() => { closeModal(); toast("Banner Updated"); });
+                });
             });
         }
 
@@ -1039,24 +1059,20 @@
             document.getElementById('view-'+v).classList.remove('hidden');
             
             document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-            // Manually set active class for navigation
             const navItems = document.querySelectorAll('.nav-item');
+            
             if(v === 'dashboard') navItems[0].classList.add('active');
-            if(v === 'subjects') navItems[1].classList.add('active');
-            if(v === 'reports') navItems[2].classList.add('active');
-            if(v === 'feedback') navItems[3].classList.add('active');
-            if(v === 'settings') navItems[4].classList.add('active');
+            if(v === 'users') navItems[1].classList.add('active'); // Users Tab Active
+            if(v === 'subjects') navItems[2].classList.add('active');
+            if(v === 'reports') navItems[3].classList.add('active');
+            if(v === 'feedback') navItems[4].classList.add('active');
+            if(v === 'settings') navItems[5].classList.add('active');
             
-            // Close mobile sidebar
             if(window.innerWidth <= 1024) toggleSidebar();
-            
-            // If switching to subjects, force a reset
             if(v === 'subjects') resetManager();
+            if(v === 'users') renderUsers(); // Render user table on switch
             
-            // Store simple view in history
-            if(v !== 'subjects') {
-                history.pushState({ view: v }, null, "");
-            }
+            if(v !== 'subjects') history.pushState({ view: v }, null, "");
         }
 
         function toggleSidebar() {
@@ -1083,7 +1099,6 @@
             }).showToast();
         }
 
-        // --- PWA SERVICE WORKER REGISTRATION ---
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('./sw.js')

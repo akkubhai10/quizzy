@@ -348,6 +348,11 @@
                 <input type="email" id="user-email" class="input-field" placeholder="Email Address" required>
                 <input type="password" id="user-pass" class="input-field" placeholder="Password" required>
                 
+                <div id="forgot-pass-box" style="text-align:right; margin-bottom:15px;">
+                    <span style="font-size:0.85rem; color:var(--primary); cursor:pointer; font-weight:500;" onclick="resetPassword()">
+                        Forgot Password?
+                    </span>
+                </div>
                 <button type="submit" class="btn btn-primary" id="auth-btn">Sign In</button>
             </form>
 
@@ -374,7 +379,7 @@
             <div class="banner-dots" id="banner-dots"></div>
         </div>
 
-        <div class="search-box">
+        <div class="search-box" id="search-container">
             <input type="text" id="search-input" class="search-input" placeholder="Search subjects, chapters...">
             <i class="fas fa-search search-icon"></i>
         </div>
@@ -513,11 +518,23 @@
             breadcrumbs: document.getElementById('breadcrumbs')
         };
 
-        // --- 3. INITIALIZATION ---
+        // --- 3. INITIALIZATION & BAN CHECK ---
         auth.onAuthStateChanged(user => {
             if (user) {
-                state.user = user;
-                initApp(); 
+                // IMPORTANT: Check if user is banned
+                db.ref(`users/${user.uid}/isBanned`).once('value', snap => {
+                    if (snap.val() === true) {
+                        // User is banned
+                        auth.signOut().then(() => {
+                            alert("Access Denied: Your account has been banned by the administrator.");
+                            window.location.reload();
+                        });
+                    } else {
+                        // User is allowed
+                        state.user = user;
+                        initApp(); 
+                    }
+                });
             } else {
                 els.splash.style.opacity = '0';
                 setTimeout(() => {
@@ -549,6 +566,31 @@
             loadConfig();
             checkAdmin();
             initBanners();
+
+            // --- SEARCH BAR LOGIC ---
+            // Handles Moving Search to top on focus & restoring on blur
+            const searchContainer = document.getElementById('search-container');
+            const searchInp = document.getElementById('search-input');
+            const bannerSec = document.getElementById('banner-section');
+            const welcomeSec = document.getElementById('welcome-section');
+
+            searchInp.addEventListener('focus', () => {
+                if(state.view === 'home') {
+                    bannerSec.classList.add('hidden');
+                    welcomeSec.classList.add('hidden');
+                }
+            });
+
+            searchInp.addEventListener('blur', () => {
+                // Restore only if empty and we are still on home
+                if(searchInp.value.trim() === '' && state.view === 'home') {
+                    welcomeSec.classList.remove('hidden');
+                    // Check if banner has content before showing
+                    if(document.getElementById('banner-wrapper').children.length > 0) {
+                        bannerSec.classList.remove('hidden');
+                    }
+                }
+            });
         }
 
         // --- 4. BANNER SLIDER LOGIC ---
@@ -706,10 +748,15 @@
             state.quizActive = false;
             els.breadcrumbs.classList.add('hidden');
 
+            // --- SHOW SEARCH & WELCOME (Home View) ---
+            document.getElementById('search-container').style.display = 'block';
+            document.getElementById('welcome-section').classList.remove('hidden');
+
             // Show Banner (if it has content)
             const bannerContainer = document.getElementById('banner-section');
             if(document.getElementById('banner-wrapper').children.length > 0) {
                  bannerContainer.style.display = 'block';
+                 bannerContainer.classList.remove('hidden');
             }
 
             if(pushHistory) {
@@ -743,8 +790,9 @@
             state.activeSubject = sub;
             state.view = 'chapters';
 
-            // Hide Banner
+            // --- HIDE BANNER & SEARCH (Chapter View) ---
             document.getElementById('banner-section').style.display = 'none';
+            document.getElementById('search-container').style.display = 'none';
 
             if(pushHistory) {
                 history.pushState({ view: 'chapters', subId: id }, null, "");
@@ -787,8 +835,9 @@
             state.activeChapter = chap;
             state.view = 'quizzes';
 
-            // Hide Banner
+            // --- HIDE BANNER & SEARCH (Quiz List View) ---
             document.getElementById('banner-section').style.display = 'none';
+            document.getElementById('search-container').style.display = 'none';
 
             if(pushHistory) {
                 history.pushState({ view: 'quizzes', subId: sub.id, chapId: chapId }, null, "");
@@ -938,11 +987,15 @@
             Toastify({ text: msg, duration: 3000, gravity: "bottom", position: "center", style: { background: "var(--primary)", borderRadius: "8px" } }).showToast();
         }
 
-        // Auth
+        // --- AUTH & PASSWORD RESET LOGIC ---
         let isSignup = false;
         function toggleAuth() {
             isSignup = !isSignup;
             document.getElementById('name-field').classList.toggle('hidden', !isSignup);
+            
+            // Toggle Forgot Password Visibility
+            document.getElementById('forgot-pass-box').classList.toggle('hidden', isSignup);
+
             document.getElementById('auth-title').innerText = isSignup ? 'Create Account' : 'Sign In';
             document.getElementById('auth-btn').innerText = isSignup ? 'Sign Up' : 'Sign In';
             document.getElementById('auth-toggle-text').innerHTML = isSignup ? "Already have an account? <b>Sign In</b>" : "Don't have an account? <b>Sign Up</b>";
@@ -959,7 +1012,12 @@
                 if(isSignup) {
                     const res = await auth.createUserWithEmailAndPassword(email, pass);
                     await res.user.updateProfile({ displayName: name });
-                    await db.ref(`users/${res.user.uid}`).set({ name, email });
+                    // Store user in DB with initial banned status false
+                    await db.ref(`users/${res.user.uid}`).set({ 
+                        name: name, 
+                        email: email,
+                        isBanned: false
+                    });
                 } else {
                     await auth.signInWithEmailAndPassword(email, pass);
                 }
@@ -968,6 +1026,32 @@
                 btn.innerText = isSignup ? 'Sign Up' : 'Sign In';
             }
         });
+
+        // --- PASSWORD RESET FUNCTION ---
+        function resetPassword() {
+            const email = document.getElementById('user-email').value;
+
+            if (!email) {
+                toast("Please enter your Email Address inside the box first.");
+                return;
+            }
+
+            const originalText = document.querySelector('#forgot-pass-box span').innerText;
+            document.querySelector('#forgot-pass-box span').innerText = "Sending...";
+
+            auth.sendPasswordResetEmail(email)
+                .then(() => {
+                    toast("✅ Password reset email sent! Check your inbox.");
+                    document.querySelector('#forgot-pass-box span').innerText = originalText;
+                })
+                .catch((error) => {
+                    let msg = error.message;
+                    if(error.code === 'auth/user-not-found') msg = "User not found with this email.";
+                    if(error.code === 'auth/invalid-email') msg = "Invalid email format.";
+                    toast("❌ " + msg);
+                    document.querySelector('#forgot-pass-box span').innerText = originalText;
+                });
+        }
 
         // Search
         document.getElementById('search-input').addEventListener('input', (e) => {

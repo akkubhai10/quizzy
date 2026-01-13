@@ -26,7 +26,7 @@
             --border: #E5E7EB;
             --danger: #EF4444;
             --success: #10B981;
-            --warning: #F59E0B;
+            --warning: #F59E0B; /* Added for Reports */
             --sidebar-width: 280px;
             --header-height: 64px;
             --radius: 10px;
@@ -62,6 +62,10 @@
         .btn-danger:hover { background: #fecaca; }
         .btn-outline { border: 1px solid var(--border); background: transparent; color: var(--text); }
         .btn-outline:hover { background: var(--primary-light); color: var(--primary); border-color: var(--primary); }
+        
+        /* Success Button for Reports */
+        .btn-success { background: var(--success); color: white; }
+        .btn-success:hover { opacity: 0.9; }
 
         /* Inputs */
         .input-group { margin-bottom: 16px; }
@@ -207,6 +211,12 @@
         <nav class="nav-links">
             <div class="nav-item active" onclick="switchView('dashboard')"><i class="fas fa-chart-pie"></i> Dashboard</div>
             <div class="nav-item" onclick="switchView('subjects')"><i class="fas fa-book"></i> Subjects & Content</div>
+            
+            <div class="nav-item" onclick="switchView('reports')">
+                <i class="fas fa-bug"></i> Reported Quizzes 
+                <span id="report-badge" class="hidden" style="background:var(--warning); color:white; font-size:0.7rem; padding:2px 8px; border-radius:10px; margin-left:auto;">0</span>
+            </div>
+
             <div class="nav-item" onclick="switchView('feedback')">
                 <i class="fas fa-inbox"></i> Inbox 
                 <span id="sidebar-badge" class="hidden" style="background:var(--danger); color:white; font-size:0.7rem; padding:2px 8px; border-radius:10px; margin-left:auto;">0</span>
@@ -266,6 +276,28 @@
                 <div id="empty-state" class="hidden" style="padding:40px; text-align:center; color:var(--text-muted);">
                     <i class="fas fa-folder-open fa-3x" style="opacity:0.3; margin-bottom:15px;"></i>
                     <p>No content found.</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="view-reports" class="view-section hidden">
+            <h2 style="margin-bottom:20px; color:var(--warning);">Reported Quizzes</h2>
+            <div class="card">
+                <div class="table-wrap">
+                    <table id="reports-table">
+                        <thead>
+                            <tr>
+                                <th>Quiz Name / Issue</th>
+                                <th>Reported By</th>
+                                <th width="120">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="reports-body"></tbody>
+                    </table>
+                </div>
+                <div id="reports-empty" class="hidden" style="padding:40px; text-align:center; color:var(--text-muted);">
+                    <i class="fas fa-check-circle fa-3x" style="opacity:0.3; margin-bottom:15px; color:var(--success);"></i>
+                    <p>No active reports. Good job!</p>
                 </div>
             </div>
         </div>
@@ -379,7 +411,7 @@
         let appState = {
             user: null,
             subjectsData: {},
-            view: 'subjects', // subjects | chapters | quizzes
+            view: 'subjects', // subjects | chapters | quizzes | reports
             activeSubjectId: null,
             activeChapterId: null
         };
@@ -393,7 +425,17 @@
                 appState.activeChapterId = event.state.chapId || null;
                 
                 // Render UI (don't push history again)
-                renderManager(); 
+                if(appState.view === 'reports') {
+                    switchView('reports');
+                } else if(appState.view === 'feedback') {
+                    switchView('feedback');
+                } else if(appState.view === 'settings') {
+                    switchView('settings');
+                } else if(appState.view === 'dashboard') {
+                    switchView('dashboard');
+                } else {
+                    renderManager(); 
+                }
             } else {
                 // Fallback if no state exists
                 resetManager(false);
@@ -426,7 +468,6 @@
             if(localStorage.getItem('quizzy_dark') === 'true') document.body.classList.add('dark-mode');
 
             // --- INITIAL HISTORY STATE ---
-            // Replaces the current history so we have a starting point
             history.replaceState({ view: 'subjects', subId: null, chapId: null }, null, "");
 
             // Listeners
@@ -435,6 +476,7 @@
             listenToFeedback();
             listenToConfig();
             listenToBanners(); 
+            listenToReports(); // <--- NEW: Listen for reports
         }
 
         // --- 4. REALTIME STATS ---
@@ -479,7 +521,6 @@
             });
         }
 
-        // UPDATED: resetManager with history control
         function resetManager(pushToHistory = true) {
             appState.view = 'subjects';
             appState.activeSubjectId = null;
@@ -788,7 +829,68 @@
             });
         }
 
-        // --- 7. FEEDBACK & INBOX ---
+        // --- 7. REPORT HANDLING (NEW) ---
+        function listenToReports() {
+            db.ref('reports').on('value', snap => {
+                const data = snap.val() || {};
+                const tbody = document.getElementById('reports-body');
+                const empty = document.getElementById('reports-empty');
+                const badge = document.getElementById('report-badge');
+                
+                tbody.innerHTML = '';
+                const keys = Object.keys(data);
+                
+                // Update Sidebar Badge
+                badge.innerText = keys.length;
+                badge.classList.toggle('hidden', keys.length === 0);
+
+                if(keys.length === 0) {
+                    empty.classList.remove('hidden');
+                    document.getElementById('reports-table').classList.add('hidden');
+                    return;
+                }
+
+                empty.classList.add('hidden');
+                document.getElementById('reports-table').classList.remove('hidden');
+
+                // Sort by newest first
+                keys.sort((a,b) => data[b].timestamp - data[a].timestamp);
+
+                keys.forEach(key => {
+                    const r = data[key];
+                    const date = new Date(r.timestamp).toLocaleDateString();
+                    
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>
+                                <div style="font-weight:600; color:var(--primary); margin-bottom:5px;">
+                                    <i class="fas fa-file-alt"></i> ${r.quizTitle}
+                                </div>
+                                <div style="background:#fee2e2; padding:8px; border-radius:6px; font-size:0.9rem; color:#b91c1c;">
+                                    <strong>Issue:</strong> ${r.issue}
+                                </div>
+                                <div style="margin-top:5px;">
+                                    <a href="${r.quizUrl}" target="_blank" style="font-size:0.8rem; color:var(--primary); text-decoration:none;">
+                                        <i class="fas fa-external-link-alt"></i> Open Quiz to Check
+                                    </a>
+                                </div>
+                            </td>
+                            <td style="font-size:0.9rem;">
+                                <div>${r.reportedBy}</div>
+                                <div style="color:var(--text-muted); font-size:0.75rem;">${date}</div>
+                            </td>
+                            <td>
+                                <button class="btn btn-success" style="padding:8px 15px;" onclick="deleteNode('reports/${key}')">
+                                    <i class="fas fa-check"></i> Fixed
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            });
+        }
+
+        // --- 8. FEEDBACK & INBOX ---
         function listenToFeedback() {
             db.ref('feedback').on('value', snap => {
                 const data = snap.val() || {};
@@ -830,7 +932,7 @@
             });
         }
 
-        // --- 8. UTILITIES & MODALS ---
+        // --- 9. UTILITIES & MODALS ---
         
         function openModal(title, fields, saveCb) {
             document.getElementById('modal-title').innerText = title;
@@ -937,13 +1039,24 @@
             document.getElementById('view-'+v).classList.remove('hidden');
             
             document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-            event.currentTarget.classList.add('active');
+            // Manually set active class for navigation
+            const navItems = document.querySelectorAll('.nav-item');
+            if(v === 'dashboard') navItems[0].classList.add('active');
+            if(v === 'subjects') navItems[1].classList.add('active');
+            if(v === 'reports') navItems[2].classList.add('active');
+            if(v === 'feedback') navItems[3].classList.add('active');
+            if(v === 'settings') navItems[4].classList.add('active');
             
             // Close mobile sidebar
             if(window.innerWidth <= 1024) toggleSidebar();
             
             // If switching to subjects, force a reset
             if(v === 'subjects') resetManager();
+            
+            // Store simple view in history
+            if(v !== 'subjects') {
+                history.pushState({ view: v }, null, "");
+            }
         }
 
         function toggleSidebar() {

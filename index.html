@@ -31,6 +31,7 @@
             --header-height: 60px;
             --glass-filter: none;
             --card-border: 1px solid var(--border);
+            --warning: #F59E0B;
         }
 
         /* --- DARK MODE (NEON + GLASS CONFIGURATION) --- */
@@ -97,6 +98,27 @@
         
         .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
         
+        /* Report Button Style */
+        .btn-warning-outline {
+            background: transparent;
+            border: 1px solid var(--warning);
+            color: var(--warning);
+            padding: 6px 12px; 
+            border-radius: 8px; 
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: 0.2s;
+            white-space: nowrap;
+        }
+        .btn-warning-outline:hover {
+            background: var(--warning);
+            color: white;
+        }
+
         .input-field {
             width: 100%; padding: 14px; border: 1px solid var(--border);
             border-radius: var(--radius); background: var(--surface); color: var(--text);
@@ -255,9 +277,10 @@
         body.dark-mode .menu-link:hover { background: rgba(255,255,255,0.05); }
         .menu-link i { width: 25px; color: var(--text-muted); }
 
-        /* --- 10. MODALS --- */
+        /* --- 10. MODALS (FIXED Z-INDEX) --- */
         .modal {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 300;
+            position: fixed; inset: 0; background: rgba(0,0,0,0.6); 
+            z-index: 2000 !important; /* FIXED: Must be higher than quiz overlay */
             display: flex; align-items: center; justify-content: center; padding: 20px;
             opacity: 0; pointer-events: none; transition: 0.2s; backdrop-filter: blur(5px);
         }
@@ -271,14 +294,16 @@
 
         /* --- 11. QUIZ OVERLAY --- */
         #quiz-overlay {
-            position: fixed; inset: 0; background: white; z-index: 1000;
+            position: fixed; inset: 0; background: white; 
+            z-index: 1000; /* FIXED: Lower than modal */
             display: flex; flex-direction: column;
         }
         body.dark-mode #quiz-overlay { background: #000; }
 
         .quiz-header-bar {
-            height: 50px; background: #fff; border-bottom: 1px solid #eee;
-            display: flex; align-items: center; justify-content: space-between; padding: 0 15px;
+            height: 60px; background: #fff; border-bottom: 1px solid #eee;
+            display: flex; align-items: center; justify-content: space-between; 
+            padding: 0 15px; gap: 10px;
         }
         body.dark-mode .quiz-header-bar { background: #111; border-color: #333; }
         body.dark-mode .quiz-header-bar span { color: #fff !important; }
@@ -429,8 +454,16 @@
 
     <div id="quiz-overlay" class="hidden">
         <div class="quiz-header-bar">
-            <span style="font-weight:600; color:#333;">Playing Quiz</span>
-            <button style="background:#ef4444; color:white; border:none; padding:5px 15px; border-radius:5px; cursor:pointer;" onclick="closeQuiz()">Close</button>
+            <div style="display: flex; align-items: center; gap: 10px; flex: 1; overflow: hidden;">
+                <button class="btn-warning-outline" onclick="openReportQuizModal()">
+                    <i class="fas fa-exclamation-circle"></i> Report
+                </button>
+                <span style="font-weight:600; color:#333; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" id="quiz-overlay-title">Playing Quiz</span>
+            </div>
+
+            <button style="background:#ef4444; color:white; border:none; padding:8px 15px; border-radius:8px; cursor:pointer; font-weight:500; white-space:nowrap; flex-shrink: 0;" onclick="closeQuiz()">
+                <i class="fas fa-times"></i> Close
+            </button>
         </div>
         <iframe id="quiz-frame" src=""></iframe>
     </div>
@@ -464,7 +497,9 @@
             activeSubject: null,
             activeChapter: null,
             view: 'home', // home | chapters | quizzes | playing
-            quizActive: false
+            quizActive: false,
+            activeQuizTitle: null,
+            activeQuizUrl: null
         };
 
         const els = {
@@ -513,7 +548,7 @@
             loadContent();
             loadConfig();
             checkAdmin();
-            initBanners(); // <-- Banner Initialization
+            initBanners();
         }
 
         // --- 4. BANNER SLIDER LOGIC ---
@@ -532,7 +567,13 @@
                     return;
                 }
 
-                container.style.display = 'block';
+                // Show banner only if view is 'home', else keep it hidden but populate it
+                if(state.view === 'home') {
+                    container.style.display = 'block';
+                } else {
+                    container.style.display = 'none';
+                }
+
                 wrapper.innerHTML = '';
                 dotsContainer.innerHTML = '';
                 
@@ -568,15 +609,10 @@
             
             bannerInterval = setInterval(() => {
                 currentIndex = (currentIndex + 1) % count;
-                
-                // Slide Effect
                 wrapper.style.transform = `translateX(-${currentIndex * 100}%)`;
-                
-                // Update Dots
                 dots.forEach(d => d.classList.remove('active'));
                 dots[currentIndex].classList.add('active');
-                
-            }, 4000); // Change slide every 4 seconds
+            }, 4000); 
         }
 
         // --- 5. NAVIGATION HISTORY HANDLER ---
@@ -670,6 +706,12 @@
             state.quizActive = false;
             els.breadcrumbs.classList.add('hidden');
 
+            // Show Banner (if it has content)
+            const bannerContainer = document.getElementById('banner-section');
+            if(document.getElementById('banner-wrapper').children.length > 0) {
+                 bannerContainer.style.display = 'block';
+            }
+
             if(pushHistory) {
                 history.pushState({ view: 'home' }, null, "");
             }
@@ -700,6 +742,9 @@
             if(!sub) return;
             state.activeSubject = sub;
             state.view = 'chapters';
+
+            // Hide Banner
+            document.getElementById('banner-section').style.display = 'none';
 
             if(pushHistory) {
                 history.pushState({ view: 'chapters', subId: id }, null, "");
@@ -742,6 +787,9 @@
             state.activeChapter = chap;
             state.view = 'quizzes';
 
+            // Hide Banner
+            document.getElementById('banner-section').style.display = 'none';
+
             if(pushHistory) {
                 history.pushState({ view: 'quizzes', subId: sub.id, chapId: chapId }, null, "");
             }
@@ -779,6 +827,12 @@
         // --- 7. QUIZ LOGIC ---
         function startQuiz(url, title) {
             state.quizActive = true;
+            state.activeQuizTitle = title;
+            state.activeQuizUrl = url;
+            
+            // Set header title
+            document.getElementById('quiz-overlay-title').innerText = title;
+
             const overlay = document.getElementById('quiz-overlay');
             const frame = document.getElementById('quiz-frame');
 
@@ -945,6 +999,37 @@
                     closeModal(); document.getElementById('feedback-text').value = ''; toast('Feedback Sent!');
                 });
             }
+        }
+
+        // --- REPORT QUIZ FUNCTIONS (Fixes for Z-Index) ---
+        function openReportQuizModal() {
+            const html = `
+                <p style="margin-bottom:10px; color:var(--text-muted);">Describe the problem (e.g., Wrong Answer, Broken Layout):</p>
+                <textarea id="report-text" class="input-field" rows="4" style="resize:none;" placeholder="Type issue here..."></textarea>
+                <div style="text-align:right; margin-top:10px;">
+                    <button class="btn btn-primary" onclick="submitQuizReport()">Submit Report</button>
+                </div>
+            `;
+            openModal('Report Quiz Issue', html);
+        }
+
+        function submitQuizReport() {
+            const issue = document.getElementById('report-text').value;
+            if(!issue) { toast("Please write the issue."); return; }
+
+            const reportData = {
+                quizTitle: state.activeQuizTitle || "Unknown Quiz",
+                quizUrl: state.activeQuizUrl || "Unknown URL",
+                reportedBy: state.user.email,
+                issue: issue,
+                timestamp: firebase.database.ServerValue.TIMESTAMP,
+                status: 'open'
+            };
+
+            db.ref('reports').push(reportData).then(() => {
+                closeModal();
+                toast("Report submitted. Admins will check it.");
+            }).catch(err => toast("Error: " + err.message));
         }
 
         // --- PWA SERVICE WORKER REGISTRATION ---

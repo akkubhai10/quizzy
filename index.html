@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quizzy - Master Your Skills</title>
     
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#4F46E5">
+    <link rel="apple-touch-icon" href="icon-192.png">
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -12,10 +16,10 @@
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
 
     <style>
-        /* --- 1. THEME VARIABLES --- */
+        /* --- 1. THEME VARIABLES (NEON & GLASS) --- */
         :root {
             --primary: #4F46E5;
-            --primary-dark: #4338ca;
+            --primary-glow: rgba(79, 70, 229, 0.5);
             --primary-light: #EEF2FF;
             --bg: #F3F4F6;
             --surface: #FFFFFF;
@@ -23,18 +27,25 @@
             --text-muted: #6B7280;
             --border: #E5E7EB;
             --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            --radius: 12px;
+            --radius: 16px;
             --header-height: 60px;
+            --glass-filter: none;
+            --card-border: 1px solid var(--border);
         }
 
+        /* --- DARK MODE (NEON + GLASS CONFIGURATION) --- */
         body.dark-mode {
-            --bg: #111827;
-            --surface: #1F2937;
-            --text: #F9FAFB;
-            --text-muted: #9CA3AF;
-            --border: #374151;
-            --primary-light: #374151;
-            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+            --bg: #050505; /* Deepest Black */
+            --surface: rgba(20, 20, 25, 0.65); /* Semi-transparent */
+            --text: #e0e0e0;
+            --text-muted: #9ca3af;
+            --primary: #6366f1; /* Brighter Indigo */
+            --primary-light: rgba(99, 102, 241, 0.15);
+            --primary-glow: rgba(99, 102, 241, 0.6);
+            --border: rgba(255, 255, 255, 0.08);
+            --card-border: 1px solid rgba(255, 255, 255, 0.08);
+            --glass-filter: blur(12px); /* The Glass Effect */
+            --shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
         }
 
         /* --- 2. BASE STYLES --- */
@@ -43,15 +54,47 @@
         
         .hidden { display: none !important; }
         .flex-center { display: flex; align-items: center; justify-content: center; }
+
+        /* --- 3. NEON & GLASS OVERRIDES --- */
         
-        /* --- 3. COMPONENTS --- */
+        /* Apply Glass Effect to specific containers in Dark Mode */
+        body.dark-mode .card, 
+        body.dark-mode .list-item,
+        body.dark-mode .auth-card,
+        body.dark-mode .sidebar,
+        body.dark-mode #app-header,
+        body.dark-mode .modal-content,
+        body.dark-mode .search-input {
+            background: var(--surface);
+            backdrop-filter: var(--glass-filter);
+            -webkit-backdrop-filter: var(--glass-filter);
+            border: var(--card-border);
+            box-shadow: var(--shadow);
+        }
+
+        /* Neon Text Glow for Headings */
+        body.dark-mode h1, body.dark-mode h2, body.dark-mode h3 {
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+        }
+
+        /* --- 4. COMPONENTS --- */
         .btn {
             display: inline-flex; align-items: center; justify-content: center;
             padding: 12px 20px; border-radius: var(--radius); border: none;
             cursor: pointer; font-weight: 500; transition: 0.2s; font-size: 0.95rem; width: 100%;
         }
-        .btn-primary { background: var(--primary); color: white; box-shadow: 0 4px 10px rgba(79, 70, 229, 0.3); }
+        .btn-primary { 
+            background: var(--primary); 
+            color: white; 
+            box-shadow: 0 4px 10px rgba(79, 70, 229, 0.3); 
+        }
+        /* Neon Button in Dark Mode */
+        body.dark-mode .btn-primary {
+            box-shadow: 0 0 15px var(--primary-glow);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
         .btn-primary:active { transform: scale(0.98); }
+        
         .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
         
         .input-field {
@@ -60,8 +103,12 @@
             outline: none; margin-bottom: 15px; transition: 0.2s;
         }
         .input-field:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-light); }
+        /* Neon Input Focus in Dark Mode */
+        body.dark-mode .input-field:focus {
+            box-shadow: 0 0 15px var(--primary-glow);
+        }
 
-        /* --- 4. SPLASH SCREEN --- */
+        /* --- 5. SPLASH SCREEN --- */
         #splash-screen {
             position: fixed; inset: 0; background: var(--surface); z-index: 9999;
             flex-direction: column;
@@ -72,10 +119,15 @@
             box-shadow: 0 10px 25px rgba(79, 70, 229, 0.4);
             animation: pulse 2s infinite; margin-bottom: 20px;
             background: var(--primary-light);
+            display: flex; align-items: center; justify-content: center;
+        }
+        body.dark-mode .splash-logo {
+            box-shadow: 0 0 50px var(--primary); /* Strong Neon Glow */
+            background: rgba(99, 102, 241, 0.2);
         }
         @keyframes pulse { 0% {transform: scale(1);} 50% {transform: scale(1.05);} 100% {transform: scale(1);} }
 
-        /* --- 5. AUTH (Login/Signup) --- */
+        /* --- 6. AUTH (Login/Signup) --- */
         #auth-container {
             min-height: 100vh; display: flex; flex-direction: column; justify-content: center;
             padding: 20px; max-width: 450px; margin: 0 auto;
@@ -86,7 +138,7 @@
         }
         .auth-logo { width: 50px; height: 50px; border-radius: 12px; margin-bottom: 15px; background: var(--primary); display: flex; align-items: center; justify-content: center; color: white; font-size: 24px; }
 
-        /* --- 6. MAIN APP HEADER --- */
+        /* --- 7. MAIN APP HEADER --- */
         #app-header {
             position: fixed; top: 0; left: 0; width: 100%; height: var(--header-height);
             background: var(--surface); display: flex; align-items: center; justify-content: space-between;
@@ -98,14 +150,39 @@
         
         .hamburger { font-size: 1.5rem; cursor: pointer; color: var(--text); padding: 5px; }
 
-        /* --- 7. MAIN CONTENT --- */
+        /* --- 8. MAIN CONTENT --- */
         #main-content { margin-top: var(--header-height); padding: 20px; padding-bottom: 80px; max-width: 800px; margin-left: auto; margin-right: auto; }
+
+        /* Banner Slider */
+        .banner-container {
+            width: 100%;
+            height: 180px; 
+            border-radius: 16px;
+            overflow: hidden;
+            position: relative;
+            margin-bottom: 25px;
+            box-shadow: var(--shadow);
+            background: var(--surface);
+            display: none; 
+        }
+        .banner-wrapper { display: flex; height: 100%; transition: transform 0.5s ease-in-out; }
+        .banner-slide { min-width: 100%; height: 100%; position: relative; }
+        .banner-img { width: 100%; height: 100%; object-fit: cover; }
+        .banner-dots { position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; }
+        .dot { width: 8px; height: 8px; background: rgba(255,255,255,0.5); border-radius: 50%; transition: 0.3s; }
+        .dot.active { background: white; width: 20px; border-radius: 4px; }
 
         /* Search */
         .search-box { position: relative; margin-bottom: 25px; }
         .search-input {
             width: 100%; padding: 15px 45px 15px 20px; border-radius: 30px; border: none;
             background: var(--surface); box-shadow: var(--shadow); color: var(--text);
+            transition: 0.3s;
+        }
+        /* Neon Search Focus */
+        body.dark-mode .search-input:focus {
+            border: 1px solid var(--primary);
+            box-shadow: 0 0 15px var(--primary-glow);
         }
         .search-icon { position: absolute; right: 20px; top: 50%; transform: translateY(-50%); color: var(--text-muted); }
 
@@ -118,9 +195,16 @@
         .card {
             background: var(--surface); border-radius: 16px; overflow: hidden;
             box-shadow: var(--shadow); border: 1px solid var(--border);
-            transition: transform 0.2s; cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s; cursor: pointer;
         }
         .card:active { transform: scale(0.97); }
+        /* Neon Hover Effect on Cards */
+        body.dark-mode .card:hover {
+            transform: translateY(-5px) scale(1.02);
+            border-color: var(--primary);
+            box-shadow: 0 0 20px var(--primary-glow), inset 0 0 10px rgba(255,255,255,0.05);
+        }
+
         .card-poster { height: 100px; width: 100%; object-fit: cover; background: var(--primary-light); }
         .card-body { padding: 15px; }
         .card-title { font-weight: 600; font-size: 1rem; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -148,7 +232,7 @@
         }
         .icon-btn { width: 35px; height: 35px; border-radius: 50%; background: var(--bg); display: grid; place-items: center; color: var(--primary); }
 
-        /* --- 8. SIDEBAR --- */
+        /* --- 9. SIDEBAR --- */
         .sidebar-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200; opacity: 0; pointer-events: none; transition: 0.3s; }
         .sidebar-overlay.active { opacity: 1; pointer-events: auto; }
         
@@ -168,9 +252,10 @@
             color: var(--text); border-radius: 10px; cursor: pointer; transition: 0.2s;
         }
         .menu-link:hover { background: var(--bg); }
+        body.dark-mode .menu-link:hover { background: rgba(255,255,255,0.05); }
         .menu-link i { width: 25px; color: var(--text-muted); }
 
-        /* --- 9. MODALS --- */
+        /* --- 10. MODALS --- */
         .modal {
             position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 300;
             display: flex; align-items: center; justify-content: center; padding: 20px;
@@ -184,32 +269,37 @@
         }
         .modal.active .modal-content { transform: translateY(0); }
 
-        /* --- 10. QUIZ OVERLAY --- */
+        /* --- 11. QUIZ OVERLAY --- */
         #quiz-overlay {
             position: fixed; inset: 0; background: white; z-index: 1000;
             display: flex; flex-direction: column;
         }
+        body.dark-mode #quiz-overlay { background: #000; }
+
         .quiz-header-bar {
             height: 50px; background: #fff; border-bottom: 1px solid #eee;
             display: flex; align-items: center; justify-content: space-between; padding: 0 15px;
         }
-        /* Fix: Opacity transition for smooth load */
+        body.dark-mode .quiz-header-bar { background: #111; border-color: #333; }
+        body.dark-mode .quiz-header-bar span { color: #fff !important; }
+
         #quiz-frame { 
             flex: 1; 
             border: none; 
             width: 100%; 
             height: 100%; 
-            opacity: 0; /* Initially hidden */
+            opacity: 0; 
             transition: opacity 0.3s ease-in-out;
             background: white;
         }
+        body.dark-mode #quiz-frame { background: #000; }
 
     </style>
 </head>
 <body>
 
     <div id="splash-screen" class="flex-center">
-        <div class="splash-logo flex-center" style="background: var(--primary); color: white;">
+        <div class="splash-logo flex-center" style="color: white;">
             <i class="fas fa-graduation-cap" style="font-size: 40px;"></i>
         </div>
         <div style="font-size:2rem; font-weight:700; color:var(--primary);">Quizzy</div>
@@ -222,8 +312,8 @@
                 <div style="display: flex; justify-content: center;">
                     <div class="auth-logo"><i class="fas fa-user"></i></div>
                 </div>
-                <h2 id="auth-title">Sign In</h2>
-                <p style="color:var(--text-muted); font-size:0.9rem;">Welcome back to Quizzy</p>
+                <h2 id="auth-title" style="text-align:center;">Sign In</h2>
+                <p style="color:var(--text-muted); font-size:0.9rem; text-align:center;">Welcome back to Quizzy</p>
             </div>
             
             <form id="auth-form">
@@ -236,7 +326,7 @@
                 <button type="submit" class="btn btn-primary" id="auth-btn">Sign In</button>
             </form>
 
-            <div class="text-center" style="margin-top:20px;">
+            <div class="text-center" style="margin-top:20px; text-align:center;">
                 <p style="color:var(--text-muted); font-size:0.9rem; cursor:pointer;" onclick="toggleAuth()">
                     <span id="auth-toggle-text">Don't have an account? <b>Sign Up</b></span>
                 </p>
@@ -253,6 +343,12 @@
     </header>
 
     <main id="main-content" class="hidden">
+        
+        <div id="banner-section" class="banner-container">
+            <div class="banner-wrapper" id="banner-wrapper"></div>
+            <div class="banner-dots" id="banner-dots"></div>
+        </div>
+
         <div class="search-box">
             <input type="text" id="search-input" class="search-input" placeholder="Search subjects, chapters...">
             <i class="fas fa-search search-icon"></i>
@@ -410,20 +506,84 @@
 
             if(localStorage.getItem('quizzy_dark') === 'true') document.body.classList.add('dark-mode');
 
-            // Initialize History for Navigation Fix
+            // Initialize History for Navigation
             history.replaceState({ view: 'home' }, null, "");
 
             showSkeletons();
             loadContent();
             loadConfig();
             checkAdmin();
+            initBanners(); // <-- Banner Initialization
         }
 
-        // --- 4. NAVIGATION HISTORY HANDLER (NEW) ---
+        // --- 4. BANNER SLIDER LOGIC ---
+        let bannerInterval;
+
+        function initBanners() {
+            db.ref('banners').on('value', snap => {
+                const bannersObj = snap.val() || {};
+                const bannerKeys = Object.keys(bannersObj);
+                const container = document.getElementById('banner-section');
+                const wrapper = document.getElementById('banner-wrapper');
+                const dotsContainer = document.getElementById('banner-dots');
+                
+                if (bannerKeys.length === 0) {
+                    container.style.display = 'none';
+                    return;
+                }
+
+                container.style.display = 'block';
+                wrapper.innerHTML = '';
+                dotsContainer.innerHTML = '';
+                
+                // Render Slides and Dots
+                bannerKeys.forEach((key, index) => {
+                    const b = bannersObj[key];
+                    
+                    // Slide
+                    const slide = document.createElement('div');
+                    slide.className = 'banner-slide';
+                    slide.innerHTML = `<a href="${b.targetUrl}" target="_blank"><img src="${b.imageUrl}" class="banner-img"></a>`;
+                    wrapper.appendChild(slide);
+                    
+                    // Dot
+                    const dot = document.createElement('div');
+                    dot.className = index === 0 ? 'dot active' : 'dot';
+                    dotsContainer.appendChild(dot);
+                });
+
+                // Start Auto Slide
+                startBannerAnimation(bannerKeys.length);
+            });
+        }
+
+        function startBannerAnimation(count) {
+            if(count <= 1) return; // Don't slide if only 1 image
+            
+            if(bannerInterval) clearInterval(bannerInterval);
+            
+            let currentIndex = 0;
+            const wrapper = document.getElementById('banner-wrapper');
+            const dots = document.querySelectorAll('.dot');
+            
+            bannerInterval = setInterval(() => {
+                currentIndex = (currentIndex + 1) % count;
+                
+                // Slide Effect
+                wrapper.style.transform = `translateX(-${currentIndex * 100}%)`;
+                
+                // Update Dots
+                dots.forEach(d => d.classList.remove('active'));
+                dots[currentIndex].classList.add('active');
+                
+            }, 4000); // Change slide every 4 seconds
+        }
+
+        // --- 5. NAVIGATION HISTORY HANDLER ---
         window.onpopstate = function(event) {
             const historyState = event.state;
 
-            // Agar koi quiz chal raha hai to pehle use band karein
+            // If quiz is active, close it first
             if (state.quizActive) {
                 closeQuiz(false); // false = don't push history, just close UI
                 return;
@@ -434,11 +594,9 @@
             } else if (historyState.view === 'chapters') {
                 openSubject(historyState.subId, false);
             } else if (historyState.view === 'quizzes') {
-                // Ensure activeSubject is set
                 if(state.activeSubject && state.activeSubject.id === historyState.subId) {
                     openChapter(historyState.chapId, false);
                 } else {
-                    // Fallback
                     openSubject(historyState.subId, false);
                 }
             }
@@ -474,7 +632,7 @@
                 '</div>';
         }
 
-        // --- 5. RENDERING ---
+        // --- 6. RENDERING ---
         function loadContent() {
             db.ref('subjects').once('value', snap => {
                 state.subjects = [];
@@ -507,13 +665,11 @@
             });
         }
         
-        // MODIFIED: Accepts pushHistory param
         function renderSubjects(pushHistory = true) {
             state.view = 'home';
             state.quizActive = false;
             els.breadcrumbs.classList.add('hidden');
 
-            // Add to history stack
             if(pushHistory) {
                 history.pushState({ view: 'home' }, null, "");
             }
@@ -539,14 +695,12 @@
             }
         }
 
-        // MODIFIED: Accepts pushHistory param
         function openSubject(id, pushHistory = true) {
             const sub = state.subjects.find(s => s.id === id);
             if(!sub) return;
             state.activeSubject = sub;
             state.view = 'chapters';
 
-            // Add to history stack
             if(pushHistory) {
                 history.pushState({ view: 'chapters', subId: id }, null, "");
             }
@@ -582,22 +736,19 @@
             });
         }
 
-        // MODIFIED: Accepts pushHistory param
         function openChapter(chapId, pushHistory = true) {
             const sub = state.activeSubject;
             const chap = sub.chapters[chapId];
             state.activeChapter = chap;
             state.view = 'quizzes';
 
-            // Add to history stack
             if(pushHistory) {
                 history.pushState({ view: 'quizzes', subId: sub.id, chapId: chapId }, null, "");
             }
 
             document.getElementById('bc-current').innerText = sub.name;
-            // Breadcrumb back click
             document.getElementById('bc-current').onclick = () => {
-                history.back(); // Simulate back button
+                history.back();
             };
 
             els.content.innerHTML = `<h3>${chap.name}</h3><div id="list-container" style="margin-top:15px;"></div>`;
@@ -625,13 +776,12 @@
             });
         }
 
-        // --- 6. QUIZ LOGIC (With History) ---
+        // --- 7. QUIZ LOGIC ---
         function startQuiz(url, title) {
             state.quizActive = true;
             const overlay = document.getElementById('quiz-overlay');
             const frame = document.getElementById('quiz-frame');
 
-            // Add to history
             history.pushState({ view: 'playing' }, null, "");
 
             overlay.classList.remove('hidden');
@@ -649,7 +799,6 @@
             };
         }
 
-        // MODIFIED: Accepts pushHistory param
         function closeQuiz(goBackInHistory = true) {
             state.quizActive = false;
             const overlay = document.getElementById('quiz-overlay');
@@ -659,13 +808,12 @@
             frame.style.opacity = "0";
             frame.src = "about:blank"; 
             
-            // If closed via button, manually go back in history
             if(goBackInHistory) {
                 history.back();
             }
         }
 
-        // --- 7. MENU & UTILS ---
+        // --- 8. MENU & UTILS ---
         function toggleSidebar() {
             els.sidebar.classList.toggle('active');
             els.overlay.classList.toggle('active');
@@ -797,6 +945,15 @@
                     closeModal(); document.getElementById('feedback-text').value = ''; toast('Feedback Sent!');
                 });
             }
+        }
+
+        // --- PWA SERVICE WORKER REGISTRATION ---
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then((reg) => console.log('Service Worker Registered'))
+                    .catch((err) => console.log('Service Worker Error', err));
+            });
         }
     </script>
 </body>

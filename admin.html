@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quizzy Admin Panel - Master Control</title>
     
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#4F46E5">
+    <link rel="apple-touch-icon" href="icon-192.png">
+
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
@@ -50,7 +54,7 @@
         .btn {
             padding: 10px 18px; border-radius: 8px; border: none; cursor: pointer;
             font-weight: 500; display: inline-flex; align-items: center; gap: 8px; 
-            transition: all 0.2s; font-size: 0.9rem;
+            transition: all 0.2s; font-size: 0.9rem; justify-content: center;
         }
         .btn-primary { background: var(--primary); color: white; box-shadow: 0 2px 5px rgba(79, 70, 229, 0.3); }
         .btn-primary:hover { background: var(--primary-dark); transform: translateY(-1px); }
@@ -322,6 +326,18 @@
                     </div>
                     <div id="socials-list"></div>
                 </div>
+
+                <div class="card" style="grid-column: 1 / -1;">
+                    <div class="card-header">
+                        <h3>Promotional Banners</h3>
+                        <button class="btn btn-primary" onclick="openAddBannerModal()"><i class="fas fa-plus"></i> Add Banner</button>
+                    </div>
+                    <div style="padding:24px;">
+                        <div id="banner-list" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap:20px;">
+                            </div>
+                    </div>
+                </div>
+
             </div>
         </div>
 
@@ -368,6 +384,22 @@
             activeChapterId: null
         };
 
+        // --- NEW: HISTORY HANDLER FOR BROWSER BACK BUTTON ---
+        window.onpopstate = function(event) {
+            if (event.state) {
+                // Restore state from history
+                appState.view = event.state.view;
+                appState.activeSubjectId = event.state.subId || null;
+                appState.activeChapterId = event.state.chapId || null;
+                
+                // Render UI (don't push history again)
+                renderManager(); 
+            } else {
+                // Fallback if no state exists
+                resetManager(false);
+            }
+        };
+
         // --- 3. AUTH & INITIALIZATION ---
         auth.onAuthStateChanged(user => {
             if(user) {
@@ -393,16 +425,20 @@
             // Theme
             if(localStorage.getItem('quizzy_dark') === 'true') document.body.classList.add('dark-mode');
 
+            // --- INITIAL HISTORY STATE ---
+            // Replaces the current history so we have a starting point
+            history.replaceState({ view: 'subjects', subId: null, chapId: null }, null, "");
+
             // Listeners
             listenToStats();
             listenToSubjects();
             listenToFeedback();
             listenToConfig();
+            listenToBanners(); 
         }
 
-        // --- 4. REALTIME STATS FIX ---
+        // --- 4. REALTIME STATS ---
         function listenToStats() {
-            // A. User Count Listener
             db.ref('users').on('value', snap => {
                 const count = snap.exists() ? snap.numChildren() : 0;
                 document.getElementById('stat-users').innerText = count;
@@ -410,12 +446,10 @@
         }
 
         function calculateContentStats() {
-            // This runs whenever subjects data changes
             const subs = appState.subjectsData || {};
             const subCount = Object.keys(subs).length;
             let quizCount = 0;
 
-            // Deep counting of quizzes
             Object.values(subs).forEach(sub => {
                 if(sub.chapters) {
                     Object.values(sub.chapters).forEach(chap => {
@@ -445,10 +479,15 @@
             });
         }
 
-        function resetManager() {
+        // UPDATED: resetManager with history control
+        function resetManager(pushToHistory = true) {
             appState.view = 'subjects';
             appState.activeSubjectId = null;
             appState.activeChapterId = null;
+
+            if(pushToHistory) {
+                history.pushState({ view: 'subjects', subId: null, chapId: null }, null, "");
+            }
             renderManager();
         }
 
@@ -492,8 +531,8 @@
             
             // --- VIEW: CHAPTERS ---
             else if(appState.view === 'chapters') {
-                // Validate if parent still exists (Realtime safety)
-                if(!appState.subjectsData[appState.activeSubjectId]) return resetManager();
+                // Validate if parent still exists
+                if(!appState.subjectsData[appState.activeSubjectId]) return resetManager(false);
 
                 const subject = appState.subjectsData[appState.activeSubjectId];
                 title.innerText = `Chapters`;
@@ -531,7 +570,7 @@
                 if(!appState.subjectsData[appState.activeSubjectId] || 
                    !appState.subjectsData[appState.activeSubjectId].chapters ||
                    !appState.subjectsData[appState.activeSubjectId].chapters[appState.activeChapterId]) {
-                    return resetManager();
+                    return resetManager(false);
                 }
 
                 const subject = appState.subjectsData[appState.activeSubjectId];
@@ -566,19 +605,27 @@
             }
         }
 
+        // UPDATED: openChapters with History Push
         function openChapters(subId) {
             appState.activeSubjectId = subId;
             appState.view = 'chapters';
+            
+            history.pushState({ view: 'chapters', subId: subId, chapId: null }, null, "");
+            
             renderManager();
         }
 
+        // UPDATED: openQuizzes with History Push
         function openQuizzes(chapId) {
             appState.activeChapterId = chapId;
             appState.view = 'quizzes';
+            
+            history.pushState({ view: 'quizzes', subId: appState.activeSubjectId, chapId: chapId }, null, "");
+            
             renderManager();
         }
 
-        // --- 6. SETTINGS & HELP MSG FIX ---
+        // --- 6. SETTINGS & HELP MSG ---
         function listenToConfig() {
             db.ref('config').on('value', snap => {
                 const c = snap.val() || {};
@@ -616,6 +663,7 @@
             }).then(() => toast("General Settings Saved"));
         }
 
+        // --- SOCIAL MEDIA ---
         function renderSocials(links) {
             const list = document.getElementById('socials-list');
             list.innerHTML = '';
@@ -634,7 +682,10 @@
                                 <div style="font-size:0.8rem; color:var(--text-muted);">${item.url}</div>
                             </div>
                         </div>
-                        <button class="btn btn-danger" style="padding:5px 10px;" onclick="deleteNode('config/socialLinks/${key}')"><i class="fas fa-trash"></i></button>
+                        <div style="display:flex; gap:5px;">
+                            <button class="btn btn-primary" style="padding:5px 10px;" onclick="openEditSocialModal('${key}')"><i class="fas fa-edit"></i></button>
+                            <button class="btn btn-danger" style="padding:5px 10px;" onclick="deleteNode('config/socialLinks/${key}')"><i class="fas fa-trash"></i></button>
+                        </div>
                     </div>
                 `;
             });
@@ -648,6 +699,92 @@
                 const u = document.getElementById('s-url').value;
                 const i = document.getElementById('s-icon').value;
                 if(p && u) db.ref('config/socialLinks').push({platform:p, url:u, iconUrl:i}).then(() => { closeModal(); toast("Link Added"); });
+            });
+        }
+
+        function openEditSocialModal(key) {
+            db.ref('config/socialLinks/' + key).once('value', snap => {
+                const data = snap.val();
+                openModal('Edit Social Link', [
+                    {id:'e-plat', label:'Platform Name', value: data.platform}, 
+                    {id:'e-url', label:'URL', value: data.url}, 
+                    {id:'e-icon', label:'Icon URL (Optional)', value: data.iconUrl}
+                ], () => {
+                    const p = document.getElementById('e-plat').value;
+                    const u = document.getElementById('e-url').value;
+                    const i = document.getElementById('e-icon').value;
+                    if(p && u) {
+                        db.ref('config/socialLinks/' + key).update({platform:p, url:u, iconUrl:i})
+                        .then(() => { closeModal(); toast("Link Updated"); });
+                    }
+                });
+            });
+        }
+
+        // --- BANNER MANAGER ---
+        function listenToBanners() {
+            db.ref('banners').on('value', snap => {
+                const list = document.getElementById('banner-list');
+                list.innerHTML = '';
+                const banners = snap.val() || {};
+                
+                if(Object.keys(banners).length === 0) {
+                    list.innerHTML = '<p style="color:var(--text-muted);">No active banners.</p>';
+                    return;
+                }
+
+                Object.keys(banners).forEach(key => {
+                    const b = banners[key];
+                    list.innerHTML += `
+                        <div style="border:1px solid var(--border); border-radius:10px; overflow:hidden; position:relative; background:var(--surface);">
+                            <img src="${b.imageUrl}" style="width:100%; height:120px; object-fit:cover;">
+                            <div style="padding:10px;">
+                                <div style="font-size:0.8rem; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-bottom:10px;">Target: ${b.targetUrl}</div>
+                                <div style="display:flex; gap:8px;">
+                                    <button class="btn btn-primary" style="flex:1; padding:5px;" onclick="openEditBannerModal('${key}')">Edit</button>
+                                    <button class="btn btn-danger" style="flex:1; padding:5px;" onclick="deleteNode('banners/${key}')">Remove</button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+            });
+        }
+
+        function openAddBannerModal() {
+            openModal('Add Advertisement Banner', [
+                {id:'b-img', label:'Image URL (Landscape preferred)'},
+                {id:'b-link', label:'Target Link (Where clicking goes)'}
+            ], () => {
+                const img = document.getElementById('b-img').value;
+                const link = document.getElementById('b-link').value;
+                
+                if(img && link) {
+                    db.ref('banners').push({
+                        imageUrl: img,
+                        targetUrl: link
+                    }).then(() => { closeModal(); toast("Banner Added"); });
+                }
+            });
+        }
+
+        function openEditBannerModal(key) {
+            db.ref('banners/' + key).once('value', snap => {
+                const data = snap.val();
+                openModal('Edit Banner', [
+                    {id:'e-img', label:'Image URL', value: data.imageUrl},
+                    {id:'e-link', label:'Target Link', value: data.targetUrl}
+                ], () => {
+                    const img = document.getElementById('e-img').value;
+                    const link = document.getElementById('e-link').value;
+                    
+                    if(img && link) {
+                        db.ref('banners/' + key).update({
+                            imageUrl: img,
+                            targetUrl: link
+                        }).then(() => { closeModal(); toast("Banner Updated"); });
+                    }
+                });
             });
         }
 
@@ -695,7 +832,6 @@
 
         // --- 8. UTILITIES & MODALS ---
         
-        // MODIFIED: Supports default values for Editing
         function openModal(title, fields, saveCb) {
             document.getElementById('modal-title').innerText = title;
             const container = document.getElementById('modal-fields');
@@ -743,7 +879,7 @@
             });
         }
 
-        // --- EDIT Functions (NEW) ---
+        // --- EDIT Functions ---
         function openEditSubjectModal(key) {
             const sub = appState.subjectsData[key];
             openModal('Edit Subject', [
@@ -806,6 +942,7 @@
             // Close mobile sidebar
             if(window.innerWidth <= 1024) toggleSidebar();
             
+            // If switching to subjects, force a reset
             if(v === 'subjects') resetManager();
         }
 
@@ -833,6 +970,14 @@
             }).showToast();
         }
 
+        // --- PWA SERVICE WORKER REGISTRATION ---
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then((reg) => console.log('Service Worker Registered'))
+                    .catch((err) => console.log('Service Worker Error', err));
+            });
+        }
     </script>
 </body>
 </html>

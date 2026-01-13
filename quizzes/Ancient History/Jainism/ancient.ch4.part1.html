@@ -1,0 +1,1136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jainism History Quiz | Bilingual</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-glass: rgba(255, 255, 255, 0.1);
+            --border-glass: rgba(255, 255, 255, 0.2);
+            --text-main: #ffffff;
+            --text-sub: #e0e0e0;
+            --accent-green: #00e676;
+            --accent-red: #ff1744;
+            --mesh-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Poppins', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background: #0f0c29;
+            background: -webkit-linear-gradient(to right, #24243e, #302b63, #0f0c29); 
+            background: linear-gradient(to right, #24243e, #302b63, #0f0c29);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--text-main);
+            overflow-x: hidden;
+        }
+
+        /* Canvas for Confetti */
+        #confetti-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        /* Glassmorphism Container */
+        .app-container {
+            width: 95%;
+            max-width: 800px;
+            min-height: 600px;
+            background: var(--primary-glass);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border-glass);
+            border-radius: 25px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            padding: 20px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transition: height 0.3s ease;
+        }
+
+        /* Hidden Utility */
+        .hidden { display: none !important; }
+
+        /* Start Screen */
+        .start-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            text-align: center;
+            padding: 40px 0;
+        }
+
+        h1 { font-size: 2.5rem; margin-bottom: 10px; background: linear-gradient(to right, #fff, #b3cdd1); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .sub-header { color: var(--text-sub); margin-bottom: 40px; font-size: 1.1rem; }
+
+        .settings-group {
+            width: 100%;
+            max-width: 400px;
+            margin-bottom: 30px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 0.9rem; }
+        
+        input[type="number"] {
+            width: 100%;
+            padding: 12px;
+            border-radius: 12px;
+            border: 1px solid var(--border-glass);
+            background: rgba(0,0,0,0.2);
+            color: white;
+            font-size: 1rem;
+            outline: none;
+        }
+
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(0,0,0,0.2);
+            padding: 12px;
+            border-radius: 12px;
+            border: 1px solid var(--border-glass);
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 26px;
+        }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider { background-color: var(--accent-green); }
+        input:checked + .slider:before { transform: translateX(24px); }
+
+        .btn-primary {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            padding: 15px 40px;
+            border: 1px solid white;
+            border-radius: 50px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: transform 0.2s, background 0.2s;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .btn-primary:hover {
+            transform: scale(1.05);
+            background: white;
+            color: #333;
+        }
+
+        /* Quiz UI */
+        .quiz-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            height: 6px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            background: var(--accent-green);
+            box-shadow: 0 0 10px var(--accent-green);
+            transition: width 0.3s ease;
+        }
+
+        .timer-badge {
+            background: rgba(0,0,0,0.3);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-variant-numeric: tabular-nums;
+        }
+        .pulse-red { animation: pulse 1s infinite; color: var(--accent-red); font-weight: bold;}
+
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+
+        .question-card {
+            background: rgba(0,0,0,0.2);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            max-height: 40vh;
+            overflow-y: auto;
+            border: 1px solid var(--border-glass);
+        }
+
+        .q-text-en { font-size: 1.1rem; margin-bottom: 8px; font-weight: 700; line-height: 1.4; }
+        .q-text-hi { font-size: 0.95rem; color: var(--text-sub); line-height: 1.5; font-weight: 400; }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .option-btn {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border-glass);
+            padding: 12px 15px;
+            border-radius: 12px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .option-btn:hover:not([disabled]) {
+            background: rgba(255,255,255,0.15);
+        }
+
+        .opt-en { font-size: 0.95rem; font-weight: 600; margin-bottom: 4px; }
+        .opt-hi { font-size: 0.85rem; color: var(--text-sub); }
+
+        .option-btn.correct { background: rgba(0, 230, 118, 0.4) !important; border-color: var(--accent-green); }
+        .option-btn.wrong { background: rgba(255, 23, 68, 0.4) !important; border-color: var(--accent-red); }
+
+        .footer-controls {
+            margin-top: auto;
+            text-align: center;
+        }
+
+        .btn-secondary {
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.4);
+            color: #ddd;
+            padding: 10px 25px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        .btn-secondary:hover { background: rgba(255,255,255,0.1); }
+
+        /* Feedback Overlay */
+        .feedback-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 5rem;
+            z-index: 10;
+            pointer-events: none;
+            display: none;
+        }
+        .shake { animation: shake 0.5s; }
+        @keyframes shake {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            25% { transform: translate(-55%, -50%) rotate(-5deg); }
+            75% { transform: translate(-45%, -50%) rotate(5deg); }
+            100% { transform: translate(-50%, -50%) rotate(0deg); }
+        }
+
+        /* Result Screen */
+        .result-screen {
+            text-align: center;
+            padding: 20px;
+        }
+        .score-circle {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.1);
+            border: 4px solid var(--accent-green);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 25px;
+            font-size: 3rem;
+            font-weight: bold;
+            box-shadow: 0 0 20px rgba(0, 230, 118, 0.3);
+        }
+        .result-msg { font-size: 1.5rem; margin-bottom: 30px; min-height: 60px; }
+
+        @media (min-width: 768px) {
+            .options-grid { grid-template-columns: 1fr 1fr; }
+            h1 { font-size: 3.5rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="confetti-canvas"></canvas>
+
+    <div class="app-container">
+        <div id="start-screen" class="start-screen">
+            <h1>Jainism Quiz</h1>
+            <p class="sub-header">Bilingual History Test (English / हिन्दी)</p>
+            
+            <div class="settings-group">
+                <div class="input-group">
+                    <label>Timer per Question (Seconds)</label>
+                    <input type="number" id="timeInput" placeholder="Enter seconds (e.g. 30)" min="5">
+                    <small style="color:#aaa; font-size:0.7rem;">Leave empty for no timer</small>
+                </div>
+
+                <div class="toggle-container">
+                    <span>Shuffle Questions</span>
+                    <label class="switch">
+                        <input type="checkbox" id="shuffleToggle">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+
+            <button class="btn-primary" onclick="startQuiz()">Start Quiz</button>
+        </div>
+
+        <div id="quiz-screen" class="quiz-screen hidden">
+            <div class="progress-bar-container">
+                <div id="progress-fill" class="progress-fill"></div>
+            </div>
+
+            <div class="quiz-header">
+                <span id="q-counter">Question 01/50</span>
+                <span id="timer-display" class="timer-badge">--</span>
+                <span id="score-display">Score: 0</span>
+            </div>
+
+            <div class="question-card">
+                <div id="q-en" class="q-text-en">Loading...</div>
+                <div id="q-hi" class="q-text-hi">लोड हो रहा है...</div>
+            </div>
+
+            <div id="options-container" class="options-grid">
+                </div>
+
+            <div class="feedback-overlay" id="sad-emoji">😢</div>
+
+            <div class="footer-controls">
+                <button class="btn-secondary" onclick="finishQuiz()">Finish & Show Results</button>
+            </div>
+        </div>
+
+        <div id="result-screen" class="result-screen hidden">
+            <h2>Quiz Completed!</h2>
+            <p style="color:#ddd; margin-bottom: 20px;">परिणाम</p>
+            
+            <div class="score-circle">
+                <span id="final-score">0%</span>
+            </div>
+            
+            <div id="result-msg" class="result-msg"></div>
+            <p id="stats-detail" style="margin-bottom: 30px; color: #bbb;"></p>
+
+            <button class="btn-primary" onclick="restartApp()">Restart Quiz</button>
+        </div>
+    </div>
+
+    <script>
+        // --- Data Extraction (1-50 Questions based on provided Images) ---
+        const questionsDB = [
+            {
+                id: 1,
+                q_en: "How many sects emerged against Brahmanism in the 6th century BC?",
+                q_hi: "6ठी शताब्दी ई.पू. ब्राह्मण धर्म के खिलाफ कुल कितने सम्प्रदाय का उदय हुआ था?",
+                options: [
+                    {en: "64", hi: "64"}, {en: "62", hi: "62"}, {en: "9", hi: "9"}, {en: "14", hi: "14"}
+                ],
+                correct: 1 // (b)
+            },
+            {
+                id: 2,
+                q_en: "What is the literal meaning of the word 'Jain'?",
+                q_hi: "जैन शब्द का शाब्दिक अर्थ होता है?",
+                options: [
+                    {en: "Jina", hi: "जिन"}, {en: "Winner", hi: "विजेता"}, {en: "Valor", hi: "पराक्रम"}, {en: "Nirvana", hi: "निर्वाण"}
+                ],
+                correct: 1 // (b) Vijeta/Winner derived from Jin
+            },
+            {
+                id: 3,
+                q_en: "According to Jain tradition, how many Tirthankaras have there been?",
+                q_hi: "जैन परम्परा के अनुसार जैन धर्म में कुल कितने तीर्थंकर हुए हैं?",
+                options: [
+                    {en: "20", hi: "20"}, {en: "14", hi: "14"}, {en: "24", hi: "24"}, {en: "22", hi: "22"}
+                ],
+                correct: 2 // (c) 24
+            },
+            {
+                id: 4,
+                q_en: "Which two Jain Tirthankaras have historical evidence found in Rigveda?",
+                q_hi: "किन दो जैन तीर्थंकर को ऐतिहासिकता प्राप्त है (ऋग्वेद में उल्लेख)?",
+                options: [
+                    {en: "Parsvanath and Mahavira", hi: "पार्श्वनाथ और महावीर स्वामी"}, 
+                    {en: "Rishabhdev and Arishtanemi", hi: "ऋषभदेव और अरिष्टनेमि"}, 
+                    {en: "Rishabhdev and Mahavira", hi: "ऋषभदेव और महावीर स्वामी"}, 
+                    {en: "Sambhavnath and Ajitnath", hi: "संभवनाथ और अजितनाथ"}
+                ],
+                correct: 0 // Note: Q4 in image answer key is (a), but Q6 asks specifically about Rigveda which is usually Rishabhdev/Arishtanemi. Following Image Key: 4(a).
+            },
+            {
+                id: 5,
+                q_en: "Match the Tirthankaras with their order number:\n(A) 1st (1) Aristanemi\n(B) 2nd (2) Parsvanath\n(C) 22nd (3) Ajitnath\n(D) 23rd (4) Rishabhdev",
+                q_hi: "मिलान करें:\n(A) प्रथम (1) अरिष्टनेमि\n(B) द्वितीय (2) पार्श्वनाथ\n(C) 22वें (3) अजितनाथ\n(D) 23वें (4) ऋषभदेव",
+                options: [
+                    {en: "A-2, B-3, C-1, D-4", hi: "A-2, B-3, C-1, D-4"}, 
+                    {en: "A-3, B-1, C-4, D-2", hi: "A-3, B-1, C-4, D-2"}, 
+                    {en: "A-4, B-2, C-1, D-3", hi: "A-4, B-2, C-1, D-3"}, 
+                    {en: "A-4, B-3, C-1, D-2", hi: "A-4, B-3, C-1, D-2"}
+                ],
+                correct: 3 // (d) 1st-Rishabhdev(4), 2nd-Ajitnath(3), 22nd-Aristanemi(1), 23rd-Parsvanath(2)
+            },
+            {
+                id: 6,
+                q_en: "Which two Tirthankaras are mentioned in the Rigveda?",
+                q_hi: "किन दो तीर्थंकर का उल्लेख ऋग्वेद में भी मिलता है?",
+                options: [
+                    {en: "Rishabhdev and Mahavira", hi: "ऋषभदेव और महावीर स्वामी"}, 
+                    {en: "Adinath and Arishtanemi", hi: "आदिनाथ और अरिष्टनेमि"}, 
+                    {en: "Parsvanath and Mahavira", hi: "पार्श्वनाथ और महावीर स्वामी"}, 
+                    {en: "Rishabhdev and Parsvanath", hi: "ऋषभदेव और पार्श्वनाथ"}
+                ],
+                correct: 1 // (b) Adinath (Rishabhdev) and Arishtanemi
+            },
+            {
+                id: 7,
+                q_en: "Which statement is true regarding Parsvanath?",
+                q_hi: "पार्श्वनाथ के संबंध में कौन सा कथन सही है?",
+                options: [
+                    {en: "Son of King Ashvasena", hi: "राजा अश्वसेन के पुत्र थे"}, 
+                    {en: "Added Brahmacharya to Chaturyama", hi: "चातुर्याम धर्म में ब्रह्मचर्य को जोड़ा"}, // Note: Mahavira added Brahmacharya. Parsvanath gave Chaturyama. Wait, option C says "Allowed women". Option D says all. Image key 7(d).
+                    {en: "Allowed women into Jainism", hi: "नारियों को भी प्रवेश दिया"}, 
+                    {en: "All of the above", hi: "इनमें सभी"}
+                ],
+                correct: 3 // (d) per key.
+            },
+            {
+                id: 8,
+                q_en: "Who was the real founder of Jainism?",
+                q_hi: "जैन धर्म का वास्तविक संस्थापक कौन थे?",
+                options: [
+                    {en: "Rishabhdev", hi: "ऋषभदेव"}, {en: "Mahavira Swami", hi: "महावीर स्वामी"}, {en: "Parsvanath", hi: "पार्श्वनाथ"}, {en: "Sambhavnath", hi: "संभवनाथ"}
+                ],
+                correct: 1 // (b)
+            },
+            {
+                id: 9,
+                q_en: "When was Mahavira Swami born?",
+                q_hi: "महावीर स्वामी का जन्म कब हुआ था?",
+                options: [
+                    {en: "540 BC", hi: "540 BC"}, {en: "483 BC", hi: "483 BC"}, {en: "468 BC", hi: "468 BC"}, {en: "576 BC", hi: "576 BC"}
+                ],
+                correct: 0 // (a)
+            },
+            {
+                id: 10,
+                q_en: "In which Kshatriya clan was Mahavira Swami born?",
+                q_hi: "महावीर स्वामी का जन्म किस क्षत्रिय गोत्र में हुआ था?",
+                options: [
+                    {en: "Shakya", hi: "शाक्य"}, {en: "Jnatrika", hi: "ज्ञांत्रिक"}, {en: "Sallas", hi: "सल्लास"}, {en: "Licchavi", hi: "लिच्छवि"}
+                ],
+                correct: 1 // (b)
+            },
+            {
+                id: 11,
+                q_en: "Who was Mahavira's mother?",
+                q_hi: "महावीर की माता कौन थी?",
+                options: [
+                    {en: "Yashoda", hi: "यशोदा"}, {en: "Anojja", hi: "अनोज्जा"}, {en: "Trishala", hi: "त्रिशला"}, {en: "Devanandi", hi: "देवानंदी"}
+                ],
+                correct: 2 // (c)
+            },
+            {
+                id: 12,
+                q_en: "Who was Mahavira Swami's father?",
+                q_hi: "महावीर स्वामी के पिता कौन थे?",
+                options: [
+                    {en: "Siddhartha", hi: "सिद्धार्थ"}, {en: "Mahipal", hi: "महिपाल"}, {en: "Sambhavnath", hi: "संभवनाथ"}, {en: "Vardhaman", hi: "वर्धमान"}
+                ],
+                correct: 0 // (a)
+            },
+            {
+                id: 13,
+                q_en: "Where was Mahavira Swami born?",
+                q_hi: "महावीर स्वामी का जन्म कहाँ हुआ था?",
+                options: [
+                    {en: "Kundagram", hi: "कुण्डग्राम"}, {en: "Pataliputra", hi: "पाटलिपुत्र"}, {en: "Magadh", hi: "मगध"}, {en: "Vaishali", hi: "वैशाली"}
+                ],
+                correct: 0 // (a)
+            },
+            {
+                id: 14,
+                q_en: "What was Mahavira Swami's original name?",
+                q_hi: "महावीर स्वामी का मूल नाम क्या था?",
+                options: [
+                    {en: "Siddhartha", hi: "सिद्धार्थ"}, {en: "Gautam", hi: "गौतम"}, {en: "Vardhaman", hi: "वर्धमान"}, {en: "None of these", hi: "इनमें से कोई नहीं"}
+                ],
+                correct: 2 // (c)
+            },
+            {
+                id: 15,
+                q_en: "Where did Mahavira Swami die?",
+                q_hi: "महावीर स्वामी की मृत्यु कहाँ हुई थी?",
+                options: [
+                    {en: "Shravanabelagola", hi: "श्रवणबेलगोला"}, {en: "Lumbini", hi: "लुम्बिनी"}, {en: "Kulgumalai", hi: "कुलगुमलाई"}, {en: "Pawapuri", hi: "पावापुरी"}
+                ],
+                correct: 3 // (d)
+            },
+            {
+                id: 16,
+                q_en: "Who was the first disciple of Lord Mahavira?",
+                q_hi: "भगवान महावीर का प्रथम शिष्य कौन था?",
+                options: [
+                    {en: "Jamali", hi: "जमालि"}, {en: "Yosud", hi: "योसुद"}, {en: "Bipin", hi: "विपिन"}, {en: "Prabhas", hi: "प्रभाष"}
+                ],
+                correct: 0 // (a)
+            },
+            {
+                id: 17,
+                q_en: "At what age did Mahavira Swami leave home?",
+                q_hi: "महावीर स्वामी कितने वर्ष की आयु में गृह त्याग किये थे?",
+                options: [
+                    {en: "29", hi: "29"}, {en: "30", hi: "30"}, {en: "28", hi: "28"}, {en: "36", hi: "36"}
+                ],
+                correct: 1 // (b)
+            },
+            {
+                id: 18,
+                q_en: "What was emphasized the most in Jainism?",
+                q_hi: "जैन धर्म में सर्वाधिक बल किसपर दिया गया था?",
+                options: [
+                    {en: "Truth", hi: "सत्य"}, {en: "Non-stealing", hi: "अस्तेय"}, {en: "Non-violence", hi: "अहिंसा"}, {en: "Non-possession", hi: "अपरिग्रह"}
+                ],
+                correct: 2 // (c)
+            },
+            {
+                id: 19,
+                q_en: "Which class of people adopted Jainism the most in India?",
+                q_hi: "भारत में सर्वाधिक किस वर्ग के लोगों ने जैन धर्म को अपनाया था?",
+                options: [
+                    {en: "Farmers", hi: "कृषक"}, {en: "Kshatriyas", hi: "क्षत्रिय"}, {en: "Herders", hi: "पशुपालक"}, {en: "Traders/Merchants", hi: "व्यापारी"}
+                ],
+                correct: 3 // (d)
+            },
+            {
+                id: 20,
+                q_en: "Which statement is incorrect?",
+                q_hi: "निम्न में कौन-सा कथन गलत है?",
+                options: [
+                    {en: "Mahavira made a Sangha of Ganas", hi: "महावीर स्वामी ने गणधर नाम से एक संघ बनाया था"}, 
+                    {en: "Jainism believes in rebirth/karma", hi: "जैन धर्म पुनर्जन्म एवं कर्मवाद में विश्वास करता है"}, 
+                    {en: "Relationship of Pancha Mahavrata is with Jainism", hi: "पंच महाव्रत तथा अणुव्रत का संबंध जैन धर्म से है"}, 
+                    {en: "None of these (All are correct)", hi: "इनमें से कोई नहीं"}
+                ],
+                correct: 3 // (d)
+            },
+            {
+                id: 21,
+                q_en: "What does not come under the Pancha Mahavrata of Jainism?",
+                q_hi: "जैन धर्म के पंचमहाव्रत के अंतर्गत क्या नहीं आते हैं?",
+                options: [
+                    {en: "Truth (Satya)", hi: "सत्य"}, {en: "Celibacy (Brahmacharya)", hi: "ब्रह्मचर्य"}, {en: "Non-stealing (Asteya)", hi: "अस्तेय"}, {en: "Violence (Himsa)", hi: "हिंसा"}
+                ],
+                correct: 3 // (d)
+            },
+            {
+                id: 22,
+                q_en: "What is not included in the Triratna of Jainism?",
+                q_hi: "जैन धर्म में त्रिरत्न के अंतर्गत क्या नहीं आते हैं?",
+                options: [
+                    {en: "Right Faith", hi: "सम्यक् दर्शन"}, {en: "Right Thought", hi: "सम्यक् विचार"}, {en: "Right Knowledge", hi: "सम्यक् ज्ञान"}, {en: "Right Conduct", hi: "सम्यक् आचरण"}
+                ],
+                correct: 1 // (b)
+            },
+            {
+                id: 23,
+                q_en: "Anekantavada and Syadvada are the core philosophies of which religion?",
+                q_hi: "अनेकांतवाद तथा सप्तभंगीय/स्याद्वाद किस धर्म के प्रमुख दर्शन है?",
+                options: [
+                    {en: "Buddhism", hi: "बौद्ध"}, {en: "Jainism", hi: "जैन"}, {en: "Bhagvatism", hi: "भागवत"}, {en: "Shaivism", hi: "शैव"}
+                ],
+                correct: 1 // (b)
+            },
+            {
+                id: 24,
+                q_en: "What is Jain literature called?",
+                q_hi: "जैन साहित्य को क्या कहा जाता है?",
+                options: [
+                    {en: "Tripitaka", hi: "त्रिपिटक"}, {en: "Triratna", hi: "त्रिरत्न"}, {en: "Agam", hi: "आगम"}, {en: "Jataka", hi: "जातक"}
+                ],
+                correct: 2 // (c)
+            },
+            {
+                id: 25,
+                q_en: "Which match is correct?\n1. Acharanga Sutra - Rules for Monks\n2. Bhagwati Sutra - Mahavira's Life\n3. Nayadhammakahao - Teachings",
+                q_hi: "किसका मिलान सही है।\n1. आचारांग सूत्र - भिक्षुओं के नियम\n2. भगवती सूत्र - महावीर की शिक्षा\n3. न्यायधम्मकहासूत्र - महावीर के जीवन",
+                options: [
+                    {en: "Only 1", hi: "केवल-1"}, {en: "Only 2", hi: "केवल-2"}, {en: "1 and 2", hi: "1 और 2"}, {en: "All", hi: "सभी"}
+                ],
+                correct: 0 // (a) Image key says 25(a).
+            },
+            {
+                id: 26,
+                q_en: "Who wrote Kalpasutra?",
+                q_hi: "कल्पसूत्र की रचना किसने की थी?",
+                options: [
+                    {en: "Bhadrabahu", hi: "भद्रबाहु"}, {en: "Nagasena", hi: "नागसेन"}, {en: "Sthulabhadra", hi: "स्थूलभद्र"}, {en: "Mahavira", hi: "महावीर"}
+                ],
+                correct: 0 // (a)
+            },
+            {
+                id: 27,
+                q_en: "What was the language of Jainism?",
+                q_hi: "जैन धर्म की भाषा क्या थी?",
+                options: [
+                    {en: "Magadhi", hi: "मगही"}, {en: "Sanskrit", hi: "संस्कृत"}, {en: "Prakrit", hi: "प्राकृत"}, {en: "Pali", hi: "पालि"}
+                ],
+                correct: 2 // (c)
+            },
+            {
+                id: 28,
+                q_en: "How many sins are imagined in Jainism?",
+                q_hi: "जैन धर्म में कुल कितने पापों की कल्पना की गई है?",
+                options: [
+                    {en: "16", hi: "16"}, {en: "18", hi: "18"}, {en: "20", hi: "20"}, {en: "24", hi: "24"}
+                ],
+                correct: 1 // (b)
+            },
+            {
+                id: 29,
+                q_en: "Which of the following kings followed Jainism?",
+                q_hi: "निम्न में कौन से राजा जैन धर्म को मानते थे?",
+                options: [
+                    {en: "Krishna Dev Raya", hi: "कृष्णदेव राय"}, {en: "Chandragupta-II", hi: "चन्द्रगुप्त-II"}, {en: "Amoghavarsha", hi: "अमोघवर्ष"}, {en: "Ashoka", hi: "अशोक"}
+                ],
+                correct: 2 // (c)
+            },
+            {
+                id: 30,
+                q_en: "Where was the statue of Gomteshwar built?",
+                q_hi: "गोमतेश्वर की मूर्ति का निर्माण कहाँ करवाया गया था?",
+                options: [
+                    {en: "Pawapuri", hi: "पावापुरी"}, {en: "Rajgir", hi: "राजगीर"}, {en: "Shravanabelagola", hi: "श्रवणबेलगोला"}, {en: "Kundagram", hi: "कुण्डग्राम"}
+                ],
+                correct: 2 // (c)
+            },
+            {
+                id: 31,
+                q_en: "When and where was the First Jain Council held?",
+                q_hi: "प्रथम जैन सम्मेलन कब और कहाँ हुआ था?",
+                options: [
+                    {en: "322 BC Rajgriha", hi: "322 BC राजगृह"}, {en: "322 BC Pataliputra", hi: "322 BC पाटलीपुत्र"}, {en: "344 BC Pataliputra", hi: "344 BC पाटलीपुत्र"}, {en: "352 Rajgriha", hi: "352 राजगृह"}
+                ],
+                correct: 1 // (b)
+            },
+            {
+                id: 32,
+                q_en: "Who presided over the First Jain Council?",
+                q_hi: "प्रथम जैन सम्मेलन की अध्यक्षता किसने की थी?",
+                options: [
+                    {en: "Sthulabhadra", hi: "स्थूलभद्र"}, {en: "Bhadrabahu", hi: "भद्रबाहु"}, {en: "Kshamashramana", hi: "क्षमाश्रमण"}, {en: "Vasumitra", hi: "वसुमित्र"}
+                ],
+                correct: 0 // (a)
+            },
+            {
+                id: 33,
+                q_en: "In which council did the division of Jainism happen?",
+                q_hi: "जैन धर्म का विभाजन किस जैन सम्मेलन में हुआ था?",
+                options: [
+                    {en: "First Jain Council", hi: "प्रथम जैन सम्मेलन"}, {en: "Second Jain Council", hi: "द्वितीय जैन सम्मेलन"}, {en: "Third Jain Council", hi: "तृतीय जैन सम्मेलन"}, {en: "Fourth Jain Council", hi: "चतुर्थ जैन सम्मेलन"}
+                ],
+                correct: 0 // (a)
+            },
+            {
+                id: 34,
+                q_en: "When and where was the Second Jain Council held?",
+                q_hi: "द्वितीय जैन सम्मेलन कब और कहाँ हुई थी?",
+                options: [
+                    {en: "322 BC Vallabhi", hi: "322 BC वल्लभी"}, {en: "513/516 BC Pataliputra", hi: "513 या 516 BC पाटलीपुत्र"}, {en: "322 BC Pataliputra", hi: "322 BC पाटलीपुत्र"}, {en: "513/516 AD Vallabhi", hi: "513 या 516 AD वल्लभी"} // Note: Image says "BC" in option B/C/D but text history implies AD for 2nd council (6th cent AD). Option D in Hindi says 513/516 BC Vallabhi. Key 34(d).
+                ],
+                correct: 3 // (d) Vallabhi
+            },
+            {
+                id: 35,
+                q_en: "Rishabhnath Temple, Jal Mandir, Dilwara Temple are related to which religion?",
+                q_hi: "ऋषभनाथ मंदिर, जल मंदिर, दिलवाड़ा का मंदिर का संबंध किस धर्म से है?",
+                options: [
+                    {en: "Buddhism", hi: "बौद्ध"}, {en: "Jainism", hi: "जैन"}, {en: "Shaivism", hi: "शैव"}, {en: "Vaishnavism", hi: "वैष्णव"}
+                ],
+                correct: 1 // (b)
+            },
+            {
+                id: 36,
+                q_en: "Which statement is incorrect?",
+                q_hi: "कौन-सा कथन गलत है?",
+                options: [
+                    {en: "Sthulabhadra was founder of Svetambara", hi: "श्वेताम्बर सम्प्रदाय के संस्थापक स्थूलभद्र थे"}, 
+                    {en: "Salvation not possible for women in Digambara", hi: "दिगम्बर सम्प्रदाय में स्त्रियों का निर्वाण संभव नहीं था"}, 
+                    {en: "Svetambara sect was orthodox", hi: "श्वेताम्बर सम्प्रदाय कट्टरपंथी था"}, 
+                    {en: "Digambara sect renounced clothes", hi: "दिगम्बर सम्प्रदाय मोक्ष प्राप्ति के लिए वस्त्र त्याग कर देते थे"}
+                ],
+                correct: 2 // (c) Digambara were orthodox, not Svetambara.
+            },
+            {
+                id: 37,
+                q_en: "Who was the founder of the Ajivika sect?",
+                q_hi: "आजीवक सम्प्रदाय का संस्थापक कौन था?",
+                options: [
+                    {en: "Makkhali Gosala", hi: "मक्खलिपुत्र-गोशाल"}, {en: "Sthulabhadra", hi: "स्थूलभद्र"}, {en: "Bhadrabahu", hi: "भद्रबाहु"}, {en: "Ghora Angiras", hi: "घोर अंगिरस"}
+                ],
+                correct: 0 // (a)
+            },
+            {
+                id: 38,
+                q_en: "Which place in UP is a pilgrimage for both Buddhists and Jains?",
+                q_hi: "उत्तरप्रदेश का कौन-सा स्थान बौद्ध एवं जैन दोनों का तीर्थस्थल है?",
+                options: [
+                    {en: "Shursen", hi: "शूरसेन"}, {en: "Kaushambi", hi: "कौशाम्बी"}, {en: "Sarnath", hi: "सारनाथ"}, {en: "None", hi: "इनमें से कोई नहीं"}
+                ],
+                correct: 1 // (b)
+            },
+            {
+                id: 39,
+                q_en: "Samadhi Maran is related to which religion?",
+                q_hi: "समाधि मरण का संबंध किस धर्म से है?",
+                options: [
+                    {en: "Jainism", hi: "जैन"}, {en: "Buddhism", hi: "बौद्ध"}, {en: "Ajivika", hi: "आजीवक सम्प्रदाय"}, {en: "Shaivism", hi: "शैव"}
+                ],
+                correct: 0 // (a)
+            },
+            {
+                id: 40,
+                q_en: "Which word is used for 'Complete Knowledge' in Jainism?",
+                q_hi: "जैन धर्म में पूर्ण ज्ञान के लिए किस शब्द का प्रयोग किया गया है?",
+                options: [
+                    {en: "Nirvana", hi: "निर्वाण"}, {en: "Mahaparinirvana", hi: "महापरिनिर्वाण"}, {en: "Samadhimaran", hi: "समाधिमरण"}, {en: "Kaivalya", hi: "कैवल्य"}
+                ],
+                correct: 3 // (d)
+            },
+            {
+                id: 41,
+                q_en: "According to which religion is the world eternal and constant?",
+                q_hi: "किस धर्म के अनुसार संसार नित्य और शाश्वत है?",
+                options: [
+                    {en: "Buddhism", hi: "बौद्ध धर्म"}, {en: "Vaishnavism", hi: "वैष्णव धर्म"}, {en: "Jainism", hi: "जैन धर्म"}, {en: "Brahmanism", hi: "ब्राह्मण धर्म"}
+                ],
+                correct: 2 // (c)
+            },
+            {
+                id: 42,
+                q_en: "Match Tirthankara with Symbol:\n(A) Rishabhdev (1) Ape/Monkey\n(B) Ajitnath (2) Horse\n(C) Sambhavnath (3) Elephant\n(D) Abhinandannath (4) Bull",
+                q_hi: "मिलान करें\n(A) ऋषभनाथ (1) कपि (बन्दर)\n(B) अजितनाथ (2) घोड़ा\n(C) सम्भवनाथ (3) हाथी\n(D) अभिनन्दननाथ (4) वृषभ",
+                options: [
+                    {en: "A-1, B-2, C-3, D-4", hi: "A-1, B-2, C-3, D-4"}, 
+                    {en: "A-4, B-3, C-2, D-1", hi: "A-4, B-3, C-2, D-1"}, // Key says 42(b)
+                    {en: "A-4, B-2, C-1, D-3", hi: "A-4, B-2, C-1, D-3"}, 
+                    {en: "A-3, B-1, C-2, D-4", hi: "A-3, B-1, C-2, D-4"}
+                ],
+                correct: 1 // (b)
+            },
+            {
+                id: 43,
+                q_en: "Which statement is correct?",
+                q_hi: "निम्न में कौन-सा कथन सही है?",
+                options: [
+                    {en: "Jainism became idol-worshippers later", hi: "जैन धर्म बाद में मूर्तिपूजक हो गये"}, 
+                    {en: "Jain mathas in Karnataka called Vasadi", hi: "कर्नाटक में स्थापित जैन मठ को वसाद कहा जाता था"}, 
+                    {en: "Chalukyas gave last royal patronage", hi: "जैन धर्म को अंतिम राजकीय संरक्षण चालुक्य वंश के राजाओं ने दिया था"}, 
+                    {en: "All of the above", hi: "सभी"}
+                ],
+                correct: 3 // (d)
+            },
+            {
+                id: 44,
+                q_en: "Where did Mahavira give his first sermon?",
+                q_hi: "महावीर स्वामी ने पहला उपदेश कहाँ दिया था?",
+                options: [
+                    {en: "Pawapuri", hi: "पावापुरी"}, {en: "Rajgriha", hi: "राजगीर"}, {en: "Kaushambi", hi: "कौशाम्बी"}, {en: "Kundagram", hi: "कुण्डग्राम"}
+                ],
+                correct: 1 // (b)
+            },
+            {
+                id: 45,
+                q_en: "Where did Mahavira establish the Jain Sangha?",
+                q_hi: "महावीर स्वामी ने जैन संघ की स्थापना कहाँ की थी?",
+                options: [
+                    {en: "Pawapuri", hi: "पावापुरी"}, {en: "Rajgriha", hi: "राजगीर"}, {en: "Kaushambi", hi: "कौशाम्बी"}, {en: "Kundagram", hi: "कुण्डग्राम"}
+                ],
+                correct: 0 // (a)
+            },
+            {
+                id: 46,
+                q_en: "Who is the author of Parishishtaparvan (related to Jainism)?",
+                q_hi: "परिशिष्ट पर्व जो कि जैन धर्म से संबंधित रचना है, के रचयिता हैं-",
+                options: [
+                    {en: "Bhadrabahu", hi: "भद्रबाहु"}, {en: "Sthulabhadra", hi: "स्थूलभद्र"}, {en: "Hemchandra", hi: "हेमचन्द्र"}, {en: "Swayambhu", hi: "स्वयंभू"}
+                ],
+                correct: 2 // (c)
+            },
+            {
+                id: 47,
+                q_en: "Who was the head of Mahavira's order of nuns?",
+                q_hi: "स्वामी महावीर के भिक्षुणी संघ की प्रधान कौन थी?",
+                options: [
+                    {en: "Chandana", hi: "चन्दना"}, {en: "Kshema", hi: "क्षेम"}, {en: "Sujata", hi: "सुजाता"}, {en: "Trishala", hi: "त्रिशला"}
+                ],
+                correct: 0 // (a)
+            },
+            {
+                id: 48,
+                q_en: "Match Tirthankara to Symbol:\n(A) Aristanemi (1) Lion\n(B) Parsvanath (2) Snake\n(C) Mahavira (3) Conch\n(D) Neminath (4) Blue Lotus",
+                q_hi: "मिलान करें\n(A) अरिष्टनेमि (1) सिंह\n(B) पार्श्वनाथ (2) सांप\n(C) महावीर (3) शंख\n(D) नेमिनाथ (4) नील कमल",
+                options: [
+                    {en: "A-3, B-2, C-1, D-4", hi: "A-3, B-2, C-1, D-4"}, 
+                    {en: "A-2, B-3, C-1, D-4", hi: "A-2, B-3, C-1, D-4"}, 
+                    {en: "A-1, B-4, C-3, D-2", hi: "A-1, B-4, C-3, D-2"}, 
+                    {en: "A-3, B-1, C-2, D-4", hi: "A-3, B-1, C-2, D-4"}
+                ],
+                correct: 0 // (a) Aristanemi(Conch-3), Parsvanath(Snake-2), Mahavir(Lion-1), Neminath(BlueLotus-4)
+            },
+            {
+                id: 49,
+                q_en: "Who became the spiritual leader of the Sangha after Mahavira's death?",
+                q_hi: "महावीर ने देहान्त के बाद निम्नलिखित में से कौन जैनध र्म का आध्यात्मिक नेता बना?",
+                options: [
+                    {en: "Gautam Indrabhuti", hi: "गौतम इन्द्रभूति"}, {en: "Gosala", hi: "गोशाल"}, {en: "Sudharman", hi: "सुधर्मन"}, {en: "Jambu Swami", hi: "जम्बूस्वामी"}
+                ],
+                correct: 2 // (c) Sudharman
+            },
+            {
+                id: 50,
+                q_en: "What is the modern name of Kundagram where Mahavira was born?",
+                q_hi: "कुंडग्राम का, जहाँ महावीर का जन्म हुआ था, आधुनिक नाम क्या है?",
+                options: [
+                    {en: "Vaishali", hi: "वैशाली"}, {en: "Patna", hi: "पटना"}, {en: "Basukund", hi: "बासुकुंड"}, {en: "Paithan", hi: "पैठण"}
+                ],
+                correct: 2 // (c)
+            }
+        ];
+
+        // --- Application State ---
+        let currentQuestions = [];
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let timer = null;
+        let timeLeft = 0;
+        let totalTime = 0;
+        let isAudioEnabled = true;
+
+        // --- DOM Elements ---
+        const startScreen = document.getElementById('start-screen');
+        const quizScreen = document.getElementById('quiz-screen');
+        const resultScreen = document.getElementById('result-screen');
+        const qCounter = document.getElementById('q-counter');
+        const scoreDisplay = document.getElementById('score-display');
+        const timerDisplay = document.getElementById('timer-display');
+        const progressFill = document.getElementById('progress-fill');
+        const qEn = document.getElementById('q-en');
+        const qHi = document.getElementById('q-hi');
+        const optionsContainer = document.getElementById('options-container');
+        const sadEmoji = document.getElementById('sad-emoji');
+
+        // --- Audio Logic (Web Audio API) ---
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            if (type === 'correct') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(500, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(1000, audioCtx.currentTime + 0.1);
+                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.5);
+            } else {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+                osc.frequency.linearRampToValueAtTime(100, audioCtx.currentTime + 0.3);
+                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.4);
+            }
+        }
+
+        // --- Game Logic ---
+        function startQuiz() {
+            // Get Settings
+            const shuffle = document.getElementById('shuffleToggle').checked;
+            const timeVal = document.getElementById('timeInput').value;
+            totalTime = timeVal ? parseInt(timeVal) : 0;
+
+            // Prepare Questions
+            currentQuestions = [...questionsDB];
+            if (shuffle) {
+                currentQuestions.sort(() => Math.random() - 0.5);
+            }
+
+            // Reset State
+            currentQuestionIndex = 0;
+            score = 0;
+            updateScore();
+            
+            // UI Switch
+            startScreen.classList.add('hidden');
+            resultScreen.classList.add('hidden');
+            quizScreen.classList.remove('hidden');
+
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            if (currentQuestionIndex >= currentQuestions.length) {
+                finishQuiz();
+                return;
+            }
+
+            const q = currentQuestions[currentQuestionIndex];
+            
+            // Text Updates
+            qEn.innerText = `${currentQuestionIndex + 1}. ${q.q_en}`;
+            qHi.innerText = q.q_hi;
+            qCounter.innerText = `Question ${currentQuestionIndex + 1}/${currentQuestions.length}`;
+            
+            // Progress Bar
+            const progress = ((currentQuestionIndex) / currentQuestions.length) * 100;
+            progressFill.style.width = `${progress}%`;
+
+            // Clear previous options
+            optionsContainer.innerHTML = '';
+
+            // Generate Options
+            q.options.forEach((opt, index) => {
+                const btn = document.createElement('div');
+                btn.className = 'option-btn';
+                btn.innerHTML = `
+                    <div class="opt-en"><span style="color:var(--accent-green); margin-right:8px;">${String.fromCharCode(65+index)}.</span>${opt.en}</div>
+                    <div class="opt-hi">${opt.hi}</div>
+                `;
+                btn.onclick = () => handleAnswer(index, q.correct, btn);
+                optionsContainer.appendChild(btn);
+            });
+
+            // Timer Setup
+            if (totalTime > 0) {
+                timeLeft = totalTime;
+                timerDisplay.classList.remove('hidden');
+                updateTimerUI();
+                clearInterval(timer);
+                timer = setInterval(() => {
+                    timeLeft--;
+                    updateTimerUI();
+                    if (timeLeft <= 0) {
+                        clearInterval(timer);
+                        handleTimeOut(q.correct);
+                    }
+                }, 1000);
+            } else {
+                timerDisplay.classList.add('hidden');
+            }
+        }
+
+        function updateTimerUI() {
+            timerDisplay.innerText = timeLeft;
+            if (timeLeft <= 5) {
+                timerDisplay.classList.add('pulse-red');
+            } else {
+                timerDisplay.classList.remove('pulse-red');
+            }
+        }
+
+        function handleAnswer(selectedIndex, correctIndex, btnElement) {
+            clearInterval(timer);
+            const allBtns = document.querySelectorAll('.option-btn');
+            allBtns.forEach(b => {
+                b.style.pointerEvents = 'none'; // Disable clicks
+            });
+
+            if (selectedIndex === correctIndex) {
+                // Correct
+                btnElement.classList.add('correct');
+                score++;
+                updateScore();
+                playSound('correct');
+                fireConfetti();
+            } else {
+                // Wrong
+                btnElement.classList.add('wrong');
+                allBtns[correctIndex].classList.add('correct');
+                playSound('wrong');
+                showSadEmoji();
+            }
+
+            setTimeout(() => {
+                currentQuestionIndex++;
+                loadQuestion();
+            }, 1500);
+        }
+
+        function handleTimeOut(correctIndex) {
+            const allBtns = document.querySelectorAll('.option-btn');
+            allBtns.forEach(b => b.style.pointerEvents = 'none');
+            
+            // Show correct answer
+            allBtns[correctIndex].classList.add('correct');
+            playSound('wrong'); // Time out is bad
+            
+            setTimeout(() => {
+                currentQuestionIndex++;
+                loadQuestion();
+            }, 1500);
+        }
+
+        function updateScore() {
+            scoreDisplay.innerText = `Score: ${score}`;
+        }
+
+        function showSadEmoji() {
+            sadEmoji.style.display = 'block';
+            sadEmoji.classList.add('shake');
+            setTimeout(() => {
+                sadEmoji.style.display = 'none';
+                sadEmoji.classList.remove('shake');
+            }, 1000);
+        }
+
+        function finishQuiz() {
+            clearInterval(timer);
+            quizScreen.classList.add('hidden');
+            resultScreen.classList.remove('hidden');
+
+            // Calculate based on questions attempted (or total if user manually exits, logic: score/total)
+            // If finished naturally, currentQuestionIndex is length. 
+            // If early exit, we divide by Questions Answered So Far (currentQuestionIndex + 1 or just current if unattempted).
+            // Standard approach: Score / Total Questions in DB.
+            const percentage = Math.round((score / currentQuestions.length) * 100);
+            
+            const finalScoreEl = document.getElementById('final-score');
+            finalScoreEl.innerText = `${percentage}%`;
+            
+            const msgEl = document.getElementById('result-msg');
+            const statsEl = document.getElementById('stats-detail');
+
+            if (percentage >= 80) {
+                msgEl.innerText = "🏆 Outstanding Performance!";
+                msgEl.style.color = "#FFD700";
+            } else if (percentage >= 50) {
+                msgEl.innerText = "👏 Well Done! Keep it up.";
+                msgEl.style.color = "#00e676";
+            } else {
+                msgEl.innerText = "📚 Practice makes perfect! Try again.";
+                msgEl.style.color = "#ff1744";
+            }
+
+            statsEl.innerText = `You answered ${score} correctly out of ${currentQuestions.length} questions.`;
+        }
+
+        function restartApp() {
+            resultScreen.classList.add('hidden');
+            startScreen.classList.remove('hidden');
+        }
+
+        // --- Simple Confetti Implementation (No External Libs) ---
+        const canvas = document.getElementById('confetti-canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        let confetti = [];
+        const colors = ['#f44336', '#e91e63', '#9c27b0', '#673ab7', '#3f51b5', '#2196f3', '#03a9f4', '#00bcd4', '#009688', '#4CAF50', '#8BC34A', '#CDDC39', '#FFEB3B', '#FFC107', '#FF9800', '#FF5722'];
+
+        function fireConfetti() {
+            confetti = [];
+            for (let i = 0; i < 100; i++) {
+                confetti.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height - canvas.height,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    size: Math.random() * 10 + 5,
+                    velocity: { x: (Math.random() - 0.5) * 5, y: Math.random() * 5 + 2 }
+                });
+            }
+            animateConfetti();
+        }
+
+        function animateConfetti() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            let active = false;
+            confetti.forEach((p, index) => {
+                p.y += p.velocity.y;
+                p.x += p.velocity.x;
+                
+                ctx.fillStyle = p.color;
+                ctx.fillRect(p.x, p.y, p.size, p.size);
+
+                if (p.y < canvas.height) active = true;
+            });
+
+            if (active) requestAnimationFrame(animateConfetti);
+            else ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+
+    </script>
+</body>
+</html>

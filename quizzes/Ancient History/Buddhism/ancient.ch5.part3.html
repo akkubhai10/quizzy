@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buddhism Mastery Quiz (101-150)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --text-main: #ffffff;
+            --text-dim: #e0e0e0;
+            --accent-green: #00e676;
+            --accent-red: #ff5252;
+            --accent-yellow: #ffeb3b;
+            --bg-mesh: radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
+                       radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%), 
+                       radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 50%);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #0f0c29;
+            background-image: linear-gradient(315deg, #0f0c29 0%, #302b63 74%, #24243e 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--text-main);
+            overflow: hidden; 
+        }
+
+        /* Glassmorphism Card */
+        .container {
+            width: 95%;
+            max-width: 800px;
+            height: 90vh;
+            background: var(--glass-bg);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid var(--glass-border);
+            border-radius: 25px;
+            padding: 20px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            z-index: 10;
+        }
+
+        /* Progress Bar */
+        .progress-track {
+            width: 100%;
+            height: 4px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 2px;
+            margin-bottom: 15px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: var(--accent-yellow);
+            width: 0%;
+            transition: width 0.3s ease;
+            box-shadow: 0 0 10px var(--accent-yellow);
+        }
+
+        /* Screens */
+        .screen { display: none; flex-direction: column; height: 100%; }
+        .screen.active { display: flex; }
+
+        /* Start Screen */
+        #start-screen { justify-content: center; align-items: center; text-align: center; gap: 20px; }
+        h1 { font-size: 2rem; margin-bottom: 5px; line-height: 1.2; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+        h2 { font-size: 1.2rem; color: var(--accent-yellow); margin-bottom: 20px; }
+
+        .settings-box {
+            background: rgba(0,0,0,0.2);
+            padding: 20px;
+            border-radius: 15px;
+            width: 100%;
+            max-width: 350px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .input-group { margin-bottom: 15px; text-align: left; }
+        label { display: block; font-size: 0.9rem; margin-bottom: 5px; color: var(--text-dim); }
+        input[type="number"] {
+            width: 100%; padding: 10px; border-radius: 8px; border: none;
+            background: rgba(255,255,255,0.1); color: white; font-size: 1.1rem; outline: none;
+            text-align: center;
+        }
+
+        /* Toggle */
+        .toggle-row { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
+        .switch { position: relative; display: inline-block; width: 50px; height: 26px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(255,255,255,0.2); transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--accent-green); }
+        input:checked + .slider:before { transform: translateX(24px); }
+
+        .btn-start {
+            margin-top: 20px;
+            padding: 15px 40px;
+            background: linear-gradient(90deg, #ff8a00, #e52e71);
+            color: white; border: none; border-radius: 30px;
+            font-size: 1.2rem; font-weight: bold; cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .btn-start:hover { transform: scale(1.05); box-shadow: 0 0 15px rgba(229, 46, 113, 0.5); }
+
+        /* Quiz UI */
+        .header-row {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;
+        }
+        
+        .timer-badge {
+            width: 45px; height: 45px; border-radius: 50%; border: 2px solid white;
+            display: flex; justify-content: center; align-items: center; font-weight: bold;
+        }
+        .pulse-anim { animation: pulseRed 1s infinite; border-color: var(--accent-red); color: var(--accent-red); background: rgba(255, 82, 82, 0.1); }
+        @keyframes pulseRed { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+
+        .scroll-area {
+            flex: 1; overflow-y: auto; padding-right: 5px;
+        }
+        .scroll-area::-webkit-scrollbar { width: 4px; }
+        .scroll-area::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.3); border-radius: 4px; }
+
+        .question-block { margin-bottom: 20px; }
+        .q-en { font-size: 1.1rem; font-weight: 700; display: block; margin-bottom: 4px; }
+        .q-hi { font-size: 0.95rem; color: var(--text-dim); font-weight: 400; display: block; }
+
+        .options-list { display: flex; flex-direction: column; gap: 10px; }
+        .opt-btn {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 12px 15px;
+            border-radius: 12px;
+            text-align: left; cursor: pointer; color: white;
+            transition: background 0.2s;
+        }
+        .opt-btn:hover { background: rgba(255, 255, 255, 0.15); }
+        .opt-en { display: block; font-weight: 600; font-size: 1rem; margin-bottom: 2px; }
+        .opt-hi { display: block; font-size: 0.85rem; color: #ccc; }
+
+        .correct { background: var(--accent-green) !important; border-color: var(--accent-green) !important; color: #003300; }
+        .wrong { background: var(--accent-red) !important; border-color: var(--accent-red) !important; animation: shake 0.4s; }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+
+        /* Footer Button */
+        .footer-btn {
+            margin-top: 15px; width: 100%; padding: 12px;
+            background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 12px; color: var(--text-dim); font-weight: 600; cursor: pointer;
+        }
+        .footer-btn:hover { background: rgba(255, 255, 255, 0.1); color: white; }
+
+        /* Result Screen */
+        #result-screen { justify-content: center; align-items: center; text-align: center; }
+        .score-circle {
+            width: 120px; height: 120px; border-radius: 50%;
+            border: 5px solid var(--accent-yellow);
+            display: flex; justify-content: center; align-items: center;
+            font-size: 2.5rem; font-weight: bold; margin: 20px auto;
+            background: rgba(255, 235, 59, 0.1);
+        }
+        .msg-text { font-size: 1.4rem; margin-bottom: 10px; font-weight: bold; }
+        .stat-text { color: var(--text-dim); font-size: 1rem; margin-bottom: 25px; }
+
+        /* Overlays */
+        #confetti-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 99; }
+        #emoji-overlay {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 5rem; opacity: 0; pointer-events: none; z-index: 100; transition: opacity 0.3s;
+        }
+    </style>
+</head>
+<body>
+
+<canvas id="confetti-canvas"></canvas>
+<div id="emoji-overlay">😢</div>
+
+<div class="container">
+    <div id="start-screen" class="screen active">
+        <h1>Buddhism & History<br><span style="font-weight:300; font-size:1.5rem;">Quiz 101-150</span></h1>
+        
+        <div class="settings-box">
+            <div class="input-group">
+                <label>Timer (Seconds per question)</label>
+                <input type="number" id="timer-input" placeholder="0 = No Timer" min="0">
+            </div>
+            <div class="toggle-row">
+                <label>Shuffle Questions</label>
+                <label class="switch">
+                    <input type="checkbox" id="shuffle-toggle">
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </div>
+
+        <button class="btn-start" onclick="startQuiz()">Start Quiz</button>
+    </div>
+
+    <div id="quiz-screen" class="screen">
+        <div class="progress-track"><div class="progress-fill" id="progress-bar"></div></div>
+        
+        <div class="header-row">
+            <div>
+                <small style="opacity:0.7">Question</small>
+                <div style="font-weight:700; font-size:1.1rem;"><span id="curr-q">1</span> / <span id="total-q">50</span></div>
+            </div>
+            <div class="timer-badge" id="timer-display">∞</div>
+            <div style="text-align:right">
+                <small style="opacity:0.7">Score</small>
+                <div style="font-weight:700; font-size:1.1rem;" id="score-display">0</div>
+            </div>
+        </div>
+
+        <div class="scroll-area" id="question-container">
+            <div class="question-block">
+                <span class="q-en" id="q-en">Loading...</span>
+                <span class="q-hi" id="q-hi">...</span>
+            </div>
+            <div class="options-list" id="options-container">
+                </div>
+        </div>
+
+        <button class="footer-btn" onclick="endQuiz()">Finish & Show Results</button>
+    </div>
+
+    <div id="result-screen" class="screen">
+        <h1>Quiz Completed!</h1>
+        <div class="score-circle"><span id="final-percent">0</span>%</div>
+        <div class="msg-text" id="final-msg">Well Done!</div>
+        <div class="stat-text">You got <span id="final-score">0</span> correct out of <span id="final-total">0</span> attempted.</div>
+        <button class="btn-start" onclick="location.reload()">Restart Quiz</button>
+    </div>
+</div>
+
+<script>
+    // --- DATA: Questions 101-150 extracted from provided images ---
+    const rawData = [
+        { id: 101, en: "What is Milindapanho?", hi: "मिलिन्दपन्हों क्या है-", opts: [ {en: "Name of a Greek philosopher", hi: "एक यूनानी दार्शनिक का नाम"}, {en: "Name of a Satavahana king", hi: "एक सातवाहन राजा का नाम"}, {en: "Name of a Jain sect", hi: "एक जैन पन्थ का नाम"}, {en: "Name of a Buddhist text", hi: "एक बौद्ध ग्रंथ का नाम"} ], ans: 3 },
+        { id: 102, en: "Who is the author of Buddhacharita?", hi: "बुद्ध चरित के लेखक है-", opts: [ {en: "Ashvaghosha", hi: "अश्वघोष"}, {en: "Valmiki", hi: "वाल्मीकि"}, {en: "Bhavabhuti", hi: "भवभूति"}, {en: "Nagarjuna", hi: "नागार्जुन"} ], ans: 0 },
+        { id: 103, en: "Who was Ashvaghosha?", hi: "अश्वघोष कौन थे-", opts: [ {en: "A king of Bengal", hi: "बंगाल के एक राजा"}, {en: "A Vedic Rishi", hi: "एक वैदिक ऋषि"}, {en: "A Jain Tirthankara", hi: "एक जैन तीर्थंकर"}, {en: "A Mahayana Buddhist", hi: "एक महायान बौद्ध"} ], ans: 3 },
+        { id: 104, en: "What is Dhammapada?", hi: "धम्म पद है-", opts: [ {en: "A city in Sri Lanka", hi: "श्रीलंका में एक नगर"}, {en: "Buddhist religious text", hi: "बौद्ध धर्म ग्रंथ"}, {en: "Name of Mauryan king", hi: "मौर्य राजा का नाम"}, {en: "Name of Jain monk", hi: "जैन साधु का नाम"} ], ans: 1 },
+        { id: 105, en: "Which religion believed in Vedas?", hi: "कौन-सा धर्म वेदों में विश्वास करता था-", opts: [ {en: "Buddhist", hi: "बौद्ध"}, {en: "Jain", hi: "जैन"}, {en: "Hindu", hi: "हिन्दू"}, {en: "All of the above", hi: "उपरोक्त सभी"} ], ans: 2 },
+        { id: 106, en: "Why was the 4th Buddhist Council organized during Kanishka I's reign?", hi: "कनिष्क प्रथम के शासनावधि में चतुर्थ बौद्ध संगीति का आयोजन किस कारण किया गया-", opts: [ {en: "For spread of Buddhism", hi: "बौद्ध धर्म के प्रसार हेतु"}, {en: "For compilation of Buddhist works", hi: "बौद्ध धर्म के कार्यों के समेकन हेतु"}, {en: "For acceptance of Mahayana", hi: "महायान की स्वीकृति हेतु"}, {en: "For harmony between Mahayana and Hinayana", hi: "महायान एवं हीनयान मत में तालमेल हेतु"} ], ans: 2 }, // Key in source usually indicates Mahayana acceptance/split context (c)
+        { id: 107, en: "To which teachers did Siddhartha Gautama go in search of knowledge before attaining enlightenment?\n1. Alara Kalama 2. Udraka Ramaputra", hi: "बोधि प्राप्त करने के पूर्व ज्ञान की खोज में सिद्धार्थ गौतम किन आचार्यों के पास गये थे ?\n1. आलार कलाम 2. उद्रक रामपुत्र", opts: [ {en: "1 and 4", hi: "1 और 4"}, {en: "4 and 2", hi: "4 और 2"}, {en: "2 and 3", hi: "2 और 3"}, {en: "1 and 2", hi: "1 और 2"} ], ans: 3 },
+        { id: 108, en: "Where did the Mahasanghika sect emerge?", hi: "महासंधिक सम्प्रदाय का उदय कहाँ हुआ था ?", opts: [ {en: "Bodh Gaya", hi: "बोध गया"}, {en: "Rajgriha", hi: "राजगृह"}, {en: "Shravasti", hi: "श्रावस्ती"}, {en: "Vaishali", hi: "वैशाली"} ], ans: 3 },
+        { id: 109, en: "Where was the Bhikkhuni Sangha established by Gautama Buddha?", hi: "गौतम बुद्ध द्वारा भिक्षुणी-संघ की स्थापना कहाँ की गई?", opts: [ {en: "Kapilvastu", hi: "कपिलवस्तु"}, {en: "Vaishali", hi: "वैशाली"}, {en: "Rajgriha", hi: "राजगृह"}, {en: "Shravasti", hi: "श्रावस्ती"} ], ans: 1 },
+        { id: 110, en: "Where was the first depiction of Buddha's past life stories in art done?", hi: "गौतम बुद्ध की पूर्व जीवन कथाओं का सर्वप्रथम अंकन कहाँ की कला में किया गया था ?", opts: [ {en: "Bharhut", hi: "भरहुत"}, {en: "Sanchi", hi: "सांची"}, {en: "Ajanta", hi: "अजन्ता"}, {en: "Ellora", hi: "एलोरा"} ], ans: 1 }, // Based on key (b)
+        { id: 111, en: "The royal physician of Rajgriha, Jivaka, was the son of which courtesan?", hi: "राजगृह का राजवैद्य जीवक गणिका का पुत्र था-", opts: [ {en: "Salavati", hi: "सालवती"}, {en: "Ramaniya", hi: "रमणीया"}, {en: "Vasantasena", hi: "बसन्तसेना"}, {en: "Amrapali", hi: "आम्रपाली"} ], ans: 0 },
+        { id: 112, en: "Which of the following scholars established the Vajrayana sect of Buddhism in Tibet?", hi: "निम्नलिखित विद्वानों में से किसने तिब्बत में बौद्ध धर्म के वज्रयान सम्प्रदाय की स्थापना की ?", opts: [ {en: "Shantarakshita", hi: "शान्तरक्षित"}, {en: "Padmasambhava", hi: "पद्मसम्भव"}, {en: "Dharmaraksha", hi: "धर्मरक्ष"}, {en: "Kumarajiva", hi: "कुमारजीव"} ], ans: 1 },
+        { id: 113, en: "According to Mahavamsa, who was sent to the Himalayan region after the Third Buddhist Council?", hi: "महावंश के अनुसार तृतीय बौद्ध संगीति के पश्चात् हिमालय क्षेत्र में कौन गया था :", opts: [ {en: "Majjhima", hi: "मज्झिम"}, {en: "Rakshita", hi: "रक्षित"}, {en: "Dharmarakshita", hi: "धर्म रक्षित"}, {en: "Mahadeva", hi: "महादेव"} ], ans: 0 },
+        { id: 114, en: "Rulers of which state prescribed severe punishment for monks creating schism?", hi: "निम्नलिखित राज्यों में से किसने संघभेद करने वाले बौद्ध भिक्षु एवं भिक्षुणियों के लिए कठोर दण्ड का विधान किया था ?", opts: [ {en: "Ashoka", hi: "अशोक"}, {en: "Pushyamitra Shunga", hi: "पुष्यमित्र शुंग"}, {en: "Harsha", hi: "हर्ष"}, {en: "Shashanka", hi: "शशांक"} ], ans: 0 },
+        { id: 115, en: "Credit for establishing Vikramshila Mahavihara goes to?", hi: "विक्रमशिला महाविहार की स्थापना का श्रेय किसे दिया जाता है ?", opts: [ {en: "Harsha", hi: "हर्ष"}, {en: "Bhaskaravarman", hi: "भास्करवर्मन्"}, {en: "Dharmapala", hi: "धर्मपाल"}, {en: "Vijayasena", hi: "विजयसेन"} ], ans: 2 },
+        { id: 116, en: "Buddhism was propagated in Avanti by-", hi: "अवन्ति में बौद्ध धर्म का प्रचार किया-", opts: [ {en: "Mahakatyayana", hi: "महाकात्यायन ने"}, {en: "Ananda", hi: "आनन्द ने"}, {en: "Sariputta", hi: "सारिपुत्र ने"}, {en: "Moggallana", hi: "मौदगलायन ने"} ], ans: 0 },
+        { id: 117, en: "Buddha's famous disciple Ananda was-", hi: "बुद्ध का प्रसिद्ध शिष्य आनन्द था-", opts: [ {en: "Malla", hi: "मल्ल"}, {en: "Vajjian", hi: "वज्जि"}, {en: "Licchavi", hi: "लिच्छवि"}, {en: "Shakya", hi: "शाक्य"} ], ans: 3 },
+        { id: 118, en: "In Vajrayana Buddhism, the wife of Bodhisattva is known as-", hi: "वज्रयान बौद्ध धर्म में बोधिसत्व की पत्नी को किस नाम से जाना जाता है-", opts: [ {en: "Matangi", hi: "मातंगी"}, {en: "Yogini", hi: "योगिनी"}, {en: "Dakini", hi: "डाकिनी"}, {en: "Tara", hi: "तारा"} ], ans: 3 },
+        { id: 119, en: "Keeping whose wish in mind did Buddha allow women to enter the Sangha?", hi: "बुद्ध ने किसकी इच्छा को ध्यान में रखकर स्त्रियों को संघ में प्रवेश की अनुमति दी ?", opts: [ {en: "Maya", hi: "माया"}, {en: "Amrapali", hi: "आम्रपाली"}, {en: "Yashodhara", hi: "यशोधरा"}, {en: "Gautami Prajapati", hi: "गौतमी प्रजापति"} ], ans: 3 },
+        { id: 120, en: "Who got the figure of Shakyamuni Buddha inscribed on his coins?", hi: "किसने अपनी सिक्को पर शाक्यमुनि बुद्ध की आकृति अंकित करवायी-", opts: [ {en: "Ashoka", hi: "अशोक"}, {en: "Harsha", hi: "हर्ष"}, {en: "Kanishka", hi: "कनिष्क"}, {en: "Vima Kadphises", hi: "विम कडफिसेस"} ], ans: 2 },
+        { id: 121, en: "Kakanava was the ancient name of-", hi: "काकनाय (Kakanava) प्राचीन नाम था-", opts: [ {en: "Ajanta", hi: "अजन्ता का"}, {en: "Bharhut", hi: "भरहुत का"}, {en: "Nagarjunakonda", hi: "नागार्जुनकोंड का"}, {en: "Sanchi", hi: "सांची का"} ], ans: 3 },
+        { id: 122, en: "Compilation of rules of conduct for Buddhist Sanghas is found in?", hi: "बौद्ध संघों के आचरण (Conduct for the Budhist) के नियमों का संकलन किस निम्न ग्रंथ में मिलता है ?", opts: [ {en: "Vinaya Pitaka", hi: "विनयपिटक"}, {en: "Sutta Pitaka", hi: "सुत्तपिटक"}, {en: "Abhidhamma Pitaka", hi: "अभिधम्म पिटक"}, {en: "Anguttara Nikaya", hi: "अंगुत्तर निकाय"} ], ans: 0 },
+        { id: 123, en: "From whom did Mahendra study Buddhist texts before propagating in Sri Lanka?", hi: "श्रीलंका में बौद्ध धर्म का प्रचार करने वाले महेन्द्र ने किससे बौद्ध ग्रंथों का अध्ययन किया-", opts: [ {en: "Dasaka", hi: "दासक"}, {en: "Moggaliputtatissa", hi: "मोगलिपुत्ततिस्स"}, {en: "Upagupta", hi: "उपगुप्त"}, {en: "Upali", hi: "उपालि"} ], ans: 1 },
+        { id: 124, en: "Buddhist sect that worships Buddha as God is-", hi: "बुद्ध को ईश्वर के रूप में पूजने वाला बौद्ध सम्प्रदाय है-", opts: [ {en: "Sthavir", hi: "स्थविर"}, {en: "Mahasanghika", hi: "महासंधिक"}, {en: "Hinayana", hi: "हीनयान"}, {en: "Mahayana", hi: "महायान"} ], ans: 3 },
+        { id: 125, en: "Which Indo-Greek ruler is mentioned in Buddhist literature?", hi: "निम्नांकित भारतीय यूनानी शासकों में से कौन भारतीय बौद्ध साहित्य में उल्लिखित है ?", opts: [ {en: "Demetrius", hi: "डेमिट्रियस"}, {en: "Menander", hi: "मेनांडर"}, {en: "Strabo", hi: "स्ट्रेबो"}, {en: "Antialcidas", hi: "एंटियाल्किदस"} ], ans: 1 },
+        { id: 126, en: "Who led the First Buddhist Council?", hi: "बुद्ध की मृत्यु के तुरन्त बाद हुई बौद्ध संगीति (प्रथम) किसने नेतृत्व में हुई थी ?", opts: [ {en: "Mahakassapa", hi: "महाकस्सप"}, {en: "Ajatashatru", hi: "अजातशत्रु"}, {en: "Vasumitra", hi: "वसुमित्र"}, {en: "Subhakamari", hi: "सुबुकुमारी"} ], ans: 0 },
+        { id: 127, en: "Rummindei is related to which event?", hi: "रूम्मिनदेई किस घटना से संबंधित है ?", opts: [ {en: "Birth of Buddha", hi: "बुद्ध का जन्म"}, {en: "Death of Buddha", hi: "बुद्ध की मृत्यु"}, {en: "Dharma Chakra Pravartana", hi: "बुद्ध का धर्म परिवर्तन"}, {en: "Great Renunciation", hi: "गृह त्याग"} ], ans: 0 },
+        { id: 128, en: "Criticism of Brahmin supremacy was first done by whom?", hi: "ब्राह्मणों की सर्वोच्चता की सर्वप्रथम आलोचना निम्न मे से किसके द्वारा की गयी थी ?", opts: [ {en: "Upanishadic thinkers", hi: "उपनिषदवेत्ता"}, {en: "Ajivikas", hi: "आजीवक"}, {en: "Mahavira", hi: "महावीर"}, {en: "Buddha", hi: "बुद्ध"} ], ans: 3 },
+        { id: 129, en: "Who wanted to become the leader of the Sangha during Buddha's lifetime?", hi: "निम्नलिखित में से कौन गौतम बुद्ध के जीवनकाल में संघ का नायक बनना चाहता था ?", opts: [ {en: "Devadatta", hi: "देवदत्त"}, {en: "Mahakassapa", hi: "महाकश्यप"}, {en: "Upali", hi: "उपालि"}, {en: "None of above", hi: "उपरोक्त में से कोई नही"} ], ans: 0 },
+        { id: 130, en: "Who founded the Vijnanavada (Yogachara) sect?", hi: "विज्ञानवाद ( योगाचार ) संप्रदाय की स्थापना किसने की थी ?", opts: [ {en: "Vasubandhu", hi: "वसुबन्धु"}, {en: "Nagarjuna", hi: "नागार्जुन"}, {en: "Ashvaghosha", hi: "अश्वघोष"}, {en: "Maitreya Nath", hi: "मैत्रेय नाथ"} ], ans: 3 },
+        { id: 131, en: "What were stupas with Buddha's relics called?", hi: "वे स्तूप जिनमें बुद्ध या उनके प्रमुख शिष्यों की अस्थियों रखी जाती थीं, क्या कहलाते थे ?", opts: [ {en: "Sharirika", hi: "शारीरिक"}, {en: "Paribhogika", hi: "परिभोगिक"}, {en: "Uddeshika", hi: "उद्देशिका"}, {en: "Sankalpita", hi: "संकल्पित"} ], ans: 0 },
+        { id: 132, en: "Bone relics of Sariputra were found in the excavation of a stupa at-", hi: "कहाँ के एक स्तूप की खुदाई में सारिपुत्र का अस्थि अवशेष प्राप्त हुआ ?", opts: [ {en: "Rajgriha", hi: "राजगृह"}, {en: "Kushinagar", hi: "कुशीनगर"}, {en: "Sanchi", hi: "सांची"}, {en: "Sarnath", hi: "सारनाथ"} ], ans: 2 },
+        { id: 133, en: "Who were the two merchants Buddha made his lay followers at Bodhgaya?", hi: "बोधगया में महात्मा बुद्ध ने दो बनजारों को उपदेश देकर अपना उपासक बना लिया था। निम्नलिखित में से वे दो बनजारे कौन थे ?", opts: [ {en: "Mallika and Tapassu", hi: "मल्लिक और तपस्सु"}, {en: "Mallika and Devadas", hi: "मल्लिक और देवदास"}, {en: "Tapassu and Bhallika", hi: "तपस्सु और शूल्क"}, {en: "Shulk and Devadas", hi: "शूल्क और देवदास"} ], ans: 0 },
+        { id: 134, en: "Where were Sariputra and Maudgalyayana initiated into the religion?", hi: "सारिपुत्र और मौदगलायन शाक्य मुनि के धर्म में कहाँ दीक्षित हुए थे ?", opts: [ {en: "Gaya", hi: "गया"}, {en: "Nalaka Gram", hi: "नालक ग्राम"}, {en: "Rajgriha", hi: "राजगृह"}, {en: "Vaishali", hi: "वैशाली"} ], ans: 2 },
+        { id: 135, en: "Who was the exponent of materialism during the time of Gautama Buddha?", hi: "गौतमबुद्ध के समय भौतिकवाद का व्याख्याता कौन था?", opts: [ {en: "Makkhali Gosala", hi: "मक्खलि गोशाल"}, {en: "Devadatta", hi: "देवदत्त"}, {en: "Ajita Kesakambalin", hi: "अजित केशकम्बलिन"}, {en: "Shukra", hi: "शुक्र"} ], ans: 2 },
+        { id: 136, en: "According to Chinese sources, who destroyed the Bodhi tree at Gaya?", hi: "चीनी स्रोतों के अनुसार किसने गया के बोधिवृक्ष को नष्ट कर दिया था ?", opts: [ {en: "Pushyamitra", hi: "पुष्यमित्र"}, {en: "Mihirakula", hi: "महिरकुल"}, {en: "Shashanka", hi: "शशांक"}, {en: "Toramana", hi: "तोरमाण"} ], ans: 2 },
+        { id: 137, en: "Who was the first woman to get entry into the Buddhist Sangha?", hi: "बौद्ध संघ में प्रवेश पाने वाली पहली स्त्री कौन थी ?", opts: [ {en: "Amrapali", hi: "आम्रपाली"}, {en: "Yashodhara", hi: "यशोधरा"}, {en: "Gautami Prajapati", hi: "गौतमी प्रजापति"}, {en: "Maya Devi", hi: "माया देवी"} ], ans: 2 },
+        { id: 138, en: "When did the worship of Buddha statues begin?", hi: "गौतम बुद्ध की मूर्तियों की पूजा कब से प्रारंभ हुई थी ?", opts: [ {en: "From Mauryan period", hi: "मौर्य काल से"}, {en: "From Kushan period", hi: "कुषाण काल से"}, {en: "From Gupta period", hi: "गुप्त काल से"}, {en: "From 6th century BC", hi: "छठीं शताब्दी ईसवी पूर्व से"} ], ans: 1 },
+        { id: 139, en: "What is the main feature of Gandhara style?", hi: "गान्धार शैली की प्रमुख विशेषता क्या है ?", opts: [ {en: "Use of black stones", hi: "काले पत्थरों का व्यवहार"}, {en: "Buddha statues", hi: "बुद्ध मूर्तियाँ"}, {en: "Patronage of foreign kings", hi: "विदेशी राजाओं का संरक्षण"}, {en: "None of these", hi: "इनमें से कोई नहीं"} ], ans: 1 },
+        { id: 140, en: "In which caves is the representation of Hindu, Buddhist and Jain religions found?", hi: "हिन्दू, बौद्ध और जैन, सभी धर्मों का प्रतिनिधित्व निम्न में से किस गुफा में हुआ है ?", opts: [ {en: "Ajanta", hi: "अजंता"}, {en: "Ellora", hi: "एलोरा"}, {en: "Nasik", hi: "नासिक"}, {en: "Pitalkhora", hi: "पीतलखोरा"} ], ans: 1 },
+        { id: 141, en: "Buddhist text mentioning various ancient Indian scripts is-", hi: "विभिन्न प्राचीन भारतीय लिपियों का उल्लेख करने वाला बौद्ध ग्रंथ है-", opts: [ {en: "Divyavadana", hi: "दिव्यावदान"}, {en: "Ashokavadana", hi: "अशोकावदान"}, {en: "Avadana Shataka", hi: "अवदान शतक"}, {en: "Lalitavistara", hi: "ललित विस्तार"} ], ans: 3 },
+        { id: 142, en: "Which ruler built the Dharmarajika Stupa at Sarnath?", hi: "सारनाथ के धर्मराजिक स्तूप का निर्माण किस शासक ने किया ?", opts: [ {en: "Ashoka", hi: "अशोक"}, {en: "Kanishka", hi: "कनिष्क"}, {en: "Menander", hi: "मिनेण्डर"}, {en: "Harsha", hi: "हर्ष"} ], ans: 0 },
+        { id: 143, en: "Where are Chaitya caves located?", hi: "चैत्य गुफाएँ कहाँ हैं ?", opts: [ {en: "Mahabalipuram", hi: "महाबलीपुरम् में"}, {en: "Nagarjunakonda", hi: "नागार्जुनकोंडा में"}, {en: "Karle", hi: "कार्ले में"}, {en: "Kanchi", hi: "कांची में"} ], ans: 2 },
+        { id: 144, en: "Which ruler built the Dhamek Stupa at Sarnath?", hi: "सारनाथ के धमेख स्तूप का निर्माण किस शासक ने किया था ?", opts: [ {en: "Ashoka", hi: "अशोक"}, {en: "Menander", hi: "मेनेन्डर"}, {en: "Kanishka", hi: "कनिष्क"}, {en: "Kumaragupta", hi: "कुमारगुप्त"} ], ans: 3 },
+        { id: 145, en: "Who is the author of 'Vajrasuchi' which criticizes the caste system?", hi: "जाति प्रथा की तीव्र आलोचना करने वाला ग्रन्थ 'वज्रसूची' के रचयिता कौन हैं ?", opts: [ {en: "Yajnavalkya", hi: "याज्ञवल्क्य"}, {en: "Ashvaghosha", hi: "अश्वघोष"}, {en: "Gargi", hi: "गार्गी"}, {en: "Nagarjuna", hi: "नागार्जुन"} ], ans: 1 },
+        { id: 146, en: "City associated with Gandhara Art was-", hi: "गंधार कला से संबद्ध नगर था-", opts: [ {en: "Agra", hi: "आगरा"}, {en: "Kannauj", hi: "कन्नौज"}, {en: "Bharhut", hi: "भरहुत"}, {en: "Bamiyan", hi: "बामियान"} ], ans: 3 },
+        { id: 147, en: "Amaravati and Nagarjunakonda were famous for?", hi: "अमरावती और नागार्जुनीकोंडा किसके लिए प्रसिद्ध थे ?", opts: [ {en: "Chola architecture", hi: "चोल स्थापत्य"}, {en: "Buddhist Stupa", hi: "बौद्ध स्तूप"}, {en: "Jain cave", hi: "जैनगुफा के लिए"}, {en: "Chalukya temples", hi: "चालुक्य मंदिरों के लिए"} ], ans: 1 },
+        { id: 148, en: "Tissa was contemporary of?", hi: "तिस्सा किसका समकालीन था ?", opts: [ {en: "Kanishka", hi: "कनिष्क"}, {en: "Ashoka", hi: "अशोक"}, {en: "Bimbisara", hi: "बिम्बिसार"}, {en: "Harsha", hi: "हर्ष"} ], ans: 1 },
+        { id: 149, en: "Whose relics are in the Stupa of Sanchi?", hi: "सांची के स्तूप में किसकी अस्थि है-", opts: [ {en: "Buddha", hi: "बुद्ध की"}, {en: "Devadatta", hi: "देवदत्त की"}, {en: "Sariputta and Moggallana", hi: "सारिपुत्त एवं मोदगल्यायन की"}, {en: "Mahavira", hi: "महावीर की"} ], ans: 2 },
+        { id: 150, en: "Which is the oldest stupa among the following?", hi: "निम्नलिखित में से प्राचीनतम स्तूप कौन-सा है ?", opts: [ {en: "Sanchi Stupa", hi: "सांची स्तूप"}, {en: "Piprahwa Stupa", hi: "पिपरावा स्तूप"}, {en: "Bharhut Stupa", hi: "भरहुत स्तूप"}, {en: "Amaravati Stupa", hi: "अमरावती स्तूप"} ], ans: 1 }
+    ];
+
+    // --- GAME LOGIC ---
+    let quizData = [];
+    let currIndex = 0;
+    let score = 0;
+    let timerInt;
+    let timeLimit = 0;
+    let timerActive = false;
+
+    // Audio Context for Synthesized Sounds
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    const audioCtx = new AudioContext();
+
+    function playSound(type) {
+        if(audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        if (type === 'correct') {
+            // Ting sound (Sine wave, high pitch, short decay)
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(900, audioCtx.currentTime + 0.1);
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.4);
+        } else {
+            // Buzz sound (Sawtooth, low pitch)
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+            osc.frequency.linearRampToValueAtTime(100, audioCtx.currentTime + 0.3);
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.3);
+        }
+    }
+
+    // Confetti Animation
+    const canvas = document.getElementById("confetti-canvas");
+    const ctx = canvas.getContext("2d");
+    let particles = [];
+    
+    function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    function triggerConfetti() {
+        for (let i = 0; i < 80; i++) {
+            particles.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height - canvas.height,
+                vy: Math.random() * 4 + 2,
+                vx: Math.random() * 2 - 1,
+                color: `hsl(${Math.random()*360}, 100%, 50%)`,
+                size: Math.random() * 5 + 2
+            });
+        }
+        animateConfetti();
+    }
+
+    function animateConfetti() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        let active = false;
+        particles.forEach((p, i) => {
+            p.y += p.vy;
+            p.x += p.vx;
+            ctx.fillStyle = p.color;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            ctx.fill();
+            if (p.y < canvas.height) active = true;
+            else particles.splice(i, 1);
+        });
+        if (active) requestAnimationFrame(animateConfetti);
+    }
+
+    function showEmoji() {
+        const el = document.getElementById('emoji-overlay');
+        el.style.opacity = 1;
+        el.style.animation = "shake 0.5s ease";
+        setTimeout(() => {
+            el.style.opacity = 0;
+            el.style.animation = "none";
+        }, 1200);
+    }
+
+    // Quiz Functions
+    function switchScreen(id) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+    }
+
+    function startQuiz() {
+        const timerVal = document.getElementById('timer-input').value;
+        const shuffle = document.getElementById('shuffle-toggle').checked;
+        
+        timeLimit = parseInt(timerVal) || 0;
+        timerActive = timeLimit > 0;
+        
+        quizData = shuffle ? [...rawData].sort(() => 0.5 - Math.random()) : [...rawData];
+        
+        currIndex = 0;
+        score = 0;
+        document.getElementById('total-q').textContent = quizData.length;
+        document.getElementById('score-display').textContent = 0;
+        
+        switchScreen('quiz-screen');
+        loadQuestion();
+    }
+
+    function loadQuestion() {
+        clearInterval(timerInt);
+        if (currIndex >= quizData.length) {
+            endQuiz();
+            return;
+        }
+
+        const q = quizData[currIndex];
+        document.getElementById('curr-q').textContent = currIndex + 1;
+        document.getElementById('q-en').textContent = q.en;
+        document.getElementById('q-hi').textContent = q.hi;
+        
+        // Progress
+        const pct = (currIndex / quizData.length) * 100;
+        document.getElementById('progress-bar').style.width = pct + "%";
+
+        // Options
+        const optContainer = document.getElementById('options-container');
+        optContainer.innerHTML = '';
+        
+        q.opts.forEach((opt, idx) => {
+            const btn = document.createElement('div');
+            btn.className = 'opt-btn';
+            btn.innerHTML = `<span class="opt-en">${opt.en}</span><span class="opt-hi">${opt.hi}</span>`;
+            btn.onclick = () => checkAnswer(idx, btn, q.ans);
+            optContainer.appendChild(btn);
+        });
+
+        // Timer
+        const badge = document.getElementById('timer-display');
+        badge.classList.remove('pulse-anim');
+        
+        if (timerActive) {
+            let timeLeft = timeLimit;
+            badge.textContent = timeLeft;
+            timerInt = setInterval(() => {
+                timeLeft--;
+                badge.textContent = timeLeft;
+                if (timeLeft <= 5) badge.classList.add('pulse-anim');
+                if (timeLeft <= 0) {
+                    clearInterval(timerInt);
+                    nextQuestion();
+                }
+            }, 1000);
+        } else {
+            badge.textContent = "∞";
+        }
+    }
+
+    function checkAnswer(selected, btn, correct) {
+        clearInterval(timerInt);
+        const allOpts = document.querySelectorAll('.opt-btn');
+        allOpts.forEach(b => b.style.pointerEvents = 'none'); // Disable clicks
+
+        if (selected === correct) {
+            btn.classList.add('correct');
+            playSound('correct');
+            triggerConfetti();
+            score++;
+            document.getElementById('score-display').textContent = score;
+        } else {
+            btn.classList.add('wrong');
+            allOpts[correct].classList.add('correct');
+            playSound('wrong');
+            showEmoji();
+        }
+
+        setTimeout(nextQuestion, 1500);
+    }
+
+    function nextQuestion() {
+        currIndex++;
+        loadQuestion();
+    }
+
+    function endQuiz() {
+        clearInterval(timerInt);
+        switchScreen('result-screen');
+        
+        // Use logic: Questions *Attempted* so far (if early exit) or Total if finished normally
+        const totalConsidered = Math.max(currIndex, 1); 
+        const percentage = Math.round((score / totalConsidered) * 100);
+        
+        document.getElementById('final-percent').textContent = percentage;
+        document.getElementById('final-score').textContent = score;
+        document.getElementById('final-total').textContent = totalConsidered;
+
+        const msgEl = document.getElementById('final-msg');
+        if (percentage >= 80) msgEl.textContent = "🏆 Outstanding Performance!";
+        else if (percentage >= 50) msgEl.textContent = "👏 Well Done! Keep it up.";
+        else msgEl.textContent = "📚 Practice makes perfect! Try again.";
+    }
+</script>
+
+</body>
+</html>

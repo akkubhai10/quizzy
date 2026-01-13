@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>History Quiz (Q201-269)</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+
+        :root {
+            --glass: rgba(255, 255, 255, 0.1);
+            --border: rgba(255, 255, 255, 0.2);
+            --shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            --correct: #00e676;
+            --wrong: #ff1744;
+            --text-main: #ffffff;
+            --text-sub: #dddddd;
+            /* Vibrant Mesh Gradient */
+            --bg-gradient: linear-gradient(45deg, #f093fb 0%, #f5576c 100%);
+            --bg-mesh: radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
+                       radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%), 
+                       radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 50%);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: var(--bg-gradient); 
+            background-image: var(--bg-mesh);
+            background-attachment: fixed;
+            background-size: cover;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            overflow: hidden;
+        }
+
+        /* Confetti Canvas */
+        #confetti-canvas {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        /* Glassmorphism Card */
+        .quiz-card {
+            background: var(--glass);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid var(--border);
+            border-radius: 25px;
+            box-shadow: var(--shadow);
+            width: 95%;
+            max-width: 800px;
+            height: 90vh;
+            display: flex;
+            flex-direction: column;
+            padding: 25px;
+            position: relative;
+        }
+
+        /* Screens */
+        .screen { display: none; flex-direction: column; height: 100%; }
+        .screen.active { display: flex; }
+
+        /* Typography */
+        h1 { text-align: center; margin-bottom: 5px; font-weight: 700; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+        .sub-text { text-align: center; font-size: 0.9rem; opacity: 0.8; margin-bottom: 25px; }
+
+        /* Settings */
+        .settings-panel {
+            display: flex; flex-direction: column; align-items: center; gap: 20px; margin: auto 0;
+        }
+        
+        .input-group { text-align: center; }
+        input[type="number"] {
+            background: rgba(0,0,0,0.2);
+            border: 1px solid var(--border);
+            padding: 12px; border-radius: 12px;
+            color: white; font-family: inherit;
+            text-align: center; font-size: 1.1rem;
+            width: 140px; margin-top: 5px;
+        }
+        input:focus { outline: none; border-color: rgba(255,255,255,0.6); }
+
+        /* Toggle */
+        .switch-wrap { display: flex; align-items: center; gap: 15px; font-weight: 600; }
+        .switch { position: relative; display: inline-block; width: 54px; height: 28px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(0,0,0,0.3); transition: .4s; border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute; content: ""; height: 20px; width: 20px; left: 4px; bottom: 4px;
+            background-color: white; transition: .4s; border-radius: 50%;
+        }
+        input:checked + .slider { background-color: var(--correct); }
+        input:checked + .slider:before { transform: translateX(26px); }
+
+        /* Buttons */
+        .btn-start {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid var(--border);
+            color: white; padding: 15px 50px;
+            border-radius: 50px; font-size: 1.2rem;
+            cursor: pointer; transition: all 0.3s;
+            font-weight: 700; margin-top: 10px;
+        }
+        .btn-start:hover { transform: scale(1.05); background: rgba(255,255,255,0.3); }
+
+        .btn-finish {
+            background: rgba(255, 87, 34, 0.25);
+            border: 1px solid rgba(255, 87, 34, 0.5);
+            color: white; padding: 12px;
+            border-radius: 15px; width: 100%;
+            cursor: pointer; font-weight: 600;
+            transition: background 0.3s;
+            margin-top: auto;
+        }
+        .btn-finish:hover { background: rgba(255, 87, 34, 0.45); }
+
+        /* Quiz HUD */
+        .hud {
+            display: flex; justify-content: space-between; align-items: center;
+            background: rgba(0,0,0,0.25); padding: 10px 20px;
+            border-radius: 15px; margin-bottom: 20px; font-weight: 600;
+        }
+        .progress-bar-bg {
+            width: 100%; height: 6px; background: rgba(255,255,255,0.1);
+            border-radius: 10px; margin-bottom: 20px; overflow: hidden;
+        }
+        .progress-bar-fill {
+            height: 100%; width: 0%; background: var(--correct);
+            transition: width 0.3s ease; box-shadow: 0 0 10px var(--correct);
+        }
+        
+        .timer-badge { display: flex; align-items: center; gap: 6px; }
+        .pulse-red { animation: pulseRed 1s infinite; color: #ff5252; font-weight: 800; }
+        @keyframes pulseRed { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.1); opacity: 0.8; } 100% { transform: scale(1); opacity: 1; } }
+
+        /* Content Area */
+        .scroll-area {
+            flex: 1;
+            overflow-y: auto;
+            padding-right: 5px;
+            margin-bottom: 15px;
+        }
+        .scroll-area::-webkit-scrollbar { width: 5px; }
+        .scroll-area::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.3); border-radius: 10px; }
+
+        .question-block { margin-bottom: 25px; }
+        .q-english { font-size: 1.25rem; font-weight: 700; margin-bottom: 8px; line-height: 1.4; color: var(--text-main); }
+        .q-hindi { font-size: 1.05rem; color: var(--text-sub); line-height: 1.5; }
+
+        .options-list { display: flex; flex-direction: column; gap: 12px; }
+        .option-btn {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 15px; border-radius: 15px;
+            cursor: pointer; transition: background 0.2s;
+            position: relative;
+        }
+        .option-btn:hover { background: rgba(255,255,255,0.15); }
+        .opt-english { display: block; font-weight: 600; font-size: 1.05rem; margin-bottom: 3px; }
+        .opt-hindi { display: block; font-size: 0.95rem; color: #ccc; }
+
+        /* Feedback States */
+        .correct { background: rgba(0, 230, 118, 0.4) !important; border-color: var(--correct) !important; }
+        .wrong { background: rgba(255, 23, 68, 0.4) !important; border-color: var(--wrong) !important; animation: shake 0.5s; }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-6px); }
+            75% { transform: translateX(6px); }
+        }
+
+        #emoji-layer {
+            position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%); font-size: 6rem;
+            opacity: 0; pointer-events: none; z-index: 99;
+            transition: opacity 0.3s;
+        }
+        #emoji-layer.show { opacity: 1; animation: popUp 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        @keyframes popUp { 0% { transform: translate(-50%, -50%) scale(0); } 70% { transform: translate(-50%, -50%) scale(1.2); } 100% { transform: translate(-50%, -50%) scale(1); } }
+
+        /* Result */
+        .score-val { font-size: 4rem; font-weight: 800; margin: 20px 0; background: linear-gradient(to bottom, #fff, #bbb); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .score-msg { font-size: 1.25rem; margin-bottom: 15px; text-align: center; }
+        .score-stats { color: #ccc; font-size: 0.95rem; }
+
+    </style>
+</head>
+<body>
+
+    <canvas id="confetti-canvas"></canvas>
+
+    <div class="quiz-card">
+        <div id="start-screen" class="screen active">
+            <h1>History Quiz<br><span style="font-size:0.6em; font-weight:400;">(Q201 - Q269)</span></h1>
+            <p class="sub-text">Bilingual • Interactive • Early Exit</p>
+
+            <div class="settings-panel">
+                <div class="input-group">
+                    <label>Timer per Question (Sec)</label><br>
+                    <input type="number" id="inputTimer" placeholder="e.g. 15">
+                    <div style="font-size:0.75em; opacity:0.6; margin-top:5px;">0 to disable timer</div>
+                </div>
+
+                <div class="switch-wrap">
+                    <span>Normal</span>
+                    <label class="switch">
+                        <input type="checkbox" id="inputShuffle">
+                        <span class="slider"></span>
+                    </label>
+                    <span>Shuffle</span>
+                </div>
+
+                <button class="btn-start" onclick="QuizApp.startQuiz()">Start Quiz</button>
+            </div>
+        </div>
+
+        <div id="quiz-screen" class="screen">
+            <div class="progress-bar-bg"><div class="progress-bar-fill" id="progressBar"></div></div>
+
+            <div class="hud">
+                <span id="qCounter">Q: 1/69</span>
+                <span id="scoreCounter">Score: 0</span>
+                <div class="timer-badge" id="timerBadge" style="display:none;">
+                    ⏳ <span id="timerText">--</span>
+                </div>
+            </div>
+
+            <div class="scroll-area">
+                <div class="question-block">
+                    <div class="q-english" id="qTextEng"></div>
+                    <div class="q-hindi" id="qTextHin"></div>
+                </div>
+                <div class="options-list" id="optionsContainer"></div>
+            </div>
+
+            <button class="btn-finish" onclick="QuizApp.finishEarly()">Finish & Show Results</button>
+            <div id="emoji-layer">😢</div>
+        </div>
+
+        <div id="result-screen" class="screen" style="justify-content: center; align-items: center;">
+            <h2>Quiz Completed!</h2>
+            <div class="score-val" id="finalScore">0%</div>
+            <p class="score-msg" id="finalMsg"></p>
+            <p class="score-stats" id="finalStats"></p>
+            <button class="btn-start" onclick="location.reload()">Restart Quiz 🔄</button>
+        </div>
+    </div>
+
+<script>
+    // DATA: Questions 201-269
+    const questionsDB = [
+        { e: "Who was the most famous Shaka ruler in India?", h: "भारत में सबसे प्रसिद्ध शक शासक कौन था ?", o: [{e:"Pulakeshin I", h:"पुलकेशिन प्रथम"},{e:"Rudradaman", h:"रुद्रदामन"},{e:"Kanishka", h:"कनिष्क"},{e:"Harsha", h:"हर्ष"}], a: 1 },
+        { e: "The arrival of Kushanas in India happened after whom?", h: "कुषाणों का आगमन भारत में किसके बाद हुआ ?", o: [{e:"Greeks", h:"यूनानियों"},{e:"Parthians", h:"पार्थियायी"},{e:"Shakas", h:"शकों"},{e:"Guptas", h:"गुप्तों"}], a: 1 },
+        { e: "Where was the first capital of Kushanas?", h: "कुषाणों की पहली राजधानी कहाँ थी ?", o: [{e:"Pataliputra", h:"पाटलिपुत्र"},{e:"Peshawar", h:"पेशावर"},{e:"Vaishali", h:"वैशाली"},{e:"Kaushambi", h:"कौशाम्बी"}], a: 1 },
+        { e: "Where did Kanishka build a monastery and a huge stupa?", h: "कनिष्क ने कहाँ पर एक मठ और विशाल स्तूप का निर्माण करवाया ?", o: [{e:"Mathura", h:"मथुरा"},{e:"Shravasti", h:"श्रावस्ती"},{e:"Peshawar", h:"पेशावर"},{e:"Kapilvastu", h:"कपिलवस्तु"}], a: 2 },
+        { e: "Kanishka was the patron of which sect of Buddhism?", h: "कनिष्क बौद्ध धर्म के किस सम्प्रदाय का संरक्षक था ?", o: [{e:"Hinayana", h:"हीनयान"},{e:"Mahayana", h:"महायान"},{e:"Both", h:"(a) और (b) दोनो"},{e:"None", h:"इनमें से कोई नहीं"}], a: 1 },
+        { e: "The tribe named 'Yueh-chi' lived where?", h: "यू-ची नाम की जाति कहाँ निवास करती थी ?", o: [{e:"Japan", h:"जापान में"},{e:"China", h:"चीन में"},{e:"India", h:"भारत में"},{e:"Iraq", h:"इराक में"}], a: 1 },
+        { e: "Kushana people belonged to which branch of caste?", h: "कुषाण लोग किस जाति की शाखा के थे ?", o: [{e:"Yueh-chi", h:"यू-ची"},{e:"Huna", h:"हूण"},{e:"Yavana", h:"यवन"},{e:"Brahmin", h:"ब्राह्मण"}], a: 0 },
+        { e: "Another name for Peshawar was?", h: "पेशावर का दूसरा नाम था", o: [{e:"Kalyanpur", h:"कल्याणपुर"},{e:"Shubhankarpur", h:"शुभंकरपुर"},{e:"Purushapura", h:"पुरुषपुर"},{e:"Nirbhaypur", h:"निर्भयपुर"}], a: 2 },
+        { e: "Kanishka established which city in Kashmir?", h: "कनिष्क ने कश्मीर में किस नामक नगर की स्थापना की ?", o: [{e:"Purushnagar", h:"पुरुषनगर"},{e:"Kanishkapura", h:"कनिष्कपुर"},{e:"Pritampur", h:"प्रीतमपुर"},{e:"Janakpur", h:"जनकपुर"}], a: 1 },
+        { e: "Writer of the play 'Sariputra'?", h: "'सारीपुत' नाटक के लेखक हैं", o: [{e:"Ashvaghosha", h:"अश्वघोष"},{e:"Charaka", h:"चरक"},{e:"Kalidasa", h:"कालिदास"},{e:"Nagarjuna", h:"नागार्जुन"}], a: 0 },
+        { e: "Who composed 'Madhyama Karika' and 'Suhrullekha'?", h: "'मध्यम कारिका' तथा 'सुहृल्लेख' की रचना की", o: [{e:"Vishakhadatta", h:"विशाखदत्त"},{e:"Bhavabhuti", h:"भवभूति"},{e:"Nagarjuna", h:"नागार्जुन"},{e:"Kautilya", h:"कौटिल्य"}], a: 2 },
+        { e: "Kharavela was a follower of?", h: "खारवेल धर्मावलम्बी था", o: [{e:"Jain", h:"जैन"},{e:"Buddhist", h:"बौद्ध"},{e:"Brahmin", h:"ब्राह्मण"},{e:"Christian", h:"ईसाई"}], a: 0 },
+        { e: "First Shaka King in India was?", h: "भारत में पहला शक राजा था", o: [{e:"Maues", h:"मैयस"},{e:"Demetrius", h:"उम्मैयस"},{e:"Vasudeva", h:"वायुदेव"},{e:"Pulakeshin I", h:"पुलकेसिन प्रथम"}], a: 0 },
+        { e: "From whom did Kushanas adopt the title of 'Devaputra'?", h: "देवपुत्र की उपाधि का प्रयोग कुषाणों ने किसमें ग्रहण की थी ?", o: [{e:"Iranians", h:"ईरानी"},{e:"Africans", h:"अफ्रीकी"},{e:"Chinese", h:"चीनी"},{e:"Egyptians", h:"मिस्र"}], a: 2 },
+        { e: "Society of Satavahanas was?", h: "सातवाहनों का समाज था", o: [{e:"Patriarchal", h:"पितृसत्तात्मक"},{e:"Matriarchal", h:"मातृसत्तात्मक"},{e:"Both", h:"(a) और (b) दोनों"},{e:"None", h:"उपरोक्त कोई नहीं"}], a: 0 },
+        { e: "Official language of Satavahanas was?", h: "सातवाहनों की राजकीय भाषा थी", o: [{e:"Prakrit", h:"प्राकृत"},{e:"Sanskrit", h:"संस्कृत"},{e:"Tamil", h:"तमिल"},{e:"Telugu", h:"तेलुगु"}], a: 0 },
+        { e: "Who started land grants to Brahmins first?", h: "सर्वप्रथम ब्राह्मणों को किसने भूमिदान किया ?", o: [{e:"Kushana", h:"कुषाण"},{e:"Satavahana", h:"सातवाहन"},{e:"Gupta", h:"गुप्त"},{e:"Maurya", h:"मौर्य"}], a: 1 },
+        { e: "Total number of caves in Ajanta group?", h: "अजन्ता गुफा समूह में कुल कितनी गुफाएँ हैं ?", o: [{e:"28", h:"28"},{e:"26", h:"26"},{e:"30", h:"30"},{e:"31", h:"31"}], a: 2 },
+        { e: "Main place of Ajanta paintings?", h: "अजन्ता चित्रों का प्रमुख स्थान क्या है ?", o: [{e:"Gujarat", h:"गुजरात"},{e:"Rajasthan", h:"राजस्थान"},{e:"Maharashtra", h:"महाराष्ट्र"},{e:"Bengal", h:"बंगाल"}], a: 2 },
+        { e: "Main subject of Ajanta paintings?", h: "अजन्ता चित्रों का प्रमुख विषय क्या है ?", o: [{e:"Ram Katha", h:"राम कथा"},{e:"Krishna Leela", h:"कृष्ण लीला"},{e:"Buddha Charita", h:"बुद्ध चरित"},{e:"Shiv Katha", h:"शिव कथा"}], a: 2 },
+        { e: "When did Ajanta caves come to light?", h: "अजन्ता गुफायें कब प्रकाश में आई ?", o: [{e:"1818 AD", h:"1818 ई०"},{e:"1816 AD", h:"1816 ई०"},{e:"1819 AD", h:"1819 ई०"},{e:"1800 AD", h:"1800 ई०"}], a: 2 },
+        { e: "Paintings are available in how many caves of Ajanta now?", h: "अजन्ता की कितनी गुफाओं में अब चित्र उपलब्ध है ?", o: [{e:"4", h:"4 गुफाओं में"},{e:"6", h:"6 गुफाओं में"},{e:"11", h:"11 गुफाओं में"},{e:"All", h:"सभी में"}], a: 1 },
+        { e: "Ancient name of Ellora village?", h: "एलोरा गांव का प्राचीन नाम क्या था ?", o: [{e:"Elpur", h:"ऐलपुर"},{e:"Aurangabad", h:"औरंगाबाद"},{e:"Tanjore", h:"तन्जोर"},{e:"None", h:"इनमें से कोई नहीं"}], a: 0 },
+        { e: "Vakataka dynasty contributed most to Ajanta. Rulers were followers of?", h: "अजन्ता के निर्माण में सबसे अधिक योगदान वाकाटक राजवंश का है। वे किस धर्म के अनुयायी थे ?", o: [{e:"Buddhism", h:"बौद्ध धर्म के"},{e:"Jainism", h:"जैन धर्म के"},{e:"Shaivism", h:"शैव धर्म के"},{e:"None", h:"इनमें से कोई नहीं"}], a: 3 },
+        { e: "World famous painting 'Dying Princess' is in which cave?", h: "विश्व प्रसिद्ध चित्र 'मरणासन्न राजकुमारी' का चित्र किस गुफा में चित्रित है ?", o: [{e:"16", h:"16"},{e:"17", h:"17"},{e:"21", h:"21"},{e:"19", h:"19"}], a: 0 },
+        { e: "Subject matter of Ajanta paintings?", h: "अजन्ता की गुफाओं में मिलने वाली चित्रकला की विषय-वस्तु क्या है :", o: [{e:"Buddha's life", h:"बुद्ध के जीवन का व्यष्टि व समष्टिगत पक्ष"},{e:"Buddha's teachings", h:"बुद्ध के उपदेश"},{e:"Forms of Shiva", h:"शिव के विविध रूप"},{e:"None", h:"इनमें से कोई नहीं"}], a: 0 },
+        { e: "What is false about Gandhara style?", h: "गान्धार शैली के विषय में निम्न में से क्या असत्य है ?", o: [{e:"Started in 1st Century BC", h:"प्रारम्भ ईसा पूर्व प्रथम शताब्दी में हुआ"},{e:"Developed in Afg/West Punjab", h:"विकास अफगानिस्तान और पश्चिम पंजाब में हुआ"},{e:"Called Greek-Buddhist style", h:"यह ग्रीक-बौद्ध शैली भी कहलाती है"},{e:"All of the above", h:"उपर्युक्त सभी"}], a: 3 },
+        { e: "Gandhara art style is related to?", h: "गान्धार कला शैली का सम्बन्ध है", o: [{e:"Sculpture", h:"मूर्ति कला से"},{e:"Painting", h:"चित्रकला से"},{e:"Architecture", h:"स्थापत्य कला से"},{e:"Dance", h:"नृत्य कला से"}], a: 0 },
+        { e: "Sanchi Stupas represent whose art?", h: "सांची के स्तूप किसकी कला तथा मूर्ति कला को निरूपित करते हैं ?", o: [{e:"Buddhists", h:"बौद्धों की"},{e:"Jains", h:"जैनियों की"},{e:"Muslims", h:"मुसलमानों की"},{e:"Brahmins", h:"ब्राह्मणों की"}], a: 0 },
+        { e: "Ellora caves are situated in which district?", h: "एलोरा की गुफाएँ किस जिले में स्थित हैं ?", o: [{e:"Chandrapur", h:"चन्द्रपुर"},{e:"Nagpur", h:"नागपुर"},{e:"Aurangabad", h:"औरंगाबाद"},{e:"Latur", h:"लातूर"}], a: 2 },
+        { e: "Ajanta caves are situated in?", h: "अजन्ता गुफाएँ स्थित हैं", o: [{e:"Barabar hills", h:"बराबर पहाड़ियों में"},{e:"Satpura hills", h:"सतपुड़ा पहाड़ियों में"},{e:"Vindhya slopes", h:"विंध्य पर्वत की ढलान पर"},{e:"None", h:"इनमें से कोई नहीं"}], a: 1 },
+        { e: "Which Ellora cave is Dashavatara cave?", h: "एलोरा की कौन-सी गुफा दशावतार गुफा के नाम से प्रसिद्ध है ?", o: [{e:"7th", h:"सातवीं"},{e:"9th", h:"नवीं"},{e:"10th", h:"दसवीं"},{e:"15th", h:"पन्द्रहवीं"}], a: 3 },
+        { e: "Nasik caves were constructed by?", h: "नासिक गुफा का निर्माण किन शासकों ने करवाया ?", o: [{e:"Pallava", h:"पल्लव"},{e:"Andhra-Satavahana", h:"आन्ध्रवंशी"},{e:"Chalukya", h:"चालुक्य"},{e:"Maurya", h:"मौर्य"}], a: 1 },
+        { e: "How many Jain caves in Ellora?", h: "एलोरा गुफा समूह में जैन धर्म से सम्बन्धित कुल कितनी गुफाएँ हैं ?", o: [{e:"12", h:"12"},{e:"17", h:"17"},{e:"9", h:"9"},{e:"5", h:"5"}], a: 3 },
+        { e: "Ajanta caves are located at?", h: "अजन्ता की गुफाएँ निम्न में से कहाँ पर स्थित है :", o: [{e:"Hoshangabad", h:"होशंगाबाद"},{e:"Aurangabad", h:"औरंगाबाद"},{e:"Jahanabad", h:"जहानाबाद"},{e:"Dhanbad", h:"धनबाद"}], a: 1 },
+        { e: "'Apsara' painting is in which cave?", h: "'अप्सरा' नामक चित्र अजन्ता की किस गुफा में है ?", o: [{e:"Cave 10", h:"गुफा नं० 10"},{e:"Cave 15", h:"गुफा नं० 15"},{e:"Cave 17", h:"गुफा नं० 17"},{e:"Cave 18", h:"गुफा नं० 18"}], a: 2 },
+        { e: "Founder of Shunga dynasty was?", h: "शुंग वंश के संस्थापक कौन थे ?", o: [{e:"Vasudeva", h:"वासुदेव"},{e:"Pushyamitra Shunga", h:"पुष्यमित्र शुंग"},{e:"Susharma", h:"सुशर्मा"},{e:"Shishunaga", h:"शिशुनाग"}], a: 1 },
+        { e: "Who performed two Ashvamedha sacrifices?", h: "निम्नलिखित में से किस शासक ने दो अश्वमेध यज्ञ करवाया था ?", o: [{e:"Pushyamitra Shunga", h:"पुष्यमित्र शुंग"},{e:"Agnimitra", h:"अग्निमित्र"},{e:"Bhagabhadra", h:"भागभद्र"},{e:"Ashoka", h:"अशोक"}], a: 0 },
+        { e: "Royal Priest of Pushyamitra Shunga?", h: "पुष्यमित्र शुंग के राजपुरोहित कौन थे ?", o: [{e:"Patanjali", h:"पतंजलि"},{e:"Banabhatta", h:"वाणभट्ट"},{e:"Panini", h:"पाणिनि"},{e:"Shudraka", h:"शूद्रक"}], a: 0 },
+        { e: "Which statement is correct?", h: "निम्न में कौन-सा कथन सही है ?", o: [{e:"1 & 2", h:"1 और 2"},{e:"2 & 3", h:"2 और 3"},{e:"1 & 3", h:"1 और 3"},{e:"1, 2, 3", h:"1, 2 और 3"}], a: 3 },
+        { e: "Malavikagnimitram is based on?", h: "मालविकाग्निमित्रम् कालिदास की ग्रंथ जो आधारित है", o: [{e:"Politics", h:"राजनीति पर"},{e:"Social system", h:"सामाजिक व्यवस्था पर"},{e:"Love (Pranay)", h:"प्रेस पर (प्रणय)"},{e:"War", h:"युद्ध पर"}], a: 2 },
+        { e: "Capitals of Pushyamitra Shunga (Pol/Cult)?", h: "पुष्यमित्र शुंग की राजनीतिक तथा सांस्कृतिक राजधानी क्रमशः कहाँ थी ?", o: [{e:"Ujjain-Vidisha", h:"उज्जैन, विदिशा"},{e:"Vidisha-Pataliputra", h:"विदिशा, पाटलिपुत्र"},{e:"Pataliputra-Vidisha", h:"पाटलिपुत्र, विदिशा"},{e:"Pataliputra-Mathura", h:"पाटलिपुत्र, मथुरा"}], a: 2 },
+        { e: "Who defeated Indo-Greek ruler Menander?", h: "हिन्द-यवन शासक मिनाण्डर को किसने पराजित किया था ?", o: [{e:"Pushyamitra Shunga", h:"पुष्यमित्र शुंग"},{e:"Harshavardhana", h:"हर्षवर्धन"},{e:"Gautamiputra Satakarni", h:"गौतमीपुत्र शातकर्णी"},{e:"Amoghavarsha", h:"अमोघवर्ष"}], a: 0 },
+        { e: "Author of Ashtadhyayi?", h: "अष्टाध्यायी के लेखक कौन थे ?", o: [{e:"Patanjali", h:"पतंजलि"},{e:"Panini", h:"पाणिनि"},{e:"Vishakhadatta", h:"विशाखदत्त"},{e:"Harshavardhana", h:"हर्षवर्धन"}], a: 1 },
+        { e: "9th Shunga ruler who adopted Bhagavat religion?", h: "शुंग वंश के 9वें शासक कौन थे, जिन्होंने भागवत धर्म को अपनाया था ?", o: [{e:"Devabhuti", h:"देवभूति"},{e:"Vajramitra", h:"वज्रमित्र"},{e:"Bhagabhadra", h:"भागभद्र"},{e:"Vasumitra", h:"वसुमित्र"}], a: 2 },
+        { e: "Heliodorus came to whose court?", h: "हेलियोडोरस किसके दरबार में आया था ?", o: [{e:"Vasumitra", h:"वसुमित्र"},{e:"Devabhuti", h:"देवभूति"},{e:"Agnimitra", h:"अग्निमित्र"},{e:"Bhagabhadra", h:"भागभद्र"}], a: 3 },
+        { e: "Last ruler of Shunga dynasty?", h: "शुंग वंश का अंतिम शासक कौन था ?", o: [{e:"Vasumitra", h:"वसुमित्र"},{e:"Devabhuti", h:"देवभूति"},{e:"Vajramitra", h:"वज्रमित्र"},{e:"Vasujyeshtha", h:"वसुज्येष्ठ"}], a: 1 },
+        { e: "Who founded Kanva dynasty?", h: "शुंग वंश के स्थान पर कण्व वंश की स्थापना किसने की थी ?", o: [{e:"Vasudeva", h:"वासुदेव"},{e:"Bhumimitra", h:"भूमिमित्र"},{e:"Narayana", h:"नारायण"},{e:"Susharma", h:"सुशर्मा"}], a: 0 },
+        { e: "Revival of Sanskrit and Hindu religion in which period?", h: "किस काल में संस्कृत तथा हिन्दू धर्म का पुनरुत्थान हुआ था ?", o: [{e:"Gupta", h:"गुप्त वंश के काल में"},{e:"Satavahana", h:"सातवाहन वंश के काल में"},{e:"Shunga", h:"शुंग वंश के काल में"},{e:"Maurya", h:"मौर्य वंश के काल में"}], a: 2 },
+        { e: "Stone usage in Stupas started when?", h: "किस काल में स्तूप को बनाने में पत्थरों का प्रयोग किया जाने लगा ?", o: [{e:"Maurya", h:"मौर्य काल"},{e:"Satavahana", h:"सातवाहन काल"},{e:"Kanva", h:"कण्व काल"},{e:"Shunga", h:"शुंग काल"}], a: 3 },
+        { e: "Last ruler of Kanva dynasty?", h: "कण्व वंश का अंतिम शासक कौन था ?", o: [{e:"Simuka", h:"सिमुक"},{e:"Susharma", h:"सुशर्मा"},{e:"Vasudeva", h:"वासुदेव"},{e:"Bhumiputra", h:"भूमिपुत्र"}], a: 1 },
+        { e: "Who established Andhra Satavahana replacing Kanva?", h: "कण्व वंश के स्थान पर किसने आन्ध्र सातवाहन की स्थापना की ?", o: [{e:"Satakarni I", h:"शातकर्णी प्रथम"},{e:"Simuka", h:"सिमुक"},{e:"Hala", h:"हाल"},{e:"Gautamiputra Satakarni", h:"गौतमीपुत्र शातकर्णी"}], a: 1 },
+        { e: "Where was the capital of Satavahanas?", h: "सातवाहनों की राजधानी कहाँ थी ?", o: [{e:"Pratisthan", h:"प्रतिष्ठान"},{e:"Pataliputra", h:"पाटलिपुत्र"},{e:"Mathura", h:"मथुरा"},{e:"Ujjain", h:"उज्जैन"}], a: 0 },
+        { e: "Who was the author of Gathasaptashati?", h: "गाथासप्तशती के लेखक कौन थे ?", o: [{e:"Somadeva", h:"सोमदेव"},{e:"Kshemendra", h:"क्षेमेन्द्र"},{e:"Hala", h:"हाल"},{e:"Patanjali", h:"पतंजलि"}], a: 2 },
+        { e: "Which statement is correct?", h: "निम्न में कौन-सा कथन सही है ?", o: [{e:"1 & 2", h:"1 और 2"},{e:"2 & 3", h:"2 और 3"},{e:"1 & 3", h:"1 और 3"},{e:"1, 2, 3", h:"1, 2, 3"}], a: 3 },
+        { e: "Which statement is incorrect?", h: "निम्न में कौन-सा कथन गलत है ?", o: [{e:"Gunadhya wrote Brihatkatha", h:"वृहत्कथा के रचयिता गुणाढ्य थे"},{e:"Somadeva wrote Katantra", h:"कातन्त्र के रचयिता सोमदेव थे"},{e:"Greatest ruler Gautamiputra", h:"सबसे महान शासक गौतमीपुत्र शातकर्णी था"},{e:"Nasik inscription by Gautami Balashri", h:"नासिक अभिलेख गौतमी बलश्री ने बनवाया था"}], a: 1 },
+        { e: "Inscription: Horse of Gautamiputra drank water of 3 oceans?", h: "किस अभिलेख से पता चलता है कि गौतमी पुत्र शातकर्णी के घोड़े ने तीन समुद्रों का पानी पिया था ?", o: [{e:"Nasik", h:"नासिक अभिलेख से"},{e:"Junagadh", h:"जूनागढ़ अभिलेख से"},{e:"Hathigumpha", h:"हाथीगुम्फा अभिलेख से"},{e:"None", h:"इनमें से कोई नहीं"}], a: 0 },
+        { e: "Which statements are true?", h: "निम्न में कौन-से कथन सत्य हैं ?", o: [{e:"1, 2, 3", h:"1, 2 और 3"},{e:"2, 3, 4", h:"2, 3 और 4"},{e:"1, 2, 4", h:"1, 2 और 4"},{e:"1, 2, 3, 4", h:"1, 2, 3 और 4"}], a: 0 },
+        { e: "Last ruler of Satavahana dynasty?", h: "सातवाहन वंश का अंतिम शासक कौन था ?", o: [{e:"Pulumavi", h:"पुलुमावि"},{e:"Hala", h:"हाल"},{e:"Yajnashri", h:"यज्ञश्री"},{e:"Gautamiputra", h:"गौतमीपुत्र"}], a: 2 },
+        { e: "Coins with image of a ship?", h: "किस वंश के शासकों के सिक्के पर जलपोत का चित्र अंकित था ?", o: [{e:"Kanva", h:"कण्व वंश"},{e:"Chola", h:"चोल वंश"},{e:"Satavahana", h:"सातवाहन वंश"},{e:"Pandya", h:"पाण्ड्य वंश"}], a: 2 },
+        { e: "Which statement is correct?", h: "निम्न में कौन-सा कथन सही है ?", o: [{e:"1 & 2", h:"1 और 2"},{e:"2 & 3", h:"2 और 3"},{e:"1 & 3", h:"1 और 3"},{e:"1, 2, 3", h:"1, 2, 3"}], a: 3 },
+        { e: "Who first introduced lead coins?", h: "सर्वप्रथम किस शासकों ने सीसा के सिक्के का प्रचलन किया था :", o: [{e:"Maurya", h:"मौर्य वंश"},{e:"Satavahana", h:"सातवाहन वंश"},{e:"Gupta", h:"गुप्त वंश"},{e:"Vardhana", h:"वर्धन वंश"}], a: 1 },
+        { e: "Which statement is correct?", h: "निम्न में कौन-सा कथन सही है ?", o: [{e:"1 & 2", h:"1 और 2"},{e:"2 & 3", h:"2 और 3"},{e:"1 & 3", h:"1 और 3"},{e:"1, 2, 3", h:"1, 2, 3"}], a: 1 },
+        { e: "Satavahanas worked as officials under whom initially?", h: "सातवाहनों ने पहले किसके शासन काल में स्थानीय अधिकारी के रूप में कार्य किया था ?", o: [{e:"Shunga", h:"शुंग"},{e:"Kanva", h:"कण्व"},{e:"Maurya", h:"मौर्य"},{e:"Indo-Greek", h:"हिन्द यूनानी"}], a: 2 },
+        { e: "Where did Satavahanas start their rule?", h: "सातवाहनों ने आरंभिक दिनों में अपना शासन कहाँ शुरू किया था :", o: [{e:"Karnataka", h:"कर्नाटक"},{e:"Maharashtra", h:"महाराष्ट्र"},{e:"Chhattisgarh", h:"छत्तीसगढ़"},{e:"Andhra", h:"आन्ध्र"}], a: 1 },
+        { e: "Land where elephant sleeps produces enough for a year?", h: "जितनी भूमि पर एक हाथी सोता है उतनी ही भूमि पर एक व्यक्ति के सालभर के अनाज का उत्पादन होता था ?", o: [{e:"Mahanadi Delta", h:"महानदी डेल्टा"},{e:"Godavari Delta", h:"गोदावरी डेल्टा"},{e:"Krishna Delta", h:"कृष्णा डेल्टा"},{e:"Damodar", h:"दामोदर नदी घाटी"}], a: 1 },
+        { e: "Founder of Chedi dynasty of Kalinga?", h: "कलिंग के चेदी वंश की स्थापना किसने की थी ?", o: [{e:"Kharavela", h:"खारवेल"},{e:"Mahameghavahana", h:"महामेघवाहन"},{e:"Nandaraj", h:"नंदराज"},{e:"Brahmagupta", h:"ब्रह्मगुप्त"}], a: 1 },
+        { e: "Who traded with Rome first?", h: "सर्वप्रथम रोम के साथ व्यापार किस वंश के शासकों ने किया था :", o: [{e:"Chedi", h:"चेदी वंश"},{e:"Satavahana", h:"सातवाहन वंश"},{e:"Tamil & Chera", h:"तमिल एवं चेर"},{e:"Kanva", h:"कण्व वंश"}], a: 2 },
+        { e: "Hathigumpha inscription related to?", h: "हाथीगुम्फा अभिलेख किस राजा से संबंधित है ?", o: [{e:"Rudradaman", h:"रुद्रदामन"},{e:"Kharavela", h:"खारवेल"},{e:"Mahameghavahana", h:"महामेघवाहन"},{e:"Ashoka", h:"अशोक"}], a: 1 }
+    ];
+
+    const QuizApp = {
+        currentIdx: 0,
+        score: 0,
+        timer: null,
+        timeLimit: 0,
+        questions: [],
+        audioCtx: null,
+
+        // Initialize Audio Context
+        initAudio() {
+            if (!this.audioCtx) this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        },
+
+        // Play Tone
+        playTone(type) {
+            if (!this.audioCtx) return;
+            const osc = this.audioCtx.createOscillator();
+            const gain = this.audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(this.audioCtx.destination);
+            
+            const now = this.audioCtx.currentTime;
+            if (type === 'success') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(600, now);
+                osc.frequency.exponentialRampToValueAtTime(1000, now + 0.15);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+            } else {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(120, now);
+                osc.frequency.linearRampToValueAtTime(80, now + 0.3);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+            }
+            osc.start();
+            osc.stop(now + 0.4);
+        },
+
+        startQuiz() {
+            this.initAudio();
+            const tInput = document.getElementById('inputTimer').value;
+            this.timeLimit = (tInput && parseInt(tInput) > 0) ? parseInt(tInput) : 0;
+            const shuffle = document.getElementById('inputShuffle').checked;
+
+            this.questions = [...questionsDB];
+            if (shuffle) {
+                for (let i = this.questions.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [this.questions[i], this.questions[j]] = [this.questions[j], this.questions[i]];
+                }
+            }
+
+            this.currentIdx = 0;
+            this.score = 0;
+            document.getElementById('start-screen').classList.remove('active');
+            document.getElementById('quiz-screen').classList.add('active');
+            this.loadQuestion();
+        },
+
+        loadQuestion() {
+            clearInterval(this.timer);
+            const q = this.questions[this.currentIdx];
+            const total = this.questions.length;
+
+            // Update HUD
+            document.getElementById('qCounter').textContent = `Q: ${this.currentIdx + 1}/${total}`;
+            document.getElementById('scoreCounter').textContent = `Score: ${this.score}`;
+            document.getElementById('progressBar').style.width = `${(this.currentIdx / total) * 100}%`;
+
+            // Render Text
+            document.getElementById('qTextEng').textContent = `${this.currentIdx + 201}. ${q.e}`;
+            document.getElementById('qTextHin').textContent = q.h;
+
+            // Render Options
+            const container = document.getElementById('optionsContainer');
+            container.innerHTML = '';
+            q.o.forEach((opt, i) => {
+                const btn = document.createElement('div');
+                btn.className = 'option-btn';
+                btn.innerHTML = `<span class="opt-english">${String.fromCharCode(65+i)}. ${opt.e}</span><span class="opt-hindi">${opt.h}</span>`;
+                btn.onclick = () => this.handleAnswer(i, btn);
+                container.appendChild(btn);
+            });
+
+            // Timer
+            const badge = document.getElementById('timerBadge');
+            const txt = document.getElementById('timerText');
+            txt.className = '';
+            
+            if (this.timeLimit > 0) {
+                badge.style.display = 'flex';
+                let timeLeft = this.timeLimit;
+                txt.textContent = timeLeft;
+
+                this.timer = setInterval(() => {
+                    timeLeft--;
+                    txt.textContent = timeLeft;
+                    if (timeLeft <= 5) txt.className = 'pulse-red';
+                    if (timeLeft <= 0) {
+                        clearInterval(this.timer);
+                        this.handleTimeout();
+                    }
+                }, 1000);
+            } else {
+                badge.style.display = 'none';
+            }
+        },
+
+        handleTimeout() {
+            this.disableButtons();
+            const correctIndex = this.questions[this.currentIdx].a;
+            document.querySelectorAll('.option-btn')[correctIndex].classList.add('correct');
+            this.playTone('fail');
+            setTimeout(() => this.nextQuestion(), 2000);
+        },
+
+        handleAnswer(selectedIndex, btn) {
+            clearInterval(this.timer);
+            this.disableButtons();
+            const correctIndex = this.questions[this.currentIdx].a;
+
+            if (selectedIndex === correctIndex) {
+                this.score++;
+                btn.classList.add('correct');
+                this.playTone('success');
+                confettiEffect();
+            } else {
+                btn.classList.add('wrong');
+                document.querySelectorAll('.option-btn')[correctIndex].classList.add('correct');
+                this.playTone('fail');
+                this.showEmoji();
+            }
+            setTimeout(() => this.nextQuestion(), 1500);
+        },
+
+        disableButtons() {
+            const btns = document.querySelectorAll('.option-btn');
+            btns.forEach(b => b.style.pointerEvents = 'none');
+        },
+
+        showEmoji() {
+            const el = document.getElementById('emoji-layer');
+            el.classList.add('show');
+            setTimeout(() => el.classList.remove('show'), 1000);
+        },
+
+        nextQuestion() {
+            this.currentIdx++;
+            if (this.currentIdx < this.questions.length) {
+                this.loadQuestion();
+            } else {
+                this.finish();
+            }
+        },
+
+        finishEarly() {
+            clearInterval(this.timer);
+            this.finish();
+        },
+
+        finish() {
+            document.getElementById('quiz-screen').classList.remove('active');
+            document.getElementById('result-screen').classList.add('active');
+
+            let denominator = this.currentIdx;
+            if (denominator === 0) denominator = 1;
+
+            const percentage = Math.round((this.score / denominator) * 100);
+            
+            document.getElementById('finalScore').textContent = `${percentage}%`;
+            
+            const msgEl = document.getElementById('finalMsg');
+            if (percentage >= 80) msgEl.textContent = "🏆 Outstanding Performance!";
+            else if (percentage >= 50) msgEl.textContent = "👏 Well Done! Keep it up.";
+            else msgEl.textContent = "📚 Practice makes perfect! Try again.";
+
+            document.getElementById('finalStats').textContent = `You scored ${this.score} out of ${denominator} attempted questions.`;
+        }
+    };
+
+    // Confetti Animation
+    function confettiEffect() {
+        const canvas = document.getElementById('confetti-canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        
+        const pieces = [];
+        for(let i=0; i<80; i++) {
+            pieces.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height - canvas.height,
+                w: Math.random() * 8 + 4,
+                h: Math.random() * 8 + 4,
+                color: `hsl(${Math.random() * 360}, 100%, 50%)`,
+                vy: Math.random() * 4 + 2,
+                vx: Math.random() * 4 - 2
+            });
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            let active = false;
+            
+            pieces.forEach(p => {
+                p.x += p.vx;
+                p.y += p.vy;
+                p.y > canvas.height ? null : active = true;
+                
+                ctx.fillStyle = p.color;
+                ctx.fillRect(p.x, p.y, p.w, p.h);
+            });
+
+            if (active) requestAnimationFrame(animate);
+            else ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+        animate();
+    }
+</script>
+</body>
+</html>

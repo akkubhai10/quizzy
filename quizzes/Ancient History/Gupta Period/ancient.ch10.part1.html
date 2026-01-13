@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gupta Empire Master Quiz</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* --- RESET & BASE --- */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #ff758c 100%);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            overflow-x: hidden;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* --- GLASSMORPHISM CARD --- */
+        .glass-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 25px;
+            width: 95%;
+            max-width: 600px;
+            height: 90vh; /* Fixed height for scrollable content */
+            padding: 20px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* --- SCROLLABLE CONTENT AREA --- */
+        .content-area {
+            flex: 1;
+            overflow-y: auto;
+            padding-right: 5px;
+            padding-bottom: 60px; /* Space for bottom button */
+        }
+
+        /* Scrollbar Styling */
+        .content-area::-webkit-scrollbar {
+            width: 6px;
+        }
+        .content-area::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.3);
+            border-radius: 10px;
+        }
+
+        /* --- UTILITY --- */
+        .hidden { display: none !important; }
+        .text-center { text-align: center; }
+        .flex-between { display: flex; justify-content: space-between; align-items: center; }
+        
+        /* --- START SCREEN --- */
+        .start-screen {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            height: 100%;
+            gap: 20px;
+        }
+
+        h1 { font-size: 2rem; margin-bottom: 10px; text-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        
+        .input-group {
+            background: rgba(0,0,0,0.2);
+            padding: 15px;
+            border-radius: 15px;
+            margin-bottom: 10px;
+        }
+
+        label { display: block; margin-bottom: 8px; font-weight: 600; }
+        
+        input[type="number"] {
+            width: 100%;
+            padding: 12px;
+            border-radius: 10px;
+            border: none;
+            outline: none;
+            background: rgba(255,255,255,0.9);
+            font-family: 'Poppins', sans-serif;
+            font-size: 1.1rem;
+        }
+
+        .toggle-switch {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+        }
+
+        .toggle-input { display: none; }
+        .toggle-label {
+            width: 50px;
+            height: 26px;
+            background: #ddd;
+            border-radius: 50px;
+            position: relative;
+            transition: 0.3s;
+        }
+        .toggle-label::after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            top: 3px;
+            left: 3px;
+            transition: 0.3s;
+        }
+        .toggle-input:checked + .toggle-label { background: #4cd137; }
+        .toggle-input:checked + .toggle-label::after { left: 27px; }
+
+        .btn-primary {
+            background: white;
+            color: #764ba2;
+            border: none;
+            padding: 15px;
+            border-radius: 50px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            width: 100%;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        .btn-primary:hover { transform: scale(1.02); box-shadow: 0 6px 20px rgba(0,0,0,0.3); }
+
+        /* --- QUIZ UI --- */
+        .progress-container {
+            width: 100%;
+            height: 6px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 10px;
+            margin-bottom: 15px;
+            overflow: hidden;
+        }
+        .progress-bar {
+            height: 100%;
+            background: #00d2d3;
+            width: 0%;
+            transition: width 0.3s ease;
+            box-shadow: 0 0 10px #00d2d3;
+        }
+
+        .stats-bar {
+            font-size: 0.9rem;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .timer-icon {
+            font-weight: bold;
+            background: rgba(0,0,0,0.2);
+            padding: 5px 12px;
+            border-radius: 20px;
+        }
+        .pulse-red {
+            color: #ff4757;
+            animation: pulse 1s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .question-box {
+            margin-bottom: 20px;
+        }
+        .q-eng { font-size: 1.1rem; font-weight: 700; margin-bottom: 5px; line-height: 1.4; }
+        .q-hin { font-size: 0.95rem; color: #ddd; font-weight: 400; line-height: 1.4; }
+
+        .options-grid {
+            display: grid;
+            gap: 12px;
+        }
+
+        .option-btn {
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255,255,255,0.2);
+            padding: 12px;
+            border-radius: 15px;
+            text-align: left;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            flex-direction: column;
+        }
+        .option-btn:hover { background: rgba(255,255,255,0.25); }
+        .opt-eng { font-size: 1rem; font-weight: 600; }
+        .opt-hin { font-size: 0.85rem; color: #eee; margin-top: 2px; }
+
+        /* Feedback States */
+        .correct { background: #2ecc71 !important; border-color: #2ecc71 !important; box-shadow: 0 0 15px #2ecc71; }
+        .wrong { background: #e74c3c !important; border-color: #e74c3c !important; animation: shake 0.5s; }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        /* Submit Button */
+        .submit-container {
+            margin-top: 20px;
+            text-align: center;
+        }
+        .btn-submit {
+            background: rgba(255, 159, 67, 0.9);
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 30px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        /* --- RESULTS SCREEN --- */
+        .result-emoji { font-size: 4rem; margin-bottom: 10px; display: block; }
+        .score-big { font-size: 3rem; font-weight: bold; margin: 10px 0; }
+        .result-msg { font-size: 1.2rem; margin-bottom: 30px; opacity: 0.9; }
+
+        /* --- FEEDBACK OVERLAY --- */
+        .emoji-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 5rem;
+            z-index: 100;
+            pointer-events: none;
+            display: none;
+        }
+
+        /* Canvas for Confetti */
+        #confetti-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+    </style>
+</head>
+<body>
+
+<canvas id="confetti-canvas"></canvas>
+
+<div class="glass-container">
+    
+    <div id="start-screen" class="start-screen">
+        <div class="text-center">
+            <h1>Gupta Empire</h1>
+            <p style="color:#ddd;">Bilingual History Quiz (Q1-50)</p>
+        </div>
+
+        <div class="input-group">
+            <label>⏱ Timer (Seconds per Q)</label>
+            <input type="number" id="timerInput" placeholder="Leave empty for no timer" min="5">
+        </div>
+
+        <div class="input-group flex-between">
+            <label style="margin:0">🔀 Shuffle Questions</label>
+            <label class="toggle-switch">
+                <input type="checkbox" id="shuffleToggle" class="toggle-input">
+                <span class="toggle-label"></span>
+            </label>
+        </div>
+
+        <button class="btn-primary" onclick="startQuiz()">Start Quiz 🚀</button>
+    </div>
+
+    <div id="quiz-screen" class="hidden" style="height: 100%; display: flex; flex-direction: column;">
+        <div class="progress-container">
+            <div id="progressBar" class="progress-bar"></div>
+        </div>
+
+        <div class="stats-bar flex-between">
+            <span id="questionCounter">Q: 01/50</span>
+            <span id="timerDisplay" class="timer-icon hidden">--</span>
+            <span id="scoreDisplay">Score: 0</span>
+        </div>
+
+        <div class="content-area">
+            <div id="question-container">
+                </div>
+            
+            <div class="submit-container">
+                <button class="btn-submit" onclick="finishQuiz()">🏁 Finish & Show Results</button>
+            </div>
+        </div>
+        
+        <div id="sadEmoji" class="emoji-overlay">😢</div>
+    </div>
+
+    <div id="result-screen" class="start-screen hidden text-center">
+        <div>
+            <span id="finalEmoji" class="result-emoji">🏆</span>
+            <h2>Quiz Completed!</h2>
+            <div class="score-big" id="finalScore">0%</div>
+            <p id="finalMsg" class="result-msg">Message</p>
+            <p id="statsText" style="margin-bottom: 20px; color: #ddd;">Correct: 0 | Wrong: 0 | Skipped: 0</p>
+        </div>
+        <button class="btn-primary" onclick="location.reload()">Restart Quiz 🔄</button>
+    </div>
+
+</div>
+
+<script>
+    /* --- DATA EXTRACTED FROM IMAGES (1-50) --- */
+    const rawQuestions = [
+        { q: "Which was the initial state of the Gupta rulers?", q_hi: "गुप्त शासकों का आरंभिक राज्य कौन-सा था?", options: [ {e:"UP and Bihar", h:"उत्तर प्रदेश और बिहार"}, {e:"MP and UP", h:"मध्य प्रदेश और उत्तर प्रदेश"}, {e:"MP and Chhattisgarh", h:"मध्य प्रदेश और छत्तीसगढ़"}, {e:"UP and Maharashtra", h:"उत्तर प्रदेश और महाराष्ट्र"} ], ans: 0 },
+        { q: "The Gupta rulers were feudatories of whom?", q_hi: "गुप्त शासक किसके सामंत थे?", options: [ {e:"Shungas", h:"शुंग"}, {e:"Kanvas", h:"कण्व"}, {e:"Satavahanas", h:"सातवाहन"}, {e:"Kushanas", h:"कुषाण"} ], ans: 3 },
+        { q: "Match the Author with Book:\n(A) Mrichhakatika (B) Kumarasambhava (C) Kamasutra (D) Devi-Chandraguptam\n(1) Vishakhadatta (2) Vatsyayana (3) Kalidasa (4) Shudraka", q_hi: "मिलान करें :\n(A) मृच्छकटिकम् (B) कुमार संभवम् (C) कामसूत्र (D) देवी चन्द्रगुप्तम्\n(1) विशाखदत्त (2) वात्स्यायन (3) कालिदास (4) शूद्रक", options: [ {e:"A-1, B-2, C-3, D-4", h:"A-1, B-2, C-3, D-4"}, {e:"A-2, B-1, C-4, D-3", h:"A-2, B-1, C-4, D-3"}, {e:"A-3, B-4, C-1, D-2", h:"A-3, B-4, C-1, D-2"}, {e:"A-4, B-3, C-2, D-1", h:"A-4, B-3, C-2, D-1"} ], ans: 3 },
+        { q: "Where has the largest hoard of Gupta gold coins been found?", q_hi: "गुप्तकालीन स्वर्ण सिक्कों का सबसे बड़ा ढेर कहाँ से प्राप्त हुआ है?", options: [ {e:"Madhya Pradesh", h:"मध्य प्रदेश"}, {e:"Uttar Pradesh", h:"उत्तर प्रदेश"}, {e:"Rajasthan (Bayana)", h:"राजस्थान"}, {e:"Bihar", h:"बिहार"} ], ans: 2 },
+        { q: "Which match regarding Gupta coins is correct?\n1. Gold - Rupaka\n2. Silver - Dinar\n3. Copper - Mashaka", q_hi: "गुप्तकालीन सिक्कों के संबंध में किसका मिलान सही है?\n1. सोने - रूपक\n2. चाँदी - दीनार\n3. ताँबे - माशक", options: [ {e:"Only 1", h:"केवल - 1"}, {e:"1 and 2", h:"1 और 2"}, {e:"Only 3", h:"केवल - 3"}, {e:"1, 2 and 3", h:"1, 2 और 3"} ], ans: 2 },
+        { q: "Who was the founder of the Gupta Dynasty?", q_hi: "गुप्त वंश का संस्थापक कौन था?", options: [ {e:"Srigupta", h:"श्रीगुप्त"}, {e:"Chandragupta I", h:"चन्द्रगुप्त - 1"}, {e:"Samudragupta", h:"समुद्रगुप्त"}, {e:"Ghatotkacha", h:"घटोत्कच"} ], ans: 0 },
+        { q: "Who was the real founder of the Gupta Dynasty?", q_hi: "गुप्त वंश का वास्तविक संस्थापक कौन था?", options: [ {e:"Srigupta", h:"श्रीगुप्त"}, {e:"Chandragupta I", h:"चन्द्रगुप्त प्रथम"}, {e:"Chandragupta II", h:"चन्द्रगुप्त द्वितीय"}, {e:"Samudragupta", h:"समुद्रगुप्त"} ], ans: 1 },
+        { q: "Which statement is false?", q_hi: "निम्न में कौन-सा कथन असत्य है?", options: [ {e:"Chandragupta I ruled 319-334 AD", h:"चन्द्रगुप्त-1 का शासन काल 319 -334 AD तक रहा था"}, {e:"Chandragupta I took title Maharajadhiraja", h:"चन्द्रगुप्त-1 ने महाराजाधिराज की उपाधि धारण की थी"}, {e:"Chandragupta II started Gupta Era", h:"चन्द्रगुप्त-2 ने गुप्त संवत को चलाया था"}, {e:"Chinese traveler Fa-Hien came in C-II's court", h:"चन्द्रगुप्त-2 के दरबार मे चीनी यात्री फाहियान आया था"} ], ans: 2 },
+        { q: "Which Gupta ruler issued King-Queen type, Lichchhavi type, and Lion-slayer type coins?", q_hi: "किस गुप्त शासक ने राजा-रानी प्रकार, लिच्छवी प्रकार तथा तथा सिंहवाहिनी प्रकार का सिक्का चलाया था?", options: [ {e:"Chandragupta I", h:"चन्द्रगुप्त -1"}, {e:"Chandragupta II", h:"चन्द्रगुप्त -2"}, {e:"Samudragupta", h:"समुद्रगुप्त"}, {e:"Kumaragupta", h:"कुमारगुप्त"} ], ans: 0 },
+        { q: "Which statement is correct?\n1. Samudragupta is called 'Lichchhavi Dauhitra'\n2. Samudragupta's childhood name was Kancha\n3. Samudragupta's mother was Kumardevi", q_hi: "निम्न में कौन-सा कथन सही है?\n1. समुद्रगुप्त को लिच्छवी दौहित्र भी कहा जाता है\n2. समुद्रगुप्त के बचपन का नाम काँच था\n3. समुद्रगुप्त की माता राजकुमारी कुमार देवी थी", options: [ {e:"1 and 2", h:"1 और 2"}, {e:"2 and 3", h:"2 और 3"}, {e:"1 and 3", h:"1 और 3"}, {e:"1, 2, and 3", h:"1, 2 और 3"} ], ans: 3 },
+        { q: "Who wrote the Prayag Prashasti Inscription?", q_hi: "प्रयाग प्रशस्ति अभिलेख को किसने लिखा था?", options: [ {e:"Ravikirti", h:"रविकीर्ति"}, {e:"Harisena", h:"हरिषेण"}, {e:"Banabhatta", h:"बाणभट्ट"}, {e:"Kalidasa", h:"कालिदास"} ], ans: 1 },
+        { q: "Which Gupta ruler first adopted the title 'Param-Bhagavata'?", q_hi: "सर्वप्रथम परमभागवत की उपाधि किस गुप्त शासक ने धारण की थी?", options: [ {e:"Chandragupta I", h:"चन्द्रगुप्त-1"}, {e:"Chandragupta II", h:"चन्द्रगुप्त-2"}, {e:"Samudragupta", h:"समुद्रगुप्त"}, {e:"Skandagupta", h:"स्कन्दगुप्त"} ], ans: 2 },
+        { q: "Which Gupta ruler adopted titles like 'Dharanibandha' and 'Parthiv Prathamveer'?", q_hi: "किस गुप्त शासक ने धरणीबद्ध, पार्थिव प्रथमवीर की उपाधि धारण की थी?", options: [ {e:"Chandragupta II", h:"चन्द्रगुप्त-2"}, {e:"Kumaragupta", h:"कुमारगुप्त"}, {e:"Skandagupta", h:"स्कन्दगुप्त"}, {e:"Samudragupta", h:"समुद्रगुप्त"} ], ans: 3 },
+        { q: "Whose name is NOT mentioned on the Prayag Prashasti pillar constructed by Ashoka and moved to Allahabad by Akbar?", q_hi: "अशोक द्वारा निर्मित प्रयाग प्रशस्ति अभिलेख जिसे अकबर ने इलाहाबाद में स्थापित करवाया इस स्तम्भ पर निम्नलिखित में किस राजा का नाम उल्लेख नहीं है?", options: [ {e:"Akbar", h:"अकबर"}, {e:"Jahangir", h:"जहाँगीर"}, {e:"Samudragupta", h:"समुद्रगुप्त"}, {e:"Chandragupta II", h:"चन्द्रगुप्त-2"} ], ans: 3 },
+        { q: "Which historian called Samudragupta the 'Napoleon of India'?", q_hi: "किस इतिहासकार ने समुद्रगुप्त को भारत के नेपोलियन की संज्ञा दी है?", options: [ {e:"V.A. Smith", h:"वी. ए. स्मिथ"}, {e:"Aurel Stein", h:"आरेल स्टाइन"}, {e:"Cunningham", h:"कनिंघम"}, {e:"James Prinsep", h:"जेम्स प्रिंसेप"} ], ans: 0 },
+        { q: "Ruler Meghavarman of which place sent an envoy to Samudragupta to build a Buddha temple in Gaya?", q_hi: "कहाँ के शासक मेघवर्मन ने गया में बुद्ध का मंदिर बनवाने की अनुमति प्राप्त करने के लिए समुद्रगुप्त के पास दूत भेजा था?", options: [ {e:"Japan", h:"जापान"}, {e:"Sri Lanka", h:"श्रीलंका"}, {e:"China", h:"चीन"}, {e:"Myanmar", h:"म्यान्मार"} ], ans: 1 },
+        { q: "Which Gupta ruler played the Veena?", q_hi: "निम्न में कौन-सा गुप्त शासक वीणा बजाता था?", options: [ {e:"Kumaragupta", h:"कुमार गुप्त"}, {e:"Vishnugupta", h:"विष्णु गुप्त"}, {e:"Samudragupta", h:"समुद्रगुप्त"}, {e:"Ramagupta", h:"रामगुप्त"} ], ans: 2 },
+        { q: "Which statement is correct?\n1. Samudragupta wrote 'Krishnacharit'\n2. Samudragupta is called 'Kaviraj'\n3. Samudragupta was a devotee of Vishnu", q_hi: "निम्न में कौन-सा कथन सही है?\n1. समुद्रगुप्त ने कृष्ण चरित नामक ग्रंथ की रचना की थी\n2. समुद्रगुप्त को कविराज कहा जाता है\n3. समुद्रगुप्त विष्णु के उपासक थे", options: [ {e:"1 and 2", h:"1 और 2"}, {e:"2 and 3", h:"2 और 3"}, {e:"1 and 3", h:"1 और 3"}, {e:"1, 2, and 3", h:"1, 2 और 3"} ], ans: 3 },
+        { q: "Which statement is false?", q_hi: "निम्न में कौन-सा कथन असत्य है?", options: [ {e:"Prabhavati Gupta's Pune inscription mentions Samudragupta doing Ashvamedha", h:"प्रभावती गुप्त के पूना अभिलेख मे समुद्रगुप्त का अनेक अश्वमेघ यज्ञ करने वाला कहा गया है।"}, {e:"Total 6 types of coins of Samudragupta found", h:"समुद्रगुप्त की कुल छः मुद्राएँ प्राप्त होती है।"}, {e:"Ramagupta issued copper coins", h:"रामगुप्त ने ताँबा का सिक्का चलाया था"}, {e:"Mehrauli Pillar is related to Chandragupta-1", h:"मेहरौली स्तम्भ लेख का संबंध चन्द्रगुप्त-1 से है।"} ], ans: 3 },
+        { q: "Where did Chandragupta II make his second capital?", q_hi: "चन्द्रगुप्त-2 ने अपनी दूसरी राजधानी कहाँ बनायी थी?", options: [ {e:"Pataliputra", h:"पाटलीपुत्र"}, {e:"Kannauj", h:"कन्नौज"}, {e:"Ujjain", h:"उज्जैन"}, {e:"Mathura", h:"मथुरा"} ], ans: 2 },
+        { q: "Consider the statements and choose the correct one:\n1. Chandragupta II married Naga princess Kuberanaga.\n2. Married his daughter Prabhavati to Vakataka ruler Rudrasena II.", q_hi: "निम्न कथनों पर विचार करें और सही कथन चुने-\n1. चन्द्रगुप्त-2 ने कुबेरनाग के साथ विवाह किया था\n2. चन्द्रगुप्त-2 ने अपनी पुत्री प्रभावती का विवाह वाकाटक शासक रुद्रसेन-2 के साथ किया था", options: [ {e:"Chandragupta II defeated Shaka ruler Rudrasimha III", h:"चन्द्रगुप्त -2 ने उज्जैन के अंतिम शक शासक रुद्रसिंह तृतीय को पराजित किया था"}, {e:"Vikramadityas in history are 21", h:"भारतीय इतिहास मे विक्रमादित्य की संख्या 21 है।"}, {e:"1, 2, and 3 are correct", h:"1, 2 और 3"}, {e:"2, 3 and 4 are correct", h:"2, 3 और 4"} ], ans: 0 },
+        { q: "Who was the most popular Vikramaditya?", q_hi: "सर्वाधिक लोकप्रिय विक्रमादित्य कौन था?", options: [ {e:"Samrat Hemchandra", h:"सम्राट हेमचन्द्र"}, {e:"Chandragupta II", h:"चन्द्रगुप्त-2"}, {e:"Amar Singh", h:"अमर सिंह"}, {e:"Mihir Bhoja", h:"मिहिर भोज"} ], ans: 1 },
+        { q: "Which Gupta ruler issued silver coins in Vyaghra style after defeating Shakas?", q_hi: "किस गुप्त शासक ने शको पर विजय के उपलक्ष्य में मालवा क्षेत्र में व्याघ्र शैली के चाँदी के सिक्के चलाए थे?", options: [ {e:"Skandagupta", h:"स्कन्दगुप्त"}, {e:"Kumaragupta", h:"कुमारगुप्त"}, {e:"Samudragupta", h:"समुद्रगुप्त"}, {e:"Chandragupta II", h:"चन्द्रगुप्त-2"} ], ans: 3 },
+        { q: "Which Gupta king is known by the nicknames Devagupta, Devaraj, and Devashri?", q_hi: "देवगुप्त, देवराज एवं देवश्री के उपनाम से किस गुप्त राजा को जाना जाता है?", options: [ {e:"Chandragupta I", h:"चन्द्रगुप्त -1"}, {e:"Chandragupta II", h:"चन्द्रगुप्त-2"}, {e:"Samudragupta", h:"समुद्रगुप्त"}, {e:"Vishnugupta", h:"विष्णुगुप्त"} ], ans: 1 },
+        { q: "Who was NOT included in the Navratnas of Chandragupta II?", q_hi: "चन्द्रगुप्त-2 के दरबार में नवरत्नों मे कौन शामिल नहीं था?", options: [ {e:"Amar Singh", h:"अमर सिंह"}, {e:"Kalidasa", h:"कालिदास"}, {e:"Kshapanak", h:"क्षपणक"}, {e:"Shudraka", h:"शूद्रक"} ], ans: 3 },
+        { q: "Who is called the Shakespeare of India?", q_hi: "भारत का शेक्सपियर किसे कहा जाता है?", options: [ {e:"Nagarjuna", h:"नागार्जुन"}, {e:"Patanjali", h:"पतंजली"}, {e:"Kalidasa", h:"कालिदास"}, {e:"Vishakhadatta", h:"विशाखदत्त"} ], ans: 2 },
+        { q: "In which year did Fa-Hien come to India?", q_hi: "फाहियान भारत किस वर्ष आया था?", options: [ {e:"397 AD", h:"397 AD"}, {e:"396 AD", h:"396 AD"}, {e:"414 AD", h:"414 AD"}, {e:"399 AD", h:"399 AD"} ], ans: 3 },
+        { q: "About which state did Fa-Hien say it is the land of Brahmins?", q_hi: "फाहियान ने किस राज्य के बारे में कहा कि यह ब्राह्मणों का देश है?", options: [ {e:"Uttar Pradesh", h:"उत्तरप्रदेश"}, {e:"Mathura", h:"मथुरा"}, {e:"Madhya Pradesh", h:"मध्यप्रदेश"}, {e:"Bihar", h:"बिहार"} ], ans: 2 },
+        { q: "Which statement is correct?", q_hi: "निम्न में कौन-सा कथन सही है?", options: [ {e:"India called 'Yin-Tu' in Chinese texts", h:"चीनी ग्रंथो मे भारत को 'यिन-तू' कहा गया है।"}, {e:"Pataliputra/Ujjain were education hubs in C-II time", h:"चन्द्रगुप्त-2 के समय पाटलीपुत्र एवं उज्जैन विद्या के प्रमुख केन्द्र थ"}, {e:"C-II era was peak of Brahminism", h:"चन्द्रगुप्त-2 का काल ब्राह्मण धर्म के चरमोत्कर्ष का काल था"}, {e:"All 1, 2, and 3", h:"1, 2, और 3"} ], ans: 3 },
+        { q: "Which Gupta ruler has the nickname Mahendraditya?", q_hi: "मेहेन्द्रादित्य किस गुप्त शासक का उपनाम है?", options: [ {e:"Samudragupta", h:"समुद्रगुप्त"}, {e:"Skandagupta", h:"स्कन्दगुप्त"}, {e:"Kumaragupta", h:"कुमार गुप्त"}, {e:"Ramagupta", h:"रामगुप्त"} ], ans: 2 },
+        { q: "Bilsad, Mandsaur, and Karmadanda inscriptions give info about which ruler?", q_hi: "बिलसड़ अभिलेख मंदसौर अभिलेख करमदंडा अभिलेख से किस शासक के बारे में जानकारी मिलती है?", options: [ {e:"Kumaragupta", h:"कुमारगुप्त"}, {e:"Vishnugupta", h:"विष्णुगुप्त"}, {e:"Ramagupta", h:"रामगुप्त"}, {e:"Chandragupta I", h:"चन्द्रगुप्त-1"} ], ans: 0 },
+        { q: "Which statement is correct?\n1. Kumaragupta engraved Peacock shape on coins.\n2. Nalanda Univ is Oxford of Mahayana.\n3. Nalanda Univ built by Kumaragupta.", q_hi: "निम्न में कौन-सा कथन सही है?\n1. कुमारगुप्त ने मुद्राओं पर मयूर की आकृति उत्कीर्ण करवाया\n2. नालंदा विश्वविद्यालय को ऑक्सफोर्ड ऑफ महायान कहा जाता है।\n3. नालंदा विश्वविद्यालय का निर्माण कुमारगुप्त ने करवाबा था", options: [ {e:"1 and 2", h:"1 और 2"}, {e:"2 and 3", h:"2 और 3"}, {e:"1 and 3", h:"1 और 3"}, {e:"1, 2, and 3", h:"1, 2 और 3"} ], ans: 3 },
+        { q: "Match the Inscription with Ruler:\n(A) Bhitari Pillar (B) Prayag Prashasti (C) Mandsaur (D) Mehrauli Pillar\n(1) Kumaragupta (2) Chandragupta (3) Samudragupta (4) Skandagupta", q_hi: "मिलान करें :\n(A) भीतरी स्तम्भ लेख (1) कुमार गुप्त\n(B) प्रयाग प्रशस्ती लेख (2) चन्द्रगुप्त\n(C) मंदसौर अभिलेख (3) समुद्रगुप्त\n(D) मेहरौली स्तम्भ लेख (4) स्कन्दगुप्त", options: [ {e:"A-1, B-2, C-3, D-4", h:"A-1, B-2, C-3, D-4"}, {e:"A-4, B-3, C-1, D-2", h:"A-4, B-3, C-1, D-2"}, {e:"A-3, B-4, C-1, D-2", h:"A-3, B-4, C-1, D-2"}, {e:"A-2, B-1, C-3, D-4", h:"A-2, B-1, C-3, D-4"} ], ans: 1 },
+        { q: "According to which inscription did Skandagupta defeat the Huna invasion?", q_hi: "किस अभिलेख के अनुसार स्कन्दगुप्त ने हूणों के आक्रमण को विफल कर दिया था?", options: [ {e:"Bhitari Pillar", h:"भीतरी स्तम्भ लेख"}, {e:"Junagadh Inscription", h:"जूनागढ़ अभिलेख"}, {e:"Bilsad Inscription", h:"बिसलड़ अभिलेख"}, {e:"Prayag Prashasti", h:"प्रयाग प्रशस्ति"} ], ans: 0 },
+        { q: "Which statement is false?", q_hi: "निम्न में कौन-सा कथन असत्य है?", options: [ {e:"Toramana/Mihirakula were famous Huna rulers", h:"तोरमण और मिहिरकुल प्रसिद्ध हूण शासक थे"}, {e:"Skandagupta gave Sudarshan Lake repair to Chakrapalit", h:"स्कन्दगुप्त ने सुदर्शन झील के पुनरूद्धार का कार्य चक्रपालित को सौपा था"}, {e:"Skandagupta issued new Bull-style coins", h:"स्कन्दगुप्त ने वृषभशैली के नए सिक्के जारी किये थे"}, {e:"Mihirakula was a Buddhist follower", h:"मिहिरकुल बौद्ध अनुयायी था"} ], ans: 3 },
+        { q: "Which inscription gives the first evidence of Sati practice?", q_hi: "सती प्रथा का पहला अभिलेखिय प्रमाण किस अभिलेख से मिलता है?", options: [ {e:"Bhanugupta's Eran Inscription", h:"भानुगुप्त का एरण अभिलेख"}, {e:"Skandagupta's Bhitari Pillar", h:"स्कन्दगुप्त का भीतरी स्तम्भ लेख"}, {e:"Kumaragupta's Karmadanda", h:"कुमार गुप्त का करमदंडा अभिलेख"}, {e:"Samudragupta's Prayag Prashasti", h:"समुद्रगुप्त का प्रयाग प्रशस्ती लेख"} ], ans: 0 },
+        { q: "Who was the last King of the Gupta Dynasty?", q_hi: "गुप्त वंश का अंतिम राजा कौन था?", options: [ {e:"Narasimhagupta", h:"नरसिंह गुप्त"}, {e:"Bhanugupta", h:"भानुगुप्त"}, {e:"Vrihadratha", h:"वृहद्रथ"}, {e:"Vishnugupta", h:"विष्णुगुप्त"} ], ans: 3 },
+        { q: "Which Gupta ruler defeated Huna king Mihirakula?", q_hi: "किस गुप्त शासक ने हूण नरेश मिहिरकुल को पराजित किया था?", options: [ {e:"Skandagupta", h:"स्कन्दगुप्त"}, {e:"Narasimhagupta Baladitya", h:"नरसिंह गुप्त"}, {e:"Bhanugupta", h:"भानुगुप्त"}, {e:"Purugupta", h:"पुरुगुप्त"} ], ans: 1 },
+        { q: "Which statement is correct?", q_hi: "निम्न में कौन-सा कथन सही हैं?", options: [ {e:"King was supreme judge in Gupta era", h:"गुप्तकाल मे राजा ही सर्वोच्च न्यायाधीश होता था"}, {e:"Highest officer was Kumaramatya", h:"गुप्तकाल मे सबसे बड़े अधिकारी कुमारामात्य होता था"}, {e:"Provinces called 'Bhukti'", h:"गुप्त काल मे प्रांतो को युक्ति कहा जाता था"}, {e:"All 1, 2, and 3", h:"1, 2, और 3"} ], ans: 3 },
+        { q: "What is the correct order of administration in Gupta period?", q_hi: "निम्न में गुप्त काल के प्रशासन का सही क्रम क्या है?", options: [ {e:"Bhukti - Vidhi - Peth - Vishay", h:"भुक्ति - विधि - पैठ - विषय"}, {e:"Vidhi - Peth - Vishay - Bhukti", h:"विधि - पैठ - विषय - भुक्ति"}, {e:"Bhukti - Vishay - Vithi - Peth (Village)", h:"भुक्ति - विषय - विथि - पैठ"}, {e:"Vishay - Bhukti - Vidhi - Peth", h:"विषय - भुक्ति - विधि - पैठ"} ], ans: 2 },
+        { q: "Match the Officers:\n(A) Mahabaladhikrit (B) Sandhivigrahika (C) Mahakshapatalik (D) Dandapashika\n(1) Commander (2) War/Peace Minister (3) Accounts Dept (4) Police Dept", q_hi: "मिलान करें :\n(A) महाबलाधिकृत (1) सेनापति\n(B) संधिविग्रह (2) युद्ध एवं शांति का मंत्री\n(C) महाक्षपटलिक (3) लेखा विभाग का अधिकारी\n(D) दंडपाशिक (4) पुलिस विभाग का अधिकारी", options: [ {e:"A-1, B-2, C-3, D-4", h:"A-1, B-2, C-3, D-4"}, {e:"A-4, B-3, C-2, D-1", h:"A-4, B-3, C-2, D-1"}, {e:"A-3, B-4, C-1, D-2", h:"A-3, B-4, C-1, D-2"}, {e:"A-2, B-1, C-3, D-4", h:"A-2, B-1, C-3, D-4"} ], ans: 0 },
+        { q: "What was the highest officer of Village Administration called?", q_hi: "गुप्त काल में ग्राम प्रशासक के सर्वोच्च अधिकारी को क्या कहा जाता था?", options: [ {e:"Vithak", h:"विथक"}, {e:"Mahattar", h:"महत्तर"}, {e:"Paithak", h:"पैठक"}, {e:"Vishaypati", h:"विषयपति"} ], ans: 1 },
+        { q: "Which match is incorrect?", q_hi: "किसका मिलान गलत है?", options: [ {e:"Nagar Shreshthi - Capital Class Leader", h:"नगर श्रेष्ठि - पूँजीगत वर्ग का नेता"}, {e:"Sarthavaha - Leader of Traders", h:"सार्थवाह - विषय के व्यापारियों का प्रधान नेता"}, {e:"Pratham Kulik - Leader of Artisans (Incorrect)", h:"प्रथम कुलिक - व्यापारियों का प्रधान नेता"}, {e:"Pratham Kayastha - Head of Scribes", h:"प्रथम कायस्थ - लिपिकों का प्रधान"} ], ans: 2 },
+        { q: "What was the Village Assembly called in Bihar during Gupta period?", q_hi: "गुप्तकाल में ग्राम सभा को बिहार में क्या कहा जाता था?", options: [ {e:"Panchmandali", h:"पंचमंडली"}, {e:"Gram Janpad", h:"ग्राम जनपद"}, {e:"Panchayat", h:"पंचायत"}, {e:"Gram Sabha", h:"ग्राम सभा"} ], ans: 0 },
+        { q: "Which statement is correct regarding police?", q_hi: "निम्न में कौन-सा कथन सही है?\n1. Ordinary soldier called 'Chat'\n2. Police personnel called 'Bhat'\n3. Spies called 'Chat'", options: [ {e:"1 and 2", h:"1 और 2"}, {e:"Only 3", h:"केवल - 3"}, {e:"Only 2", h:"केवल - 2"}, {e:"None", h:"इनमे से कोई नहीं"} ], ans: 2 },
+        { q: "Which statement is correct in context of Gupta period?\n1. Land revenue rate 1/6\n2. Hiranya was a cash tax\n3. Mey tax given as grain\n4. Land grants to Brahmins called Agrahara", q_hi: "गुप्तकाल के संदर्भ में कौन-सा कथन सही है?\n1. इस काल मे भूराजस्व की दर 1/6 थी\n2. हिरण्य एक प्रकार का नकद कर था\n3. मेय कर अन्न के रूप में दिया जाता था\n4. मंदिरो एवं ब्राह्मणो को जो भूमिदान दी जाती थी उसे अग्रहार कहा जाता था", options: [ {e:"1, 2, 3", h:"1, 2 और 3"}, {e:"2, 3, 4", h:"2, 3 और 4"}, {e:"1, 3, 4", h:"1, 3 और 4"}, {e:"1, 2, 3, 4", h:"1, 2, 3 और 4"} ], ans: 3 },
+        { q: "Which match is wrong?", q_hi: "निम्न में किसका मिलान गलत है?", options: [ {e:"Uparik - Tax on temporary farmers", h:"उपरिक - अस्थायी कृषकों पर लगाया जाने वाला भूमिकर"}, {e:"Shulk - Border sales tax", h:"शुल्क - सीमा बिक्री कर"}, {e:"Dhruvadhikaran - Revenue collector", h:"ध्रुवाधिकरण - भूमिकर संग्रह अधिकारी"}, {e:"Shaulkik - Income-Exp accountant (Incorrect)", h:"शौल्किक - आय-व्यय लेखा जोखा अधिकारी"} ], ans: 3 },
+        { q: "Which statement is correct?", q_hi: "निम्न में कौन-सा कथन सही है?", options: [ {e:"Society divided into 4 varnas", h:"गुप्तकालीन समाज चार वर्गों मे विभक्त था"}, {e:"Smallest unit was family", h:"गुप्तकालीन सामाजिक व्यवस्था की सबसे छोटी ईकाई परिवार थी"}, {e:"Justice based on varna system", h:"गुप्त काल मे न्याय वर्ण व्यवस्था के आधार पर होता था"}, {e:"1, 2, and 3", h:"1, 2, और 3"} ], ans: 3 },
+        { q: "What was uncultivated forest land called in Gupta period?", q_hi: "गुप्त काल में बिना जोती गई जंगली भूमि को क्या कहा जाता था?", options: [ {e:"Vastu", h:"वास्तु"}, {e:"Khil", h:"खिल"}, {e:"Aprahat", h:"अप्रहत"}, {e:"Kshetra", h:"क्षेत्र"} ], ans: 2 },
+        { q: "Which was the most prominent port of East India in Gupta period?", q_hi: "गुप्तकाल में पूर्वी भारत का सबसे प्रमुख बंदरगाह कौन-सा था?", options: [ {e:"Tamralipti", h:"ताम्रलिप्ति"}, {e:"Bhrugukachchha", h:"भृगुकच्छ"}, {e:"Kaveri Pattanam", h:"कावेरी पट्टनम"}, {e:"Lothal", h:"लोथल"} ], ans: 0 }
+    ];
+
+    /* --- GAME VARIABLES --- */
+    let questions = [];
+    let currentQuestionIndex = 0;
+    let score = 0;
+    let timer;
+    let timeRemaining = 0;
+    let userSettings = {
+        timerSec: 0,
+        shuffle: false
+    };
+
+    /* --- AUDIO CONTEXT --- */
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    
+    function playSound(type) {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        
+        const osc = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        
+        osc.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+        
+        if (type === 'correct') {
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.1);
+            gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.5);
+        } else if (type === 'wrong') {
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(200, audioCtx.currentTime);
+            osc.frequency.linearRampToValueAtTime(100, audioCtx.currentTime + 0.3);
+            gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.4);
+        }
+    }
+
+    /* --- APP LOGIC --- */
+    
+    function startQuiz() {
+        // Read Settings
+        const timerInput = document.getElementById('timerInput').value;
+        userSettings.timerSec = timerInput ? parseInt(timerInput) : 0;
+        userSettings.shuffle = document.getElementById('shuffleToggle').checked;
+
+        // Process Questions
+        questions = [...rawQuestions]; // Copy array
+        if (userSettings.shuffle) {
+            questions.sort(() => Math.random() - 0.5);
+        }
+
+        // Initialize State
+        currentQuestionIndex = 0;
+        score = 0;
+        
+        // UI Transition
+        document.getElementById('start-screen').classList.add('hidden');
+        document.getElementById('quiz-screen').classList.remove('hidden');
+        
+        loadQuestion();
+    }
+
+    function loadQuestion() {
+        clearInterval(timer);
+        const qData = questions[currentQuestionIndex];
+        const container = document.getElementById('question-container');
+        
+        // Update Stats
+        document.getElementById('questionCounter').innerText = `Q: ${currentQuestionIndex + 1}/${questions.length}`;
+        document.getElementById('scoreDisplay').innerText = `Score: ${score}`;
+        
+        // Timer Setup
+        const timerDisplay = document.getElementById('timerDisplay');
+        timerDisplay.classList.remove('pulse-red');
+        
+        if (userSettings.timerSec > 0) {
+            timeRemaining = userSettings.timerSec;
+            timerDisplay.classList.remove('hidden');
+            timerDisplay.innerText = timeRemaining;
+            
+            timer = setInterval(() => {
+                timeRemaining--;
+                timerDisplay.innerText = timeRemaining;
+                
+                if (timeRemaining <= 5) timerDisplay.classList.add('pulse-red');
+                
+                if (timeRemaining <= 0) {
+                    clearInterval(timer);
+                    handleAnswer(-1, -1); // Time out acts like wrong answer
+                }
+            }, 1000);
+        } else {
+            timerDisplay.classList.add('hidden');
+        }
+
+        // Render HTML
+        let optionsHtml = '';
+        qData.options.forEach((opt, index) => {
+            optionsHtml += `
+                <button class="option-btn" onclick="handleAnswer(${index}, ${qData.ans}, this)">
+                    <span class="opt-eng">${opt.e}</span>
+                    <span class="opt-hin">${opt.h}</span>
+                </button>
+            `;
+        });
+
+        container.innerHTML = `
+            <div class="question-box animate-fade">
+                <div class="q-eng">${qData.q}</div>
+                <div class="q-hin">${qData.q_hi}</div>
+            </div>
+            <div class="options-grid" id="optionsGrid">
+                ${optionsHtml}
+            </div>
+        `;
+        
+        // Progress Bar
+        const progress = ((currentQuestionIndex) / questions.length) * 100;
+        document.getElementById('progressBar').style.width = `${progress}%`;
+    }
+
+    function handleAnswer(selectedIndex, correctIndex, btnElement) {
+        clearInterval(timer);
+        const grid = document.getElementById('optionsGrid');
+        const buttons = grid.getElementsByTagName('button');
+
+        // Disable all buttons
+        for (let btn of buttons) {
+            btn.disabled = true;
+            btn.style.cursor = 'default';
+        }
+
+        if (selectedIndex === correctIndex) {
+            // Correct
+            score++;
+            if (btnElement) btnElement.classList.add('correct');
+            playSound('correct');
+            fireConfetti();
+        } else {
+            // Wrong or Timeout
+            if (selectedIndex !== -1 && btnElement) {
+                btnElement.classList.add('wrong');
+                showSadEmoji();
+            }
+            // Highlight correct one
+            buttons[correctIndex].classList.add('correct');
+            playSound('wrong');
+        }
+
+        // Update Score UI immediately
+        document.getElementById('scoreDisplay').innerText = `Score: ${score}`;
+
+        // Auto transition
+        setTimeout(() => {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < questions.length) {
+                loadQuestion();
+            } else {
+                finishQuiz();
+            }
+        }, 1500);
+    }
+
+    function showSadEmoji() {
+        const emoji = document.getElementById('sadEmoji');
+        emoji.style.display = 'block';
+        emoji.style.animation = 'shake 0.5s';
+        setTimeout(() => {
+            emoji.style.display = 'none';
+        }, 1000);
+    }
+
+    function finishQuiz() {
+        clearInterval(timer);
+        document.getElementById('quiz-screen').classList.add('hidden');
+        document.getElementById('result-screen').classList.remove('hidden');
+
+        // Calculate Stats based on questions ATTEMPTED/SEEN so far if early exit, 
+        // or total if finished. Standard practice: Score / Total Questions.
+        const percentage = Math.round((score / questions.length) * 100);
+        
+        const finalScoreEl = document.getElementById('finalScore');
+        const finalMsgEl = document.getElementById('finalMsg');
+        const finalEmojiEl = document.getElementById('finalEmoji');
+        const statsText = document.getElementById('statsText');
+
+        finalScoreEl.innerText = `${percentage}%`;
+        
+        // Calc questions stats
+        // Note: currentQuestionIndex is 0-based, so questions seen = index.
+        // If finished naturally, index = length.
+        const attempted = currentQuestionIndex; 
+        
+        statsText.innerText = `Total Questions: ${questions.length} | Score: ${score}`;
+
+        if (percentage >= 80) {
+            finalMsgEl.innerText = "🏆 Outstanding Performance!";
+            finalEmojiEl.innerText = "🤩";
+        } else if (percentage >= 50) {
+            finalMsgEl.innerText = "👏 Well Done! Keep it up.";
+            finalEmojiEl.innerText = "😊";
+        } else {
+            finalMsgEl.innerText = "📚 Practice makes perfect! Try again.";
+            finalEmojiEl.innerText = "🥺";
+        }
+    }
+
+    /* --- CONFETTI LOGIC (Pure JS Canvas) --- */
+    function fireConfetti() {
+        const canvas = document.getElementById('confetti-canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const particles = [];
+        const particleCount = 100;
+
+        for (let i = 0; i < particleCount; i++) {
+            particles.push({
+                x: canvas.width / 2,
+                y: canvas.height / 2,
+                w: Math.random() * 10 + 5,
+                h: Math.random() * 10 + 5,
+                dx: (Math.random() - 0.5) * 10,
+                dy: (Math.random() - 0.5) * 10,
+                color: `hsl(${Math.random() * 360}, 100%, 50%)`,
+                gravity: 0.1
+            });
+        }
+
+        function render() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            let active = false;
+            particles.forEach(p => {
+                p.x += p.dx;
+                p.y += p.dy;
+                p.dy += p.gravity;
+                p.w *= 0.98;
+                p.h *= 0.98;
+
+                if (p.w > 0.5) {
+                    active = true;
+                    ctx.fillStyle = p.color;
+                    ctx.fillRect(p.x, p.y, p.w, p.h);
+                }
+            });
+
+            if (active) requestAnimationFrame(render);
+            else ctx.clearRect(0,0, canvas.width, canvas.height);
+        }
+        render();
+    }
+
+    /* --- MOBILE HEIGHT FIX --- */
+    window.addEventListener('resize', () => {
+        document.querySelector('.glass-container').style.height = window.innerHeight * 0.9 + 'px';
+    });
+</script>
+
+</body>
+</html>

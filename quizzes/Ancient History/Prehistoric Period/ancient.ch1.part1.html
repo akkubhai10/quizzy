@@ -1,0 +1,1097 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ancient History Master Quiz</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --text-main: #ffffff;
+            --text-hindi: #e0e0e0;
+            --accent-green: #00e676;
+            --accent-red: #ff1744;
+            --primary-gradient: linear-gradient(45deg, #6a11cb, #2575fc, #ff0080);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: var(--primary-gradient);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-main);
+            overflow-x: hidden;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Canvas for Confetti */
+        #confetti-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        /* Glassmorphism Card */
+        .quiz-container {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 25px;
+            padding: 2rem;
+            width: 95%;
+            max-width: 700px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            position: relative;
+            min-height: 500px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Screen States */
+        .screen {
+            display: none;
+            flex-direction: column;
+            height: 100%;
+            justify-content: center;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Typography */
+        h1 { font-size: 2rem; text-align: center; margin-bottom: 1rem; text-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        h2 { font-size: 1.5rem; text-align: center; margin-bottom: 2rem; }
+        
+        .hindi-text {
+            display: block;
+            font-size: 0.9em;
+            color: var(--text-hindi);
+            font-weight: 400;
+            margin-top: 4px;
+        }
+
+        /* Controls & Inputs */
+        .input-group {
+            margin: 1rem 0;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        input[type="number"] {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid var(--glass-border);
+            padding: 12px;
+            border-radius: 12px;
+            color: white;
+            font-family: 'Poppins', sans-serif;
+            font-size: 1rem;
+            outline: none;
+        }
+        input::placeholder { color: #ddd; }
+
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 50px;
+            height: 26px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 20px;
+            transition: 0.3s;
+        }
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            transition: 0.3s;
+        }
+        input[type="checkbox"]:checked + .toggle-switch { background: var(--accent-green); }
+        input[type="checkbox"]:checked + .toggle-switch::after { transform: translateX(24px); }
+        input[type="checkbox"] { display: none; }
+
+        /* Buttons */
+        .btn {
+            background: linear-gradient(45deg, #ff0080, #ff8c00);
+            border: none;
+            padding: 15px 30px;
+            border-radius: 50px;
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 1rem;
+            width: 100%;
+            text-align: center;
+        }
+        .btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+        
+        .btn-finish {
+            background: rgba(255, 255, 255, 0.15);
+            margin-top: auto; /* Push to bottom */
+            font-size: 0.9rem;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+
+        /* Quiz Header */
+        .quiz-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+        }
+        
+        .progress-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 4px;
+            background: var(--accent-green);
+            width: 0%;
+            transition: width 0.3s ease;
+            box-shadow: 0 0 10px var(--accent-green);
+            border-radius: 25px 25px 0 0;
+        }
+
+        .timer {
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .pulse-red {
+            color: var(--accent-red);
+            animation: pulse 1s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 0.8; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* Question & Options */
+        .question-box {
+            margin-bottom: 1.5rem;
+            font-weight: 600;
+            font-size: 1.1rem;
+            line-height: 1.4;
+        }
+
+        .options-grid {
+            display: grid;
+            gap: 12px;
+        }
+
+        .option-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 15px;
+            border-radius: 15px;
+            color: white;
+            text-align: left;
+            cursor: pointer;
+            transition: 0.3s;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .option-btn.correct {
+            background: rgba(0, 230, 118, 0.3);
+            border-color: var(--accent-green);
+        }
+        .option-btn.wrong {
+            background: rgba(255, 23, 68, 0.3);
+            border-color: var(--accent-red);
+        }
+
+        /* Feedback Overlay */
+        .feedback-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 5rem;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .shake { animation: shake 0.5s; }
+        @keyframes shake {
+            0%, 100% { transform: translate(-50%, -50%); }
+            25% { transform: translate(-55%, -50%) rotate(-5deg); }
+            75% { transform: translate(-45%, -50%) rotate(5deg); }
+        }
+
+    </style>
+</head>
+<body>
+
+<canvas id="confetti-canvas"></canvas>
+
+<div class="quiz-container">
+    <div class="progress-bar" id="progressBar"></div>
+
+    <div id="startScreen" class="screen active">
+        <h1>History Master<br><span style="font-size: 0.6em; font-weight: normal;">Ancient India (1-50)</span></h1>
+        
+        <div class="input-group">
+            <label>Timer per Question (Seconds)</label>
+            <input type="number" id="timerInput" placeholder="0 = No Timer">
+        </div>
+
+        <label class="toggle-container">
+            <input type="checkbox" id="shuffleToggle">
+            <div class="toggle-switch"></div>
+            <span>Randomize Questions</span>
+        </label>
+
+        <button class="btn" onclick="startQuiz()">Start Quiz</button>
+    </div>
+
+    <div id="quizScreen" class="screen">
+        <div class="quiz-header">
+            <span id="qCount">Q: 01/50</span>
+            <div class="timer" id="timerDisplay">🕒 <span>--</span></div>
+            <span id="scoreDisplay">Score: 0</span>
+        </div>
+
+        <div class="question-box" id="questionText">
+            </div>
+
+        <div class="options-grid" id="optionsContainer">
+            </div>
+
+        <div id="feedbackEmoji" class="feedback-overlay">😢</div>
+
+        <button class="btn btn-finish" onclick="finishQuiz()">Finish & Show Results</button>
+    </div>
+
+    <div id="resultScreen" class="screen">
+        <h2>Quiz Completed!</h2>
+        <div style="text-align: center; margin-bottom: 2rem;">
+            <div style="font-size: 4rem; font-weight: bold; margin-bottom: 1rem;" id="finalScore">0%</div>
+            <p id="resultMessage" style="font-size: 1.2rem;">Practice makes perfect!</p>
+        </div>
+        <button class="btn" onclick="restartQuiz()">Restart Quiz</button>
+    </div>
+</div>
+
+<script>
+    // --- Data: Questions 1-50 extracted from images ---
+    const rawQuestions = [
+        {
+            q_en: "In whose tenure was the Archaeological Survey of India established?",
+            q_hi: "भारतीय पुरातत्व सर्वेक्षण विभाग की स्थापना किसके कार्यकाल में हुई?",
+            options: [
+                { en: "Warren Hastings", hi: "वारेन हेस्टिंग्स" },
+                { en: "Lord Wellesley", hi: "लार्ड वेलेजली" },
+                { en: "Lord Curzon", hi: "लार्ड कर्जन" },
+                { en: "William Bentinck", hi: "विलियम बेंटिंग" }
+            ],
+            correct: 2 // c
+        },
+        {
+            q_en: "In 1863, where did Robert Bruce Foote find a handaxe?",
+            q_hi: "1863 में राबर्ट ब्रूसफुट को हस्तकुठार मिला था?",
+            options: [
+                { en: "Badmadurai", hi: "बदमदुरै" },
+                { en: "Attirampakkam", hi: "अत्तिरम्पक्कम" },
+                { en: "Pallavaram", hi: "पल्लवरम" },
+                { en: "Sanganakallu", hi: "संगनकल्लू" }
+            ],
+            correct: 2 // c
+        },
+        {
+            q_en: "Who was a famous archaeologist?",
+            q_hi: "कौन एक प्रसिद्ध पुरातत्वविद था?",
+            options: [
+                { en: "R.E. Mortimer Wheeler", hi: "आर. ई. मार्टिमर व्हीलर" },
+                { en: "John Marshall", hi: "जॉन मार्शल" },
+                { en: "H.D. Sankalia", hi: "एच. डी. सांकलिया" },
+                { en: "All of these", hi: "ये सभी" }
+            ],
+            correct: 3 // d
+        },
+        {
+            q_en: "Who is the author of 'Indian Epigraphy'?",
+            q_hi: "'इंडियन एपिग्राफी' के लेखक हैं?",
+            options: [
+                { en: "D.C. Sircar", hi: "डी. सी. सरकार" },
+                { en: "Oldenberg", hi: "ओल्डेनबर्ग" },
+                { en: "F.F. Pargiter", hi: "एफ. एफ. पार्जिटर" },
+                { en: "H.D. Sankalia", hi: "एच. डी. सांकलिया" }
+            ],
+            correct: 0 // a
+        },
+        {
+            q_en: "Who said 'History is a science, no less no more'?",
+            q_hi: "किसने कहा था 'इतिहास विज्ञान है, न कम न ज्यादा'?",
+            options: [
+                { en: "Collingwood", hi: "कालिंगबुड" },
+                { en: "Herodotus", hi: "हेरोडोटस" },
+                { en: "Bury", hi: "ब्यूरी" },
+                { en: "Acton", hi: "ऐक्टन" }
+            ],
+            correct: 2 // c
+        },
+        {
+            q_en: "Modern human (Homo Sapiens) appeared in which period?",
+            q_hi: "आधुनिक मानव होमोसेपियन्स का प्रादुर्भाव हुआ-",
+            options: [
+                { en: "Upper Paleolithic", hi: "उच्च पुरा पाषाण काल में" },
+                { en: "Lower Paleolithic", hi: "निम्न पुरा पाषाण काल में" },
+                { en: "Neolithic", hi: "नव पाषाण काल में" },
+                { en: "None of the above", hi: "उपरोक्त कोई नहीं" }
+            ],
+            correct: 0 // a
+        },
+        {
+            q_en: "From which site is the oldest fossil of prehistoric man found in India?",
+            q_hi: "भारत में प्रागैतिहासिक मानव का प्राचीनतम जीवाश्म निम्नलिखित में से किस स्थान से मिलता है?",
+            options: [
+                { en: "Bhimbetka", hi: "भीमबेटका" },
+                { en: "Hathnora", hi: "हथनोरा" },
+                { en: "Sarai Nahar Rai", hi: "सराय नाहर राय" },
+                { en: "Damdama", hi: "दमदमा" }
+            ],
+            correct: 1 // b
+        },
+        {
+            q_en: "The period of 'Chalcolithic Age' is considered to be:",
+            q_hi: "'ताम्र पाषाण युग' की अवधि मानी जाती है-",
+            options: [
+                { en: "3000-1000 BC", hi: "3000-1000 ई. पू." },
+                { en: "4000-3000 BC", hi: "4000-3000 ई. पू." },
+                { en: "6000-4000 BC", hi: "6000-4000 ई. पू." },
+                { en: "10000-8000 BC", hi: "10000-8000 ई. पू." }
+            ],
+            correct: 0 // a
+        },
+        {
+            q_en: "Sarai Nahar Rai and Mahadaha are related to:",
+            q_hi: "सरायनाहर राय और महदहा संबंधित हैं-",
+            options: [
+                { en: "Neolithic culture of Vindhya region", hi: "विंध्य क्षेत्र की नवपाषाण संस्कृति से" },
+                { en: "Mesolithic culture of Vindhya region", hi: "विंध्य क्षेत्र की मध्यपाषाण संस्कृति से" },
+                { en: "Mesolithic culture of Ganga valley", hi: "गंगा घाटी की मध्य पाषाण संस्कृति से" },
+                { en: "Neolithic culture of Ganga valley", hi: "गंगा घाटी की नवपाषाण संस्कृति से" }
+            ],
+            correct: 3 // Note: Key says 'd', though typically Mesolithic Ganga Valley (c) is cited. Following Answer Key 9(d).
+        },
+        {
+            q_en: "Which of the following is not correctly matched?",
+            q_hi: "निम्नलिखित में से कौन-सा सही सुमेलित नहीं है:",
+            options: [
+                { en: "Kayatha - Karnataka", hi: "कायथा-कर्नाटक" },
+                { en: "Chirand - Bihar", hi: "चिरांद-बिहार" },
+                { en: "Pandu Rajar Dhibi - Bengal", hi: "पाण्डुराजारडिबि-बंगाल" },
+                { en: "Daimabad - Maharashtra", hi: "दायमाबाद-महाराष्ट्र" }
+            ],
+            correct: 0 // a
+        },
+        {
+            q_en: "Sohan Valley is related to:",
+            q_hi: "सोहन घाटी का संबंध है-",
+            options: [
+                { en: "Lower Paleolithic sites", hi: "निम्न पुरा पाषाण युगीन स्थलों से" },
+                { en: "Harappan sites", hi: "हड़प्पा कालीन स्थलों से" },
+                { en: "Neolithic age", hi: "नव पाषाण काल से" },
+                { en: "None of the above", hi: "उपरोक्त कोई नहीं" }
+            ],
+            correct: 0 // a
+        },
+        {
+            q_en: "A major Neolithic site of Eastern India is:",
+            q_hi: "पूर्वी भारत का प्रमुख नवपाषाण कालीन स्थल है-",
+            options: [
+                { en: "Chirand", hi: "चिरांद" },
+                { en: "Jorwe", hi: "जोर्वे" },
+                { en: "Adamgarh", hi: "आदमगढ़" },
+                { en: "All of the above", hi: "उपरोक्त सभी" }
+            ],
+            correct: 0 // a
+        },
+        {
+            q_en: "Bagor of Rajasthan and Adamgarh of Madhya Pradesh are related to:",
+            q_hi: "राजस्थान का बागौर और मध्य प्रदेश का आदमगढ़ संबंधित हैं-",
+            options: [
+                { en: "Neolithic Age", hi: "नव पाषाण काल से" },
+                { en: "Paleolithic Age", hi: "पुरा पाषाण काल से" },
+                { en: "Mesolithic Age", hi: "मध्य पाषाण काल से" },
+                { en: "None of the above", hi: "उपरोक्त कोई नहीं" }
+            ],
+            correct: 2 // c
+        },
+        {
+            q_en: "Where did Amri culture flourish?",
+            q_hi: "आमरी संस्कृति कहाँ पनपी-",
+            options: [
+                { en: "Kutch region", hi: "कच्छ क्षेत्र" },
+                { en: "Afghanistan", hi: "अफगानिस्तान" },
+                { en: "Baluchistan", hi: "बलूचिस्तान" },
+                { en: "Sindh", hi: "सिन्ध" }
+            ],
+            correct: 3 // d
+        },
+        {
+            q_en: "Which of the following is called 'Flake Culture'?",
+            q_hi: "निम्नलिखित में से किसे 'फलक संस्कृति' कहा गया है?",
+            options: [
+                { en: "Lower Paleolithic Culture", hi: "निम्न पुरापाषाणकालीन संस्कृति" },
+                { en: "Middle Paleolithic Culture", hi: "मध्य पुरापाषाणकालीन संस्कृति" },
+                { en: "Upper Paleolithic Culture", hi: "उच्च पुरापाषाणकालीन संस्कृति" },
+                { en: "Harappan Culture", hi: "हड़प्पा संस्कृति" }
+            ],
+            correct: 1 // b
+        },
+        {
+            q_en: "Remains of Chalcolithic 'Malwa Culture' are found from where?",
+            q_hi: "ताम्र-पाषाणकालीन 'मालवा संस्कृति' के अवशेष निम्न में से कहाँ प्राप्त हुए हैं?",
+            options: [
+                { en: "Navdatoli and Maheshwar", hi: "नवदाटोली और माहेश्वर" },
+                { en: "Satna and Rewa", hi: "सतना और रीवा" },
+                { en: "Bhimbetka and Mandsaur", hi: "भीमबेटका और मंदसौर" },
+                { en: "Ahar and Gilund", hi: "आहाड़ और गिलुन्द" }
+            ],
+            correct: 0 // a
+        },
+        {
+            q_en: "The best evidence of settlement pattern in Jorwe culture sites is found in:",
+            q_hi: "जोर्वे-संस्कृति के स्थलों में अधिवास-विन्यास का सबसे अच्छा प्रमाण मिला है :",
+            options: [
+                { en: "Inamgaon", hi: "इनाम गाँव में" },
+                { en: "Jorwe", hi: "जोर्वे में" },
+                { en: "Walki", hi: "वाल्की में" },
+                { en: "Navdatoli", hi: "नवदाटोली में" }
+            ],
+            correct: 0 // a
+        },
+        {
+            q_en: "Chalcolithic Kayatha culture was discovered by:",
+            q_hi: "ताम्र-पाषाणिक कायथा-संस्कृति की खोज की गई थी :",
+            options: [
+                { en: "M.K. Dhavalikar", hi: "एम. के. धवलीकर द्वारा" },
+                { en: "V.S. Wakankar", hi: "वी. एस. वाकणकड़ द्वारा" },
+                { en: "H.D. Sankalia", hi: "एच. डी. सांकलिया द्वारा" },
+                { en: "K.D. Vajpayee", hi: "के. डी. वाजपेयी द्वारा" }
+            ],
+            correct: 1 // b
+        },
+        {
+            q_en: "Inamgaon was a large settlement of Chalcolithic age. It is related to:",
+            q_hi: "इनामगाँव ताम्रपाषाण युग की एक बड़ी बस्ती थी। इसका संबंध है-",
+            options: [
+                { en: "Jorwe Culture", hi: "जोर्वे संस्कृति से" },
+                { en: "Kayatha Culture", hi: "कायथा संस्कृति से" },
+                { en: "Malwa Culture", hi: "मालवा संस्कृति से" },
+                { en: "All of the above", hi: "उपरोक्त सभी से" }
+            ],
+            correct: 0 // a
+        },
+        {
+            q_en: "Daimabad is related to:",
+            q_hi: "दैमाबाद का संबंध है-",
+            options: [
+                { en: "Chalcolithic site", hi: "ताम्र पाषाण कालीन स्थल से" },
+                { en: "Paleolithic site", hi: "पुरा पाषाण कालीन स्थल से" },
+                { en: "Mesolithic site", hi: "मध्य पाषाण कालीन स्थल से" },
+                { en: "None of the above", hi: "उपरोक्त कोई नहीं" }
+            ],
+            correct: 0 // a
+        },
+        {
+            q_en: "Gilund site is related to:",
+            q_hi: "गिलुन्द स्थल का संबंध है-",
+            options: [
+                { en: "Ahar Culture", hi: "अहार संस्कृति से" },
+                { en: "Neolithic site", hi: "नव पाषाण कालीन स्थल से" },
+                { en: "Malwa Culture", hi: "मालवा संस्कृति से" },
+                { en: "None of the above", hi: "उपरोक्त कोई नहीं" }
+            ],
+            correct: 0 // a
+        },
+        {
+            q_en: "The main region of Ahar culture is:",
+            q_hi: "अहार संस्कृति का प्रमुख क्षेत्र है-",
+            options: [
+                { en: "Banas valley of South-East Rajasthan", hi: "दक्षिण-पूर्वी राजस्थान की बनास घाटी" },
+                { en: "Utnur of Andhra Pradesh", hi: "आंध्र प्रदेश का उतनूर" },
+                { en: "Western Madhya Pradesh", hi: "पश्चिमी मध्य प्रदेश" },
+                { en: "All of the above", hi: "उपरोक्त सभी" }
+            ],
+            correct: 0 // a
+        },
+        {
+            q_en: "Which culture developed in Narmada Valley?",
+            q_hi: "नर्मदा घाटी में विकसित हुई संस्कृति थी-",
+            options: [
+                { en: "Ahar Culture", hi: "अहार संस्कृति" },
+                { en: "Malwa Culture", hi: "मालवा संस्कृति" },
+                { en: "Jorwe Culture", hi: "जोर्वे संस्कृति" },
+                { en: "None of the above", hi: "उपरोक्त कोई नहीं" }
+            ],
+            correct: 1 // b
+        },
+        {
+            q_en: "Eran, Nagda and Navdatoli are related to:",
+            q_hi: "एरण, नगदा और नवदाटोली का संबंध है-",
+            options: [
+                { en: "Malwa Culture", hi: "मालवा संस्कृति से" },
+                { en: "Ahar Culture", hi: "अहार संस्कृति से" },
+                { en: "Jorwe Culture", hi: "जोर्वे संस्कृति से" },
+                { en: "None of the above", hi: "उपरोक्त कोई नहीं" }
+            ],
+            correct: 0 // a
+        },
+        {
+            q_en: "Archaeological evidence of pit dwellings is found from which site?",
+            q_hi: "निम्नलिखित में से किस स्थान से गर्त निवासों का पुरातात्विक साक्ष्य मिलता है ?",
+            options: [
+                { en: "Rakhigarhi", hi: "राखीगढ़ी" },
+                { en: "Gufkral", hi: "गुफ्कराल" },
+                { en: "Mehrgarh", hi: "मेहरगढ़" },
+                { en: "Balakot", hi: "बालाकोट" }
+            ],
+            correct: 1 // b
+        },
+        {
+            q_en: "Where were the remains of Neolithic pit-dwellings found? (1. Burzahom 2. Gufkral 3. Kuchai 4. Mahgara)",
+            q_hi: "नवपाषाण कालीन गर्त-निवासों के अवशेष कहाँ से मिले थे ? 1. बुर्जहोम 2. गुफ्कराल",
+            options: [
+                { en: "1 and 4", hi: "1 एवं 4" },
+                { en: "2 and 3", hi: "2 एवं 3" },
+                { en: "3 and 4", hi: "3 एवं 4" },
+                { en: "1 and 2", hi: "1 एवं 2" }
+            ],
+            correct: 3 // d
+        },
+        {
+            q_en: "Stone Age man became aware of fire in:",
+            q_hi: "पाषाणकालीन मानव को आग की जानकारी हुई थी-",
+            options: [
+                { en: "Lower Paleolithic Period", hi: "निम्न पुरापाषाण काल" },
+                { en: "Upper Paleolithic Period", hi: "उच्च पुरापाषाण काल" },
+                { en: "Middle Paleolithic Period", hi: "मध्य पाषाण काल" },
+                { en: "Neolithic Period", hi: "नवपाषाण काल" }
+            ],
+            correct: 0 // a
+        },
+        {
+            q_en: "The main characteristic of Mesolithic people was:",
+            q_hi: "मध्य पाषाण काल के लोगों की मुख्य विशेषता क्या थी?",
+            options: [
+                { en: "Use of Microliths", hi: "लघु पाषाणोपकरणों का प्रयोग" },
+                { en: "Use of houses", hi: "घरों का प्रयोग" },
+                { en: "Use of clothes", hi: "कपड़ों का प्रयोग" },
+                { en: "None of the above", hi: "उपरोक्त में से कोई नहीं" }
+            ],
+            correct: 0 // a
+        },
+        {
+            q_en: "Tools made of Flakes are related to:",
+            q_hi: "शल्कों (Flakes) से बने औजार संबंधित है-",
+            options: [
+                { en: "Upper Paleolithic", hi: "उच्च पुरा पाषाण काल" },
+                { en: "Middle Paleolithic", hi: "मध्य पुरा पाषाण काल" },
+                { en: "Lower Paleolithic", hi: "निम्न पाषाण काल" },
+                { en: "None of the above", hi: "उपरोक्त कोई नहीं" }
+            ],
+            correct: 1 // b
+        },
+        {
+            q_en: "Prehistoric axes were found at:",
+            q_hi: "प्रागैतिहासिक कुल्हाड़ियाँ मिली हैं-",
+            options: [
+                { en: "Attirampakkam", hi: "अत्तिरमपक्कम से" },
+                { en: "Adichanallur", hi: "आदिचनाल्लूर से" },
+                { en: "Arikamedu", hi: "अरिकमेडु से" },
+                { en: "Sanur", hi: "सनूर से" }
+            ],
+            correct: 0 // a
+        },
+        {
+            q_en: "Microlithic tools are related to:",
+            q_hi: "माइक्रोलिथिक औजार संबंधित है-",
+            options: [
+                { en: "Neolithic Age", hi: "नव पाषाण काल से" },
+                { en: "Copper Stone Age", hi: "ताम्र पाषाण काल से" },
+                { en: "Mesolithic Age", hi: "मध्य पाषाण काल से" },
+                { en: "None of the above", hi: "उपरोक्त कोई नहीं" }
+            ],
+            correct: 2 // c
+        },
+        {
+            q_en: "Man acquired the knowledge of agriculture in:",
+            q_hi: "मनुष्य ने कृषि का ज्ञान प्राप्त किया :",
+            options: [
+                { en: "Paleolithic Age", hi: "पुरा-पाषाण काल में" },
+                { en: "Mesolithic Age", hi: "मध्य-पाषाण काल में" },
+                { en: "Neolithic Age", hi: "नव-पाषाण काल में" },
+                { en: "Chalcolithic Age", hi: "ताम्र-प्रस्तर काल में" }
+            ],
+            correct: 2 // c
+        },
+        {
+            q_en: "The first crop used by humans was:",
+            q_hi: "मानव द्वारा उपयोग में लायी गई पहली फसल थी-",
+            options: [
+                { en: "Rice", hi: "चावल" },
+                { en: "Wheat", hi: "गेहूँ" },
+                { en: "Barley", hi: "जौ" },
+                { en: "All of the above", hi: "उपरोक्त सभी" }
+            ],
+            correct: 2 // c
+        },
+        {
+            q_en: "At which place in India has prehistoric ploughed land been found?",
+            q_hi: "भारत वर्ष में किस स्थान पर प्रागैतिहासिक जोती हुई भूमि खोजी गई है ?",
+            options: [
+                { en: "Lothal", hi: "लोथल में" },
+                { en: "Kalibangan", hi: "कालीबंगा में" },
+                { en: "Ropar", hi: "रोपड़ में" },
+                { en: "Dholavira", hi: "धौलावीरा में" }
+            ],
+            correct: 1 // b
+        },
+        {
+            q_en: "Where is the oldest evidence of systematic agriculture in India found?",
+            q_hi: "भारत में व्यवस्थित कृषि का प्राचीनतम प्रमाण कहाँ से प्राप्त होता है-",
+            options: [
+                { en: "Mehrgarh", hi: "मेहरगढ़" },
+                { en: "Kalibangan", hi: "कालीबंगा" },
+                { en: "Lothal", hi: "लोथल" },
+                { en: "Kotdiji", hi: "कोटदीजी" }
+            ],
+            correct: 0 // a
+        },
+        {
+            q_en: "Where is the prehistoric food producing site Mehrgarh located?",
+            q_hi: "प्रागैतिहासिक अन्न उत्पादक स्थल मेहरगढ़ कहाँ अवस्थित है ?",
+            options: [
+                { en: "On the banks of Ghaggar river", hi: "घग्घर नदी के तट पर" },
+                { en: "In the eastern part of Rann of Kutch", hi: "कच्छ के रन के पूर्वी भाग में" },
+                { en: "On the banks of Bolan river", hi: "बोलन नदी के किनारे" },
+                { en: "In Western Baluchistan", hi: "पश्चिमी बलूचिस्तान में" }
+            ],
+            correct: 2 // c
+        },
+        {
+            q_en: "Which place is called the 'Bread Basket of Baluchistan'?",
+            q_hi: "बलूचिस्तान की रोटी की टोकरी कहा जाता है-",
+            options: [
+                { en: "Burzahom", hi: "बुर्जहोम" },
+                { en: "Gufkral", hi: "गुफकराल" },
+                { en: "Mehrgarh", hi: "मेहरगढ़" },
+                { en: "Koldihwa", hi: "कोल्दिहवा" }
+            ],
+            correct: 2 // c
+        },
+        {
+            q_en: "Which prehistoric site is famous as 'Tambavati'?",
+            q_hi: "प्रागैतिहासिक काल का कौन-सा स्थल 'ताम्बवती' नाम से प्रसिद्ध है-",
+            options: [
+                { en: "Kayatha", hi: "कायथा" },
+                { en: "Gilund", hi: "गिलुन्द" },
+                { en: "Ahar", hi: "अहाड़" },
+                { en: "Maheshwar", hi: "माहेश्वर" }
+            ],
+            correct: 2 // c
+        },
+        {
+            q_en: "The oldest evidence of paddy cultivation in the Indian subcontinent comes from:",
+            q_hi: "भारतीय उपमहाद्वीप में धान की खेती के प्राचीनतम साक्ष्य प्राप्त होते हैं।",
+            options: [
+                { en: "From Kashmir", hi: "कश्मीर से" },
+                { en: "From North Bihar", hi: "उत्तर बिहार से" },
+                { en: "From Mahakoshal", hi: "महाकोशल से" },
+                { en: "From Vindhya region", hi: "विन्ध्य क्षेत्र से" }
+            ],
+            correct: 3 // d
+        },
+        {
+            q_en: "The first 'animal' tamed by man was-",
+            q_hi: "मानव द्वारा पाया गया पहला 'पशु' था-",
+            options: [
+                { en: "Dog", hi: "कुत्ता" },
+                { en: "Cat", hi: "बिल्ली" },
+                { en: "Horse", hi: "घोड़ा" },
+                { en: "Cow", hi: "गाय" }
+            ],
+            correct: 0 // a
+        },
+        {
+            q_en: "Megalithic tombs of South India are related to-",
+            q_hi: "दक्षिण भारत की वृहद् पाषाण समाधियाँ संबंधित हैं-",
+            options: [
+                { en: "Paleolithic Age", hi: "पूर्व पाषाण काल से" },
+                { en: "Neolithic Age", hi: "नव पाषाण काल से" },
+                { en: "Chalcolithic Age", hi: "ताम्र पाषाण काल से" },
+                { en: "Iron Age", hi: "लौह काल से" }
+            ],
+            correct: 3 // d
+        },
+        {
+            q_en: "In human burials, dogs were buried at-",
+            q_hi: "मानव शवाधानों में कुत्ते दफनाये गये थे-",
+            options: [
+                { en: "In Gufkral", hi: "गुफ्कराल में" },
+                { en: "In Burzahom", hi: "बुर्जहोम में" },
+                { en: "In Martand", hi: "मार्तण्ड में" },
+                { en: "In Mehrgarh", hi: "मेहरगढ़ में" }
+            ],
+            correct: 1 // b
+        },
+        {
+            q_en: "The oldest evidence of animal husbandry has been received from-",
+            q_hi: "पशुपालन का प्राचीनतम् साक्ष्य प्राप्त हुआ है-",
+            options: [
+                { en: "Sarai Nahar Rai", hi: "सराय नाहर राय से" },
+                { en: "Koldihwa", hi: "कोल्दिहवा से" },
+                { en: "Bagor", hi: "बागोर से" },
+                { en: "Kalibangan", hi: "कालीबंगा से" }
+            ],
+            correct: 2 // c
+        },
+        {
+            q_en: "Where has the oldest evidence of domestic buffalo in the Indian subcontinent been found?",
+            q_hi: "भारतीय उपमहाद्वीप में पालतू भैंस का प्राचीनतम साक्ष्य कहाँ से प्राप्त हुआ है-",
+            options: [
+                { en: "Dholavira", hi: "धौलावीरा" },
+                { en: "Mehrgarh", hi: "मेहरगढ़" },
+                { en: "Mohenjodaro", hi: "मोहनजोदड़ो" },
+                { en: "Rakhigarhi", hi: "राखीगढ़ी" }
+            ],
+            correct: 1 // b
+        },
+        {
+            q_en: "At which place was the first Indian Paleolithic artifact discovered?",
+            q_hi: "किस स्थान पर प्रथम भारतीय पुरापाषाण कालीन कलाकृति की खोज हुई थी-",
+            options: [
+                { en: "Daimabad", hi: "दायमाबाद" },
+                { en: "Mirzapur", hi: "मिर्जापुर" },
+                { en: "Pallavaram", hi: "पल्लवरम" },
+                { en: "Sohan Valley", hi: "सोहन घाटी" }
+            ],
+            correct: 2 // c
+        },
+        {
+            q_en: "Which of the following sites is famous for prehistoric cave paintings?",
+            q_hi: "निम्नलिखित स्थलों में से कौन-सा प्रागैतिहासिक चित्रकला के लिए प्रसिद्ध है ?",
+            options: [
+                { en: "Bagh", hi: "बाघ" },
+                { en: "Ajanta", hi: "अजंता" },
+                { en: "Bhimbetka", hi: "भीमबेटका" },
+                { en: "Amravati", hi: "अमरावती" }
+            ],
+            correct: 2 // c
+        },
+        {
+            q_en: "Bone ornaments have been found from which Mesolithic site?",
+            q_hi: "निम्नलिखित में से किस मध्य पाषाणिक स्थल से हड्डी के बने आभूषण प्राप्त हुए हैं-",
+            options: [
+                { en: "Bagor", hi: "बागोर" },
+                { en: "Bagor II", hi: "बागोर द्वितीय" },
+                { en: "Birbhanpur", hi: "वीरभानपुर" },
+                { en: "Mahadaha", hi: "महदहा" }
+            ],
+            correct: 3 // d
+        },
+        {
+            q_en: "The first metal used by humans was-",
+            q_hi: "मानव द्वारा प्रयोग में लायी गयी पहली धातु थी-",
+            options: [
+                { en: "Copper", hi: "तांबा" },
+                { en: "Brass", hi: "पीतल" },
+                { en: "Gold", hi: "सोना" },
+                { en: "Bronze", hi: "कांसा" }
+            ],
+            correct: 0 // a
+        },
+        {
+            q_en: "Lower Paleolithic Sohan culture was discovered by-",
+            q_hi: "निम्न पूर्वपाषाण युगीन सोहन संस्कृति की खोज की थी-",
+            options: [
+                { en: "D.N. Wadia", hi: "डी. एन. वाडिया ने" },
+                { en: "V.D. Krishnaswami", hi: "वी. डी. कृष्णस्वामी ने" },
+                { en: "R.V. Joshi", hi: "आर. वी. जोशी ने" },
+                { en: "De Terra and Paterson", hi: "डी. टेरा और पैटर्सन ने" }
+            ],
+            correct: 0 // a
+        },
+        {
+            q_en: "Where is the oldest remnant of human settlement in the Ganga plain found?",
+            q_hi: "गंगा के मैदान में मानव बस्ती का प्राचीनतम अवशेष कहाँ मिलता है ?",
+            options: [
+                { en: "Bagor", hi: "बागोर" },
+                { en: "Kalpi", hi: "कालपी" },
+                { en: "Adamgarh", hi: "आदमगढ़" },
+                { en: "Teri", hi: "तेरी" }
+            ],
+            correct: 1 // b
+        }
+    ];
+
+    // --- Application State ---
+    let currentState = {
+        questions: [],
+        currentIdx: 0,
+        score: 0,
+        timer: 0,
+        timerValue: 0,
+        timerInterval: null
+    };
+
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    // --- Audio Synthesis ---
+    function playSound(type) {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        if (type === 'ting') {
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(880, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(1760, audioCtx.currentTime + 0.1);
+            gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.5);
+        } else if (type === 'buzz') {
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+            osc.frequency.linearRampToValueAtTime(100, audioCtx.currentTime + 0.3);
+            gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.3);
+        }
+    }
+
+    // --- Confetti Logic ---
+    const canvas = document.getElementById('confetti-canvas');
+    const ctx = canvas.getContext('2d');
+    let particles = [];
+    
+    function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    function triggerConfetti() {
+        for(let i=0; i<100; i++) {
+            particles.push({
+                x: window.innerWidth / 2,
+                y: window.innerHeight / 2,
+                vx: (Math.random() - 0.5) * 10,
+                vy: (Math.random() - 0.5) * 10,
+                color: `hsl(${Math.random()*360}, 100%, 50%)`,
+                life: 100
+            });
+        }
+    }
+
+    function animateConfetti() {
+        ctx.clearRect(0,0, canvas.width, canvas.height);
+        particles.forEach((p, index) => {
+            p.x += p.vx;
+            p.y += p.vy;
+            p.life--;
+            p.vy += 0.1; // gravity
+            ctx.fillStyle = p.color;
+            ctx.fillRect(p.x, p.y, 5, 5);
+            if(p.life <= 0) particles.splice(index, 1);
+        });
+        requestAnimationFrame(animateConfetti);
+    }
+    animateConfetti();
+
+    // --- Quiz Logic ---
+    function startQuiz() {
+        const timerIn = document.getElementById('timerInput').value;
+        const shuffle = document.getElementById('shuffleToggle').checked;
+
+        currentState.timerValue = parseInt(timerIn) || 0;
+        currentState.questions = [...rawQuestions];
+        if (shuffle) {
+            currentState.questions.sort(() => Math.random() - 0.5);
+        }
+        
+        currentState.currentIdx = 0;
+        currentState.score = 0;
+        
+        switchScreen('quizScreen');
+        loadQuestion();
+    }
+
+    function switchScreen(id) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+    }
+
+    function loadQuestion() {
+        if (currentState.currentIdx >= currentState.questions.length) {
+            finishQuiz();
+            return;
+        }
+
+        const q = currentState.questions[currentState.currentIdx];
+        const total = currentState.questions.length;
+
+        // UI Updates
+        document.getElementById('qCount').innerText = `Q: ${(currentState.currentIdx + 1).toString().padStart(2, '0')}/${total}`;
+        document.getElementById('scoreDisplay').innerText = `Score: ${currentState.score}`;
+        document.getElementById('progressBar').style.width = `${((currentState.currentIdx) / total) * 100}%`;
+        
+        // Timer Reset
+        clearInterval(currentState.timerInterval);
+        document.getElementById('timerDisplay').classList.remove('pulse-red');
+        
+        if (currentState.timerValue > 0) {
+            let timeLeft = currentState.timerValue;
+            document.getElementById('timerDisplay').innerHTML = `🕒 ${timeLeft}s`;
+            
+            currentState.timerInterval = setInterval(() => {
+                timeLeft--;
+                document.getElementById('timerDisplay').innerHTML = `🕒 ${timeLeft}s`;
+                if (timeLeft < 5) document.getElementById('timerDisplay').classList.add('pulse-red');
+                if (timeLeft <= 0) {
+                    clearInterval(currentState.timerInterval);
+                    handleAnswer(-1); // Time out treated as wrong
+                }
+            }, 1000);
+        } else {
+            document.getElementById('timerDisplay').innerHTML = `∞`;
+        }
+
+        // Render Text
+        const qBox = document.getElementById('questionText');
+        qBox.innerHTML = `${q.q_en}<span class="hindi-text">${q.q_hi}</span>`;
+
+        // Render Options
+        const optContainer = document.getElementById('optionsContainer');
+        optContainer.innerHTML = '';
+        
+        q.options.forEach((opt, idx) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerHTML = `${opt.en}<span class="hindi-text">${opt.hi}</span>`;
+            btn.onclick = () => handleAnswer(idx);
+            optContainer.appendChild(btn);
+        });
+
+        // Hide Feedback
+        const feedback = document.getElementById('feedbackEmoji');
+        feedback.style.opacity = '0';
+        feedback.classList.remove('shake');
+    }
+
+    function handleAnswer(selectedIndex) {
+        clearInterval(currentState.timerInterval);
+        const q = currentState.questions[currentState.currentIdx];
+        const buttons = document.querySelectorAll('.option-btn');
+        const feedback = document.getElementById('feedbackEmoji');
+
+        // Disable all buttons
+        buttons.forEach(b => b.disabled = true);
+
+        if (selectedIndex === q.correct) {
+            // Correct
+            buttons[selectedIndex].classList.add('correct');
+            currentState.score++;
+            playSound('ting');
+            triggerConfetti();
+        } else {
+            // Wrong or Timeout
+            if (selectedIndex !== -1) buttons[selectedIndex].classList.add('wrong');
+            buttons[q.correct].classList.add('correct'); // Show correct one
+            playSound('buzz');
+            feedback.innerHTML = '😢';
+            feedback.style.opacity = '1';
+            feedback.classList.add('shake');
+        }
+
+        setTimeout(() => {
+            currentState.currentIdx++;
+            loadQuestion();
+        }, 1500);
+    }
+
+    function finishQuiz() {
+        clearInterval(currentState.timerInterval);
+        switchScreen('resultScreen');
+        
+        const total = currentState.currentIdx; // Based on questions attempted
+        // Avoid division by zero if user finishes immediately
+        const percent = total === 0 ? 0 : Math.round((currentState.score / currentState.questions.length) * 100);
+        
+        document.getElementById('finalScore').innerText = `${percent}%`;
+        document.getElementById('finalScore').style.color = percent >= 50 ? 'var(--accent-green)' : 'var(--accent-red)';
+        
+        let msg = "📚 Practice makes perfect! Try again.";
+        if (percent >= 80) msg = "🏆 Outstanding Performance!";
+        else if (percent >= 50) msg = "👏 Well Done! Keep it up.";
+        
+        document.getElementById('resultMessage').innerText = msg;
+    }
+
+    function restartQuiz() {
+        switchScreen('startScreen');
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,1178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sangam Age Mastery Quiz</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+    :root {
+        --glass-bg: rgba(255, 255, 255, 0.1);
+        --glass-border: 1px solid rgba(255, 255, 255, 0.2);
+        --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        --text-english: #ffffff;
+        --text-hindi: #e0e0e0;
+        --accent-green: #00e676;
+        --accent-red: #ff1744;
+        --primary-btn: #6c5ce7;
+    }
+
+    * {
+        box-sizing: border-box;
+        user-select: none;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+        margin: 0;
+        padding: 0;
+        font-family: 'Poppins', sans-serif;
+        background: linear-gradient(45deg, #667eea, #764ba2, #ff758c);
+        background-size: 400% 400%;
+        animation: gradientBG 15s ease infinite;
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        color: white;
+        overflow-x: hidden;
+    }
+
+    @keyframes gradientBG {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+
+    /* Container & Glassmorphism */
+    .app-container {
+        width: 100%;
+        max-width: 700px;
+        min-height: 95vh; /* Mobile full height */
+        background: var(--glass-bg);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: var(--glass-border);
+        box-shadow: var(--glass-shadow);
+        border-radius: 25px;
+        padding: 20px;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        overflow-y: auto; /* Enable scrolling for mobile */
+        margin: 10px;
+    }
+
+    /* Scrollbar Styling */
+    .app-container::-webkit-scrollbar {
+        width: 6px;
+    }
+    .app-container::-webkit-scrollbar-thumb {
+        background: rgba(255,255,255,0.3);
+        border-radius: 10px;
+    }
+
+    /* Screens */
+    .screen {
+        display: none;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+        animation: fadeIn 0.5s ease;
+    }
+
+    .screen.active {
+        display: flex;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Typography */
+    h1, h2 { text-align: center; text-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+    
+    .bilingual-text {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+    .eng-text { font-size: 1.1rem; font-weight: 600; color: var(--text-english); }
+    .hin-text { font-size: 0.95rem; font-weight: 400; color: var(--text-hindi); }
+
+    /* Inputs & Buttons */
+    input[type="number"] {
+        background: rgba(255,255,255,0.2);
+        border: none;
+        padding: 15px;
+        border-radius: 15px;
+        color: white;
+        font-size: 1.2rem;
+        text-align: center;
+        margin: 10px 0;
+        width: 80%;
+    }
+    input::placeholder { color: #ddd; }
+
+    .btn {
+        background: var(--primary-btn);
+        border: none;
+        padding: 15px 40px;
+        border-radius: 50px;
+        color: white;
+        font-size: 1.1rem;
+        font-weight: bold;
+        cursor: pointer;
+        transition: transform 0.2s, box-shadow 0.2s;
+        margin-top: 20px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
+    .btn:hover { transform: scale(1.05); box-shadow: 0 6px 20px rgba(0,0,0,0.3); }
+
+    .toggle-container {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin: 15px 0;
+        font-size: 1rem;
+    }
+
+    /* Quiz Header */
+    .quiz-header {
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        font-weight: bold;
+        font-size: 0.9rem;
+    }
+
+    .timer-circle {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        border: 3px solid white;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-weight: bold;
+    }
+    .pulse-red {
+        border-color: var(--accent-red);
+        color: var(--accent-red);
+        animation: pulse 1s infinite;
+    }
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+        100% { transform: scale(1); }
+    }
+
+    /* Progress Bar */
+    .progress-container {
+        width: 100%;
+        height: 6px;
+        background: rgba(255,255,255,0.2);
+        border-radius: 10px;
+        margin-bottom: 20px;
+        overflow: hidden;
+    }
+    .progress-fill {
+        height: 100%;
+        background: var(--accent-green);
+        width: 0%;
+        transition: width 0.3s ease;
+    }
+
+    /* Question Card */
+    .question-box {
+        background: rgba(0,0,0,0.2);
+        padding: 20px;
+        border-radius: 20px;
+        width: 100%;
+        margin-bottom: 20px;
+        line-height: 1.5;
+    }
+
+    /* Options */
+    .options-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 12px;
+        width: 100%;
+    }
+
+    .option-btn {
+        background: rgba(255,255,255,0.15);
+        border: 1px solid rgba(255,255,255,0.1);
+        padding: 15px;
+        border-radius: 15px;
+        text-align: left;
+        cursor: pointer;
+        transition: background 0.3s;
+        display: flex;
+        flex-direction: column;
+    }
+    .option-btn:hover { background: rgba(255,255,255,0.25); }
+
+    .option-btn.correct { background: var(--accent-green) !important; color: #000; border-color: transparent; }
+    .option-btn.wrong { background: var(--accent-red) !important; color: white; border-color: transparent; }
+    
+    /* Finish Button */
+    .finish-btn {
+        margin-top: 30px;
+        background: rgba(255, 69, 58, 0.8);
+        font-size: 0.9rem;
+        padding: 10px 20px;
+    }
+
+    /* Feedback Animations */
+    .emoji-feedback {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 5rem;
+        pointer-events: none;
+        z-index: 1000;
+        display: none;
+    }
+    .shake { animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both; }
+    @keyframes shake {
+        10%, 90% { transform: translate3d(-51%, -50%, 0); }
+        20%, 80% { transform: translate3d(-49%, -50%, 0); }
+        30%, 50%, 70% { transform: translate3d(-52%, -50%, 0); }
+        40%, 60% { transform: translate3d(-48%, -50%, 0); }
+    }
+
+    /* Confetti */
+    .confetti {
+        position: absolute;
+        width: 10px;
+        height: 10px;
+        background-color: #fff;
+        animation: fall linear forwards;
+        z-index: 9999;
+    }
+    @keyframes fall {
+        to { transform: translateY(100vh) rotate(720deg); }
+    }
+
+</style>
+</head>
+<body>
+
+<div class="app-container">
+    <div id="start-screen" class="screen active">
+        <h1>Sangam Age Quiz<br><span style="font-size: 0.6em; font-weight: 300;">संगम युग प्रश्नोत्तरी</span></h1>
+        
+        <div class="question-box" style="text-align: center;">
+            <p class="eng-text">Total Questions: 76</p>
+            <p class="hin-text">कुल प्रश्न: 76</p>
+        </div>
+
+        <input type="number" id="timeInput" placeholder="Seconds per Question (e.g., 20)">
+        
+        <div class="toggle-container">
+            <input type="checkbox" id="shuffleToggle" style="width: 20px; height: 20px;">
+            <label for="shuffleToggle">Shuffle Questions (प्रश्नों को मिलाएं)</label>
+        </div>
+
+        <button class="btn" onclick="startQuiz()">Start Quiz (प्रारंभ करें)</button>
+    </div>
+
+    <div id="quiz-screen" class="screen">
+        <div class="progress-container">
+            <div id="progressBar" class="progress-fill"></div>
+        </div>
+
+        <div class="quiz-header">
+            <div>
+                <span id="questionCount">Q: 1/76</span>
+            </div>
+            <div id="timerDisplay" class="timer-circle">--</div>
+            <div>
+                <span id="scoreDisplay">Score: 0</span>
+            </div>
+        </div>
+
+        <div class="question-box">
+            <div class="bilingual-text">
+                <span id="q-eng" class="eng-text">Question English</span>
+                <span id="q-hin" class="hin-text">Question Hindi</span>
+            </div>
+        </div>
+
+        <div id="options-container" class="options-grid">
+            </div>
+
+        <button class="btn finish-btn" onclick="finishEarly()">Finish & Show Results (समाप्त करें)</button>
+    </div>
+
+    <div id="result-screen" class="screen">
+        <h1>Quiz Completed!</h1>
+        <div class="timer-circle" style="width: 120px; height: 120px; font-size: 2rem; margin: 20px 0;">
+            <span id="finalScore">0</span>%
+        </div>
+        <p id="resultMessage" style="font-size: 1.2rem; text-align: center; margin-bottom: 20px;"></p>
+        <p id="rawScore" style="color: #ddd;"></p>
+        <button class="btn" onclick="location.reload()">Restart Quiz (पुनः प्रयास करें)</button>
+    </div>
+
+    <div id="feedbackEmoji" class="emoji-feedback">😢</div>
+</div>
+
+<script>
+    // Audio Context Setup
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    
+    function playSound(type) {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        if (type === 'correct') {
+            // High "Ting"
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(500, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(1000, audioCtx.currentTime + 0.1);
+            gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.5);
+        } else {
+            // Low "Buzz"
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+            osc.frequency.linearRampToValueAtTime(100, audioCtx.currentTime + 0.3);
+            gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.3);
+        }
+    }
+
+    // Data: 76 Questions extracted from images
+    // Note: 'ans' is 0-based index (0=a, 1=b, 2=c, 3=d)
+    const allQuestions = [
+        {
+            e: "How many 'Sangams' were held during the period 100 AD to 250 AD (Sangam Age)?",
+            h: "100 AD से लेकर 250 AD (संगम काल) के दौरान कुल कितने संगम हुए है?",
+            opts: [
+                {e:"One", h:"एक"}, {e:"Two", h:"दो"}, {e:"Three", h:"तीन"}, {e:"Four", h:"चार"}
+            ],
+            ans: 2 // c
+        },
+        {
+            e: "Which match is correct?",
+            h: "किसका मिलान सही है?",
+            opts: [
+                {e:"1 & 2", h:"1 और 2"}, {e:"Only 1", h:"केवल 1"}, {e:"Only 3", h:"केवल 3"}, {e:"1, 2, and 3", h:"1, 2, और 3"}
+            ],
+            // Context: 1. Madurai, 2. Kapadapuram (actually Kapatapuram is 2nd), 3. Madurai (North)
+            // Based on Answer Key 2 -> (b) Only 1 is technically correct pairing in list context usually provided in books
+            ans: 1 // b
+        },
+        {
+            e: "Which of the following statements is correct regarding Sangam chairmen?",
+            h: "निम्न में कौन-सा कथन सही हैं?",
+            opts: [
+                {e:"1 & 2", h:"1 और 2"}, {e:"2 & 3", h:"2 और 3"}, {e:"1 & 3", h:"1 और 3"}, {e:"1, 2 & 3", h:"1, 2 और 3"}
+            ],
+            ans: 3 // d
+        },
+        {
+            e: "Which rulers provided patronage to all three Sangams?",
+            h: "तीनों संगमों को संरक्षण किन शासकों ने दिया था?",
+            opts: [
+                {e:"Chola", h:"चोल"}, {e:"Chera", h:"चेर"}, {e:"Pandya", h:"पाण्ड्य"}, {e:"All three", h:"तीनों"}
+            ],
+            ans: 2 // c
+        },
+        {
+            e: "Which of the following statements is true?",
+            h: "निम्न में कौन-सा कथन सत्य है?",
+            opts: [
+                {e:"Only 1", h:"केवल - 1"}, {e:"Only 2", h:"केवल - 2"}, {e:"1 & 2", h:"1 और 2"}, {e:"Neither 1 nor 2", h:"न तो 1 न ही 2"}
+            ],
+            ans: 2 // c
+        },
+        {
+            e: "Who is the author of 'Silappadikaram'?",
+            h: "'शिल्प्पादिकारम' के रचियता कौन है?",
+            opts: [
+                {e:"Ilango Adigal", h:"इलांगोआदिगल"}, {e:"Senguttuvan", h:"शेनगुट्टवन"}, {e:"Nedunjeliyan", h:"नेडुजेलियन"}, {e:"Kevalam", h:"केवलम"}
+            ],
+            ans: 0 // a
+        },
+        {
+            e: "Who is the author of 'Jivaka Chintamani'?",
+            h: "'जीवक चिन्तामणि' के लेखक कौन हैं?",
+            opts: [
+                {e:"Nedunjeliyan", h:"नेडुजेलियन"}, {e:"Tirutakkadevar", h:"तिरुतक देवर"}, {e:"Sitalaisattanar", h:"सीतलैसत्तनार"}, {e:"Manimekalai", h:"मणिमेखलें"}
+            ],
+            ans: 1 // b
+        },
+        {
+            e: "Which kingdom is NOT mentioned under the Sangam period?",
+            h: "संगम काल के अंतर्गत किस राज्य का विवरण नहीं मिलता है?",
+            opts: [
+                {e:"Chera", h:"चेर"}, {e:"Chola", h:"चोल"}, {e:"Pallava", h:"पल्लव"}, {e:"Pandya", h:"पाण्ड्य"}
+            ],
+            ans: 2 // c
+        },
+        {
+            e: "What is the literal meaning of 'Chera'?",
+            h: "'चेर' का शाब्दिक अर्थ क्या होता है?",
+            opts: [
+                {e:"Mountainous Country", h:"पर्वतीय देश"}, {e:"Land of Pearls", h:"मोतियों का देश"}, {e:"Feudatory of Cholas", h:"चोलों का सामंत"}, {e:"Confluence of 4 states", h:"चार राज्यों का संगम"}
+            ],
+            ans: 0 // a
+        },
+        {
+            e: "Which of the following statements is correct regarding Chera?",
+            h: "निम्न में कौन-सा कथन सही है?",
+            opts: [
+                {e:"1 & 2", h:"1 और 2"}, {e:"2 & 3", h:"2 और 3"}, {e:"1 & 3", h:"1 और 3"}, {e:"1, 2 & 3", h:"1, 2 और 3"}
+            ],
+            ans: 3 // d
+        },
+        {
+            e: "Who was the founder of the Chera Kingdom?",
+            h: "चेर राज्य का संस्थापक कौन था?",
+            opts: [
+                {e:"Shenguttuvan", h:"शेनगुट्टवन"}, {e:"Udiyanjeral", h:"उदियन जेरल"}, {e:"Adigaiman", h:"आदिइमान"}, {e:"Nediyon", h:"नेडियोंन"}
+            ],
+            ans: 1 // b (Key says 'a' in some keys, but standard history is Udiyanjeral. Following provided Key: 11->a in image but physically 11 is usually b. Let's stick to IMAGE KEY: 11.a)
+            // Correction: Looking at image 12, Key 11 says (b). Wait. Key row: 1.(c), 2.(b)... 11.(b). Okay.
+            // Wait, looking at the crop, Key 11 is (b).
+            ans: 1 // b
+        },
+        {
+            e: "About which king is it said that he fed the warriors participating in the Mahabharata war?",
+            h: "किस राजा के विषय में कहा जाता है कि इन्होंने महाभारत युद्ध में भाग लेने वाले योद्धा को भोजन करवाया था?",
+            opts: [
+                {e:"Udiyanjeral", h:"उदियन जेरल"}, {e:"Nediyon", h:"नेडियोंन"}, {e:"Mihir Bhoj", h:"मिहिर भोज"}, {e:"Karikala", h:"करिकाल"}
+            ],
+            ans: 0 // a
+        },
+        {
+            e: "Which Chera king started 'Sati Puja' or 'Pattini Puja'?",
+            h: "किस चेर राजा ने सती पूजा या पत्नी पूजा की शुरूआत की थी?",
+            opts: [
+                {e:"Udiyanjeral", h:"उदियन जेरल"}, {e:"Shenguttuvan", h:"शेनगुट्टवन"}, {e:"Adigaiman", h:"आदिग इमान"}, {e:"Nediyon", h:"नेडियोंन"}
+            ],
+            ans: 1 // b
+        },
+        {
+            e: "Which Chera king is credited with introducing sugarcane cultivation in South India?",
+            h: "किस चेर राजा को दक्षिण भारत में गन्ने की खेती प्रारंभ करने का श्रेय दिया जाता है?",
+            opts: [
+                {e:"Adigaiman", h:"आदिग इमान"}, {e:"Karikala", h:"करिकाल"}, {e:"Shenguttuvan", h:"शेनगुट्टवन"}, {e:"Nediyon", h:"नेडियोंन"}
+            ],
+            ans: 0 // a
+        },
+        {
+            e: "Who is known by the nickname 'Lal Cher' (Red Chera)?",
+            h: "लाल चेर के उपनाम से किसे जाना जाता है?",
+            opts: [
+                {e:"Adigaiman", h:"आदिग इमान"}, {e:"Udiyanjeral", h:"उदियन जेरल"}, {e:"Shenguttuvan", h:"शेनगुट्टवन"}, {e:"Nediyon", h:"नेडियोंन"}
+            ],
+            ans: 2 // c
+        },
+        {
+            e: "Which of the following statements is true regarding Pandyas?",
+            h: "निम्न में कौन-सा कथन सत्य है?",
+            opts: [
+                {e:"1 & 2", h:"1 और 2"}, {e:"2 & 3", h:"2 और 3"}, {e:"1 & 3", h:"1 और 3"}, {e:"1, 2 & 3", h:"1, 2 और 3"}
+            ],
+            ans: 2 // c
+        },
+        {
+            e: "Where was the capital of the Pandya dynasty?",
+            h: "पांड्य वंश की राजधानी कहाँ थी?",
+            opts: [
+                {e:"Kaveripattinam", h:"कावेरीपट्टनम"}, {e:"Madurai", h:"मदुरै"}, {e:"Uraiyur", h:"उरैयुर"}, {e:"Tanjore", h:"तंजौर"}
+            ],
+            ans: 1 // b
+        },
+        {
+            e: "Who was the founder of the Pandya dynasty?",
+            h: "पांड्य वंश का संस्थापक कौन था?",
+            opts: [
+                {e:"Nedunjeliyan", h:"नेडुजेलियन"}, {e:"Nediyon", h:"नेडियोंन"}, {e:"Nallivakodan", h:"नल्लिवकोडन"}, {e:"Agastya", h:"अगस्तस"}
+            ],
+            ans: 1 // b
+        },
+        {
+            e: "Choose the correct statements regarding Pandyas.",
+            h: "निम्न कथनों में सही कथन चुनें?",
+            opts: [
+                {e:"1 & 2", h:"1 और 2"}, {e:"2 & 3", h:"2 और 3"}, {e:"1 & 3", h:"1 और 3"}, {e:"1, 2 & 3", h:"1, 2, और 3"}
+            ],
+            ans: 1 // b
+        },
+        {
+            e: "In the present context, the Chola kingdom was situated in which state?",
+            h: "चोल राज्य वर्तमान संदर्भ में किस राज्य में स्थित था?",
+            opts: [
+                {e:"Karnataka", h:"कर्नाटक"}, {e:"Kerala", h:"केरल"}, {e:"Andhra Pradesh", h:"आंध्रप्रदेश"}, {e:"Tamil Nadu", h:"तमिलनाडू"}
+            ],
+            ans: 3 // d
+        },
+        {
+            e: "What was the royal emblem of the Chola kingdom?",
+            h: "चोल राज्य का राजकीय चिन्ह क्या था?",
+            opts: [
+                {e:"Tiger", h:"बाघ"}, {e:"Vulture", h:"गिद्ध"}, {e:"Bow & Arrow", h:"तीर-धनुष"}, {e:"Ship", h:"समुद्री जहाज"}
+            ],
+            ans: 0 // a
+        },
+        {
+            e: "Where was the capital of the Cholas?",
+            h: "चोल की राजधानी कहाँ थी?",
+            opts: [
+                {e:"Madurai", h:"मदुरै"}, {e:"Kaveripattinam", h:"कावेरी पट्टनम"}, {e:"Thanjavur", h:"तंजावुर"}, {e:"Tanjore", h:"तंजौर"}
+            ],
+            // Key 22 -> (c) Thanjavur (Medieval chola) but Early Chola was Uraiyur/Puhar. Question implies later context or specific option.
+            ans: 2 // c
+        },
+        {
+            e: "Which of the following statements is FALSE regarding Cholas?",
+            h: "निम्न में कौन-सा कथन असत्य है?",
+            opts: [
+                {e:"Famous port was Kaveripattinam", h:"चोलों की सबसे प्रसिद्ध बंदरगाह कावेरीपट्टनम थी"}, {e:"Founder was Elara", h:"चोल राजवंश का संस्थापक इलनजेतचेन्नी था"}, {e:"Greatest ruler was Karikala", h:"चोल का सबसे महान शासक करिकाल था"}, {e:"Elara built Puhar using Sri Lankan captives", h:"इलनजेतचेन्नी ने कावेरी पट्टनम का निर्माण श्रीलंका के बंदियों के सहायता से बनवाया था"}
+            ],
+            ans: 3 // d
+        },
+        {
+            e: "Which of the following statements is true?",
+            h: "निम्न में कौन-सा कथन सही है?",
+            opts: [
+                {e:"1 & 2", h:"1 और 2"}, {e:"2 & 3", h:"2 और 3"}, {e:"1 & 3", h:"1 और 3"}, {e:"1, 2 & 3", h:"1, 2, और 3"}
+            ],
+            ans: 3 // d
+        },
+        {
+            e: "Which Tamil text is called 'Laghuveda' or 'Bible of the Tamils'?",
+            h: "तमिल ग्रंथों का लघुवेद या तमिलों का बाइबिल किस ग्रंथ को कहा जाता है?",
+            opts: [
+                {e:"Kural", h:"कुरल"}, {e:"Ittyuthek", h:"इत्युथेके"}, {e:"Jivaka Chintamani", h:"जीवक चिंतामणि"}, {e:"Tolkappiyam", h:"तौलकाप्पियर"}
+            ],
+            ans: 0 // a
+        },
+        {
+            e: "With whom is the Tamil epic 'Jivaka Chintamani' associated?",
+            h: "तमिल का गौरवग्रंथ जीवकचिंतामणि किससे संबंधित है?",
+            opts: [
+                {e:"Jain", h:"जैन"}, {e:"Buddhist", h:"बौद्ध"}, {e:"Hindu", h:"हिन्दु"}, {e:"Christian", h:"ईसाई"}
+            ],
+            ans: 0 // a
+        },
+        {
+            e: "In Sangam literature, for whom were 'Kon', 'Ko' and 'Mann' used?",
+            h: "संगमकालीन साहित्य मे 'कोन' को एवं 'मन्न' किसके लिए प्रयुक्त होते थे?",
+            opts: [
+                {e:"Prime Minister", h:"प्रधानमंत्री"}, {e:"Revenue Minister", h:"राजस्व मंत्री"}, {e:"Army Chief", h:"सेनापति"}, {e:"King", h:"राजा"}
+            ],
+            ans: 3 // d
+        },
+        {
+            e: "Which of the following Sangam ports were situated on the West Coast?",
+            h: "निम्नलिखित में से कौन से संगमकालीन पत्तन पश्चिमी तट पर स्थित थे?",
+            opts: [
+                {e:"1 & 2", h:"1 और 2"}, {e:"2 & 3", h:"2 और 3"}, {e:"3 & 4", h:"3 और 4"}, {e:"4 & 1", h:"4 और 1"}
+            ],
+            ans: 2 // c
+        },
+        {
+            e: "The text 'Tolkappiyam' is related to?",
+            h: "तोलक्काप्पियम ग्रंथ संबंधित है?",
+            opts: [
+                {e:"Administration", h:"प्रशासन से"}, {e:"Law", h:"विधि से"}, {e:"Grammar and Poetry", h:"व्याकरण और काव्य से"}, {e:"All of the above", h:"उपर्युक्त सभी से"}
+            ],
+            ans: 2 // c
+        },
+        {
+            e: "In the Sangam age, Uraiyur was the capital of which of the following?",
+            h: "संगम काल में उरैयुर निम्न में से किस एक की राजधानी थी?",
+            opts: [
+                {e:"Pandyas", h:"पाण्ड्य शासकों की"}, {e:"Pallavas", h:"पल्लव शासकों की"}, {e:"Chalukyas", h:"चालुक्य शासकों की"}, {e:"Cholas", h:"चोल शासकों की"}
+            ],
+            ans: 3 // d
+        },
+        {
+            e: "Who is the hero of the literary work 'Silappadikaram'?",
+            h: "साहित्यिक कृति 'शिलप्पादिकारम' का नायक कौनथा?",
+            opts: [
+                {e:"Karikala Chola", h:"करिकाल चोल"}, {e:"Senguttuvan Chera", h:"सेनगुट्टवन चेर"}, {e:"Nedunjeliyan", h:"नेडुजेलियन"}, {e:"Kovalan", h:"सेंगनन चोल (Correct hero is Kovalan, Option D says Senganan Chola? Wait Key says 31.b - Senguttuvan? No Silappadikaram hero is Kovalan. Let's look closer at 31 options in Hindi. D says 'Senganan Chola'. The hero is Kovalan. Maybe option A/B/C/D text in image is different? Image says (b) Senguttuvan Chera. But Kovalan is hero. Let's follow key: 31->b.)"}
+            ],
+            // Correction: Silappadikaram is about Kovalan and Kannagi. Senguttuvan is a character praised in it.
+            // Following the provided key rigorously: 31 -> (b).
+            ans: 1 // b
+        },
+        {
+            e: "Tolkappiyam is related to?",
+            h: "तोल्कप्पियम संबंधित है",
+            opts: [
+                {e:"First Sangam", h:"प्रथम संगम काल से"}, {e:"Second Sangam", h:"द्वितीय संगम काल से"}, {e:"Third Sangam", h:"तृतीय संगम काल से"}, {e:"Post-Second Sangam", h:"उत्तर-द्वितीय संगम काल से"}
+            ],
+            ans: 1 // b
+        },
+        {
+            e: "Match List-I (Region) with List-II (Landscape) correctly.",
+            h: "सूची-I (तिर्ण) को सूची-II (भू-दृश्य) से सुमेलित कीजिए...",
+            opts: [
+                {e:"3, 2, 1, 4", h:"3, 2, 1, 4"}, {e:"1, 4, 3, 2", h:"1, 4, 3, 2"}, {e:"3, 4, 1, 2", h:"3, 4, 1, 2"}, {e:"1, 2, 3, 4", h:"1, 2, 3, 4"}
+            ],
+            ans: 2 // c
+        },
+        {
+            e: "Which of the following tells the story of a dancer turning into a Buddhist nun?",
+            h: "निम्न में से किसमें एक नर्तकी के बौद्ध भिक्षुणी में परिवर्तित होने की कथा मिलती है?",
+            opts: [
+                {e:"Silappadikaram", h:"शिलप्पादिकारम"}, {e:"Manimekalai", h:"मणिमेखलै"}, {e:"Tolkappiyam", h:"तोलकाप्पियम"}, {e:"Maduraikanchi", h:"मदुरैकांचि"}
+            ],
+            ans: 1 // b
+        },
+        {
+            e: "Agam class poems in Tamil poetry are about:",
+            h: "तमिल काव्य में आगम वर्ग की कविताएं",
+            opts: [
+                {e:"Love related", h:"प्रेम सम्बन्धी है"}, {e:"Praise of Kings", h:"राजाओं की प्रशंसा में है"}, {e:"Praise of Nature", h:"प्रकृति की प्रशंसा में है"}, {e:"Praise of Shiva", h:"भगवान शिव की प्रशंसा में हैं"}
+            ],
+            ans: 0 // a
+        },
+        {
+            e: "Evidence of Rome's trade with South India has been found at:",
+            h: "दक्षिण भारत के साथ रोम के व्यापार के प्रमाण मिले हैं",
+            opts: [
+                {e:"Arikamedu & Kanyakumari", h:"अरिकामेडु एवं कन्याकुमारी के उत्खनन से"}, {e:"Alagankulam etc.", h:"अलंगगुलम..."}, {e:"Arikamedu & Alagankulam", h:"अरिकामेडु एवं अलगंगुलम के उत्खनन से"}, {e:"Kanyakumari & Kodumanal", h:"कन्याकुमारी एवं कोडुंगल्लूर के उत्खनन से"}
+            ],
+            ans: 2 // c
+        },
+        {
+            e: "The oldest available text of Sangam Tamils is:",
+            h: "संगम तमिलों का प्राचीनतम उपलब्ध ग्रंथ (Earliest Available literature) है",
+            opts: [
+                {e:"Pattinappalai", h:"पत्तिनप्पलै"}, {e:"Tirumurugarruppadai", h:"तिरुमुरुगारुप्पड़ई"}, {e:"Maduraikanchi", h:"मदुरैकांची"}, {e:"Tolkappiyam", h:"तोलकाप्पियम"}
+            ],
+            ans: 3 // d
+        },
+        {
+            e: "Who wrote Mahabharata in Tamil during the Sangam period?",
+            h: "संगम काल में तमिल में महाभारत किसने लिखी?",
+            opts: [
+                {e:"Perundevanar", h:"पेरुन्देवनार"}, {e:"Villiputhur Alvar", h:"विल्लिपुतूर अलवार"}, {e:"Kamban", h:"कम्बन"}, {e:"Kuttan", h:"कुट्टन"}
+            ],
+            ans: 0 // a (Key 38 -> b? Image Key 38 says (b). Standard history says Perundevanar (a). I will follow the KEY provided in image: 38->b)
+            // Correction: Wait, Image Key 38 is (b). Perundevanar is usually credited with Bharatam. Villiputhur is later. I must follow the image key.
+            ans: 1 // b
+        },
+        {
+            e: "Which ancient Tamil poet mentions Nandas and Mauryas in his work?",
+            h: "अपनी रचना में नंदों एवं मौर्यो का उल्लेख करने वाला प्राचीन तमिल कवि कौन है?",
+            opts: [
+                {e:"Sattanar", h:"सत्तनार"}, {e:"Ilango Adigal", h:"इलांगो आदिगल"}, {e:"Kapilar", h:"कपिलर"}, {e:"Mamulanar", h:"मामूलनार"}
+            ],
+            ans: 3 // d
+        },
+        {
+            e: "Which one of the following pairs is correctly matched?",
+            h: "निम्नलिखित युग्मों में कौन एक सही सुमेलित है?",
+            opts: [
+                {e:"Chera: Karikala", h:"चेर : करिकाल"}, {e:"Chola: Simuka", h:"चोल : सिमुक"}, {e:"Pandya: Nedunjeliyan", h:"पाण्ड्य : नेडुजेलियन"}, {e:"Satavahana: Senguttuvan", h:"सातवाहन : सेंगुटु वन"}
+            ],
+            ans: 2 // c
+        },
+        {
+            e: "Which pair of ancient port and location is correctly matched?",
+            h: "प्राचीन पत्तन एवं उनकी अवस्थिति के युग्मों में से कौन एक सही सुमेलित है?",
+            opts: [
+                {e:"Arikamedu: Coromandel", h:"अरिकमेडु : कोरोमण्डल"}, {e:"Nelcynda: Malabar", h:"नेलसिन्ड : मालाबार"}, {e:"Masalia: Konkan", h:"मसलिअ : कोंकण"}, {e:"Colchi: Pandya Country", h:"कोल्चि (कोरकै) : पाण्ड्य देश"}
+            ],
+            ans: 3 // d
+        },
+        {
+            e: "The deity 'Murugan' mentioned in Sangam texts resembles which deity?",
+            h: "संगम ग्रंथों में उल्लिखित मुरुगन किस देवता से साम्य रखते हैं?",
+            opts: [
+                {e:"Shiva", h:"शिव"}, {e:"Balarama", h:"बलराम"}, {e:"Skanda", h:"स्कन्द"}, {e:"Krishna", h:"कृष्ण"}
+            ],
+            ans: 2 // c
+        },
+        {
+            e: "The author of the famous South Indian epic Kural was:",
+            h: "दक्षिण भारतीय प्रसिद्ध महाकाव्य कुरल (Kural) का लेखक था",
+            opts: [
+                {e:"Kamban", h:"कम्बन"}, {e:"Ottakuttan", h:"ओटकुट्टन"}, {e:"Thiruvalluvar", h:"तिरुवल्लुवर"}, {e:"Pugzhendi", h:"पुलगेन्दि"}
+            ],
+            ans: 2 // c
+        },
+        {
+            e: "Which state was NOT there in the Sangam era?",
+            h: "संगम युग में कौन-सा राज्य नहीं था?",
+            opts: [
+                {e:"Chola", h:"चोल"}, {e:"Chera", h:"चेर"}, {e:"Pandya", h:"पाण्ड्य"}, {e:"Pallava", h:"पल्लव"}
+            ],
+            ans: 3 // d
+        },
+        {
+            e: "Where was the Roman settlement found?",
+            h: "रोमन बस्ती कहाँ मिली है?",
+            opts: [
+                {e:"Kalibangan", h:"कालीबंगा"}, {e:"Arikamedu", h:"अरिकमेडु"}, {e:"Rangpur", h:"रंगपुर"}, {e:"Satara", h:"सतारा"}
+            ],
+            ans: 1 // b
+        },
+        {
+            e: "Which of the following were epics of early Tamil literature?",
+            h: "निम्नलिखित में से कौन प्रारम्भिक तमिल साहित्य के महाकाव्य थे?",
+            opts: [
+                {e:"Tolkappiyam & Tirukkural", h:"तोलक्काप्पियम एवं तिरुक्कुरल"}, {e:"Ahananuru & Purananuru", h:"अहनानुरु एवं पुरुनानुरु"}, {e:"Padirruppattu & Maduraikanchi", h:"पादित्रपत्तु एवं मदुरै-कांचि"}, {e:"Silappadikaram & Manimekalai", h:"शिलप्पादिकारम एवं मणिमेखलै"}
+            ],
+            ans: 3 // d
+        },
+        {
+            e: "Who is the author of Manimekalai?",
+            h: "मणिमेखलै का लेखक कौन था?",
+            opts: [
+                {e:"Sattanar", h:"सत्तनार"}, {e:"Puthyagupta", h:"पुथ्यगुप्त"}, {e:"Ravi Varma", h:"रवि वर्मा"}, {e:"None of these", h:"उक्त में से कोई नहीं"}
+            ],
+            ans: 0 // a
+        },
+        {
+            e: "Who is the heroine of Silappadikaram?",
+            h: "शिलप्पादिकारम् की नायिका कौन थी?",
+            opts: [
+                {e:"Kannagi (Merchant's daughter)", h:"वणिकपुत्री"}, {e:"Shubhankara", h:"शुभंकरा"}, {e:"Aditya", h:"आदित्य आयां"}, {e:"None", h:"उक्त में से कोई नहीं"}
+            ],
+            ans: 0 // a
+        },
+        {
+            e: "What is the determined date of the Sangam period?",
+            h: "संगम तिथि क्या निर्धारित है?",
+            opts: [
+                {e:"500 BC to 500 AD", h:"500 ई० पू० से 500 ई०"}, {e:"100 to 150 AD", h:"100 से 150 ई०"}, {e:"50 to 200 AD", h:"50 से 200 ई०"}, {e:"None", h:"उक्त में से कोई नहीं"}
+            ],
+            // Key 49 -> (a)
+            ans: 0 // a
+        },
+        {
+            e: "The capital of Cholas was:",
+            h: "चोलों की राजधानी थी",
+            opts: [
+                {e:"Puhar and Uraiyur", h:"पुहार तथा उरैयूर"}, {e:"Chol Mandalam", h:"चोल मण्डलम्"}, {e:"Uraiyur and Madurai", h:"उरैयुर तथा मदुराई"}, {e:"Puhar and Yondal", h:"पुहार तथा योण्डल"}
+            ],
+            ans: 0 // a
+        },
+        {
+            e: "The port of the Cheras was:",
+            h: "चेरों का बन्दरगाह था",
+            opts: [
+                {e:"Kaveripattinam", h:"कावेरीपट्टनम्"}, {e:"Musiri", h:"मुसिरी"}, {e:"Tondai", h:"टोण्डल"}, {e:"Korkai", h:"कोरकई"}
+            ],
+            ans: 1 // b
+        },
+        {
+            e: "The main theme of Sangam literature is:",
+            h: "संगम साहित्य का मुख्य विषय है",
+            opts: [
+                {e:"Love, Music, Philosophy", h:"प्रेम, संगीत एवं दर्शन"}, {e:"Philosophy & Religion", h:"दर्शन एवं धर्म"}, {e:"Love and War", h:"प्रेम एवं युद्ध"}, {e:"Religion, Love, War", h:"धर्म, प्रेम एवं युद्ध"}
+            ],
+            ans: 2 // c
+        },
+        {
+            e: "Who was the chairman of the First Sangam?",
+            h: "प्रथम संगम का अध्यक्ष कौन था?",
+            opts: [
+                {e:"Ved Vyas", h:"वेद व्यास"}, {e:"Valmiki", h:"वाल्मीकि"}, {e:"Vasudev", h:"वासुदेव"}, {e:"Agastya", h:"अगस्त्य"}
+            ],
+            ans: 3 // d
+        },
+        {
+            e: "What is the importance of the Sangam Age in South Indian history?",
+            h: "दक्षिण भारत में इतिहास में संगम युग का क्या महत्व है?",
+            opts: [
+                {e:"Age of Chola dominance", h:"यह चोल वंश के प्रभुत्व का युग था"}, {e:"Age of foreign invasions", h:"यह विदेशी आक्रमणों का युग था"}, {e:"Age of great literary glory", h:"यह महान साहित्यिक वैभव का युग था"}, {e:"Age of spread of Buddhism", h:"यह बौद्ध धर्म के प्रसार का युग था"}
+            ],
+            ans: 2 // c
+        },
+        {
+            e: "With whom is Kaveripattinam associated in Sangam literature?",
+            h: "संगम साहित्य में कावेरीपत्तनम का सम्बन्ध किससे है?",
+            opts: [
+                {e:"Cholas", h:"चोलों से"}, {e:"Pandyas", h:"पाण्ड्यों से"}, {e:"Cheras", h:"चेरों से"}, {e:"None", h:"उपरोक्त में से किसी से नहीं"}
+            ],
+            ans: 0 // a
+        },
+        {
+            e: "The deity 'Murugan' mentioned in Sangam texts resembles?",
+            h: "संगम ग्रंथों में उल्लिखित 'मुरुगन' किस देवता से साम्य रखते हैं?",
+            opts: [
+                {e:"Shiva", h:"शिव"}, {e:"Balarama", h:"बलराम"}, {e:"Skanda", h:"स्कन्द"}, {e:"Krishna", h:"कृष्ण"}
+            ],
+            ans: 2 // c
+        },
+        {
+            e: "Which dynasty sent an embassy to the court of Roman Emperor Augustus?",
+            h: "रोमन साम्राज्य के साथ व्यापार में वृद्धि हेतु किस वंश के शासकों द्वारा रोमन सम्राट सीजस आग्स्टस के दरबार में दूत मण्डल भेजा?",
+            opts: [
+                {e:"Pandya", h:"पांड्य"}, {e:"Chola", h:"चोल"}, {e:"Kushan", h:"कुषाण"}, {e:"Gupta", h:"गुप्त"}
+            ],
+            ans: 0 // a
+        },
+        {
+            e: "Which Pandya ruler is mentioned in 'Silappadikaram'?",
+            h: "'शिलप्पादिकारम' से किस पाण्ड्य शासक का उल्लेख है?",
+            opts: [
+                {e:"Nedunjeliyan", h:"नेडुनजेलियन"}, {e:"Irumporai", h:"इरम्पोरै"}, {e:"Senguttuvan", h:"सेनगुत्तुवन"}, {e:"Karikala", h:"करिकाल"}
+            ],
+            ans: 0 // a
+        },
+        {
+            e: "Who among the following mentions the Mauryan invasion of South India?",
+            h: "निम्नलिखित में से कौन दक्षिण भारत में मौर्य आक्रमण का उल्लेख करता है?",
+            opts: [
+                {e:"Paranar", h:"परनार"}, {e:"Ilango", h:"इलंगो"}, {e:"Kapilar", h:"कपिलर"}, {e:"Mamulanar", h:"मामूलनार"}
+            ],
+            ans: 3 // d
+        },
+        {
+            e: "Kannagi described in Sangam literature is:",
+            h: "संगम साहित्य में वर्णित कन्नगी है",
+            opts: [
+                {e:"Unrequited love", h:"एक पक्षीय प्रेम"}, {e:"Illicit love", h:"अनुचित प्रेम"}, {e:"Heroine of Tamil Epic", h:"तमिल महाकाव्य की नायिका"}, {e:"Group of merchants", h:"व्यापारियों का समूह"}
+            ],
+            ans: 2 // c
+        },
+        {
+            e: "In which language was Sangam literature composed?",
+            h: "संगम साहित्य की रचना किस भाषा में की गई थी?",
+            opts: [
+                {e:"Kannada", h:"कन्नड़"}, {e:"Malayalam", h:"मलयालम"}, {e:"Telugu", h:"तेलुगू"}, {e:"Tamil", h:"तमिल"}
+            ],
+            ans: 3 // d
+        },
+        {
+            e: "In which Tamil text has the worship of a devoted wife (Pattini) been established?",
+            h: "पतिव्रता पत्नी की पूजा को किस तमिल ग्रंथ में प्रतिष्ठा प्राप्त हुई है?",
+            opts: [
+                {e:"Ahananuru", h:"अहनानूरु"}, {e:"Silappadikaram", h:"शिलप्पादिकारम्"}, {e:"Tolkappiyam", h:"तोलकाप्पियम"}, {e:"Manimekalai", h:"मणिमेखलै"}
+            ],
+            ans: 1 // b
+        },
+        {
+            e: "Sangam literature reveals the history of which part of India?",
+            h: "संगम साहित्य से भारत के किस भाग के इतिहास का पता चलता है?",
+            opts: [
+                {e:"North India", h:"उत्तरी भारत"}, {e:"West India", h:"पश्चिमी भारत"}, {e:"South India", h:"दक्षिणी भारत"}, {e:"East India", h:"पूर्वी भारत"}
+            ],
+            ans: 2 // c
+        },
+        {
+            e: "Sangam in South India represented:",
+            h: "दक्षिण भारत में संगम प्रतिनिधित्व करता था",
+            opts: [
+                {e:"Academy of Poets", h:"कवि-अकादर्म"}, {e:"Playwrights", h:"नाट्य-लेखक"}, {e:"Sculptors Guild", h:"मूर्तिकार-श्रेणी"}, {e:"Group of Novelists", h:"उपन्यासकार-समूह"}
+            ],
+            ans: 0 // a
+        },
+        {
+            e: "The most powerful among the Chola rulers in the Sangam period was:",
+            h: "संगम काल में चोल शासकों में सबसे प्रतापी था",
+            opts: [
+                {e:"Karikala", h:"करिकाल"}, {e:"Puhar", h:"पुहार"}, {e:"Kantan", h:"कांतन"}, {e:"Sevivyan", h:"शेवियन"}
+            ],
+            ans: 0 // a
+        },
+        {
+            e: "The ruler of the Sangam period was called:",
+            h: "संगम काल के शासक को कहा जाता था",
+            opts: [
+                {e:"Ayar", h:"अयार"}, {e:"Ariya", h:"अर्रिया"}, {e:"Enadi", h:"एनाडि"}, {e:"Ko", h:"को"}
+            ],
+            ans: 3 // d
+        },
+        {
+            e: "Which Sangam text depicts the story of Kovalan and his wife Kannagi?",
+            h: "निम्नलिखित में से कौन-सा संगम ग्रंथ कोवलन और उसकी पत्नी कन्नगी की कथा का चित्रण करता है?",
+            opts: [
+                {e:"Manimekalai", h:"मणिमेखलै"}, {e:"Padirruppattu", h:"पदित्रुपत्तु"}, {e:"Paripadal", h:"परिपाडल"}, {e:"Silappadikaram", h:"शिलप्पादिकारम"}
+            ],
+            ans: 3 // d
+        },
+        {
+            e: "In which Tamil text did Pattini-Puja get prestige?",
+            h: "पत्नि-पूजा को किस तमिल ग्रंथ में प्रतिष्ठा प्राप्त हुई है?",
+            opts: [
+                {e:"Silappadikaram", h:"शिलप्पादिकारम् (Note: Key 68->a? Image Key 68 says (a) Ahananuru? Wait. Pattini cult is Silappadikaram (b). Let me check Image Key 68. Row starts 60.c... 68 is (a) in image. This is historically debated but usually Silappadikaram. I will follow IMAGE KEY: 68->a. If incorrect historically, user asked for image data.)"}, 
+                {e:"Silappadikaram", h:"शिलप्पादिकारम्"}, 
+                {e:"Tolkappiyam", h:"तोलकाप्पियम"}, 
+                {e:"Manimekalai", h:"मणिमेखलाई"}
+            ],
+            // Correction: Re-reading Image 4 Key. 68 is (a). Okay.
+            ans: 0 // a
+        },
+        {
+            e: "The Battle of Takkolam was fought between?",
+            h: "तक्कोलम का युद्ध हुआ था",
+            opts: [
+                {e:"Chola and Chalukya", h:"चोल-चालुक्य के बीच"}, {e:"Chola and Pallava", h:"चोल-पल्लव के बीच"}, {e:"Chola and Pandya", h:"चोल-पाण्ड्य के बीच"}, {e:"Chola and Rashtrakuta", h:"चोल-राष्ट्रकूटों के बीच"}
+            ],
+            // Key 69 -> (a). Historically Takkolam was Chola vs Rashtrakuta (Krishna III vs Parantaka I). Key says (a). Image 69->(a). I follow image key.
+            ans: 0 // a
+        },
+        {
+            e: "Kamban's Ramayana is a classic literature in:",
+            h: "कम्बन की रामायण एक क्लासिक साहित्य है",
+            opts: [
+                {e:"Telugu", h:"तेलुगू में"}, {e:"Tamil", h:"तमिल"}, {e:"Malayalam", h:"मलयालम में"}, {e:"Kannada", h:"कन्नड़"}
+            ],
+            ans: 1 // b
+        },
+        {
+            e: "What was 'Veli' in the Sangam age?",
+            h: "संगम युग में 'वेलि' क्या था ?",
+            opts: [
+                {e:"Coin", h:"उस समय का सिक्का"}, {e:"Land Measure", h:"भूमि-मापन का एक पैमान"}, {e:"Agri Tax", h:"कृषि कर"}, {e:"Literary Work", h:"एक साहित्यिक कृति"}
+            ],
+            ans: 2 // c (Key 71 -> c)
+        },
+        {
+            e: "What were the small village assemblies called in the Sangam age?",
+            h: "संगम युग में ग्रामों की छोटी सभाओं को क्या कहा जाता था ?",
+            opts: [
+                {e:"Manram", h:"मनरम"}, {e:"Ambalam", h:"अम्बलम्"}, {e:"Avai", h:"अवई"}, {e:"Podiyil", h:"पोडियल"}
+            ],
+            ans: 2 // c
+        },
+        {
+            e: "Who was the most powerful Chera ruler?",
+            h: "चेर शासकों में सर्वाधिक प्रतापी शासक था",
+            opts: [
+                {e:"Udiyanjeral", h:"उदियन जेरल"}, {e:"Nedunjeral", h:"मेदुन्जेरल"}, {e:"Kuttuvan", h:"कुट्टवन"}, {e:"Senguttuvan", h:"शेन गुट्टवन"}
+            ],
+            ans: 3 // d
+        },
+        {
+            e: "The most important king among the Chola kings was:",
+            h: "चोल राजाओं में सर्वाधिक महत्त्वपूर्ण राजा थी",
+            opts: [
+                {e:"Tiruvatakkadevar", h:"तिरुवत्तक्क देवर"}, {e:"Karikala", h:"करिकाल"}, {e:"Senguttuvan", h:"सेनगुट्ट वन"}, {e:"Elango Adigal", h:"इलांगोआदिगल"}
+            ],
+            ans: 1 // b
+        },
+        {
+            e: "The royal emblem of the Pandyas was:",
+            h: "पाण्ड्यों का राज चिह्न था",
+            opts: [
+                {e:"Tiger", h:"बाघ"}, {e:"Horse", h:"घोड़ा"}, {e:"Elephant", h:"हाथी"}, {e:"Fish", h:"मछली"}
+            ],
+            ans: 3 // d
+        },
+        {
+            e: "Who was the most famous ruler among contemporary Pandya rulers?",
+            h: "संगमकालीन पाण्ड्य शासकों में सर्वाधिक प्रसिद्ध शासक था?",
+            opts: [
+                {e:"Nedunjeliyan", h:"नेडुजेलियन"}, {e:"Nediyon", h:"नेडियोंन"}, {e:"Shengannan", h:"शेनगणान"}, {e:"Cher", h:"चेर"}
+            ],
+            ans: 0 // a
+        }
+    ];
+
+    // State Variables
+    let currentQuestions = [];
+    let currentQuestionIndex = 0;
+    let score = 0;
+    let timerInterval;
+    let timeLeft = 0;
+    let manualTime = 0;
+
+    // DOM Elements
+    const startScreen = document.getElementById('start-screen');
+    const quizScreen = document.getElementById('quiz-screen');
+    const resultScreen = document.getElementById('result-screen');
+    const progressBar = document.getElementById('progressBar');
+    const questionCount = document.getElementById('questionCount');
+    const timerDisplay = document.getElementById('timerDisplay');
+    const scoreDisplay = document.getElementById('scoreDisplay');
+    const questionEng = document.getElementById('q-eng');
+    const questionHin = document.getElementById('q-hin');
+    const optionsContainer = document.getElementById('options-container');
+    const feedbackEmoji = document.getElementById('feedbackEmoji');
+    const finalScore = document.getElementById('finalScore');
+    const resultMessage = document.getElementById('resultMessage');
+    const rawScore = document.getElementById('rawScore');
+
+    function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+    }
+
+    function startQuiz() {
+        const timeInput = document.getElementById('timeInput').value;
+        const doShuffle = document.getElementById('shuffleToggle').checked;
+        manualTime = timeInput ? parseInt(timeInput) : 0;
+
+        currentQuestions = [...allQuestions];
+        if (doShuffle) shuffleArray(currentQuestions);
+
+        currentQuestionIndex = 0;
+        score = 0;
+        
+        startScreen.classList.remove('active');
+        quizScreen.classList.add('active');
+        
+        loadQuestion();
+    }
+
+    function loadQuestion() {
+        if (currentQuestionIndex >= currentQuestions.length) {
+            finishQuiz();
+            return;
+        }
+
+        const q = currentQuestions[currentQuestionIndex];
+        questionEng.textContent = `${currentQuestionIndex + 1}. ${q.e}`;
+        questionHin.textContent = q.h;
+        questionCount.textContent = `Q: ${currentQuestionIndex + 1}/${currentQuestions.length}`;
+        scoreDisplay.textContent = `Score: ${score}`;
+
+        // Progress Bar
+        const progress = ((currentQuestionIndex) / currentQuestions.length) * 100;
+        progressBar.style.width = `${progress}%`;
+
+        // Clear previous options
+        optionsContainer.innerHTML = '';
+
+        q.opts.forEach((opt, index) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerHTML = `
+                <span class="eng-text"><b>${String.fromCharCode(65+index)}.</b> ${opt.e}</span>
+                <span class="hin-text">${opt.h}</span>
+            `;
+            btn.onclick = () => handleAnswer(index, btn);
+            optionsContainer.appendChild(btn);
+        });
+
+        // Timer Logic
+        clearInterval(timerInterval);
+        timerDisplay.classList.remove('pulse-red');
+        
+        if (manualTime > 0) {
+            timerDisplay.style.display = 'flex';
+            timeLeft = manualTime;
+            timerDisplay.textContent = timeLeft;
+            
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                timerDisplay.textContent = timeLeft;
+                if (timeLeft <= 5) timerDisplay.classList.add('pulse-red');
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    // Treat as wrong answer if time runs out, or just auto-skip?
+                    // Let's auto-skip to next
+                    handleAnswer(-1, null); // -1 indicates timeout
+                }
+            }, 1000);
+        } else {
+            timerDisplay.style.display = 'none';
+        }
+    }
+
+    function handleAnswer(selectedIndex, btnElement) {
+        clearInterval(timerInterval);
+        const q = currentQuestions[currentQuestionIndex];
+        const correctIndex = q.ans;
+        const allButtons = document.querySelectorAll('.option-btn');
+        
+        // Disable all buttons
+        allButtons.forEach(btn => btn.style.pointerEvents = 'none');
+
+        if (selectedIndex === correctIndex) {
+            // Correct
+            btnElement.classList.add('correct');
+            playSound('correct');
+            score++;
+            triggerConfetti();
+        } else {
+            // Wrong
+            if(btnElement) btnElement.classList.add('wrong');
+            allButtons[correctIndex].classList.add('correct');
+            playSound('wrong');
+            triggerEmoji();
+        }
+
+        scoreDisplay.textContent = `Score: ${score}`;
+
+        setTimeout(() => {
+            currentQuestionIndex++;
+            loadQuestion();
+        }, 1500);
+    }
+
+    function triggerConfetti() {
+        for(let i=0; i<30; i++) {
+            const conf = document.createElement('div');
+            conf.className = 'confetti';
+            conf.style.left = Math.random() * 100 + 'vw';
+            conf.style.backgroundColor = ['#ff0', '#f00', '#0f0', '#00f'][Math.floor(Math.random()*4)];
+            conf.style.animationDuration = (Math.random() * 2 + 1) + 's';
+            document.body.appendChild(conf);
+            setTimeout(() => conf.remove(), 3000);
+        }
+    }
+
+    function triggerEmoji() {
+        feedbackEmoji.style.display = 'block';
+        feedbackEmoji.classList.add('shake');
+        setTimeout(() => {
+            feedbackEmoji.style.display = 'none';
+            feedbackEmoji.classList.remove('shake');
+        }, 1000);
+    }
+
+    function finishEarly() {
+        clearInterval(timerInterval);
+        finishQuiz();
+    }
+
+    function finishQuiz() {
+        quizScreen.classList.remove('active');
+        resultScreen.classList.add('active');
+        
+        // Calculate percentage based on QUESTIONS ATTEMPTED so far if early exit, 
+        // OR based on TOTAL? Usually quizzes are based on Total.
+        // Let's base it on Total Questions to be strict, or Questions Seen.
+        // Given "Early Exit", score is usually finalized based on what you have done.
+        
+        let totalToCount = currentQuestions.length;
+        // Percentage
+        let percentage = Math.round((score / totalToCount) * 100);
+        
+        finalScore.textContent = percentage;
+        rawScore.textContent = `You answered ${score} correctly out of ${totalToCount} questions.`;
+
+        if (percentage >= 80) {
+            resultMessage.textContent = "🏆 Outstanding Performance!";
+            resultMessage.style.color = "#00e676";
+            triggerConfetti(); // Bonus confetti
+        } else if (percentage >= 50) {
+            resultMessage.textContent = "👏 Well Done! Keep it up.";
+            resultMessage.style.color = "#ffd700";
+        } else {
+            resultMessage.textContent = "📚 Practice makes perfect! Try again.";
+            resultMessage.style.color = "#ff1744";
+        }
+    }
+</script>
+</body>
+</html>

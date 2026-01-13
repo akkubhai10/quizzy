@@ -1,0 +1,1145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chola Empire Quiz (Part 2) - Bilingual</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --text-main: #ffffff;
+            --text-hindi: #dddddd;
+            --accent-green: #00e676;
+            --accent-red: #ff1744;
+            --shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+
+        body {
+            background: radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
+                        radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%), 
+                        radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 50%);
+            background-color: #1a1a2e; /* Fallback */
+            background-image: linear-gradient(120deg, #89f7fe 0%, #66a6ff 100%);
+            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden; 
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Confetti Canvas */
+        #confetti-canvas {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        /* Glassmorphism Card */
+        .container {
+            width: 100%;
+            max-width: 700px;
+            height: 95vh;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 25px;
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--shadow);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+            margin: 10px;
+        }
+
+        /* Scrollable Content Area */
+        .scroll-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255,255,255,0.5) transparent;
+        }
+
+        .scroll-area::-webkit-scrollbar { width: 6px; }
+        .scroll-area::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.5); border-radius: 10px; }
+
+        /* Screens */
+        .screen { display: none; text-align: center; animation: fadeIn 0.5s ease; }
+        .screen.active { display: block; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Start Screen */
+        h1 { color: var(--text-main); margin-bottom: 10px; text-shadow: 0 2px 4px rgba(0,0,0,0.2); font-size: 1.8rem; }
+        .subtitle { color: var(--text-hindi); font-size: 1rem; margin-bottom: 20px; }
+        
+        .input-group { margin: 15px 0; text-align: left; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 15px; }
+        label { color: var(--text-main); display: block; margin-bottom: 5px; font-size: 0.9rem; }
+        input[type="number"] {
+            width: 100%; padding: 10px; border-radius: 8px; border: none; outline: none;
+            background: rgba(255,255,255,0.2); color: white; font-size: 1rem;
+        }
+        
+        .toggle-container { display: flex; align-items: center; justify-content: space-between; }
+        .switch { position: relative; display: inline-block; width: 50px; height: 24px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0,0,0,0.4); transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--accent-green); }
+        input:checked + .slider:before { transform: translateX(26px); }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none; padding: 15px 40px; color: white; border-radius: 50px;
+            font-size: 1.1rem; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 20px; width: 100%; font-weight: 600;
+        }
+        .btn-primary:hover { transform: scale(1.02); box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+
+        /* Quiz UI */
+        .header-stats {
+            display: flex; justify-content: space-between; padding: 15px 20px;
+            background: rgba(0,0,0,0.2); border-bottom: 1px solid var(--glass-border);
+            color: white; font-weight: 600; font-size: 0.9rem; align-items: center;
+        }
+        .progress-container { width: 100%; height: 4px; background: rgba(255,255,255,0.2); }
+        .progress-bar { height: 100%; background: var(--accent-green); width: 0%; transition: width 0.3s ease; box-shadow: 0 0 10px var(--accent-green); }
+        
+        .timer-display { font-size: 1.2rem; font-weight: bold; padding: 5px 12px; border-radius: 50px; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.2); min-width: 50px; text-align: center; }
+        .timer-display.danger { color: var(--accent-red); background: rgba(255, 23, 68, 0.1); border-color: var(--accent-red); animation: pulse 1s infinite; }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+
+        .question-box { margin-bottom: 25px; background: rgba(0,0,0,0.1); padding: 15px; border-radius: 15px; }
+        .q-text-en { font-size: 1.1rem; font-weight: 700; color: white; margin-bottom: 8px; line-height: 1.4; }
+        .q-text-hi { font-size: 1rem; color: var(--text-hindi); font-weight: 400; line-height: 1.5; }
+        
+        .options-grid { display: flex; flex-direction: column; gap: 12px; padding-bottom: 20px; }
+        .option-btn {
+            background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15);
+            padding: 15px; border-radius: 12px; text-align: left; cursor: pointer;
+            transition: all 0.2s; position: relative;
+        }
+        .option-btn:hover { background: rgba(255,255,255,0.2); transform: translateX(5px); }
+        .opt-en { display: block; color: white; font-weight: 600; font-size: 1rem; margin-bottom: 4px; }
+        .opt-hi { display: block; color: #ddd; font-size: 0.9rem; font-weight: 300; }
+
+        .option-btn.correct { background: rgba(0, 230, 118, 0.3); border-color: var(--accent-green); box-shadow: 0 0 15px rgba(0, 230, 118, 0.3); pointer-events: none; }
+        .option-btn.wrong { background: rgba(255, 23, 68, 0.3); border-color: var(--accent-red); animation: shake 0.5s; pointer-events: none; }
+
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+
+        .feedback-overlay {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 6rem; z-index: 100; pointer-events: none; opacity: 0; transition: opacity 0.2s;
+            filter: drop-shadow(0 5px 15px rgba(0,0,0,0.5));
+        }
+        .feedback-overlay.show { opacity: 1; animation: popUp 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        @keyframes popUp { 0% { transform: translate(-50%, -50%) scale(0); } 50% { transform: translate(-50%, -50%) scale(1.2); } 100% { transform: translate(-50%, -50%) scale(1); } }
+
+        .submit-btn {
+            background: rgba(255, 69, 58, 0.9); width: 100%; margin-top: 10px;
+            padding: 15px; border-radius: 12px; color: white; border: none; font-weight: bold;
+            cursor: pointer; font-size: 1rem; box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        .submit-btn:hover { background: #ff3b30; }
+
+        /* Result Screen */
+        .score-circle {
+            width: 160px; height: 160px; border-radius: 50%;
+            background: conic-gradient(var(--accent-green) calc(var(--score-pct) * 1%), rgba(255,255,255,0.1) 0);
+            margin: 20px auto; display: flex; align-items: center; justify-content: center;
+            position: relative; box-shadow: 0 0 20px rgba(0,0,0,0.3);
+        }
+        .score-circle::before {
+            content: ""; position: absolute; width: 140px; height: 140px;
+            background: #2a2a40; border-radius: 50%; /* Dark inner for contrast */
+        }
+        .score-text { position: relative; font-size: 2.5rem; font-weight: bold; color: white; }
+        .message { font-size: 1.4rem; margin: 15px 0; color: #fff; font-weight: 600; }
+        .stats-box {
+            text-align: left; background: rgba(0,0,0,0.25); padding: 20px; border-radius: 15px; 
+            margin-bottom: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+        }
+        .stat-item { color: #eee; font-size: 1rem; }
+        .stat-val { font-weight: bold; float: right; }
+
+        @media (max-width: 480px) {
+            .container { height: 100vh; border-radius: 0; margin: 0; border: none; }
+            h1 { font-size: 1.5rem; }
+            .q-text-en { font-size: 1rem; }
+            .q-text-hi { font-size: 0.95rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="confetti-canvas"></canvas>
+
+    <div class="container">
+        <div id="start-screen" class="screen active scroll-area">
+            <h1>🏛️ Chola Empire Quiz<br>(Part 2)</h1>
+            <p class="subtitle">Questions 51 - 109</p>
+            
+            <div class="input-group">
+                <label>⏱️ Timer per Question (Seconds) / प्रति प्रश्न समय</label>
+                <input type="number" id="timer-input" placeholder="e.g. 20 (Leave 0 for no timer)">
+            </div>
+
+            <div class="input-group">
+                <div class="toggle-container">
+                    <label>🔀 Shuffle Questions / प्रश्नों को मिलाएं</label>
+                    <label class="switch">
+                        <input type="checkbox" id="shuffle-toggle">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+
+            <button class="btn-primary" onclick="startQuiz()">Start Quiz / शुरू करें</button>
+            <p style="margin-top:20px; font-size:0.8rem; color:#aaa;">Contains 59 Questions</p>
+        </div>
+
+        <div id="quiz-screen" class="screen">
+            <div class="progress-container"><div class="progress-bar" id="progress-bar"></div></div>
+            <div class="header-stats">
+                <span id="q-counter">Q: 1/59</span>
+                <span id="timer-display" class="timer-display">--</span>
+                <span id="score-counter">Score: 0</span>
+            </div>
+            
+            <div class="scroll-area">
+                <div id="feedback-emoji" class="feedback-overlay">😢</div>
+                <div class="question-box">
+                    <div class="q-text-en" id="q-en"></div>
+                    <div class="q-text-hi" id="q-hi"></div>
+                </div>
+                <div class="options-grid" id="options-container">
+                    </div>
+                <button class="submit-btn" onclick="endQuiz()">🏁 Finish & Show Results</button>
+            </div>
+        </div>
+
+        <div id="result-screen" class="screen scroll-area">
+            <h1>Quiz Summary</h1>
+            <div class="score-circle" id="score-circle">
+                <span class="score-text" id="final-score">0%</span>
+            </div>
+            <p class="message" id="result-message">Message</p>
+            
+            <div class="stats-box">
+                <div class="stat-item">Correct <span style="color:var(--accent-green)">●</span> <span class="stat-val" id="res-correct">0</span></div>
+                <div class="stat-item">Wrong <span style="color:var(--accent-red)">●</span> <span class="stat-val" id="res-wrong">0</span></div>
+                <div class="stat-item" style="grid-column: span 2; border-top: 1px solid rgba(255,255,255,0.1); padding-top:10px; margin-top:5px;">
+                    Attempted <span class="stat-val" id="res-attempted">0</span>
+                </div>
+            </div>
+            
+            <button class="btn-primary" onclick="restartQuiz()">🔄 Restart Quiz</button>
+        </div>
+    </div>
+
+    <script>
+        // --- DATA: Questions 51-109 ---
+        const rawQuestions = [
+            {
+                en: "Under whose reign did Gangaikonda Cholapuram become the capital of the Chola Empire?",
+                hi: "किसके काल से गंगईकोंडचोलपुरम चोल साम्राज्य की राजधानी बनी?",
+                options: [
+                    { en: "Parantaka I", hi: "परान्तक प्रथम" },
+                    { en: "Rajendra I", hi: "राजेन्द्र-I" },
+                    { en: "Kulothunga I", hi: "कुलोतुंग-I" },
+                    { en: "Vikrama Chola", hi: "विक्रम चोल" }
+                ],
+                correct: 1
+            },
+            {
+                en: "Which of the following Chola rulers had the title 'Pandit Chola'?",
+                hi: "निम्नलिखित में से किस चोल शासक की उपाधि 'पंडित चोल' थी?",
+                options: [
+                    { en: "Rajaraja I", hi: "राजराज प्रथम" },
+                    { en: "Rajendra I", hi: "राजेन्द्र प्रथम" },
+                    { en: "Rajadhiraja I", hi: "राजाधिराज प्रथम" },
+                    { en: "Kulothunga I", hi: "कुलोतुंग प्रथम" }
+                ],
+                correct: 1
+            },
+            {
+                en: "Which of the following had the title 'Tyaga-Samudra'?",
+                hi: "निम्नलिखित में से किसकी उपाधि 'त्याग-समुद्र' था?",
+                options: [
+                    { en: "Chandragupta Vikramaditya", hi: "चन्द्रगुप्त विक्रमादित्य" },
+                    { en: "Harsha", hi: "हर्ष" },
+                    { en: "Jayasimha Siddharaja", hi: "जयसिंह सिद्धराज" },
+                    { en: "Vikram Chola", hi: "विक्रम चोल" }
+                ],
+                correct: 3
+            },
+            {
+                en: "Which of the following is NOT engraved on Chola coins?",
+                hi: "निम्नलिखित में से कौन चोलों के सिक्कों पर उत्कीर्ण नहीं है?",
+                options: [
+                    { en: "Fish", hi: "मत्स्य" },
+                    { en: "Bow", hi: "धनुष" },
+                    { en: "Cheetah (Tiger)", hi: "चीता" },
+                    { en: "Elephant", hi: "हाथी" }
+                ],
+                correct: 3
+            },
+            {
+                en: "The Cholas established their empire by ending the rule of whom?",
+                hi: "चोलों ने किसके शासन को समाप्त करके अपने साम्राज्य की स्थापना की?",
+                options: [
+                    { en: "Chalukyas of Vengi", hi: "वेंगी के चालुक्य" },
+                    { en: "Pallavas of Kanchi", hi: "कांची के पल्लव" },
+                    { en: "Chalukyas of Kalyani", hi: "कल्याणी के चालुक्य" },
+                    { en: "Pandyas of Madurai", hi: "मदुरा के पांड्य" }
+                ],
+                correct: 1
+            },
+            {
+                en: "What is meant by 'Padikavalkuli' in Chola administration?",
+                hi: "चोल प्रशासन में 'पाडिकावलकूली' से तात्पर्य है",
+                options: [
+                    { en: "Village Deity", hi: "ग्राम्य देवी" },
+                    { en: "Religious Ceremony", hi: "धार्मिक समारोह" },
+                    { en: "Tax given for security of local heads", hi: "स्थानीय प्रधानों को सुरक्षा के बदले दिया जाने वाला कर" },
+                    { en: "Tax for maintenance of ponds", hi: "तालाबों के रख-रखाव के निमित्त दिया जाने वाला कर" }
+                ],
+                correct: 2
+            },
+            {
+                en: "Which Vengi Chalukya prince ascended the Chola throne?",
+                hi: "वेंगी (Vengi) का कौन चालुक्य (Chalukya) राजकुमार चोल (Chol) सिंहासन पर आसीन हुआ?",
+                options: [
+                    { en: "Gangaikonda Chola", hi: "गंगैकोंड चोल" },
+                    { en: "Kulothunga I", hi: "कुलोतुंग प्रथम" },
+                    { en: "Rajadhiraja", hi: "राजाधिराज" },
+                    { en: "Vir Rajendra I", hi: "वीर राजेन्द्र प्रथम" }
+                ],
+                correct: 1
+            },
+            {
+                en: "What was the function of 'Udankuttam' officer in Chola administration?",
+                hi: "चोल प्रशासन में 'उडनकुट्टम' अधिकारी का क्या कार्य था?",
+                options: [
+                    { en: "He used to execute king's orders", hi: "वह राजा के आदेशों को लिपिबद्ध करता था" },
+                    { en: "He was secretary of Gram Sabha", hi: "वह ग्राम सभा का सचिवत होता था" },
+                    { en: "He was judicial officer of Gram Sabha", hi: "वह ग्राम सभा का न्यायिक अधिकारी था" },
+                    { en: "He was the chief military officer", hi: "वह राज्य का प्रमुख नौ सैनिक अधिकारी था" }
+                ],
+                correct: 0
+            },
+            {
+                en: "Who among the following was the first fully sovereign Chola ruler?",
+                hi: "निम्न में से कौन प्रथम सर्वसत्तासम्पन्न चोल शासक था?",
+                options: [
+                    { en: "Vijayalaya", hi: "विजयालय" },
+                    { en: "Aditya", hi: "आदित्य" },
+                    { en: "Parantaka", hi: "परान्तक" },
+                    { en: "Rajendra I", hi: "राजेन्द्र प्रथम" }
+                ],
+                correct: 2
+            },
+            {
+                en: "Which Chola ruler gets the credit for conquering Maldives?",
+                hi: "किस चोल शासक को मालदीव पर विजय प्राप्त करने का श्रेय प्राप्त है?",
+                options: [
+                    { en: "Rajaraja I", hi: "राजराज प्रथम" },
+                    { en: "Rajendra I", hi: "राजेन्द्र प्रथम" },
+                    { en: "Rajadhiraja I", hi: "राजाधिराज प्रथम" },
+                    { en: "Rajendra II", hi: "राजेन्द्र द्वितीय" }
+                ],
+                correct: 0
+            },
+            {
+                en: "What was the Chola gold coin called?",
+                hi: "चोल सोने का सिक्का क्या कहलाता था?",
+                options: [
+                    { en: "Hem", hi: "हेम" },
+                    { en: "Kalanju", hi: "कलंजु" },
+                    { en: "Kasu", hi: "काशु" },
+                    { en: "Panam", hi: "पणम्" }
+                ],
+                correct: 2
+            },
+            {
+                en: "Who was the builder of the Gangaikonda Cholapuram temple?",
+                hi: "गंगकोंडचोलपुरम मंदिर का निर्माता कौन था?",
+                options: [
+                    { en: "Rajaraja I", hi: "राजराज प्रथम" },
+                    { en: "Rajendra I", hi: "राजेन्द्र प्रथम" },
+                    { en: "Kulothunga I", hi: "कुलोतुंग प्रथम" },
+                    { en: "Aditya I", hi: "आदित्य प्रथम" }
+                ],
+                correct: 1
+            },
+            {
+                en: "Who established the Chola dynasty by making Tanjore the capital in the 9th century?",
+                hi: "निम्नलिखित शासकों में किसने नवीं शताब्दी में तंजीर को राजधानी बनाकर चोल राजवंश की स्थापना की?",
+                options: [
+                    { en: "Aditya I", hi: "आदित्य प्रथम" },
+                    { en: "Rajadhiraja", hi: "राजाधिराज" },
+                    { en: "Vijayalaya", hi: "विजयालय" },
+                    { en: "Vir Rajendra", hi: "वीर राजेन्द्र" }
+                ],
+                correct: 2
+            },
+            {
+                en: "During the time of Rajaraja I, which King of 'Marvijayottungavarman' built the Chudamanivihara at Nagapattinam?",
+                hi: "राजराज प्रथम के समय नागिपत्तम में चूड़ामणिविहार विहार बनवाने वाला महाराज मारविजयोत्तुंग वर्मन कहाँ का राजा था?",
+                options: [
+                    { en: "Burma", hi: "बर्मा" },
+                    { en: "Champa", hi: "चम्पा" },
+                    { en: "Sri Lanka", hi: "श्रीलंका" },
+                    { en: "Sri Vijaya", hi: "श्रीविजय" }
+                ],
+                correct: 3
+            },
+            {
+                en: "Whose title was 'Kadarkonda'?",
+                hi: "'कडारकोण्ड' किसकी उपाधि थी?",
+                options: [
+                    { en: "Rajaraja I", hi: "राजराज प्रथम" },
+                    { en: "Rajendra I", hi: "राजेन्द्र प्रथम" },
+                    { en: "Rajendra II", hi: "राजेन्द्र द्वितीय" },
+                    { en: "Vir Rajendra I", hi: "वीर राजेन्द्र प्रथम" }
+                ],
+                correct: 1
+            },
+            {
+                en: "Which Chola ruler conquered Lanka?",
+                hi: "निम्न में से किस चोल शासक ने लंका को विजित किया था?",
+                options: [
+                    { en: "Rajaraja I", hi: "राजराज प्रथम" },
+                    { en: "Vijayalaya", hi: "विजयालय" },
+                    { en: "Rajendra I", hi: "राजेन्द्र प्रथम" },
+                    { en: "Kulothunga I", hi: "कुलोतुंग प्रथम" }
+                ],
+                correct: 2
+            },
+            {
+                en: "Which of the following rulers sent a trade delegation to China twice?",
+                hi: "निम्न में से किस शासक ने चीन में दो बार व्यापारिक दूतण्डल भेजा था?",
+                options: [
+                    { en: "Rajaraja I", hi: "राजराज प्रथम" },
+                    { en: "Rajendra I", hi: "राजेन्द्र प्रथम" },
+                    { en: "Vijayalaya", hi: "विजयालय" },
+                    { en: "Kulothunga I", hi: "कुलोतुंग प्रथम" }
+                ],
+                correct: 3
+            },
+            {
+                en: "What was the meaning of 'Ur' in the administration of Cholas?",
+                hi: "चोलों के शासनकाल में 'उर' का क्या अर्थ था?",
+                options: [
+                    { en: "Royal Court", hi: "राजदरबार" },
+                    { en: "Infantry", hi: "पैदल सैनिक" },
+                    { en: "Assembly of scholars", hi: "विद्वानों की मण्डलियाँ" },
+                    { en: "Village General Assembly", hi: "ग्राम साधारण सभा" }
+                ],
+                correct: 3
+            },
+            {
+                en: "Who started the first naval expedition against South-East Asia?",
+                hi: "किसने सर्वप्रथम दक्षिण-पूर्व एशिया के विरुद्ध नौसैनिक अभियान प्रारम्भ किया?",
+                options: [
+                    { en: "Rajendra I", hi: "राजेन्द्र प्रथम" },
+                    { en: "Rajaraja II", hi: "राजराज द्वितीय" },
+                    { en: "Pulakeshin I", hi: "पुलकेशिन प्रथम" },
+                    { en: "Vijayalaya", hi: "विजयालय" }
+                ],
+                correct: 0
+            },
+            {
+                en: "The Chola Empire was established on:",
+                hi: "चोल साम्राज्य स्थापित था",
+                options: [
+                    { en: "On Kalinga", hi: "कलिंग पर" },
+                    { en: "Ruins of Vijayanagar", hi: "विजयनगर के अवशेष पर" },
+                    { en: "Ruins of Bahmani Kingdom", hi: "बहमनी साम्राज्य के अवशेष पर" },
+                    { en: "Ruins of Pallavas (Coromandel Coast)", hi: "कोरोमण्डल के तट पर (पल्लव)" }
+                ],
+                correct: 3
+            },
+            {
+                en: "Which ruler took the title of 'Narkesari'?",
+                hi: "नरकेसरी की उपाधि किस शासक ने धारण की थी?",
+                options: [
+                    { en: "Rajaraja I", hi: "राजराज प्रथम" },
+                    { en: "Rajendra I", hi: "राजेन्द्र प्रथम" },
+                    { en: "Vijayalaya", hi: "विजयालय" },
+                    { en: "Adhirajendra", hi: "अधिराजेन्द्र" }
+                ],
+                correct: 2
+            },
+            {
+                en: "Which of the following committees protected the interests of traders under Chola administration?",
+                hi: "निम्नलिखित में से कौन-सी समिति चोल प्रशासन के अन्तर्गत व्यापारियों के हितों की रक्षा करती थी?",
+                options: [
+                    { en: "Mahasabha", hi: "महासभा" },
+                    { en: "Perunguri", hi: "पीरनगरी" },
+                    { en: "Kuri", hi: "कुरी" },
+                    { en: "Nagaram", hi: "नगरम्" }
+                ],
+                correct: 3
+            },
+            {
+                en: "What does the term 'Chaturvedimangalam' mean under the Cholas?",
+                hi: "चोलों के अधीन 'चतुर्वेद मंगलम्' शब्द का क्या अभिप्राय है?",
+                options: [
+                    { en: "An Agrahara (Brahmin land)", hi: "एक अग्रहार" },
+                    { en: "Collection of four Vedas", hi: "चार वेदों का एक संग्रह" },
+                    { en: "A sacrifice performed by four priests", hi: "चार पुरोहितों द्वारा सम्पन्न होने वाला एक यज्ञ" },
+                    { en: "A Gotra", hi: "एक गोत्र" }
+                ],
+                correct: 0
+            },
+            {
+                en: "Rajarajeshwara temple is dedicated to?",
+                hi: "राजराजेश्वर मंदिर समर्पित है",
+                options: [
+                    { en: "Vishnu", hi: "विष्णु को" },
+                    { en: "Shiva", hi: "शिव को" },
+                    { en: "Sun", hi: "सूर्य को" },
+                    { en: "Ganesha", hi: "गणेश को" }
+                ],
+                correct: 1
+            },
+            {
+                en: "Cholas are famous in history for which type of administration?",
+                hi: "इतिहास में चोल किस प्रकार के शासन के लिए प्रसिद्ध थे?",
+                options: [
+                    { en: "Central", hi: "केन्द्रीय" },
+                    { en: "Urban", hi: "नगरीय" },
+                    { en: "Provincial", hi: "प्रांतीय" },
+                    { en: "Village Self-government", hi: "ग्राम स्वशासन" }
+                ],
+                correct: 3
+            },
+            {
+                en: "Who looked after the bath and kitchen arrangement of Chola kings?",
+                hi: "चोल राजाओं के स्नानागार एवं भोजनालय का प्रबंध कौन देखता था?",
+                options: [
+                    { en: "Women", hi: "स्त्रियाँ" },
+                    { en: "Men", hi: "पुरुष" },
+                    { en: "Both Women and Men", hi: "स्त्रियाँ तथा पुरुष दोनों" },
+                    { en: "None of the above", hi: "उपर्युक्त में से कोई नहीं" }
+                ],
+                correct: 0
+            },
+            {
+                en: "Which type of army was not in vogue in Chola rule?",
+                hi: "चोल शासन में किस प्रकार की सेना का चलन नहीं था?",
+                options: [
+                    { en: "Elephant Corps", hi: "हस्ति सेना" },
+                    { en: "Cavalry", hi: "अश्व सेना" },
+                    { en: "Chariot Corps", hi: "रथ सेन" },
+                    { en: "Navy", hi: "नौ सेना" }
+                ],
+                correct: 2
+            },
+            {
+                en: "On which subject did Percy Brown write about India?",
+                hi: "पर्सी ब्राउन ने भारत के किस विषय पर लिखा?",
+                options: [
+                    { en: "Literature", hi: "साहित्य" },
+                    { en: "Architecture", hi: "स्थापत्य" },
+                    { en: "Administration", hi: "प्रशासन" },
+                    { en: "Colonialism", hi: "औपनिवेशिकता" }
+                ],
+                correct: 1
+            },
+            {
+                en: "Which Chola ruler was killed in a public rebellion?",
+                hi: "किसी चोल शासक की जन विद्रोह में हत्या कर दी गयी थी?",
+                options: [
+                    { en: "Kulothunga I", hi: "कुलोतुंग प्रथम" },
+                    { en: "Vir Rajendra", hi: "वीर राजेन्द्र" },
+                    { en: "Rajendra I", hi: "राजेन्द्र प्रथम" },
+                    { en: "Adhirajendra", hi: "अधिराजेन्द्र" }
+                ],
+                correct: 3
+            },
+            {
+                en: "Who sent a trade delegation of 72 members to China?",
+                hi: "किसने 72 सदस्यों वाले एक व्यापारिक प्रतिनिधि मण्डल को चीन भेजा था?",
+                options: [
+                    { en: "Kulothunga II", hi: "कुलोतुंग द्वितीय" },
+                    { en: "Kulothunga III", hi: "कुलोतुंग तृतीय" },
+                    { en: "Kulothunga I", hi: "कुलोतुंग प्रथम" },
+                    { en: "Rajendra I", hi: "राजेन्द्र प्रथम" }
+                ],
+                correct: 2
+            },
+            {
+                en: "Chola ruler whose coronation took place in the battlefield?",
+                hi: "चोल शासक जिसका राज्याभिषेक युद्ध भूमि में हुआ",
+                options: [
+                    { en: "Rajendra I", hi: "राजेन्द्र प्रथम" },
+                    { en: "Someshvara", hi: "सोमेश्वर" },
+                    { en: "Rajendra II", hi: "राजेन्द्र द्वितीय" },
+                    { en: "Mahendra", hi: "महेन्द्र" }
+                ],
+                correct: 2
+            },
+            {
+                en: "Which Chola ruler took the title of 'Sungamtavirta' (Abolisher of tolls)?",
+                hi: "किस चोल शासक ने 'शुंगमतविर्त' (करो को हटाने वाला) की उपाधि धारण किया?",
+                options: [
+                    { en: "Rajaraja I", hi: "राजराज प्रथम" },
+                    { en: "Rajendra I", hi: "राजेन्द्र प्रथम" },
+                    { en: "Kulothunga I", hi: "कुलोतुंग प्रथम" },
+                    { en: "Parantaka I", hi: "परांतक प्रथम" }
+                ],
+                correct: 2
+            },
+            {
+                en: "Chola kings were initially rulers under whom?",
+                hi: "चोल राजा पहले किसके अधीन शासक थे?",
+                options: [
+                    { en: "Pallavas of Kanchi", hi: "काँची के पल्लव" },
+                    { en: "Chalukyas of Vengi", hi: "वेंगी के चालुक्य" },
+                    { en: "Chalukyas of Kalyani", hi: "कल्याणी के चालुक्य" },
+                    { en: "Pandyas of Madurai", hi: "मदुरा के पांड्य" }
+                ],
+                correct: 0
+            },
+            {
+                en: "Who was the real founder of Cholas in South India?",
+                hi: "दक्षिण भारत में चोलों का वास्तविक संस्थापक कौन था?",
+                options: [
+                    { en: "Vijayalaya", hi: "विजयालय" },
+                    { en: "Parantaka I", hi: "परान्तक प्रथम" },
+                    { en: "Rajaraja I", hi: "राजराज प्रथम" },
+                    { en: "Rajendra I", hi: "राजेन्द्र प्रथम" }
+                ],
+                correct: 1
+            },
+            {
+                en: "Who provides the description of Chola local self-government?",
+                hi: "चोलकालीन स्थानीय स्वशासन का वर्णन किससे मिलता है?",
+                options: [
+                    { en: "Junagadh Inscription", hi: "जूनागढ़ अभिलेख" },
+                    { en: "Aihole Inscription", hi: "ऐहोल अभिलेख" },
+                    { en: "Uttaramerur Inscription", hi: "उत्तरमेरूर अभिलेख" },
+                    { en: "Vijayawada Inscription", hi: "विजयवाड़ा अभिलेख" }
+                ],
+                correct: 2
+            },
+            {
+                en: "Where did Rajaraja I make the new capital after conquering Northern Sri Lanka?",
+                hi: "राजराज प्रथम चोल ने उत्तरी श्रीलंका को जीतकर नई राजधानी कहाँ बनायी थी?",
+                options: [
+                    { en: "Anuradhapura", hi: "अनुराधपुर" },
+                    { en: "Polonnaruwa", hi: "पोलन्नरूआ" },
+                    { en: "Rohan", hi: "रोहन" },
+                    { en: "Colombo", hi: "कोलम्बो" }
+                ],
+                correct: 1
+            },
+            {
+                en: "Which Chola ruler conducted the first survey of land?",
+                hi: "किस चोल शासक ने सबसे पहले भूमि की पैमाइश करायी थी?",
+                options: [
+                    { en: "Rajaraja I", hi: "राजराज प्रथम" },
+                    { en: "Sundara Chola", hi: "सुन्दर चोल" },
+                    { en: "Gandaraditya", hi: "गण्डरा दित्य" },
+                    { en: "Rajendra Chola", hi: "राजेन्द्र चोल" }
+                ],
+                correct: 0
+            },
+            {
+                en: "Which Chola ruler permitted the Shailendra ruler Srimara Vijayottungavarman to build a Buddhist Vihara at Nagapattinam?",
+                hi: "किस चोल शासक ने श्री विजय के शैलेन्द्र शासक श्रीमार विजयोत्तुंग वर्मन को नागापट्टम् बौद्ध विहार के निर्माण की अनुमति दी?",
+                options: [
+                    { en: "Rajendra I", hi: "राजेन्द्र प्रथम" },
+                    { en: "Vijayalaya", hi: "विजयालय" },
+                    { en: "Rajaraja I", hi: "राजराज प्रथम" },
+                    { en: "Sundar Chola", hi: "सुन्दर चोल" }
+                ],
+                correct: 2
+            },
+            {
+                en: "Information about local autonomous village administration of Cholas is from Uttaramerur inscription. This inscription is related to which Chola ruler?",
+                hi: "चोलों के स्थानीय स्वायत्तशासी ग्राम प्रशासन की जानकारी उत्तर मेरूर अभिलेख से होती है। इस अभिलेख का संबंध किस चोल शासक से है?",
+                options: [
+                    { en: "Rajaraja I", hi: "राजराज प्रथम" },
+                    { en: "Vijayalaya", hi: "विजयालय" },
+                    { en: "Sundar Chola", hi: "सुन्दर चोल" },
+                    { en: "Parantaka", hi: "परान्तक" }
+                ],
+                correct: 3
+            },
+            {
+                en: "In Chola local administration, the general assembly was under whom?",
+                hi: "चोलकालीन स्थानीय प्रशासन में सर्वसाधारण की सभा किसके अधीन होती थी?",
+                options: [
+                    { en: "Sabha", hi: "सभा" },
+                    { en: "Samiti", hi: "समिति" },
+                    { en: "Kottram", hi: "कोट्टम" },
+                    { en: "Ur", hi: "उर" }
+                ],
+                correct: 3
+            },
+            {
+                en: "Who among the following rulers of Chola dynasty first conducted a naval expedition against South-East Asia?",
+                hi: "चोल राजवंश के निम्नलिखित शासकों में से किसने सर्वप्रथम दक्षिण-पूर्व एशिया के विरुद्ध नौसैनिक अभियान चलाया था?",
+                options: [
+                    { en: "Rajadhiraja", hi: "राजाधिराज" },
+                    { en: "Rajaraja I", hi: "राजराज I" },
+                    { en: "Rajendra I", hi: "राजेन्द्र I" },
+                    { en: "Vir Rajendra", hi: "वीर राजेन्द्र" }
+                ],
+                correct: 2
+            },
+            {
+                en: "Rulers of which of the following dynasties declared their successor during their lifetime?",
+                hi: "निम्नांकित राजवंशों में से किसके शासक अपने शासन काल में ही अपना उत्तराधिकारी घोषित कर देते थे?",
+                options: [
+                    { en: "Chalukya", hi: "चालुक्य" },
+                    { en: "Chola", hi: "चोल" },
+                    { en: "Kadamba", hi: "कदम्ब" },
+                    { en: "Kalachuri", hi: "कलचुरी" }
+                ],
+                correct: 1
+            },
+            {
+                en: "Which one of the Chola kings conquered Ceylon (Sri Lanka)?",
+                hi: "चोल राजाओं में किस एक ने सीलोन पर विजय प्राप्त की थी?",
+                options: [
+                    { en: "Aditya I", hi: "आदित्य प्रथम" },
+                    { en: "Rajaraja I", hi: "राजराजा प्रथम" },
+                    { en: "Rajendra", hi: "राजेन्द्र" },
+                    { en: "Vijayalaya", hi: "विजयालय" }
+                ],
+                correct: 2
+            },
+            {
+                en: "The shape of deities in the bronze Nataraja statues made during the Chola period is usually:",
+                hi: "चोल काल में निर्मित नटराज की कांस्य प्रतिमाओं में देवताओं की आकृति प्रायः",
+                options: [
+                    { en: "Eight-armed", hi: "अष्टभुज है" },
+                    { en: "Six-armed", hi: "षट्भुज है" },
+                    { en: "Four-armed", hi: "चतुर्भुज है" },
+                    { en: "Two-armed", hi: "द्विभुज है" }
+                ],
+                correct: 2
+            },
+            {
+                en: "Who finally ended the Chola Empire?",
+                hi: "चोल साम्राज्य को अन्ततः किसने समाप्त किया?",
+                options: [
+                    { en: "Mahmud Ghaznavi", hi: "महमूद गजनवी ने" },
+                    { en: "Bakhtiyar Khilji", hi: "बख्तियार खिलजी ने" },
+                    { en: "Mohammad Ghori", hi: "मोहम्मद गौरी ने" },
+                    { en: "Malik Kafur", hi: "मलिक काफूर ने" }
+                ],
+                correct: 3
+            },
+            {
+                en: "The Khmer King of Cambodia had friendship with which Chola king?",
+                hi: "कम्बोडिया के खमेर राजा ने किस चोल नरेश के साथ मित्रता की थी?",
+                options: [
+                    { en: "Rajaraja", hi: "राजराज" },
+                    { en: "Rajendra I", hi: "राजेन्द्र प्रथम" },
+                    { en: "Kulothunga I", hi: "कुलोतुंग प्रथम" },
+                    { en: "Adhirajendra", hi: "अधिराजेन्द्र" }
+                ],
+                correct: 1
+            },
+            {
+                en: "Whose statues are most famous and beautiful in Chola bronze statues?",
+                hi: "चोलकालीन कांस्य प्रतिमाओं में किसकी प्रतिमाएँ सर्वाधिक प्रसिद्ध एवं सुन्दर हैं?",
+                options: [
+                    { en: "Nataraja", hi: "नटराज" },
+                    { en: "Lord Murugan", hi: "भगवान मुरुगन" },
+                    { en: "Lord Venkateshwara", hi: "भगवान वेंकटेश्वर" },
+                    { en: "Lord Vishnu", hi: "भगवान विष्णु" }
+                ],
+                correct: 0
+            },
+            {
+                en: "Who among the following Chola period Tamil writers wrote Ramayana, which is considered a great classic of Tamil literature?",
+                hi: "निम्नलिखित में से किस चोल चोलयुगीन तमिल लेखक ने रामायण की रचना की, जिसे तमिल साहित्य का महान शास्त्रीय या गौरवग्रन्थ माना जाता है?",
+                options: [
+                    { en: "Pugalendi", hi: "पुगलेन्दि" },
+                    { en: "Kamban", hi: "कम्बन" },
+                    { en: "Jayagondar", hi: "जयगोगुण्डर" },
+                    { en: "Kalladanar", hi: "कल्लाडनार" }
+                ],
+                correct: 1
+            },
+            {
+                en: "Who among the following founded the Hoysala dynasty?",
+                hi: "निम्नलिखित में से किसने होयसल राजवंश की स्थापना की थी?",
+                options: [
+                    { en: "Vishnuvardhan (Sala)", hi: "विष्णुवर्धन (सल)" },
+                    { en: "Ballala", hi: "बल्लाल" },
+                    { en: "Bhillama", hi: "भिल्लम" },
+                    { en: "Harihara", hi: "हरिहर" }
+                ],
+                correct: 0
+            },
+            {
+                en: "The independent Yadava state of Devagiri was established by whom?",
+                hi: "देवगिरि केक स्वतंत्र यादव राज्य की स्थापना किसके द्वारा की गई थी?",
+                options: [
+                    { en: "Prolaraja II", hi: "प्रोलराज द्वितीय" },
+                    { en: "Ganapati", hi: "गणपति" },
+                    { en: "Bhillama", hi: "भिल्लम" },
+                    { en: "Singhana", hi: "सिंघन" }
+                ],
+                correct: 2
+            },
+            {
+                en: "The Venetian traveler Marco Polo made special mention of which Kakatiya ruler and praised his/her rule?",
+                hi: "वेनिस के यात्री मार्को पोलो ने किस काकतीय शासक का विशेष उल्लेख और उसके शासन की अतिशय प्रशंसा की है?",
+                options: [
+                    { en: "Prolaraja II", hi: "प्रोलराज द्वितीय" },
+                    { en: "Ganapati", hi: "गणपति" },
+                    { en: "Rudramma", hi: "रुदम्मा" },
+                    { en: "Pratap Rudradeva", hi: "प्रताप रुद्रदेव" }
+                ],
+                correct: 2
+            },
+            {
+                en: "Which Chola king defeated the Cheras and destroyed their fleet?",
+                hi: "किस चोल नरेश ने चेरों को पराजित करके उनके जहाजी बेड़े को विनष्ट किया था?",
+                options: [
+                    { en: "Rajendra Chola I", hi: "राजेन्द्र चोल प्रथम" },
+                    { en: "Rajaraja I", hi: "राजराज प्रथम" },
+                    { en: "Kulothunga I", hi: "कुलोतुंग प्रथम" },
+                    { en: "Adhirajendra", hi: "अधिराजेन्द्र" }
+                ],
+                correct: 1
+            },
+            {
+                en: "The title of 'Kodandaram' was assumed by:",
+                hi: "कोदण्डराम की उपाधि धारण की थी",
+                options: [
+                    { en: "Vijayalaya", hi: "विजयालय" },
+                    { en: "Aditya I", hi: "आदित्य प्रथम" },
+                    { en: "Parantaka I", hi: "परान्तक प्रथम" },
+                    { en: "Rajaraja", hi: "राजराज" }
+                ],
+                correct: 1
+            },
+            {
+                en: "Maximum expansion of Chola Empire happened during whose time?",
+                hi: "चोल साम्राज्य का सर्वाधिक विस्तार किसके काल में हुआ?",
+                options: [
+                    { en: "Rajendra I", hi: "राजेन्द्र प्रथम" },
+                    { en: "Rajaraja I", hi: "राजराज प्रथम" },
+                    { en: "Parantaka", hi: "परान्तक" },
+                    { en: "Vijayalaya", hi: "विजयालय" }
+                ],
+                correct: 0
+            },
+            {
+                en: "Jayangondar was the court poet of which Chola ruler?",
+                hi: "जयगोंदर किस चोल शासक का राजकवि था?",
+                options: [
+                    { en: "Kulothunga I", hi: "कुलोतुंग प्रथम" },
+                    { en: "Rajaraja", hi: "राजराज" },
+                    { en: "Aditya I", hi: "आदित्य प्रथम" },
+                    { en: "Rajendra I", hi: "राजेन्द्र I" }
+                ],
+                correct: 0
+            },
+            {
+                en: "Who was the author of Kalingattuparani?",
+                hi: "कलिंगतुपर्णि के लेखक थे",
+                options: [
+                    { en: "Jayangondar", hi: "जयगोंडर" },
+                    { en: "Bharati", hi: "भारति" },
+                    { en: "Dandi", hi: "दण्डी" },
+                    { en: "Kalidasa", hi: "कालिदास" }
+                ],
+                correct: 0
+            },
+            {
+                en: "Famous Shaiva saint Isanasiva was the Rajaguru of which Chola ruler?",
+                hi: "प्रसिद्ध शैव सन्त ईशानशिव किस चोल शासक का राजगुरु था?",
+                options: [
+                    { en: "Rajendra I", hi: "राजेन्द्र प्रथम" },
+                    { en: "Parantaka", hi: "परान्तक" },
+                    { en: "Rajaraja", hi: "राजराज" },
+                    { en: "Aditya", hi: "आदित्य" }
+                ],
+                correct: 2
+            },
+            {
+                en: "Which Chola ruler performed Ashvamedha Yajna to commemorate his victory?",
+                hi: "किस चोल शासक ने अपनी विजय के उपलक्ष्य में अश्वमेघ यज्ञ किया?",
+                options: [
+                    { en: "Rajaraja", hi: "राजराज" },
+                    { en: "Parantaka", hi: "परान्तक" },
+                    { en: "Krishna III", hi: "कृष्ण तृतीय" },
+                    { en: "Rajadhiraja I", hi: "राजाधिराज प्रथम" }
+                ],
+                correct: 3
+            },
+            {
+                en: "Who was the last ruler of Chola dynasty?",
+                hi: "चोल वंश का अंतिम शासक था",
+                options: [
+                    { en: "Rajendra I", hi: "राजेन्द्र I" },
+                    { en: "Vikram Chola", hi: "विक्रम चोल" },
+                    { en: "Jayakesi", hi: "जयकेस" },
+                    { en: "Rajendra III", hi: "राजेन्द्र तृतीय" }
+                ],
+                correct: 3
+            }
+        ];
+
+        // --- GAME LOGIC ---
+        let questions = [];
+        let currentIndex = 0;
+        let score = 0;
+        let timerInterval;
+        let timeRemaining = 0;
+        let userTimerSetting = 0;
+        let correctCount = 0;
+        let wrongCount = 0;
+        let isQuizActive = false;
+
+        // Audio Context
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            osc.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+
+            if (type === 'correct') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.1);
+                gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.3);
+            } else if (type === 'wrong') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(200, audioCtx.currentTime);
+                osc.frequency.linearRampToValueAtTime(100, audioCtx.currentTime + 0.3);
+                gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.4);
+            }
+        }
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        function startQuiz() {
+            const timerInput = document.getElementById('timer-input').value;
+            userTimerSetting = timerInput ? parseInt(timerInput) : 0;
+            const doShuffle = document.getElementById('shuffle-toggle').checked;
+
+            questions = [...rawQuestions];
+            if (doShuffle) shuffleArray(questions);
+
+            currentIndex = 0;
+            score = 0;
+            correctCount = 0;
+            wrongCount = 0;
+            isQuizActive = true;
+
+            document.getElementById('start-screen').classList.remove('active');
+            document.getElementById('quiz-screen').classList.add('active');
+            document.getElementById('result-screen').classList.remove('active');
+
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            if (currentIndex >= questions.length) {
+                endQuiz();
+                return;
+            }
+
+            const q = questions[currentIndex];
+            
+            document.getElementById('q-counter').textContent = `Q: ${currentIndex + 1}/${questions.length}`;
+            document.getElementById('score-counter').textContent = `Score: ${correctCount}`;
+            document.getElementById('q-en').textContent = `${currentIndex + 1}. ${q.en}`;
+            document.getElementById('q-hi').textContent = q.hi;
+            
+            const progress = ((currentIndex) / questions.length) * 100;
+            document.getElementById('progress-bar').style.width = `${progress}%`;
+
+            const container = document.getElementById('options-container');
+            container.innerHTML = '';
+            
+            q.options.forEach((opt, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerHTML = `<span class="opt-en">${String.fromCharCode(65 + index)}. ${opt.en}</span><span class="opt-hi">${opt.hi}</span>`;
+                btn.onclick = () => checkAnswer(index, btn);
+                container.appendChild(btn);
+            });
+
+            clearInterval(timerInterval);
+            const timerDisplay = document.getElementById('timer-display');
+            timerDisplay.classList.remove('danger');
+            
+            if (userTimerSetting > 0) {
+                timeRemaining = userTimerSetting;
+                timerDisplay.textContent = timeRemaining;
+                timerInterval = setInterval(() => {
+                    timeRemaining--;
+                    timerDisplay.textContent = timeRemaining;
+                    if (timeRemaining < 5) timerDisplay.classList.add('danger');
+                    if (timeRemaining <= 0) {
+                        clearInterval(timerInterval);
+                        autoMove();
+                    }
+                }, 1000);
+            } else {
+                timerDisplay.textContent = '∞';
+            }
+        }
+
+        function checkAnswer(selectedIndex, btnElement) {
+            if (!isQuizActive) return;
+            const buttons = document.querySelectorAll('.option-btn');
+            buttons.forEach(b => b.disabled = true);
+            clearInterval(timerInterval);
+
+            const q = questions[currentIndex];
+            const correctIndex = q.correct;
+
+            if (selectedIndex === correctIndex) {
+                btnElement.classList.add('correct');
+                playSound('correct');
+                triggerConfetti();
+                correctCount++;
+            } else {
+                btnElement.classList.add('wrong');
+                buttons[correctIndex].classList.add('correct');
+                playSound('wrong');
+                wrongCount++;
+                const emoji = document.getElementById('feedback-emoji');
+                emoji.classList.add('show');
+                setTimeout(() => emoji.classList.remove('show'), 1000);
+            }
+
+            setTimeout(() => {
+                currentIndex++;
+                loadQuestion();
+            }, 1500);
+        }
+
+        function autoMove() {
+             const buttons = document.querySelectorAll('.option-btn');
+             buttons.forEach(b => b.disabled = true);
+             const q = questions[currentIndex];
+             buttons[q.correct].classList.add('correct');
+             playSound('wrong');
+             setTimeout(() => {
+                 currentIndex++;
+                 loadQuestion();
+             }, 1500);
+        }
+
+        function endQuiz() {
+            isQuizActive = false;
+            clearInterval(timerInterval);
+            
+            document.getElementById('quiz-screen').classList.remove('active');
+            document.getElementById('result-screen').classList.add('active');
+
+            const total = questions.length;
+            const percentage = Math.round((correctCount / currentIndex) * 100) || 0; // Based on questions seen so far
+            
+            document.getElementById('score-circle').style.setProperty('--score-pct', percentage);
+            document.getElementById('final-score').textContent = `${percentage}%`;
+
+            const msgEl = document.getElementById('result-message');
+            if (percentage >= 80) msgEl.textContent = "🏆 Outstanding Performance!";
+            else if (percentage >= 50) msgEl.textContent = "👏 Well Done! Keep it up.";
+            else msgEl.textContent = "📚 Practice makes perfect! Try again.";
+
+            document.getElementById('res-correct').textContent = correctCount;
+            document.getElementById('res-wrong').textContent = wrongCount;
+            document.getElementById('res-attempted').textContent = currentIndex;
+        }
+
+        function restartQuiz() {
+            document.getElementById('result-screen').classList.remove('active');
+            document.getElementById('start-screen').classList.add('active');
+        }
+
+        // --- CONFETTI (Pure JS) ---
+        function triggerConfetti() {
+            const canvas = document.getElementById('confetti-canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            const particles = [];
+            const particleCount = 100;
+
+            for (let i = 0; i < particleCount; i++) {
+                particles.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height - canvas.height,
+                    color: `hsl(${Math.random() * 360}, 100%, 70%)`,
+                    size: Math.random() * 8 + 4,
+                    speed: Math.random() * 5 + 3,
+                    angle: Math.random() * 6.2
+                });
+            }
+
+            let animationId;
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                let activeParticles = false;
+
+                particles.forEach(p => {
+                    p.y += p.speed;
+                    p.x += Math.sin(p.angle) * 2;
+                    if (p.y < canvas.height) {
+                        ctx.fillStyle = p.color;
+                        ctx.beginPath();
+                        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                        ctx.fill();
+                        activeParticles = true;
+                    }
+                });
+
+                if (activeParticles) {
+                    animationId = requestAnimationFrame(animate);
+                } else {
+                    ctx.clearRect(0,0, canvas.width, canvas.height);
+                }
+            }
+            animate();
+        }
+    </script>
+</body>
+</html>

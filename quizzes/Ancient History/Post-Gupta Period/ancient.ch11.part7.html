@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Post-Gupta History Quiz (301-350)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --text-main: #ffffff;
+            --text-sub: #e0e0e0;
+            --correct: #00e676;
+            --wrong: #ff5252;
+            --accent-1: #4facfe;
+            --accent-2: #00f2fe;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background-image: 
+                radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
+                radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%), 
+                radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 50%);
+            min-height: 100vh;
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow-y: auto;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        /* Glassmorphism Card */
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 25px;
+            padding: 25px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            position: relative;
+            overflow: hidden;
+            animation: slideUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 1.8rem;
+            margin-bottom: 25px;
+            text-shadow: 0 4px 4px rgba(0,0,0,0.3);
+            line-height: 1.4;
+        }
+
+        /* Settings Inputs */
+        .input-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 0.9rem; }
+        input[type="number"] {
+            width: 100%; padding: 15px; border-radius: 12px;
+            border: 1px solid var(--glass-border);
+            background: rgba(0,0,0,0.2); color: white;
+            font-size: 1rem; outline: none; transition: 0.3s;
+        }
+        input[type="number"]:focus { background: rgba(0,0,0,0.4); border-color: rgba(255,255,255,0.5); }
+
+        /* Custom Toggle */
+        .toggle-row {
+            display: flex; align-items: center; gap: 15px;
+            cursor: pointer; margin-bottom: 30px;
+        }
+        .toggle-switch {
+            width: 50px; height: 28px; background: rgba(0,0,0,0.4);
+            border-radius: 20px; position: relative; transition: 0.3s;
+        }
+        .toggle-switch::after {
+            content: ''; position: absolute; top: 4px; left: 4px;
+            width: 20px; height: 20px; background: white;
+            border-radius: 50%; transition: 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+        }
+        input[type="checkbox"]:checked + .toggle-switch { background: var(--correct); }
+        input[type="checkbox"]:checked + .toggle-switch::after { transform: translateX(22px); }
+
+        /* Buttons */
+        .btn {
+            width: 100%; padding: 16px; border: none; border-radius: 50px;
+            font-size: 1.1rem; font-weight: 700; cursor: pointer;
+            background: linear-gradient(90deg, #ff8a00, #e52e71);
+            color: white; transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 10px;
+        }
+        .btn:hover { transform: scale(1.02); box-shadow: 0 10px 20px rgba(0,0,0,0.3); }
+
+        .btn-finish {
+            background: transparent; border: 2px solid rgba(255,255,255,0.3);
+            margin-top: 30px; font-size: 0.9rem;
+        }
+        .btn-finish:hover { background: rgba(255,255,255,0.1); }
+        .btn-restart { background: linear-gradient(90deg, #11998e, #38ef7d); }
+
+        /* Quiz UI */
+        .quiz-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 20px; font-size: 0.9rem; font-weight: 600;
+        }
+        .timer { display: flex; align-items: center; gap: 5px; }
+        .timer.danger { color: var(--wrong); animation: pulse 1s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+
+        .progress-container {
+            position: absolute; top: 0; left: 0; width: 100%; height: 5px;
+            background: rgba(255,255,255,0.1);
+        }
+        .progress-bar {
+            height: 100%; background: var(--correct); width: 0%;
+            transition: width 0.3s ease; box-shadow: 0 0 10px var(--correct);
+        }
+
+        /* Questions */
+        .question-box { margin-bottom: 25px; }
+        .q-text-en { font-size: 1.2rem; font-weight: 700; margin-bottom: 8px; line-height: 1.4; }
+        .q-text-hi { font-size: 1rem; color: var(--text-sub); font-weight: 400; line-height: 1.5; }
+
+        .options-grid { display: grid; gap: 12px; }
+        .option-btn {
+            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+            padding: 15px; border-radius: 15px; color: white; text-align: left;
+            cursor: pointer; transition: all 0.2s; display: flex; flex-direction: column;
+        }
+        .option-btn:hover { background: rgba(255,255,255,0.15); }
+        .option-btn.correct { background: var(--correct); border-color: var(--correct); color: #1a1a2e; }
+        .option-btn.correct .opt-hi { color: #333; }
+        .option-btn.wrong { background: var(--wrong); border-color: var(--wrong); }
+
+        .opt-en { font-weight: 600; font-size: 1rem; }
+        .opt-hi { font-size: 0.85rem; color: var(--text-sub); margin-top: 4px; }
+
+        /* Feedback */
+        .emoji-overlay {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 5rem; display: none; z-index: 2000; pointer-events: none;
+        }
+        .shake { animation: shake 0.5s; }
+        @keyframes shake {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            25% { transform: translate(-50%, -50%) rotate(-15deg); }
+            75% { transform: translate(-50%, -50%) rotate(15deg); }
+            100% { transform: translate(-50%, -50%) rotate(0deg); }
+        }
+        .confetti {
+            position: fixed; width: 10px; height: 10px; background-color: #f00;
+            animation: fall linear forwards; z-index: 9999;
+        }
+        @keyframes fall { to { transform: translateY(100vh) rotate(720deg); } }
+
+        .result-score { font-size: 4rem; font-weight: 800; text-align: center; margin: 20px 0; }
+        .result-msg { text-align: center; font-size: 1.3rem; margin-bottom: 10px; font-weight: 600; }
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div id="start-screen" class="glass-card">
+        <h1>Historical Quiz<br><span style="font-size: 1rem; font-weight: 400; color:#ddd;">Post-Gupta Period (Q301-350)</span></h1>
+        
+        <div class="input-group">
+            <label>Timer per Question (Seconds)</label>
+            <input type="number" id="timer-input" placeholder="e.g. 30 (0 or empty = No Timer)" min="0">
+        </div>
+
+        <div class="toggle-row" onclick="document.getElementById('shuffle-toggle').click()">
+            <input type="checkbox" id="shuffle-toggle" style="display: none;">
+            <div class="toggle-switch"></div>
+            <span>Shuffle Questions / प्रश्न शफल करें</span>
+        </div>
+
+        <button class="btn" onclick="app.startQuiz()">Start Quiz</button>
+    </div>
+
+    <div id="quiz-screen" class="glass-card hidden">
+        <div class="progress-container"><div id="progress-bar" class="progress-bar"></div></div>
+        
+        <div class="quiz-header">
+            <span id="q-counter">Q: 301/350</span>
+            <span id="timer-display" class="timer">⏱️ --</span>
+            <span id="score-display">Score: 0</span>
+        </div>
+
+        <div id="question-area"></div>
+
+        <button class="btn btn-finish" onclick="app.finishQuiz()">Finish & Show Results</button>
+    </div>
+
+    <div id="result-screen" class="glass-card hidden">
+        <h1>Quiz Results</h1>
+        <div id="final-score" class="result-score">0%</div>
+        <div id="result-message" class="result-msg"></div>
+        <p style="text-align: center; color: #ccc; margin-bottom: 20px;" id="score-text"></p>
+        <button class="btn btn-restart" onclick="app.restart()">Restart Quiz</button>
+    </div>
+</div>
+
+<div id="emoji-display" class="emoji-overlay">😢</div>
+
+<script>
+/* Data extracted from provided screenshots */
+const quizData = [
+    {
+        id: 301,
+        qEn: "The founder of Rashtrakuta dynasty was?",
+        qHi: "राष्ट्रकूट वंश का संस्थापक था",
+        optEn: ["Krishna I", "Govinda III", "Dantidurga", "Dhruva"],
+        optHi: ["कृष्ण प्रथम", "गोविन्द तृतीय", "दन्तिदुर्ग", "ध्रुव"],
+        ans: 2
+    },
+    {
+        id: 302,
+        qEn: "The first ruler of Rashtrakuta dynasty who participated in the Tripartite Struggle?",
+        qHi: "राष्ट्रकूट वंश का पहला शासक जिसने त्रिपक्षीय संघर्ष में भाग लिया",
+        optEn: ["Krishna I", "Dantidurga", "Govinda III", "Dhruva"],
+        optHi: ["कृष्ण प्रथम", "दन्ति दुर्ग", "गोविन्द तृतीय", "ध्रुव"], // Key 302 -> d (Dhruva)
+        ans: 3
+    },
+    {
+        id: 303,
+        qEn: "Which Pala ruler was defeated by Dhruva?",
+        qHi: "ध्रुव ने किस पाल शासक को पराजित किया था ?",
+        optEn: ["Dharmapala", "Gopala", "Mahipala", "Mahipala II"],
+        optHi: ["धर्मपाल", "गोपाल", "महिपाल", "महिपाल द्वितीय"],
+        ans: 0
+    },
+    {
+        id: 304,
+        qEn: "In which language is the book 'Kavirajamarga' written?",
+        qHi: "कविराज मार्ग किस भाषा में रचित ग्रन्थ है ?",
+        optEn: ["Sanskrit", "Pali", "Kannada", "Hindi"],
+        optHi: ["संस्कृत", "पाली", "कन्नड़", "हिन्दी"],
+        ans: 2
+    },
+    {
+        id: 305,
+        qEn: "The author of 'Adi Purana' was",
+        qHi: "आदि पुराण के लेखक थे",
+        optEn: ["Mahaviracharya", "Jinasena", "Saktayana", "None of these"],
+        optHi: ["महावीराचार्य", "जिनसेन", "सक्तायन", "इनमें से कोई नहीं"],
+        ans: 1
+    },
+    {
+        id: 306,
+        qEn: "Arab traveler Al-Masudi came to India during whose time?",
+        qHi: "अरब यात्री अलसमूदी किसके काल में भारत आया ?",
+        optEn: ["Indra II", "Nagabhatta II", "Indra III", "Amoghavarsha"],
+        optHi: ["इन्द्र II", "नागभट्ट II", "इन्द्र III", "अमोघ वर्ष"],
+        ans: 2
+    },
+    {
+        id: 307,
+        qEn: "The founder of Chalukya dynasty of Kalyani was",
+        qHi: "कल्याणी के चालुक्य वंश का संस्थापक था",
+        optEn: ["Tailapa II", "Tailapa I", "Tailapa III", "Someshvara III"],
+        optHi: ["तैलप II", "तैलप I", "तैलप III", "सोमेश्वर III"],
+        ans: 0
+    },
+    {
+        id: 308,
+        qEn: "The most powerful ruler of Chalukya dynasty (Kalyani) was",
+        qHi: "चालुक्य वंश ( कल्याणी ) का सबसे प्रतापी शासक था",
+        optEn: ["Someshvara", "Jayasimha", "Vikramaditya VI", "Tailapa II"],
+        optHi: ["सोमेश्वर", "जयसिंह", "विक्रमादित्य VI", "तैलप द्वितीय"],
+        ans: 2
+    },
+    {
+        id: 309,
+        qEn: "Bilhana was a resident of whose court?",
+        qHi: "विल्हण किसके दरबार का निवासी था ?",
+        optEn: ["Someshvara", "Jayasimha", "Vikramaditya VI", "None of these"],
+        optHi: ["सोमेश्वर", "जयसिंह", "विक्रमादित्य VI", "इनमें से कोई नहीं"],
+        ans: 2
+    },
+    {
+        id: 310,
+        qEn: "Vijnaneshwara was a resident of whose court?",
+        qHi: "विज्ञानेश्वर किसके दरबार के निवासी थे ?",
+        optEn: ["Nagabhatta II", "Mahendra Varman", "Vikramaditya VI", "Someshvara"],
+        optHi: ["नागभट्ट II", "महेन्द्र वर्मन", "विक्रमादित्य VI", "सोमेश्वर"],
+        ans: 2
+    },
+    {
+        id: 311,
+        qEn: "Defeating whom did Pulakeshin II assume the title of Parameshvara?",
+        qHi: "किसे पराजित कर पुलकेशिन II ने परमेश्वर की उपाधि धारण की ?",
+        optEn: ["Harsha", "Jayasimha", "Dhruva", "Nagabhatta"],
+        optHi: ["हर्ष", "जयसिंह", "ध्रुव", "नागभट्ट"],
+        ans: 0
+    },
+    {
+        id: 312,
+        qEn: "The builder of Meguti Temple was",
+        qHi: "मेगुती मंदिर का निर्माणकर्ता था",
+        optEn: ["Pulakeshin II", "Harsha", "Narasimha Varman", "Vinayaditya"],
+        optHi: ["पुलकेशिन द्वितीय", "हर्ष", "नरसिंह वर्मन", "विनयादित्य"],
+        ans: 0
+    },
+    {
+        id: 313,
+        qEn: "Who built the Trailokeshwara Temple?",
+        qHi: "त्रैलोकेश्वर मंदिर का निर्माण करवाया",
+        optEn: ["Narasimhavarman", "Bhoja", "Trailokya Devi", "None of these"],
+        optHi: ["नरसिंहवर्मन", "भोज", "त्रैलोक्य देवी", "इनमें से कोई नहीं"],
+        ans: 2
+    },
+    {
+        id: 314,
+        qEn: "The founder of Chalukya dynasty of Vengi was",
+        qHi: "वेंगी के चालुक्य वंश का संस्थापक था",
+        optEn: ["Vishnuvardhana", "Indravardhana", "Vishnuvardhana III", "None of these"],
+        optHi: ["विष्णुवर्धन", "इन्द्रवर्धन", "विष्णुवर्धन III", "इनमें से कोई नहीं"],
+        ans: 0
+    },
+    {
+        id: 315,
+        qEn: "The most powerful ruler of Chalukya dynasty of Vengi was",
+        qHi: "वेंगी के चालुक्य वंश का सर्वाधिक प्रतापी शासक था",
+        optEn: ["Vijayaditya III", "Jayasimha I", "Jayasimha II", "Vishnuvardhana"],
+        optHi: ["विजयादित्य तृतीय", "जयसिंह प्रथम", "जयसिंह द्वितीय", "विष्णुवर्धन"],
+        ans: 0
+    },
+    {
+        id: 316,
+        qEn: "Pandrang was the general of",
+        qHi: "पंडरंग सेनापति था",
+        optEn: ["Vijayaditya III", "Jayasimha I", "Harsha", "None of these"],
+        optHi: ["विजयादित्य तृतीय का", "जयसिंह प्रथम का", "हर्ष का", "इनमें से कोई नहीं"],
+        ans: 0
+    },
+    {
+        id: 317,
+        qEn: "The founder of Yadava dynasty of Devagiri was",
+        qHi: "देवगिरि के यादव वंश का संस्थापक था",
+        optEn: ["Simhana", "Bhillama V", "Ramachandra", "None of these"],
+        optHi: ["सिंघन", "भिल्लम पंचम", "रामचन्द्र", "इनमें से कोई नहीं"],
+        ans: 1
+    },
+    {
+        id: 318,
+        qEn: "Who built the Chennakesava Temple in Vellore?",
+        qHi: "वेल्लूर में चेन्ना केशव मंदिर का निर्माण किया था",
+        optEn: ["Simhana", "Vishnuvardhana", "Veera Ballala", "None of these"],
+        optHi: ["सिंघन", "विष्णुवर्धन", "वीर बल्लाल", "इनमें से कोई नहीं"],
+        ans: 1
+    },
+    {
+        id: 319,
+        qEn: "The founder of Kadamba dynasty was",
+        qHi: "कादम्ब वंश का संस्थापक था",
+        optEn: ["Mayurasharman", "Vajrahasta", "Konkani Varma", "Ballala III"],
+        optHi: ["मयूर शर्मन", "वज्रहस्त", "कोंकणी वर्मा", "बल्लाल तृतीय"],
+        ans: 0
+    },
+    {
+        id: 320,
+        qEn: "The founder of Kakatiya dynasty was",
+        qHi: "काकतीय वंश का संस्थापक था",
+        optEn: ["Madhav I", "Mayur Sharman", "Prataparudra", "Beta I"],
+        optHi: ["माधव प्रथम", "मयूर शर्मन", "प्रताप रूद्र", "बीटा प्रथम"],
+        ans: 3
+    },
+    {
+        id: 321,
+        qEn: "The most powerful ruler of Kakatiya dynasty was",
+        qHi: "काकतीय वंश का सबसे शक्तिशाली शासक था",
+        optEn: ["Ganapati", "Konkani Varma", "Madhav I", "Prataparudra"],
+        optHi: ["गणपति", "कोकणी वर्मा", "माधव प्रथम", "प्रतापरूद्र"],
+        ans: 0
+    },
+    {
+        id: 322,
+        qEn: "The last ruler of Kakatiya dynasty was",
+        qHi: "काकतीय वंश अंतिम शासक था",
+        optEn: ["Gopala", "Prataparudra", "Ramachandra", "None of these"],
+        optHi: ["गोपाल", "प्रतापरूद्र", "रामचन्द्र", "इनमें से कोई नहीं"],
+        ans: 1
+    },
+    {
+        id: 323,
+        qEn: "The founder of Odantapuri University was",
+        qHi: "ओदन्तपुरी विश्वविद्यालय का संस्थापक था",
+        optEn: ["Dharmapala", "Gopala", "Vijayapala", "Narayanapala"],
+        optHi: ["धर्मपाल", "गोपाल", "विजयपाल", "नारायणपाल"],
+        ans: 1
+    },
+    {
+        id: 324,
+        qEn: "The most powerful ruler of Pala dynasty was",
+        qHi: "पालवंश का सर्वाधिक शक्तिशाली शासक था",
+        optEn: ["Devapala", "Dharmapala", "Narayanapala", "Nayapala"],
+        optHi: ["देवपाल", "धर्मपाल", "नारायणपाल", "नयपाल"],
+        ans: 0
+    },
+    {
+        id: 325,
+        qEn: "Pala ruler who built one thousand temples in honor of Shiva",
+        qHi: "पाल शासक जिसने शिव के सम्मान में एक हजार मंदिरों का निर्माण करवाया",
+        optEn: ["Mahipala I", "Narayanapala", "Devapala", "Gopala"],
+        optHi: ["महीपाल प्रथम", "नारायण पाल", "देवपाल", "गोपाल"],
+        ans: 1
+    },
+    {
+        id: 326,
+        qEn: "Who is called the second founder of Pala dynasty?",
+        qHi: "पाल वंश का दूसरा संस्थापक कहा जाता है",
+        optEn: ["Devapala", "Mahipala I", "Ramapala", "None of these"],
+        optHi: ["देवपाल को", "महीपाल प्रथम को", "रामपाल को", "इनमें से कोई नहीं"],
+        ans: 1
+    },
+    {
+        id: 327,
+        qEn: "The founder of Sena dynasty in Bengal was",
+        qHi: "बंगाल में सेन वंश का संस्थापक था",
+        optEn: ["Samanta Sena", "Ballala Sena", "Lakshmana Sena", "None of these"],
+        optHi: ["सामन्त सेन", "बल्लात सेन", "लक्ष्मण सेन", "इनमें से कोई नहीं"],
+        ans: 0
+    },
+    {
+        id: 328,
+        qEn: "The first independent ruler of Sena dynasty was",
+        qHi: "सेन वंश का प्रथम स्वतंत्र शासक था",
+        optEn: ["Samanta Sena", "Vijaya Sena", "Lakshmana Sena", "Ballala Sena"],
+        optHi: ["सामन्त सेन", "विजय सेन", "लक्ष्मण सेन", "बल्लाल सेन"],
+        ans: 1
+    },
+    {
+        id: 329,
+        qEn: "Propagator of social movement known as Kulinism was",
+        qHi: "कुलीनवाद नाम से प्रसिद्ध सामाजिक आन्दोलन का प्रचलनकर्ता था",
+        optEn: ["Ballala Sena", "Lakshmana Sena", "Samanta Sena", "Vijaya Sena"],
+        optHi: ["बल्लाल सेन", "लक्ष्मण सेन", "सामन्त सेन", "विजय सेन"],
+        ans: 0
+    },
+    {
+        id: 330,
+        qEn: "Composed Adbhuta Sagara",
+        qHi: "अद्भूत सागर की रचना की थी",
+        optEn: ["Ballala Sena", "Samanta Sena", "Vijaya Sena", "Lakshmana Sena"],
+        optHi: ["बल्लाल सेन", "सामन्त सेन", "विजय सेन", "लक्ष्मण सेन"],
+        ans: 0
+    },
+    {
+        id: 331,
+        qEn: "Who among the following made Lakhnauti his capital?",
+        qHi: "निम्नलिखित में से किसने लखनौती को अपनी राजधानी बनाया ?",
+        optEn: ["Ballala Sena", "Lakshmana Sena", "Vijaya Sena", "Dharma Sena"],
+        optHi: ["बल्लाल सेन", "लक्ष्मण सेन", "विजय सेन", "धर्म सेन"],
+        ans: 1
+    },
+    {
+        id: 332,
+        qEn: "In whose reign did Bakhtiyar Khilji attack Lakhnauti?",
+        qHi: "किसके काल में बख्तियार खिलजी ने लखनौती पर आक्रमण किया ?",
+        optEn: ["Dharma Sena", "Ballala Sena", "Mahipala", "Lakshmana Sena"],
+        optHi: ["धर्म सेन", "बल्लाल सेन", "महीपाल", "लक्ष्मण सेन"],
+        ans: 3
+    },
+    {
+        id: 333,
+        qEn: "Shridharadasa was a court poet of",
+        qHi: "श्रीधरदास दरबारी कवि थे",
+        optEn: ["Mahendra Varman", "Lakshmana Sena", "Ballala Sena", "Dharma Sena"],
+        optHi: ["महेन्द्र वर्मन", "लक्ष्मण सेन", "बल्लाल सेन", "धर्म सेन"],
+        ans: 1
+    },
+    {
+        id: 334,
+        qEn: "Author of Pavanaduta was",
+        qHi: "पवनदूत के लेखक थे",
+        optEn: ["Jayadeva", "Jimutavahana", "Dhoyi", "Shridharadasa"],
+        optHi: ["जयदेव", "जीमूतवाहन", "धोयी", "श्रीधरदास"],
+        ans: 2
+    },
+    {
+        id: 335,
+        qEn: "Dhoyi lived in whose court?",
+        qHi: "धोयी किसके दरबार में निवास करते थे ?",
+        optEn: ["Chandragupta II", "Lakshmana Sena", "Ballala Sena", "Dharmapala"],
+        optHi: ["चन्द्रगुप्त II", "लक्ष्मण सेन", "बल्लाल सेन", "धर्मपाल"],
+        ans: 1
+    },
+    {
+        id: 336,
+        qEn: "Halayudha was associated with whose court?",
+        qHi: "हलायुध किसके दरबार से सम्बद्ध थे ?",
+        optEn: ["Mahendravarman", "Avanti Varman", "Lakshmana Sena", "Ballala Sena"],
+        optHi: ["महेन्द्रवर्मन", "अवन्ति वर्मन", "लक्ष्मण सेन", "बल्लाल सेन"],
+        ans: 2
+    },
+    {
+        id: 337,
+        qEn: "Halayudha was the chief justice and chief minister of which ruler?",
+        qHi: "हलायुध किस शासक के प्रधान न्यायाधीश व मुख्यमंत्री थे ?",
+        optEn: ["Mihir Bhoja", "Chandradeva", "Vasudeva", "Lakshmana Sena"],
+        optHi: ["मिहिर भोज", "चन्द्रदेव", "वासुदेव", "लक्ष्मण सेन"],
+        ans: 3
+    },
+    {
+        id: 338,
+        qEn: "Established Karkota dynasty in Kashmir",
+        qHi: "कश्मीर में कार्कोट वंश की स्थापना की थी",
+        optEn: ["Lalitaditya", "Durlabhavardhana", "Kallara", "Didda"],
+        optHi: ["ललितादित्य", "दुर्लभवर्द्धन", "कल्लूर", "दिद्दा"],
+        ans: 1
+    },
+    {
+        id: 339,
+        qEn: "The most powerful ruler of Karkota dynasty was",
+        qHi: "कार्कोट वंश का सर्वाधिक शक्तिशाली शासक था",
+        optEn: ["Avantivarman", "Kshemagupta", "Durlabhavardhana", "Lalitaditya"],
+        optHi: ["अवन्तिवर्मन", "क्षेमेन्द्रगुप्त", "दुर्लभवर्द्धन", "ललितादित्य"],
+        ans: 3
+    },
+    {
+        id: 340,
+        qEn: "Ruler of Karkota dynasty who sent his embassy to the court of Chinese ruler",
+        qHi: "कार्कोट वंश का वह शासक जिसने चीनी शासक के दरबार में अपना दूत मंडल भेजा था",
+        optEn: ["Durlabhavardhana", "Lalitaditya", "Harsha", "Avantivarman"],
+        optHi: ["दुर्लभवर्द्धन", "ललितादित्य", "हर्ष", "अवन्तिवर्मन"],
+        ans: 1
+    },
+    {
+        id: 341,
+        qEn: "Who built the famous Martand temple of Kashmir?",
+        qHi: "कश्मीर का प्रसिद्ध मार्तण्ड मंदिर का निर्माण करवाया था?",
+        optEn: ["Kshemendra Gupta", "Avantivarman", "Lalitaditya", "Shankar Varman"],
+        optHi: ["क्षेमेन्द्र गुप्त", "अवन्तिवर्मन", "ललितादित्य", "शंकर वर्मन"],
+        ans: 2
+    },
+    {
+        id: 342,
+        qEn: "Which dynasty was established in Kashmir after Karkota dynasty?",
+        qHi: "कार्कोट वंश के बाद कश्मीर में किस वंश की स्थापना हुई?",
+        optEn: ["Utpala dynasty", "Lohara dynasty", "Shahi dynasty", "Sena dynasty"],
+        optHi: ["उत्पल वंश", "लोहार वंश", "शाही वंश", "सेन वंश"],
+        ans: 0
+    },
+    {
+        id: 343,
+        qEn: "The founder of Utpala dynasty was",
+        qHi: "उत्पल वंश का संस्थापक था",
+        optEn: ["Mahendra Varman", "Avanti Varman", "Vinayaditya", "Lalitaditya"],
+        optHi: ["महेन्द्र वर्मन", "अवन्ति वर्मन", "विनयादित्य", "ललितादित्य"],
+        ans: 1
+    },
+    {
+        id: 344,
+        qEn: "Established Avantipur city in Kashmir",
+        qHi: "कश्मीर में अवन्तिपुर नगर की स्थापना की थी",
+        optEn: ["Avanti Varman", "Kshemendra", "Didda", "Suryapeeth"],
+        optHi: ["अवन्ति वर्मन", "क्षेमेन्द्र", "दिद्दा", "सूर्यपीठ"],
+        ans: 0
+    },
+    {
+        id: 345,
+        qEn: "Queen Didda was the ruler of which dynasty?",
+        qHi: "रानी दिद्दा किस वंश की शासिका थी ?",
+        optEn: ["Shahi dynasty", "Utpala dynasty", "Lohara dynasty", "Sena dynasty"],
+        optHi: ["शाही वंश", "उत्पल वंश", "लोहार वंश", "सेन वंश"],
+        ans: 1
+    },
+    {
+        id: 346,
+        qEn: "The founder of Lohara dynasty in Kashmir was",
+        qHi: "कश्मीर में लोहार वंश का संस्थापक था",
+        optEn: ["Sangramaraja", "Harsha", "Jayasimha", "Kshemendra"],
+        optHi: ["संग्रामराज", "हर्ष", "जयसिंह", "क्षेमेन्द्र"],
+        ans: 0
+    },
+    {
+        id: 347,
+        qEn: "Called the Nero of Kashmir",
+        qHi: "कश्मीर का नीरो कहा जाता था",
+        optEn: ["Harsha", "Didda", "Avantivarman", "Lalitaditya"],
+        optHi: ["हर्ष को", "दिद्दा को", "अवन्तिवर्मन को", "ललितादित्य को"],
+        ans: 0
+    },
+    {
+        id: 348,
+        qEn: "Kalhana was a dependent poet of",
+        qHi: "कल्हण आश्रित कवि था",
+        optEn: ["Harsha", "Kshemendra", "Sangramaraja", "Durlabhavardhana"],
+        optHi: ["हर्ष का", "क्षेमेन्द्र का", "संग्राम राज का", "दुर्लभवर्द्धन का"],
+        ans: 0
+    },
+    {
+        id: 349,
+        qEn: "The last ruler of Lohara dynasty was",
+        qHi: "लोहार वंश का अंतिम शासक था",
+        optEn: ["Jayasimha", "Harsha", "Ananta", "Pushyavarman"],
+        optHi: ["जयसिंह", "हर्ष", "अनन्त", "पुष्यवर्मन"],
+        ans: 0
+    },
+    {
+        id: 350,
+        qEn: "The real founder of Pratihara dynasty was",
+        qHi: "प्रतिहार वंश का वास्तविक संस्थापक था",
+        optEn: ["Vasudeva", "Vatsaraja", "Nagabhatta I", "Mahipala"],
+        optHi: ["वासुदेव", "वत्सराज", "नागभट्ट प्रथम", "महीपाल"],
+        ans: 1
+    }
+];
+
+/* App Logic */
+const app = {
+    // Variables
+    questions: [],
+    currIdx: 0,
+    score: 0,
+    timerInterval: null,
+    timeLeft: 0,
+    timerEnabled: false,
+    initialTime: 0,
+    audioCtx: null,
+
+    // Methods
+    initAudio: function() {
+        if(!this.audioCtx) {
+            this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+    },
+
+    playSound: function(type) {
+        if(!this.audioCtx) return;
+        const osc = this.audioCtx.createOscillator();
+        const gain = this.audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(this.audioCtx.destination);
+        
+        const now = this.audioCtx.currentTime;
+        
+        if(type === 'correct') {
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(500, now);
+            osc.frequency.exponentialRampToValueAtTime(1000, now + 0.1);
+            gain.gain.setValueAtTime(0.2, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+            osc.start(now);
+            osc.stop(now + 0.5);
+        } else if (type === 'wrong') {
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(150, now);
+            osc.frequency.linearRampToValueAtTime(100, now + 0.3);
+            gain.gain.setValueAtTime(0.2, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+            osc.start(now);
+            osc.stop(now + 0.4);
+        } else if (type === 'finish') {
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(300, now);
+            osc.frequency.linearRampToValueAtTime(600, now + 0.2);
+            gain.gain.setValueAtTime(0.2, now);
+            gain.gain.linearRampToValueAtTime(0, now + 1);
+            osc.start(now);
+            osc.stop(now + 1);
+        }
+    },
+
+    startQuiz: function() {
+        this.initAudio();
+        
+        // Read Settings
+        const timerVal = document.getElementById('timer-input').value;
+        const shuffle = document.getElementById('shuffle-toggle').checked;
+        
+        this.timerEnabled = (timerVal && parseInt(timerVal) > 0);
+        this.initialTime = this.timerEnabled ? parseInt(timerVal) : 0;
+
+        // Prepare Data
+        this.questions = [...quizData];
+        if(shuffle) {
+            this.questions.sort(() => Math.random() - 0.5);
+        }
+
+        // Reset
+        this.currIdx = 0;
+        this.score = 0;
+        
+        // UI Switch
+        document.getElementById('start-screen').classList.add('hidden');
+        document.getElementById('result-screen').classList.add('hidden');
+        document.getElementById('quiz-screen').classList.remove('hidden');
+        
+        this.loadQuestion();
+    },
+
+    loadQuestion: function() {
+        if(this.currIdx >= this.questions.length) {
+            this.finishQuiz();
+            return;
+        }
+
+        const q = this.questions[this.currIdx];
+        const container = document.getElementById('question-area');
+        
+        // Update Stats
+        document.getElementById('q-counter').textContent = `Q: ${this.currIdx + 1}/${this.questions.length}`;
+        document.getElementById('score-display').textContent = `Score: ${this.score}`;
+        document.getElementById('progress-bar').style.width = `${((this.currIdx) / this.questions.length) * 100}%`;
+
+        // Render Content
+        container.innerHTML = `
+            <div class="question-box">
+                <div class="q-text-en">${q.id}. ${q.qEn}</div>
+                <div class="q-text-hi">${q.qHi}</div>
+            </div>
+            <div class="options-grid">
+                ${q.optEn.map((opt, i) => `
+                    <div class="option-btn" onclick="app.checkAnswer(${i}, this)">
+                        <span class="opt-en">${String.fromCharCode(65+i)}. ${opt}</span>
+                        <span class="opt-hi">${q.optHi[i]}</span>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+        
+        // Animation
+        container.style.opacity = 0;
+        container.animate([
+            { opacity: 0, transform: 'translateY(10px)' },
+            { opacity: 1, transform: 'translateY(0)' }
+        ], { duration: 400, fill: 'forwards' });
+
+        // Timer
+        if(this.timerEnabled) {
+            this.timeLeft = this.initialTime;
+            this.updateTimerDisplay();
+            clearInterval(this.timerInterval);
+            this.timerInterval = setInterval(() => {
+                this.timeLeft--;
+                this.updateTimerDisplay();
+                if(this.timeLeft <= 0) {
+                    clearInterval(this.timerInterval);
+                    this.handleTimeout();
+                }
+            }, 1000);
+        } else {
+            document.getElementById('timer-display').style.visibility = 'hidden';
+        }
+    },
+
+    updateTimerDisplay: function() {
+        const el = document.getElementById('timer-display');
+        el.style.visibility = 'visible';
+        el.textContent = `⏱️ ${this.timeLeft}s`;
+        if(this.timeLeft < 5) el.classList.add('danger');
+        else el.classList.remove('danger');
+    },
+
+    checkAnswer: function(selectedIndex, btn) {
+        clearInterval(this.timerInterval);
+        const q = this.questions[this.currIdx];
+        const correctIndex = q.ans;
+        const allBtns = document.querySelectorAll('.option-btn');
+        
+        // Lock UI
+        allBtns.forEach(b => b.style.pointerEvents = 'none');
+
+        if(selectedIndex === correctIndex) {
+            btn.classList.add('correct');
+            this.score++;
+            this.playSound('correct');
+            this.triggerConfetti();
+        } else {
+            btn.classList.add('wrong');
+            allBtns[correctIndex].classList.add('correct');
+            this.playSound('wrong');
+            this.triggerEmoji();
+        }
+
+        document.getElementById('score-display').textContent = `Score: ${this.score}`;
+        
+        setTimeout(() => {
+            this.currIdx++;
+            this.loadQuestion();
+        }, 1500);
+    },
+
+    handleTimeout: function() {
+        const q = this.questions[this.currIdx];
+        const allBtns = document.querySelectorAll('.option-btn');
+        allBtns.forEach(b => b.style.pointerEvents = 'none');
+        
+        allBtns[q.ans].classList.add('correct');
+        this.playSound('wrong');
+        
+        setTimeout(() => {
+            this.currIdx++;
+            this.loadQuestion();
+        }, 1500);
+    },
+
+    finishQuiz: function() {
+        clearInterval(this.timerInterval);
+        this.playSound('finish');
+        
+        // Calculation based on questions attempted
+        const attempted = this.currIdx > 0 ? this.currIdx : 1;
+        const percentage = Math.round((this.score / attempted) * 100);
+        
+        const msgEl = document.getElementById('result-message');
+        const scoreEl = document.getElementById('final-score');
+        const textEl = document.getElementById('score-text');
+        
+        scoreEl.textContent = `${percentage}%`;
+        textEl.textContent = `You scored ${this.score} out of ${attempted} questions attempted.`;
+        
+        if(percentage >= 80) {
+            msgEl.textContent = "🏆 Outstanding Performance!";
+            msgEl.style.color = "#00e676";
+            this.triggerConfetti();
+        } else if(percentage >= 50) {
+            msgEl.textContent = "👏 Well Done! Keep it up.";
+            msgEl.style.color = "#ffeb3b";
+        } else {
+            msgEl.textContent = "📚 Practice makes perfect! Try again.";
+            msgEl.style.color = "#ff5252";
+        }
+
+        document.getElementById('quiz-screen').classList.add('hidden');
+        document.getElementById('result-screen').classList.remove('hidden');
+    },
+
+    restart: function() {
+        document.getElementById('result-screen').classList.add('hidden');
+        document.getElementById('start-screen').classList.remove('hidden');
+    },
+
+    triggerConfetti: function() {
+        for(let i=0; i<30; i++) {
+            const el = document.createElement('div');
+            el.classList.add('confetti');
+            el.style.left = Math.random() * 100 + 'vw';
+            el.style.backgroundColor = `hsl(${Math.random() * 360}, 100%, 50%)`;
+            el.style.animationDuration = (Math.random() * 2 + 2) + 's';
+            document.body.appendChild(el);
+            setTimeout(() => el.remove(), 4000);
+        }
+    },
+
+    triggerEmoji: function() {
+        const el = document.getElementById('emoji-display');
+        el.style.display = 'block';
+        el.classList.add('shake');
+        setTimeout(() => {
+            el.style.display = 'none';
+            el.classList.remove('shake');
+        }, 800);
+    }
+};
+</script>
+
+</body>
+</html>

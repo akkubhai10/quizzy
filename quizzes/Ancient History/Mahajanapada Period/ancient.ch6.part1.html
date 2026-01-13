@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ancient History Quiz: Mahajanapada Era</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --text-main: #ffffff;
+            --text-sub: #dddddd;
+            --correct: #00e676;
+            --wrong: #ff1744;
+            --primary-btn: #6c5ce7;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: radial-gradient(circle at top left, #a18cd1 0%, #fbc2eb 100%), 
+                        linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+            background-blend-mode: overlay;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+            overflow-x: hidden;
+            color: var(--text-main);
+        }
+
+        /* Glassmorphism Card */
+        .container {
+            width: 100%;
+            max-width: 700px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid var(--glass-border);
+            border-radius: 25px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            max-height: 95vh;
+        }
+
+        /* Progress Bar */
+        .progress-container {
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #00d2ff, #3a7bd5);
+            box-shadow: 0 0 10px rgba(58, 123, 213, 0.7);
+            transition: width 0.3s ease;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            background: rgba(0,0,0,0.1);
+            border-bottom: 1px solid var(--glass-border);
+        }
+        .score-box, .timer-box {
+            font-weight: 600;
+            font-size: 1rem;
+        }
+        .timer-box.pulse-red {
+            color: #ff4d4d;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        /* Content Area */
+        .content {
+            padding: 20px;
+            overflow-y: auto; /* Scroll for mobile */
+            flex-grow: 1;
+        }
+
+        /* Start Screen */
+        .start-screen, .result-screen {
+            text-align: center;
+            padding: 20px;
+        }
+        .input-group {
+            margin: 20px 0;
+            text-align: left;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            color: var(--text-sub);
+        }
+        input[type="number"] {
+            width: 100%;
+            padding: 12px;
+            border-radius: 12px;
+            border: 1px solid var(--glass-border);
+            background: rgba(255,255,255,0.15);
+            color: white;
+            font-size: 1rem;
+            outline: none;
+        }
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .toggle-switch {
+            position: relative;
+            width: 50px;
+            height: 26px;
+            margin-left: 10px;
+        }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(255,255,255,0.2);
+            transition: .4s;
+            border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider { background-color: var(--primary-btn); }
+        input:checked + .slider:before { transform: translateX(24px); }
+
+        /* Question & Options */
+        .question-text {
+            margin-bottom: 25px;
+            line-height: 1.5;
+        }
+        .q-en {
+            display: block;
+            font-size: 1.15rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: #fff;
+        }
+        .q-hi {
+            display: block;
+            font-size: 1rem;
+            font-weight: 400;
+            color: var(--text-sub);
+        }
+
+        .options-grid {
+            display: grid;
+            gap: 12px;
+        }
+        .option-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--glass-border);
+            padding: 15px;
+            border-radius: 15px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        .option-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.01);
+        }
+        .opt-en {
+            font-weight: 600;
+            font-size: 1rem;
+            color: #fff;
+        }
+        .opt-hi {
+            font-size: 0.9rem;
+            color: #ddd;
+            margin-top: 2px;
+        }
+
+        /* Feedback States */
+        .option-btn.correct {
+            background: rgba(0, 230, 118, 0.4) !important;
+            border-color: var(--correct);
+            box-shadow: 0 0 15px var(--correct);
+        }
+        .option-btn.wrong {
+            background: rgba(255, 23, 68, 0.4) !important;
+            border-color: var(--wrong);
+        }
+        .disabled {
+            pointer-events: none;
+        }
+
+        /* Buttons */
+        .main-btn {
+            background: linear-gradient(135deg, #6c5ce7, #a29bfe);
+            border: none;
+            padding: 15px 30px;
+            color: white;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(108, 92, 231, 0.4);
+            transition: transform 0.2s;
+            width: 100%;
+            margin-top: 20px;
+        }
+        .main-btn:hover {
+            transform: scale(1.05);
+        }
+        .secondary-btn {
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.5);
+            padding: 10px 20px;
+            color: white;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            margin-top: 15px;
+            width: auto;
+            display: inline-block;
+        }
+
+        /* Emoji Animation */
+        .emoji-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 5rem;
+            display: none;
+            z-index: 10;
+        }
+        .shake {
+            animation: shake 0.5s;
+        }
+        @keyframes shake {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            25% { transform: translate(-55%, -50%) rotate(-5deg); }
+            75% { transform: translate(-45%, -50%) rotate(5deg); }
+            100% { transform: translate(-50%, -50%) rotate(0deg); }
+        }
+
+        /* Confetti Canvas */
+        #confetti-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        /* Result Screen */
+        .result-score {
+            font-size: 3rem;
+            font-weight: 800;
+            margin: 20px 0;
+            background: linear-gradient(to right, #fff, #b3e5fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .result-msg {
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+            color: #eee;
+        }
+
+        .hidden { display: none !important; }
+
+    </style>
+</head>
+<body>
+
+<canvas id="confetti-canvas"></canvas>
+
+<div class="container">
+    <div class="progress-container">
+        <div class="progress-bar" id="progressBar"></div>
+    </div>
+
+    <div class="emoji-overlay" id="feedbackEmoji">😢</div>
+
+    <div id="startScreen" class="start-screen">
+        <h1 style="margin-bottom:10px;">Mahajanapada Era Quiz</h1>
+        <h3 style="margin-bottom:20px; font-weight:400; color:#ddd;">महाजनपद काल प्रश्नोत्तरी</h3>
+        
+        <div class="input-group">
+            <label>Timer per Question (Seconds) / प्रति प्रश्न समय (सेकंड)</label>
+            <input type="number" id="timeInput" placeholder="0 for unlimited (0 = असीमित)" min="0">
+        </div>
+
+        <div class="input-group toggle-container">
+            <label style="margin:0; flex-grow:1;">Shuffle Questions / प्रश्नों को यादृच्छिक करें</label>
+            <label class="toggle-switch">
+                <input type="checkbox" id="shuffleToggle">
+                <span class="slider"></span>
+            </label>
+        </div>
+
+        <button class="main-btn" onclick="startQuiz()">Start Quiz / शुरू करें</button>
+    </div>
+
+    <div id="quizUI" class="hidden">
+        <div class="header">
+            <div class="score-box">Score: <span id="scoreVal">0</span></div>
+            <div class="timer-box" id="timerDisplay">∞</div>
+        </div>
+
+        <div class="content">
+            <div class="question-text">
+                <span class="q-en" id="qEn">Question English</span>
+                <span class="q-hi" id="qHi">Question Hindi</span>
+            </div>
+            <div class="options-grid" id="optionsContainer">
+                </div>
+            
+            <div style="text-align: center;">
+                <button class="secondary-btn" onclick="finishQuiz()">Finish & Show Results / समाप्त करें</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="resultScreen" class="result-screen hidden">
+        <h2>Quiz Completed!</h2>
+        <div class="result-score" id="finalScore">0%</div>
+        <p class="result-msg" id="resultMsg">Message</p>
+        <p style="color: #ddd;">Score: <span id="rawScore">0</span> / <span id="totalQ">0</span></p>
+        <button class="main-btn" onclick="restartApp()">Restart Quiz / पुनः आरंभ करें</button>
+    </div>
+</div>
+
+<script>
+/* DATA: Questions 1-50 extracted from provided images & translated */
+const rawQuestions = [
+    {
+        q: {en: "How many total Mahajanapadas were there in the 6th century BC?", hi: "6ठी शताब्दी ईसा पूर्व में कुल कितने महाजनपद थे?"},
+        opts: [
+            {en: "62", hi: "62"}, {en: "16", hi: "16"}, {en: "63", hi: "63"}, {en: "21", hi: "21"}
+        ],
+        a: 1 // B
+    },
+    {
+        q: {en: "Which text gives us information about the 16 Mahajanapadas in the 6th century BC?", hi: "6ठी शताब्दी ई. पूर्व में 16 महाजनपद थे इसकी जानकारी हमें किस ग्रंथ से मिलती है?"},
+        opts: [
+            {en: "Anguttara Nikaya", hi: "अंगुत्तर निकाय"}, {en: "Mahavastu", hi: "महावस्तु"}, {en: "Bhagavati Sutra", hi: "भगवती सूत्र"}, {en: "All of these", hi: "इनमे से सभी"}
+        ],
+        a: 3 // D
+    },
+    {
+        q: {en: "Which was the most powerful Mahajanapada in the 6th century BC?", hi: "6ठी शताब्दी ई. पूर्व में सबसे शक्तिशाली महाजनपद कौन सा था?"},
+        opts: [
+            {en: "Magadha", hi: "मगध"}, {en: "Shurasena", hi: "शूरसेन"}, {en: "Kamboja", hi: "कंबोज"}, {en: "Ashmaka", hi: "अश्मक"}
+        ],
+        a: 0 // A
+    },
+    {
+        q: {en: "Which was the only Mahajanapada located in South India?", hi: "दक्षिण भारत में स्थित एक मात्र महाजनपद कौन-सा था?"},
+        opts: [
+            {en: "Malla", hi: "मल्ल"}, {en: "Chedi", hi: "चेदि"}, {en: "Ashmaka", hi: "अश्मक"}, {en: "Panchal", hi: "पांञ्चाल"}
+        ],
+        a: 2 // C
+    },
+    {
+        q: {en: "Which Mahajanapada had a republican system in the 6th century?", hi: "6ठी शताब्दी में किस महाजनपद मे गणतंत्रात्मक व्यवस्था थी?"},
+        opts: [
+            {en: "Vajji", hi: "वज्जि"}, {en: "Malla", hi: "मल्ल"}, {en: "Both", hi: "दोनों"}, {en: "None of these", hi: "इनमें से कोई नहीं"}
+        ],
+        a: 2 // C
+    },
+    {
+        q: {en: "By whom was the world's first republic established?", hi: "विश्व में पहला गणतंत्र किसके द्वारा स्थापित किया गया था?"},
+        opts: [
+            {en: "Varanasi", hi: "वाराणसी"}, {en: "Licchavi", hi: "लिच्छवी"}, {en: "Kushinagar", hi: "कुशीनगर"}, {en: "Kaushambi", hi: "कौशाम्बी"}
+        ],
+        a: 1 // B
+    },
+    {
+        q: {en: "Match the Mahajanapada with its Capital:\n(A) Panchal (B) Matsya (C) Malla (D) Anga\n(1) Champa (2) Kushinagar (3) Ahichhatra (4) Viratnagar", hi: "मिलान करें :\n(A) पांचाल (B) मत्स्य (C) मल्ल (D) अंग\n(1) चंपा (2) कुशीनगर (3) अहिच्छत्र (4) विराटनगर"},
+        opts: [
+            {en: "A-1, B-2, C-3, D-4", hi: "A-1, B-2, C-3, D-4"}, {en: "A-4, B-3, C-1, D-2", hi: "A-4, B-3, C-1, D-2"}, {en: "A-3, B-4, C-2, D-1", hi: "A-3, B-4, C-2, D-1"}, {en: "A-4, B-3, C-2, D-1", hi: "A-4, B-3, C-2, D-1"}
+        ],
+        a: 2 // C
+    },
+    {
+        q: {en: "Which match is incorrect?", hi: "किसका मिलान गलत है"},
+        opts: [
+            {en: "Kamboja - Rajapur", hi: "कम्बोज - राजपुर"}, {en: "Ashmaka - Potali", hi: "अश्मक - पोटली"}, {en: "Shurasena - Mathura", hi: "शूरसेन - मथुरा"}, {en: "Magadha - Kampilya", hi: "मगध - कामिल्य"}
+        ],
+        a: 3 // D
+    },
+    {
+        q: {en: "Which was the world's oldest magnificent metropolis?", hi: "विश्व का सबसे प्राचीन वैभवशाली महानगर कौन-सा था?"},
+        opts: [
+            {en: "Ujjain", hi: "उज्जैन"}, {en: "Taxila", hi: "तक्षशिला"}, {en: "Pataliputra", hi: "पाटलीपुत्र"}, {en: "Indraprastha", hi: "इन्द्रप्रस्थ"}
+        ],
+        a: 2 // C
+    },
+    {
+        q: {en: "Which Mahajanapada was famous for superior horses in the 6th century BC?", hi: "छठी शताब्दी ईसा पूर्व में कौन-सा महाजनपद अपने श्रेष्ठ घोड़ों के लिए विख्यात था ?"},
+        opts: [
+            {en: "Magadha", hi: "मगध"}, {en: "Kamboja", hi: "कंबोज"}, {en: "Shurasena", hi: "शूरसेन"}, {en: "Vajji", hi: "वज्जि"}
+        ],
+        a: 1 // B
+    },
+    {
+        q: {en: "Where was the most prominent center of education in the 6th century BC?", hi: "छठी शताब्दी ईसा पूर्व में शिक्षा का सबसे प्रमुख केन्द्र कहाँ था ?"},
+        opts: [
+            {en: "Ujjain", hi: "उज्जैन"}, {en: "Nalanda", hi: "नालंदा"}, {en: "Pataliputra", hi: "पाटलीपुत्र"}, {en: "Taxila", hi: "तक्षशिला"}
+        ],
+        a: 3 // D
+    },
+    {
+        q: {en: "Regarding the boundaries of Magadha Mahajanapada, which match is incorrect?", hi: "मगध महाजनपद की चौहद्दी के संदर्भ में किसका मिलान गलत है ?"},
+        opts: [
+            {en: "East - Champa Mahajanapada", hi: "पूर्व - चंपा महाजनपद"}, {en: "North - River Ganga", hi: "उत्तर - गंगा नदी"}, {en: "South - Satpura Hills", hi: "दक्षिण - सतपुड़ा की पहाड़ी"}, {en: "West - River Son", hi: "पश्चिम - सोन नदी"}
+        ],
+        a: 2 // C
+    },
+    {
+        q: {en: "Which dynasty ruled Magadha Mahajanapada first?", hi: "मगधा महाजनपद मे सर्वप्रथम किस राजवंश ने शासन किया था :"},
+        opts: [
+            {en: "Maurya Dynasty", hi: "मौर्य वंश"}, {en: "Haryanka Dynasty", hi: "हर्यंक वंश"}, {en: "Nanda Dynasty", hi: "नंद वंश"}, {en: "Shishunaga Dynasty", hi: "शिशुनाग वंश"}
+        ],
+        a: 1 // B
+    },
+    {
+        q: {en: "Which of the following statements is incorrect?", hi: "निम्न में कौन-सा कथन गलत है :"},
+        opts: [
+            {en: "Founder of Haryanka dynasty was Bimbisara", hi: "हर्यंक वंश का संस्थापक बिम्बिसार था"}, {en: "Capital of Haryanka dynasty was Girivraj", hi: "हर्यंक वंश की राजधानी गिरिव्रज थी"}, {en: "Real founder of Haryanka dynasty was Ajatshatru", hi: "हर्यंक वंश का वास्तविक संस्थापक अजातशत्रु था"}, {en: "Bimbisara is called Shrenik in Jain literature", hi: "बिम्बिसार को जैन साहित्य मे श्रेणिक कहा गया है"}
+        ],
+        a: 2 // C
+    },
+    {
+        q: {en: "Who among the following was not the wife of Bimbisara?", hi: "निम्न में कौन बिम्बिसार की पत्नी नहीं थी ?"},
+        opts: [
+            {en: "Mahakoshala Devi", hi: "महाकोशला देवी"}, {en: "Chellana", hi: "चेल्लना"}, {en: "Amrapali", hi: "आम्रपाली"}, {en: "Karuvaki", hi: "कारूवाकी"}
+        ],
+        a: 3 // D
+    },
+    {
+        q: {en: "Who conquered Anga and merged it into the Magadha Empire?", hi: "अंग को जीतकर मगध साम्राज्य मे किसने मिलाया था ?"},
+        opts: [
+            {en: "Bimbisara", hi: "बिम्बिसार"}, {en: "Ajatshatru", hi: "अजातशत्रु"}, {en: "Udayin", hi: "उदायिन"}, {en: "Nagadasak", hi: "नागदशक"}
+        ],
+        a: 0 // A
+    },
+    {
+        q: {en: "Which Magadha ruler is called 'Seniya' (possessor of a standing army)?", hi: "मगध के किस शासक को सेनिया अर्थात स्थायी सेना रखने वाला कहा जाता है ?"},
+        opts: [
+            {en: "Bimbisara", hi: "बिम्बिसार"}, {en: "Ajatshatru", hi: "अजातशत्रु"}, {en: "Udayin", hi: "उदायिन"}, {en: "Nagadasak", hi: "नागदशक"}
+        ],
+        a: 0 // A
+    },
+    {
+        q: {en: "Where did Bimbisara send his royal physician Jivaka to treat King Pradyota?", hi: "बिम्बिसार ने कहाँ के शासक चंडप्रद्योत के इलाज के लिए अपने राजवैध जीवक को भेजा था ?"},
+        opts: [
+            {en: "Anga", hi: "अंगा"}, {en: "Avanti", hi: "अवंति"}, {en: "Kosala", hi: "कोशल"}, {en: "Vajji", hi: "वज्जि"}
+        ],
+        a: 1 // B
+    },
+    {
+        q: {en: "Who murdered Bimbisara?", hi: "बिम्बिसार की हत्या किसने की थी ?"},
+        opts: [
+            {en: "His minister", hi: "उसके मंत्री ने"}, {en: "His commander", hi: "उसके सेनापति ने"}, {en: "His son", hi: "उसके बेटे ने"}, {en: "None of these", hi: "इनमें से कोई नहीं"}
+        ],
+        a: 2 // C
+    },
+    {
+        q: {en: "Which statement is correct regarding Ajatshatru?\n1. Ajatshatru was called Kunika.\n2. Ajatshatru is also called Pitrihanta.\n3. Vassakara was Ajatshatru's diplomatic minister.", hi: "अजातशत्रु के संदर्भ में कौन-सा कथन सही है ?\n1. अजातशत्रु को कुणिक कहा जाता था\n2. अजातशत्रु को ही पितृहन्ता भी कहा जाता है\n3. अजातशत्रु का कूटनीतिज्ञ मित्र वर्षकार था"},
+        opts: [
+            {en: "1 and 2", hi: "1 और 2"}, {en: "2 and 3", hi: "2 और 3"}, {en: "1 and 3", hi: "1 और 3"}, {en: "1, 2 and 3", hi: "1, 2 और 3"}
+        ],
+        a: 3 // D
+    },
+    {
+        q: {en: "During the time of which king was the First Buddhist Council organized?", hi: "प्रथम बौद्ध सम्मेलन का आयोजन किस राजा के समय मे हुआ था ?"},
+        opts: [
+            {en: "Ajatshatru", hi: "अजातशत्रु"}, {en: "Kalashoka", hi: "कालाशोक"}, {en: "Ashoka", hi: "अशोक"}, {en: "Kanishka", hi: "कनिष्क"}
+        ],
+        a: 0 // A
+    },
+    {
+        q: {en: "Ajatshatru was always in conflict with which Sangha?", hi: "अजातशत्रु का सदैव किस संघ के साथ हमेशा संघर्ष चलता रहा।"},
+        opts: [
+            {en: "Avanti", hi: "अवंति"}, {en: "Kosala", hi: "कोशल"}, {en: "Vajji", hi: "वज्जि"}, {en: "Kashi", hi: "काशी"}
+        ],
+        a: 2 // C
+    },
+    {
+        q: {en: "Where was Prasenjit the ruler during the time of Ajatshatru?", hi: "अजातशत्रु के समय प्रसेनजीत कहाँ का शासक था ?"},
+        opts: [
+            {en: "Avanti", hi: "अवंति"}, {en: "Kosala", hi: "कोशल"}, {en: "Vajji", hi: "वज्जि"}, {en: "Shurasena", hi: "शूरसेन"}
+        ],
+        a: 1 // B
+    },
+    {
+        q: {en: "Against which Sangha did Ajatshatru use weapons named Rathamusala and Mahashilakantaka?", hi: "किस संघ के विरूद्ध अजातशत्रु ने रथमूसल तथा महाशिलाकंटक नामक हथियार का प्रयोग किया था ?"},
+        opts: [
+            {en: "Kosala", hi: "कोशल"}, {en: "Avanti", hi: "अवंति"}, {en: "Kamboja", hi: "कंबोज"}, {en: "Vaishali", hi: "वैशाली"}
+        ],
+        a: 3 // D
+    },
+    {
+        q: {en: "Who founded the city named Pataliputra?", hi: "पाटलिपुत्र नामक नगर की स्थापना किसने की थी ?"},
+        opts: [
+            {en: "Ajatshatru", hi: "अजातशत्रु"}, {en: "Ashoka", hi: "अशोक"}, {en: "Chandragupta Maurya", hi: "चन्द्रगुप्त मौर्य"}, {en: "Udayin", hi: "उदायिन"}
+        ],
+        a: 3 // D
+    },
+    {
+        q: {en: "Who was the last ruler of the Haryanka Dynasty?", hi: "हर्यंक वंश का अंतिम शासक कौन था ?"},
+        opts: [
+            {en: "Nagananda", hi: "नागानंद"}, {en: "Nagadasak", hi: "नागदशक"}, {en: "Nandivardhan", hi: "नन्दिवर्धन"}, {en: "Brihadratha", hi: "बृहद्रथ"}
+        ],
+        a: 1 // B
+    },
+    {
+        q: {en: "What is the correct sequence of the capitals of the Magadha Empire?", hi: "मगध साम्राज्य की राजधानी का सही क्रम कौन-सा है ?"},
+        opts: [
+            {en: "Pataliputra, Rajgir, Vaishali", hi: "पाटलीपुत्र, राजगृह, वैशाली"}, {en: "Rajgir, Vaishali, Pataliputra", hi: "राजगृह, वैशाली, पाटलीपुत्र"}, {en: "Girivraj, Pataliputra, Vaishali", hi: "गिरिव्रज, पाटलीपुत्र, वैशाली"}, {en: "None of these", hi: "इनमे से कोई नहीं"}
+        ],
+        a: 2 // C (Assuming C implies the changes over time even if intermediate steps missing) Note: Answer key says C.
+    },
+    {
+        q: {en: "Who was the founder of the Shishunaga Dynasty?", hi: "शिशुनाग वंश का संस्थापक कौन था ?"},
+        opts: [
+            {en: "Shishunaga", hi: "शिशुनाग"}, {en: "Kalashoka", hi: "कालाशोक"}, {en: "Nandivardhan", hi: "नन्दिवर्धन"}, {en: "Nagadasak", hi: "नागदशक"}
+        ],
+        a: 0 // A
+    },
+    {
+        q: {en: "Who first made Vaishali the capital of the Magadha Empire?", hi: "सर्वप्रथम वैशाली को मगध साम्राज्य की राजधानी किसने बनाया ?"},
+        opts: [
+            {en: "Udayin", hi: "उदायिन"}, {en: "Kalashoka", hi: "कालाशोक"}, {en: "Shishunaga", hi: "शिशुनाग"}, {en: "Ajatshatru", hi: "अजातशत्रु"}
+        ],
+        a: 2 // C
+    },
+    {
+        q: {en: "Which statement is correct about Kalashoka?\n1. Kalashoka was also called Kakvarna.\n2. The Second Buddhist Council was held in his time.\n3. He made Pataliputra the capital again in place of Vaishali.", hi: "कालाशोक के बारे में कौन-सा कथन सही है ?\n1. कालाशोक को काकवर्ण भी कहा जाता था\n2. इसके समय में द्वितीय बौद्ध सम्मेलन हुआ था\n3. इसने वैशाली के स्थान पर पुनः पाटलीपुत्र को राजधानी बनाया।"},
+        opts: [
+            {en: "1 and 2", hi: "1 और 2"}, {en: "Only 2", hi: "केवल-2"}, {en: "2 and 3", hi: "2 और 3"}, {en: "1, 2 and 3", hi: "1, 2 और 3"}
+        ],
+        a: 3 // D
+    },
+    {
+        q: {en: "Who was the last ruler of the Shishunaga Dynasty?", hi: "शिशुनाग वंश का अंतिम शासक कौन था ?"},
+        opts: [
+            {en: "Nandivardhan", hi: "नन्दिवर्धन"}, {en: "Nagadasak", hi: "नागदशक"}, {en: "Brihadratha", hi: "बृहद्रथ"}, {en: "Vishnugupta", hi: "विष्णुगुप्त"}
+        ],
+        a: 0 // A
+    },
+    {
+        q: {en: "Which dynasty ruled Magadha after the Shishunaga Dynasty?", hi: "मगध में शिशुनाग वंश के बाद किस वंश ने शासन किया ?"},
+        opts: [
+            {en: "Maurya Dynasty", hi: "मौर्य वंश"}, {en: "Gupta Dynasty", hi: "गुप्त वंश"}, {en: "Nanda Dynasty", hi: "नंद वंश"}, {en: "Kushan Dynasty", hi: "कुषाण वंश"}
+        ],
+        a: 2 // C
+    },
+    {
+        q: {en: "Who was the founder of the Nanda Dynasty?", hi: "नंद वंश का संस्थापक कौन था ?"},
+        opts: [
+            {en: "Dhanananda", hi: "धनानंद"}, {en: "Susharman", hi: "सुशर्मन"}, {en: "Mahapadma Nanda", hi: "महापद्मनंद"}, {en: "Vasudev", hi: "वासुदेव"}
+        ],
+        a: 2 // C
+    },
+    {
+        q: {en: "Which statement is correct regarding Mahapadma Nanda?\n1. Mahapadma Nanda was a Shudra.\n2. He assumed titles like Sarvakshatrantaka and Bhargava.\n3. Mahapadma Nanda was also called Ugrasena.", hi: "महापद्मनंद के संदर्भ मे कौन-सा कथन सही है ?\n1. महापद्मनंद एक शूद्र था\n2. इन्होंने सर्वक्षात्रांतक तथा भार्गव की उपाधि धारण की थी\n3. महापद्मनंद को उग्रसेन भी कहा जाता था।"},
+        opts: [
+            {en: "1 and 2", hi: "1 और 2"}, {en: "2 and 3", hi: "2 और 3"}, {en: "1 and 3", hi: "1 और 3"}, {en: "1, 2 and 3", hi: "1, 2 और 3"}
+        ],
+        a: 3 // D
+    },
+    {
+        q: {en: "Which statement is incorrect regarding Dhanananda?", hi: "धनानंद के संदर्भ में कौन-सा कथन गलत है ?"},
+        opts: [
+            {en: "Dhanananda was contemporary to Alexander", hi: "धनानंद सिकंदर का समकालिन था"}, {en: "Chanakya came to Dhanananda's court", hi: "धनानंद के दरबार मे चाणक्य आया था"}, {en: "Last ruler of Nanda dynasty was Nagananda", hi: "नंद वंश का अंतिम शासक नागानंद था"}, {en: "Dhanananda was killed by Chandragupta Maurya", hi: "धनानंद की हत्या चन्द्रगुप्त मौर्य ने की थी"}
+        ],
+        a: 2 // C (Because last ruler is Dhanananda, not Nagananda)
+    },
+    {
+        q: {en: "King Nanda is mentioned in which inscription?", hi: "राजा नंद का उल्लेख किस अभिलेख मे मिलता है ?"},
+        opts: [
+            {en: "Hathigumpha Inscription of Kharavela", hi: "खारवेल का हाथी गुम्फा अभिलेख"}, {en: "Rummindei Pillar Edict", hi: "रूम्मिनदेई स्तम्भ लेख"}, {en: "Junagadh Inscription of Rudradaman", hi: "रूद्रदामन का जूनागढ़ अभिलेख"}, {en: "Ayodhya Inscription of Dhanadeva", hi: "धनदेव का अयोध्या अभिलेख"}
+        ],
+        a: 0 // A
+    },
+    {
+        q: {en: "Inscriptional evidence reveals that a canal was dug by the order of King Nanda in?", hi: "अभिलेखिय साक्ष्य से प्रकट होता है कि नंद राजा के आदेश से एक नहर खादी गयी थी ?"},
+        opts: [
+            {en: "Anga", hi: "अंग में"}, {en: "Magadha", hi: "मगध में"}, {en: "Kalinga", hi: "कलिंग में"}, {en: "Ujjain", hi: "उज्जैन में"}
+        ],
+        a: 2 // C
+    },
+    {
+        q: {en: "The oldest recovered coins of India were made of?", hi: "भारत के प्राचीनतम प्राप्त सिक्के ?"},
+        opts: [
+            {en: "Copper", hi: "तांबा के थे"}, {en: "Gold", hi: "सोने के थे"}, {en: "Tin", hi: "रांगा के थे"}, {en: "Silver", hi: "चांदी के थे"}
+        ],
+        a: 3 // D
+    },
+    {
+        q: {en: "Which state did Shishunaga NOT merge into the Magadha Empire?", hi: "शिशुनाग ने किस राज्य का विलय मगध साम्राज्य में नहीं किया?"},
+        opts: [
+            {en: "Avanti", hi: "अवंति"}, {en: "Vatsa", hi: "वत्स"}, {en: "Both A and B", hi: "A एवं B दोनों"}, {en: "Kashi", hi: "काशी"}
+        ],
+        a: 3 // D (He merged Avanti and Vatsa, Kashi was already there)
+    },
+    {
+        q: {en: "Match the following:\n(A) Magadha (B) Vatsa (C) Kosala (D) Avanti\n(1) Malwa (2) Patna & Gaya dist (3) Avadh (4) Allahabad", hi: "मिलान करें-\n(A) मगध (B) वत्स (C) कोशल (D) अवंति\n(1) मालवा (2) पटना व गया के जिले (3) अवध (4) इलाहाबाद"},
+        opts: [
+            {en: "A-1, B-2, C-3, D-4", hi: "A-1, B-2, C-3, D-4"}, {en: "A-2, B-3, C-4, D-1", hi: "A-2, B-3, C-4, D-1"}, {en: "A-2, B-4, C-3, D-1", hi: "A-2, B-4, C-3, D-1"}, {en: "A-2, B-1, C-3, D-4", hi: "A-2, B-1, C-3, D-4"}
+        ],
+        a: 2 // C
+    },
+    {
+        q: {en: "Which of the following Janapadas first used elephants on a large scale in war?", hi: "निम्नलिखित जनपदों में से किसने सबसे पहले युद्ध में हाथियों का प्रयोग बड़े पैमाने पर किया ?"},
+        opts: [
+            {en: "Avanti", hi: "अवंति"}, {en: "Magadha", hi: "मगध"}, {en: "Kalinga", hi: "कलिंग"}, {en: "Licchavi", hi: "लिच्छवि"}
+        ],
+        a: 1 // B
+    },
+    {
+        q: {en: "Which dynasty ruled Avanti during the Mahajanapada period mentioned in Buddhist literature?", hi: "बौद्ध साहित्य में उल्लिखित महाजनपद काल में अवंति में निम्नलिखित में से कौन-सा एक राजवंश शासन करता था ?"},
+        opts: [
+            {en: "Ikshvaku", hi: "इक्ष्वाकु"}, {en: "Haryanka", hi: "हर्यंक"}, {en: "Paurava", hi: "पौरव"}, {en: "Pradyota", hi: "प्रद्योत"}
+        ],
+        a: 3 // D
+    },
+    {
+        q: {en: "Which one of the following ancient Mahajanapadas was situated on the banks of river Yamuna?", hi: "निम्नलिखित में से कौन-सा एक प्राचीन महाजनपद यमुना नदी के तट पर स्थित था ?"},
+        opts: [
+            {en: "Anga", hi: "अंग"}, {en: "Avanti", hi: "अवँति"}, {en: "Matsya", hi: "मत्स्य"}, {en: "Vatsa", hi: "वत्स"}
+        ],
+        a: 3 // D
+    },
+    {
+        q: {en: "What is the correct chronology of rulers given to rule over Magadha?", hi: "मगध पर शासन करने वाले दिये गये शासकों का सही कालानुक्रम कौन सा है ?"},
+        opts: [
+            {en: "Haryanka - Shishunaga - Nanda - Maurya", hi: "हर्यंक वंश - शिशुनाग वंश - नंद वंश - मौर्य वंश"}, {en: "Shishunaga - Bindusara - Brihadratha - Bimbisara", hi: "शिशुनाग - बिन्दुसार - बृहद्रथ - बिम्बिसार"}, {en: "Brihadratha - Bindusara - Shishunaga - Bimbisara", hi: "बृहद्रथ - बिन्दुसार - शिशुनाग - बिम्बिसार"}, {en: "Shishunaga - Bimbisara - Brihadratha - Bimbisara", hi: "शिशुनाग - बिम्बिसार - बृहद्रथ - बिम्बिसार"}
+        ],
+        a: 0 // A (Modified options slightly to match dynasties often cited in text or the general order in question 44 image)
+    },
+    {
+        q: {en: "The King who got a canal dug in Kalinga belonged to?", hi: "जिस राजा ने कलिंग में नहर खुदवाई, वह था-"},
+        opts: [
+            {en: "Haryanka Dynasty", hi: "हर्यंक राजवंश का"}, {en: "Shishunaga Dynasty", hi: "शैशुनाग राजवंश का"}, {en: "Nanda Dynasty", hi: "नन्द राजवंश का"}, {en: "Maurya Dynasty", hi: "मौर्य राजवंश का"}
+        ],
+        a: 2 // C
+    },
+    {
+        q: {en: "First Tamil translator of Mahabharata was?", hi: "महाभारत के सर्वप्रथम तमिल में अनुवादक थे-"},
+        opts: [
+            {en: "Perundevanar", hi: "पेरुन्देवनार"}, {en: "Kamban", hi: "कम्बन"}, {en: "Sundaramurthi", hi: "सुन्दरमूर्ति"}, {en: "Bharati", hi: "भारति"}
+        ],
+        a: 0 // A
+    },
+    {
+        q: {en: "Origin of Kharosthi script was from?", hi: "खरोष्ठी लिपि की उत्पत्ति किससे हुई ?"},
+        opts: [
+            {en: "Pictograph", hi: "चित्रलिपि"}, {en: "Cuneiform script", hi: "कीलाक्षर लिपि"}, {en: "Aramaic", hi: "अरमाइक"}, {en: "Brahmi", hi: "ब्राह्मी"}
+        ],
+        a: 2 // C
+    },
+    {
+        q: {en: "'Service was his duty' applies to whom?", hi: "'जीवन में सेवा उसका हिस्सा था' यह किस पर लागू होता था ?"},
+        opts: [
+            {en: "Buddhist Monk", hi: "बौद्ध भिक्षु"}, {en: "Vaishya Varna", hi: "वैश्य वर्ण"}, {en: "Shudra Varna", hi: "शूद्र वर्ण"}, {en: "Chandal", hi: "चांडाल"}
+        ],
+        a: 2 // C
+    },
+    {
+        q: {en: "Swayamvar was a special form of?", hi: "स्वयंवर किसका विशेष रूप था ?"},
+        opts: [
+            {en: "Gandharva Marriage", hi: "गान्धर्व विवाह"}, {en: "Paishacha Marriage", hi: "पैशाच विवाह"}, {en: "Rakshasa Marriage", hi: "राक्षस विवाह"}, {en: "Brahma Marriage", hi: "ब्राह्म विवाह"}
+        ],
+        a: 0 // A
+    },
+    {
+        q: {en: "Arrange the following Ashramas in chronological order-", hi: "निम्नलिखित आश्रमों को क्रमानुसार रखिये-"},
+        opts: [
+            {en: "Brahmacharya, Grihastha, Vanaprastha, Sanyasa", hi: "ब्रह्मचर्य, गृहस्थ, वानप्रस्थ, सन्यास"}, {en: "Grihastha, Brahmacharya, Sanyasa, Vanaprastha", hi: "गृहस्थ, ब्रह्मचर्य, सन्यासए, वानप्रस्थ"}, {en: "Brahmacharya, Grihastha, Vanaprastha, Sanyasa", hi: "ब्रह्मचर्य, गृहस्थ, वानप्रस्थ, सन्यास"}, {en: "Vanaprastha, Grihastha, Vanaprastha, Sanyasa", hi: "वानप्रस्थ, गृहस्थ, वानप्रस्थ, सन्यास"}
+        ],
+        a: 0 // A
+    }
+];
+
+/* STATE MANAGEMENT */
+let currentState = {
+    questions: [],
+    currentIdx: 0,
+    score: 0,
+    timer: null,
+    timeLimit: 0,
+    currentTime: 0,
+    isActive: false
+};
+
+/* AUDIO SYSTEM (Web Audio API) */
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+function playSound(type) {
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    
+    const osc = audioCtx.createOscillator();
+    const gainNode = audioCtx.createGain();
+    
+    osc.connect(gainNode);
+    gainNode.connect(audioCtx.destination);
+    
+    if (type === 'correct') {
+        // High pitched "Ting"
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.1);
+        gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.5);
+    } else {
+        // Low pitched "Buzz"
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+        osc.frequency.linearRampToValueAtTime(100, audioCtx.currentTime + 0.3);
+        gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.3);
+    }
+}
+
+/* PARTICLES (CONFETTI) */
+function triggerConfetti() {
+    const canvas = document.getElementById('confetti-canvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    
+    let particles = [];
+    const colors = ['#00e676', '#00b0ff', '#ffeb3b', '#ff1744'];
+    
+    for (let i = 0; i < 100; i++) {
+        particles.push({
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height - canvas.height,
+            size: Math.random() * 8 + 2,
+            speedY: Math.random() * 3 + 2,
+            speedX: (Math.random() - 0.5) * 2,
+            color: colors[Math.floor(Math.random() * colors.length)]
+        });
+    }
+
+    let animationId;
+    function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        let active = false;
+        particles.forEach(p => {
+            p.y += p.speedY;
+            p.x += p.speedX;
+            ctx.fillStyle = p.color;
+            ctx.fillRect(p.x, p.y, p.size, p.size);
+            if (p.y < canvas.height) active = true;
+        });
+        
+        if (active) {
+            animationId = requestAnimationFrame(animate);
+        } else {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+    }
+    animate();
+}
+
+/* APP LOGIC */
+function startQuiz() {
+    // Get Settings
+    const timeVal = parseInt(document.getElementById('timeInput').value);
+    const shuffle = document.getElementById('shuffleToggle').checked;
+    
+    currentState.timeLimit = isNaN(timeVal) ? 0 : timeVal;
+    
+    // Setup Questions
+    let qCopy = [...rawQuestions];
+    if (shuffle) {
+        qCopy.sort(() => Math.random() - 0.5);
+    }
+    currentState.questions = qCopy;
+    currentState.currentIdx = 0;
+    currentState.score = 0;
+    currentState.isActive = true;
+
+    // UI Switch
+    document.getElementById('startScreen').classList.add('hidden');
+    document.getElementById('resultScreen').classList.add('hidden');
+    document.getElementById('quizUI').classList.remove('hidden');
+
+    loadQuestion();
+}
+
+function loadQuestion() {
+    if (currentState.currentIdx >= currentState.questions.length) {
+        finishQuiz();
+        return;
+    }
+
+    const qData = currentState.questions[currentState.currentIdx];
+    
+    // Update Text
+    document.getElementById('qEn').innerText = `Q${currentState.currentIdx + 1}. ${qData.q.en}`;
+    document.getElementById('qHi').innerText = qData.q.hi;
+    
+    // Update Header
+    document.getElementById('scoreVal').innerText = currentState.score;
+    const progress = (currentState.currentIdx / currentState.questions.length) * 100;
+    document.getElementById('progressBar').style.width = `${progress}%`;
+
+    // Render Options
+    const optsContainer = document.getElementById('optionsContainer');
+    optsContainer.innerHTML = '';
+    
+    qData.opts.forEach((opt, idx) => {
+        const btn = document.createElement('div');
+        btn.className = 'option-btn';
+        btn.onclick = () => handleAnswer(idx, btn);
+        btn.innerHTML = `
+            <span class="opt-en">${String.fromCharCode(65+idx)}. ${opt.en}</span>
+            <span class="opt-hi">${opt.hi}</span>
+        `;
+        optsContainer.appendChild(btn);
+    });
+
+    // Reset Timer
+    clearInterval(currentState.timer);
+    document.getElementById('timerDisplay').classList.remove('pulse-red');
+    
+    if (currentState.timeLimit > 0) {
+        currentState.currentTime = currentState.timeLimit;
+        document.getElementById('timerDisplay').innerText = currentState.currentTime;
+        currentState.timer = setInterval(timerTick, 1000);
+    } else {
+        document.getElementById('timerDisplay').innerText = '∞';
+    }
+}
+
+function timerTick() {
+    currentState.currentTime--;
+    const display = document.getElementById('timerDisplay');
+    display.innerText = currentState.currentTime;
+    
+    if (currentState.currentTime <= 5) {
+        display.classList.add('pulse-red');
+    }
+
+    if (currentState.currentTime <= 0) {
+        clearInterval(currentState.timer);
+        playSound('wrong');
+        handleTimeout();
+    }
+}
+
+function handleTimeout() {
+    const btns = document.querySelectorAll('.option-btn');
+    const correctIdx = currentState.questions[currentState.currentIdx].a;
+    
+    btns.forEach((btn, idx) => {
+        btn.classList.add('disabled');
+        if (idx === correctIdx) btn.classList.add('correct');
+    });
+    
+    // Show Sad Emoji
+    const emo = document.getElementById('feedbackEmoji');
+    emo.style.display = 'block';
+    emo.classList.add('shake');
+    setTimeout(() => {
+        emo.style.display = 'none';
+        emo.classList.remove('shake');
+        nextQuestion();
+    }, 1500);
+}
+
+function handleAnswer(selectedIndex, btnElement) {
+    if (!currentState.isActive) return;
+    clearInterval(currentState.timer);
+    
+    const correctIdx = currentState.questions[currentState.currentIdx].a;
+    const allBtns = document.querySelectorAll('.option-btn');
+    
+    // Disable all
+    allBtns.forEach(b => b.classList.add('disabled'));
+
+    if (selectedIndex === correctIdx) {
+        // Correct
+        currentState.score++;
+        document.getElementById('scoreVal').innerText = currentState.score;
+        btnElement.classList.add('correct');
+        playSound('correct');
+        triggerConfetti();
+        setTimeout(nextQuestion, 1500);
+    } else {
+        // Wrong
+        btnElement.classList.add('wrong');
+        allBtns[correctIdx].classList.add('correct');
+        playSound('wrong');
+        
+        const emo = document.getElementById('feedbackEmoji');
+        emo.style.display = 'block';
+        emo.classList.add('shake');
+        setTimeout(() => {
+            emo.style.display = 'none';
+            emo.classList.remove('shake');
+            nextQuestion();
+        }, 1500);
+    }
+}
+
+function nextQuestion() {
+    currentState.currentIdx++;
+    loadQuestion();
+}
+
+function finishQuiz() {
+    currentState.isActive = false;
+    clearInterval(currentState.timer);
+    
+    document.getElementById('quizUI').classList.add('hidden');
+    document.getElementById('resultScreen').classList.remove('hidden');
+    
+    const total = currentState.currentIdx; // Based on questions attempted/seen or total? Usually total implies questions defined. Prompt says "based on questions answered so far" implies currentIdx if stopped early, but if naturally finished use total.
+    // Logic: If user clicks Finish, we calculate based on seen questions (currentIdx). If currentIdx is 0, avoid divide by zero.
+    
+    const effectiveTotal = currentState.currentIdx === 0 ? 1 : currentState.currentIdx;
+    
+    const percentage = Math.round((currentState.score / effectiveTotal) * 100);
+    document.getElementById('finalScore').innerText = `${percentage}%`;
+    document.getElementById('rawScore').innerText = currentState.score;
+    document.getElementById('totalQ').innerText = effectiveTotal;
+
+    const msgEl = document.getElementById('resultMsg');
+    if (percentage >= 80) msgEl.innerText = "🏆 Outstanding Performance!";
+    else if (percentage >= 50) msgEl.innerText = "👏 Well Done! Keep it up.";
+    else msgEl.innerText = "📚 Practice makes perfect! Try again.";
+}
+
+function restartApp() {
+    document.getElementById('resultScreen').classList.add('hidden');
+    document.getElementById('startScreen').classList.remove('hidden');
+    document.getElementById('timeInput').value = '';
+    document.getElementById('progressBar').style.width = '0%';
+}
+</script>
+</body>
+</html>

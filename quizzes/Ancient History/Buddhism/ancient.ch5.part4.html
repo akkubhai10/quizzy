@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buddhism Mastery Quiz (151-205)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --text-primary: #ffffff;
+            --text-secondary: #e0e0e0;
+            --accent-green: #00e676;
+            --accent-red: #ff5252;
+            --highlight: #ffd700;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
+                        radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%), 
+                        radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 50%);
+            background-color: #1a1a2e;
+            background-size: 200% 200%;
+            animation: bgAnim 15s ease infinite;
+            color: var(--text-primary);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        @keyframes bgAnim {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .container {
+            width: 95%;
+            max-width: 800px;
+            height: 90vh;
+            background: var(--glass-bg);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid var(--glass-border);
+            border-radius: 25px;
+            padding: 20px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            z-index: 10;
+        }
+
+        /* Screens */
+        .screen { display: none; flex-direction: column; height: 100%; }
+        .screen.active { display: flex; }
+
+        /* Start Screen */
+        #start-screen { justify-content: center; align-items: center; text-align: center; gap: 20px; }
+        
+        h1 { font-size: 2.2rem; margin-bottom: 10px; line-height: 1.2; text-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        h2 { font-size: 1.2rem; color: var(--highlight); font-weight: 400; margin-bottom: 20px; }
+
+        .settings-panel {
+            background: rgba(0,0,0,0.2);
+            padding: 25px;
+            border-radius: 20px;
+            width: 100%;
+            max-width: 350px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .input-group { margin-bottom: 20px; text-align: left; }
+        label { display: block; margin-bottom: 8px; font-size: 0.9rem; color: var(--text-secondary); }
+        input[type="number"] {
+            width: 100%; padding: 12px; border-radius: 10px; border: none; outline: none;
+            background: rgba(255,255,255,0.1); color: white; font-size: 1.1rem; text-align: center;
+            transition: background 0.3s;
+        }
+        input[type="number"]:focus { background: rgba(255,255,255,0.2); }
+
+        .toggle-row { display: flex; justify-content: space-between; align-items: center; }
+        
+        /* Switch */
+        .switch { position: relative; display: inline-block; width: 50px; height: 28px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(255,255,255,0.2); transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--accent-green); }
+        input:checked + .slider:before { transform: translateX(22px); }
+
+        .btn-start {
+            margin-top: 20px; padding: 15px 50px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white; border: none; border-radius: 30px;
+            font-size: 1.2rem; font-weight: bold; cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .btn-start:hover { transform: scale(1.05); box-shadow: 0 10px 20px rgba(118, 75, 162, 0.4); }
+
+        /* Quiz Screen */
+        .progress-bar {
+            width: 100%; height: 6px; background: rgba(255,255,255,0.1);
+            border-radius: 3px; overflow: hidden; margin-bottom: 15px;
+        }
+        .progress-fill {
+            height: 100%; background: var(--highlight); width: 0%;
+            transition: width 0.3s ease; box-shadow: 0 0 10px var(--highlight);
+        }
+
+        .header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 15px;
+        }
+
+        .timer-circle {
+            width: 50px; height: 50px; border-radius: 50%; border: 3px solid white;
+            display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 1.1rem;
+        }
+        .pulse { animation: pulseRed 1s infinite; border-color: var(--accent-red); color: var(--accent-red); background: rgba(255,0,0,0.1); }
+        @keyframes pulseRed { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+
+        .scroll-area { flex: 1; overflow-y: auto; padding-right: 5px; }
+        .scroll-area::-webkit-scrollbar { width: 5px; }
+        .scroll-area::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.3); border-radius: 10px; }
+
+        .question-text { margin-bottom: 20px; }
+        .q-en { display: block; font-size: 1.2rem; font-weight: 700; margin-bottom: 5px; line-height: 1.4; }
+        .q-hi { display: block; font-size: 1rem; color: var(--text-secondary); line-height: 1.4; }
+
+        .options-grid { display: grid; gap: 12px; }
+        .option-btn {
+            background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15);
+            padding: 15px; border-radius: 15px; text-align: left; cursor: pointer;
+            transition: all 0.2s; color: white; display: flex; flex-direction: column;
+        }
+        .option-btn:hover { background: rgba(255,255,255,0.2); }
+        .opt-en { font-weight: 600; font-size: 1rem; margin-bottom: 3px; }
+        .opt-hi { font-size: 0.9rem; color: #ccc; }
+
+        .correct { background: var(--accent-green) !important; border-color: var(--accent-green) !important; color: #004d00; }
+        .wrong { background: var(--accent-red) !important; border-color: var(--accent-red) !important; animation: shake 0.4s; }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+
+        .btn-finish {
+            width: 100%; padding: 15px; margin-top: 15px;
+            background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 15px; color: #ccc; font-weight: 600; cursor: pointer;
+            transition: background 0.3s;
+        }
+        .btn-finish:hover { background: rgba(255,255,255,0.1); color: white; }
+
+        /* Result Screen */
+        #result-screen { justify-content: center; align-items: center; text-align: center; }
+        .final-score { font-size: 4rem; font-weight: 800; color: var(--highlight); margin: 20px 0; }
+        .msg { font-size: 1.5rem; margin-bottom: 10px; }
+        .stats { font-size: 1.1rem; color: var(--text-secondary); margin-bottom: 30px; }
+
+        /* Confetti & Emoji */
+        #confetti-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 99; }
+        #emoji-overlay {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 6rem; opacity: 0; pointer-events: none; z-index: 100; transition: opacity 0.3s;
+        }
+    </style>
+</head>
+<body>
+
+<canvas id="confetti-canvas"></canvas>
+<div id="emoji-overlay">😢</div>
+
+<div class="container">
+    <div id="start-screen" class="screen active">
+        <div>
+            <h1>Buddhism & History</h1>
+            <h2>Questions 151 - 205</h2>
+        </div>
+        
+        <div class="settings-panel">
+            <div class="input-group">
+                <label>Timer per Question (Seconds)</label>
+                <input type="number" id="timer-input" placeholder="0 or empty for no timer" min="0">
+            </div>
+            <div class="toggle-row">
+                <label>Shuffle Questions</label>
+                <label class="switch">
+                    <input type="checkbox" id="shuffle-toggle">
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </div>
+
+        <button class="btn-start" onclick="startQuiz()">Start Quiz</button>
+    </div>
+
+    <div id="quiz-screen" class="screen">
+        <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+        
+        <div class="header">
+            <div>
+                <small style="opacity:0.7">Question</small>
+                <div style="font-size:1.2rem; font-weight:700;"><span id="curr-q">1</span>/<span id="total-q">55</span></div>
+            </div>
+            <div class="timer-circle" id="timer-display">∞</div>
+            <div style="text-align:right;">
+                <small style="opacity:0.7">Score</small>
+                <div style="font-size:1.2rem; font-weight:700;" id="score-display">0</div>
+            </div>
+        </div>
+
+        <div class="scroll-area" id="question-area">
+            <div class="question-text">
+                <span class="q-en" id="q-en">Loading...</span>
+                <span class="q-hi" id="q-hi">...</span>
+            </div>
+            <div class="options-grid" id="options-container">
+                </div>
+        </div>
+
+        <button class="btn-finish" onclick="endQuiz()">Finish & Show Results</button>
+    </div>
+
+    <div id="result-screen" class="screen">
+        <h1>Quiz Completed!</h1>
+        <div class="final-score"><span id="final-percent">0</span>%</div>
+        <div class="msg" id="final-msg">Well Done!</div>
+        <div class="stats">You answered <span id="final-correct">0</span> correctly out of <span id="final-total">0</span>.</div>
+        <button class="btn-start" onclick="location.reload()">Restart Quiz</button>
+    </div>
+</div>
+
+<script>
+    // --- DATA: Questions 151-205 ---
+    const rawData = [
+        { id: 151, en: "The highest goal in Buddhism is-", hi: "बौद्ध धर्म में सर्वोच्च लक्ष्य (Highest goal) है-", opts: [ {en: "Nirvana", hi: "निर्वाण"}, {en: "Middle Path", hi: "मध्यम मार्ग"}, {en: "Vinaya", hi: "विनय"}, {en: "Atman (Self)", hi: "आत्मवाद"} ], ans: 0 },
+        { id: 152, en: "From where was Buddhism introduced in Tibet?", hi: "बौद्ध धर्म का तिब्बत में प्रचलन कहाँ से किया गया था?", opts: [ {en: "Pala Empire", hi: "पाल वंश का राज्य"}, {en: "Harshavardhana's Empire", hi: "हर्षवर्द्धन का राज्य"}, {en: "Kushan Empire", hi: "कुषाण राज्य"}, {en: "Mauryan Empire", hi: "मौर्य राज्य"} ], ans: 0 },
+        { id: 153, en: "The questions of King Menander and the answers of Nagasena were compiled in a book titled-", hi: "राजा मनेन्द्र (अथवा मिलिन्द) के सवाल तथा नागसेन के जवाबों को किताब के रूप में संग्रहित किया गया जिसका शीर्षक था-", opts: [ {en: "Arthashastra", hi: "अर्थशास्त्र"}, {en: "Rajatarangini", hi: "राजतरंगिणी"}, {en: "Manusmriti", hi: "मनुस्मृति"}, {en: "Milindapanho", hi: "मिलिन्दपन्हो"} ], ans: 3 },
+        { id: 154, en: "Buddha was depicted in Gandhara Art in-", hi: "गान्धार कला में बुद्ध को प्रतिबिम्बित किया गया-", opts: [ {en: "Dravidian style", hi: "द्रविड़ शैली में"}, {en: "Persian style", hi: "पर्शियन शैली में"}, {en: "Greek-Roman style", hi: "ग्रीक रोमन शैली में"}, {en: "Aryan style", hi: "आर्य शैली में"} ], ans: 2 },
+        { id: 155, en: "Who was Atisha?", hi: "अतिशा कौन थे ?", opts: [ {en: "A famous Maulvi", hi: "एक प्रसिद्ध मौलवी"}, {en: "A Pundit", hi: "एक पण्डित"}, {en: "A Buddhist monk and preacher", hi: "एक बौद्ध भिक्षु एवं उपदेशक"}, {en: "A Christian priest", hi: "एक ईसाई पादरी"} ], ans: 2 },
+        { id: 156, en: "Who among the following came to Nalanda University and received education there?", hi: "निम्नलिखित में से कौन नालन्दा विश्वविद्यालय आया था और वहां पर शिक्षा प्राप्त की थी ?", opts: [ {en: "Hiuen Tsang", hi: "ह्वेनसांग"}, {en: "Faxian", hi: "फाहियान"}, {en: "Megasthenes", hi: "मेगस्थनीज"}, {en: "Marco Polo", hi: "मार्कोपोलो"} ], ans: 0 },
+        { id: 157, en: "According to Buddhist philosophy, the theory of 'Cause and Effect' is known as?", hi: "बौद्ध दर्शन के अनुसार 'कारण एवं कार्य' के सिद्धान्त को इस प्रकार जाना जाता है ?", opts: [ {en: "Ashtanga", hi: "आष्टांग"}, {en: "Trishna", hi: "तृष्णा"}, {en: "Pratitya Samutpada", hi: "प्रतीत्य समुत्पाद"}, {en: "Avidya", hi: "अविद्या"} ], ans: 2 },
+        { id: 158, en: "The teachings of Mahatma Buddha were first compiled in-", hi: "महात्मा बुद्ध की शिक्षायें सबसे पहले संग्रहित की गयी-", opts: [ {en: "Tripitaka", hi: "त्रिपिटक में"}, {en: "Agamas", hi: "आगमम में"}, {en: "Mahavamsa", hi: "महावंश में"}, {en: "Divyavadana", hi: "दिव्यावदान में"} ], ans: 0 },
+        { id: 159, en: "Which Buddhist philosopher traveled to Nepal in the 4th century AD to propagate Buddhism?", hi: "निम्नलिखित में से किस बौद्ध दार्शनिक ने बौद्ध धर्म के प्रचार के लिए चौथी शताब्दी ई. में नेपाल की यात्रा की थी ?", opts: [ {en: "Acharya Atish", hi: "आचार्य अतिश"}, {en: "Acharya Kamalashila", hi: "आचार्य कमलशील"}, {en: "Acharya Vasubandhu", hi: "आचार्य वसुबन्धु"}, {en: "Acharya Shantarakshita", hi: "आचार्य शांतरक्षित"} ], ans: 2 },
+        { id: 160, en: "Who donated five villages for the construction of a Vihara for students of Java in Nalanda?", hi: "निम्नलिखित में से किसने नालन्दा में जावा के विद्यार्थियों के लिए एक विहार के निर्माण के लिए पाँच ग्राम दान में दिया था ?", opts: [ {en: "Dharmapala", hi: "धर्मपाल"}, {en: "Devapala", hi: "देवपाल"}, {en: "Narayan Pala", hi: "नारायण पाल"}, {en: "Mahipala I", hi: "महीपाल प्रथम"} ], ans: 1 },
+        { id: 161, en: "Where is Buddha described as 'Wise and Compassionate'?", hi: "बुद्ध का 'ज्ञानी एवं करुणा' के रूप में कहाँ वर्णन मिला है-", opts: [ {en: "Buddhacharita", hi: "बुद्धचरित"}, {en: "Jataka Tales", hi: "जातक कथा"}, {en: "Light of Asia", hi: "लाइफ ऑफ द एशिया"}, {en: "Harsha Charita", hi: "हर्ष चरित"} ], ans: 1 },
+        { id: 162, en: "Who propagated Buddhism in Peshawar?", hi: "पेशावर में बौद्ध धर्म का प्रचार किसने किया था ?", opts: [ {en: "Ashoka", hi: "अशोक"}, {en: "Harshavardhana", hi: "हर्षवर्धन"}, {en: "Shiladitya", hi: "शिलादित्य"}, {en: "Kanishka", hi: "कनिष्क"} ], ans: 3 },
+        { id: 163, en: "Where was the first statue of Mahatma Buddha found?", hi: "महात्मा बुद्ध की प्रथम मूर्ति कहाँ मिली ?", opts: [ {en: "Sanchi", hi: "सांची"}, {en: "Mathura", hi: "मथुरा"}, {en: "Kashi", hi: "काशी"}, {en: "Taxila", hi: "तक्षशिला"} ], ans: 1 },
+        { id: 164, en: "Buddhist literature Mahavamsa is related to-", hi: "बौद्ध साहित्य महावंश संबंधित है-", opts: [ {en: "Burma", hi: "वर्मा से"}, {en: "Sri Lanka", hi: "श्रीलंका से"}, {en: "China", hi: "चीन से"}, {en: "Suvarnadvipa", hi: "सुवर्णद्वीप (इन्डोनेशिया) से"} ], ans: 1 },
+        { id: 165, en: "In which university was the Chinese traveler Hiuen Tsang educated?", hi: "चीनी यात्री ह्वेनसांग की शिक्षा किस विश्वविद्यालय में हुई ?", opts: [ {en: "Taxila", hi: "तक्षशिला"}, {en: "Vikramshila", hi: "विक्रमशिला"}, {en: "Nalanda", hi: "नालन्दा"}, {en: "Vallabhi", hi: "वल्लभी"} ], ans: 2 },
+        { id: 166, en: "To which event of his life is the Bhumisparsha Mudra of Buddha related?", hi: "बुद्ध की भूमिस्पर्श मुद्रा उनके जीवन की किस घटना से संबंधित है ?", opts: [ {en: "Mahabhinishkramana", hi: "महाभिनिष्क्रमण"}, {en: "Maravijaya", hi: "मारविजय"}, {en: "Dharmachakra Pravartana", hi: "धर्मचक्र प्रवर्तन"}, {en: "Nirvana", hi: "निर्वाण"} ], ans: 3 }, // Based on provided key (d)
+        { id: 167, en: "Pratityasamutpada is the explanation of which Noble Truth?", hi: "प्रतीत्यसमुत्पाद किस आर्य सत्य की व्याख्या है ?", opts: [ {en: "Dukkha", hi: "दुख"}, {en: "Dukkha Samudaya", hi: "दुख समुदाय"}, {en: "Dukkha Nirodha", hi: "दुख निरोध"}, {en: "Nirodha Gamini Patipada", hi: "दुख निरोध गामिनी प्रतिपदा"} ], ans: 1 },
+        { id: 168, en: "Which Buddhist Council was held in Saptaparni Cave?", hi: "सप्तपर्णी गुहा में कौन-सी बौद्ध महासंगीति हुई थी ?", opts: [ {en: "First", hi: "प्रथम"}, {en: "Second", hi: "द्वितीय"}, {en: "Third", hi: "तृतीय"}, {en: "Fourth", hi: "चतुर्थ"} ], ans: 0 },
+        { id: 169, en: "Who is the author of Visuddhimagga?", hi: "विशुद्धिम्ग्ग का रचयिता कौन है ?", opts: [ {en: "Sariputra", hi: "सारिपुत्र"}, {en: "Ananda", hi: "आनंद"}, {en: "Kashyapa", hi: "कश्यप"}, {en: "Buddhaghosa", hi: "बुद्धघोष"} ], ans: 3 },
+        { id: 170, en: "Choose the true statement from the following-", hi: "निम्न में से सत्य कथन को चुनिए-", opts: [ {en: "Both believed in God", hi: "बुद्ध और महावीर दोनों ही परमात्मा के अस्तित्व में विश्वास करते थे"}, {en: "Both believed in Soul", hi: "बुद्ध और महावीर दोनों ही आत्मा के अस्तित्व में विश्वास करते थे"}, {en: "Both favored idol worship", hi: "बुद्ध और महावीर दोनों ही पूजा-अर्चना के पक्षधर थे"}, {en: "Both supported Karma theory", hi: "बुद्ध और महावीर दोनों ही कर्मवाद के समर्थक थे"} ], ans: 3 },
+        { id: 171, en: "The proponent of 'Madhyamika Philosophy' under Buddhism was:", hi: "बौद्ध धर्म अंतर्गत 'माध्यमिक दर्शन' के प्रतिपादन थे :", opts: [ {en: "Nagarjuna", hi: "नागार्जुन"}, {en: "Ashvaghosha", hi: "अश्वघोष"}, {en: "Dharmakirti", hi: "धर्मकीर्ति"}, {en: "All of the above", hi: "उपर्युक्त"} ], ans: 0 },
+        { id: 172, en: "The Buddhist text which contains the stories of previous births of Gautama Buddha is called:", hi: "बौद्धों का वह धर्म ग्रंथ, जिसमें गौतम बुद्ध के पूर्ववर्ती जन्मों की कथाएँ संकलित है, कहलाता है :", opts: [ {en: "Jivika", hi: "जीविका"}, {en: "Jataka", hi: "जातक"}, {en: "Vinaya Pitaka", hi: "विनय पिटक"}, {en: "None of the above", hi: "उपर्युक्त में से कोई नही"} ], ans: 1 },
+        { id: 173, en: "In which inscription is there evidence of stupa construction on the body relics of Gautama Buddha?", hi: "निम्नलिखित में से किस अभिलेख में गौतम बुद्ध के शरीर-अवशेषों पर स्तूप-निर्माण का प्रमाण मिलता है ?", opts: [ {en: "Mahasthana Inscription", hi: "महास्थान अभिलेख"}, {en: "Piprahwa Inscription", hi: "पिपरहवा अभिलेख"}, {en: "Lumbini Inscription", hi: "लुम्बिनी अभिलेख"}, {en: "Sarnath Inscription", hi: "सारनाथ अभिलेख"} ], ans: 1 },
+        { id: 174, en: "Which ruler got the figure of Shakyamuni Buddha inscribed on his coins?", hi: "निम्नलिखित में किस शासक ने अपने सिक्कों पर शाक्यमुनि बुद्ध की आकृति अंकित करवायी थी ?", opts: [ {en: "Ashoka", hi: "अशोक"}, {en: "Vima Kadphises", hi: "विम कडफिसेज"}, {en: "Kanishka", hi: "कनिष्क"}, {en: "Harsha", hi: "हर्ष"} ], ans: 2 },
+        { id: 175, en: "During the time of which ruler did Mahavira and Gautama Buddha preach?", hi: "वर्द्धमान महावीर और गौतम बुद्ध ने उपदेश किस शासक के समय में दिये ?", opts: [ {en: "Ajatashatru", hi: "अजातशत्रु"}, {en: "Bimbisara", hi: "बिम्बिसार"}, {en: "Nandivardhana", hi: "नन्दीवर्द्धन"}, {en: "Udayin", hi: "उदयिन"} ], ans: 1 },
+        { id: 176, en: "Which religion did Hiuen Tsang see in a prosperous state in India?", hi: "ह्वेनसांग ने भारत में किस धर्म को समृद्ध स्थिति में देखा था ?", opts: [ {en: "Jain", hi: "जैन"}, {en: "Buddhist", hi: "बौद्ध"}, {en: "Islam", hi: "इस्लाम"}, {en: "Vedic", hi: "वैदिक"} ], ans: 1 },
+        { id: 177, en: "Whose debate on Buddhism made the Indo-Greek King Menander a Buddhist?", hi: "बौद्ध धर्म पर निम्नलिखित में से किसके शास्त्रार्थ ने इण्डोग्रीक राजा मेनांडर को बौद्ध बना दिया ?", opts: [ {en: "Nagasena", hi: "नागसेन"}, {en: "Nagarjuna", hi: "नागार्जुन"}, {en: "Kashyapa Matanga", hi: "कश्यप मातंग"}, {en: "Ashvaghosha", hi: "अश्वघोष"} ], ans: 0 },
+        { id: 178, en: "Choose the difference between 'Chaitya and Vihara'-", hi: "निम्नांकित कथनों पर विचार करें एवं 'चैत्य तथा विहार' में क्या अंतर है, इसे चुनें-", opts: [ {en: "Vihara is worship place, Chaitya is residence", hi: "विहार पूजा स्थल होता है जबकि चैत्य बौद्ध भिक्षुओं का निवास स्थान है"}, {en: "Chaitya is worship place, Vihara is residence", hi: "चैत्य पूजा स्थल होता है जबकि विहार निवास स्थान होता है"}, {en: "No specific difference", hi: "दोनों में विशेषतः कोई अन्तर नहीं है"}, {en: "Both can be used as residence", hi: "विहार एवं चैत्य दोनों ही निवास स्थान के रूप में प्रयोग हो सकते हैं"} ], ans: 1 },
+        { id: 179, en: "The Pavarana ceremony in ancient Buddhist monasteries was-", hi: "प्राचीन भारत के बौद्ध मठों में, पवरन नामक समारोह आयोजित किया जाता था जो-", opts: [ {en: "Electing a speaker on Dhamma", hi: "संघपरिनायक और धर्म तथा विनय विषयों पर एक-एक वक्ता की चुनने का अवसर होता था।"}, {en: "Confession of offenses by monks", hi: "वर्षा ऋतु के दौरान मठों में प्रवास के समय भिक्षुओं द्वारा किये गए अपराधों को स्वीकारोक्ति का अवसर होता था"}, {en: "Admission ceremony for new monks", hi: "किसी नए व्यक्ति को बौद्ध संघ में प्रवेश देने का समारोह होता था"}, {en: "Gathering after Ashadha full moon", hi: "आषाढ़ की पूर्णिमा के अगले दिन बौद्ध भिक्षुओं के एकत्र होने का अवसर होता था"} ], ans: 1 },
+        { id: 180, en: "By what other name is Bodhisattva Avalokiteshvara known?", hi: "महायान बौद्ध धर्म में बोधिसत्व अवलोकितेश्वर को और किस अन्य नाम से जानते हैं ?", opts: [ {en: "Vajrapani", hi: "वज्रपाणि"}, {en: "Manjushri", hi: "मंजुश्री"}, {en: "Padmapani", hi: "पद्मपाणि"}, {en: "Maitreya", hi: "मैत्रेय"} ], ans: 2 },
+        { id: 181, en: "Which center has more than one hundred Buddhist caves?", hi: "निम्नलिखित में से किस केन्द्र में एक सौ से अधिक बौद्ध गुफायें हैं ?", opts: [ {en: "Ajanta", hi: "अजन्ता"}, {en: "Karle", hi: "कार्ले"}, {en: "Kanheri", hi: "कन्हेरी"}, {en: "Rajgriha", hi: "राजगृह"} ], ans: 2 },
+        { id: 182, en: "The 'Bodhi Tree' in Bodhgaya belongs to which generation of its family?", hi: "बोधगया में 'बोधि वृक्ष' अपने वंश का इस पीढ़ी का है-", opts: [ {en: "Third", hi: "तृतीय"}, {en: "Fourth", hi: "चतुर्थ"}, {en: "Fifth", hi: "पंचम"}, {en: "Sixth", hi: "षष्ठम"} ], ans: 3 },
+        { id: 183, en: "Which Indian Buddhist monk was sent to China in the 1st century AD?", hi: "प्रथम शताब्दी ईस्वी में किस भारतीय बौद्ध भिक्षुक को चीन भेजा गया था ?", opts: [ {en: "Asanga", hi: "असंग"}, {en: "Ashvaghosha", hi: "अश्वघोष"}, {en: "Vasumitra", hi: "वसुमित्र"}, {en: "Nagarjuna", hi: "नागार्जुन"} ], ans: 3 },
+        { id: 184, en: "Which sect worshipped Ashoka tree as God and held peacock feathers?", hi: "निम्नलिखित में किस सम्प्रदाय के अनुयायी अशोक वृक्ष की ईश्वर के रूप में पूजा करते थे तथा अपने हाथों में मोर पंख का गुच्छा रखते थे :", opts: [ {en: "Shakta", hi: "शाक्त"}, {en: "Pashupata", hi: "पाशुपत"}, {en: "Ajivika", hi: "आजीविक"}, {en: "Digambara Jain", hi: "दिगम्बर जैन"} ], ans: 2 },
+        { id: 185, en: "What is the popular name of Lord Buddha's wife?", hi: "भगवान बुद्ध की पत्नी का अत्यन्त लोकप्रिय नाम क्या है?", opts: [ {en: "Yashodhara", hi: "यशोधरा"}, {en: "Gopa", hi: "गोपा"}, {en: "Bimba", hi: "बिम्बा"}, {en: "Sujata", hi: "सुजाता"} ], ans: 0 },
+        { id: 186, en: "Which Council sent missionaries to different countries for the first time?", hi: "किस संगीति के परिणामस्वरूप बौद्ध धर्म के प्रचार के लिए पहली बार विश्व के विभिन्न देशों में धर्म प्रचारक भेजे गए :", opts: [ {en: "First", hi: "प्रथम"}, {en: "Second", hi: "द्वितीय"}, {en: "Third", hi: "तृतीय"}, {en: "Fourth", hi: "चतुर्थ"} ], ans: 2 },
+        { id: 187, en: "Which Buddhist Council made Sanskrit the medium of Buddhist texts?", hi: "किस बौद्ध संगीति ने संस्कृत को बौद्ध धर्म ग्रन्थों का माध्यम बनाया ?", opts: [ {en: "First", hi: "प्रथम"}, {en: "Second", hi: "द्वितीय"}, {en: "Third", hi: "तृतीय"}, {en: "Fourth", hi: "चतुर्थ"} ], ans: 3 },
+        { id: 188, en: "Nagarjuna was the contemporary of which Satavahana king?", hi: "नागार्जुन किस सातवाहन नरेश के मित्र और समकालीन थे?", opts: [ {en: "Gautamiputra Satakarni", hi: "गौतमीपुत्र श्री सातकर्णी"}, {en: "Vashishtiputra Pulumavi", hi: "वशिष्टीपुत्र या पुलुमायि द्वितीय"}, {en: "Yajna Sri Satakarni", hi: "यज्ञश्री गौतमीपुत्र या श्री यज्ञ"}, {en: "Pulumavi IV", hi: "पुलमायि चतुर्थ"} ], ans: 2 },
+        { id: 189, en: "Who was the first great royal patron of Buddhism?", hi: "निम्नलिखित में से कौन बौद्ध धर्म का प्रथम महान् राजकीय संरक्षक था :", opts: [ {en: "Ajatashatru", hi: "अजातशत्रु"}, {en: "Udayana", hi: "उदयन"}, {en: "Ashoka", hi: "अशोक"}, {en: "Kanishka", hi: "कनिष्क"} ], ans: 2 },
+        { id: 190, en: "Which dynasty provided the most patronage to Nalanda University?", hi: "नालन्दा विश्वविद्यालय को सर्वाधिक राजकीय संरक्षण किस राजवंश ने प्रदान किया था ?", opts: [ {en: "Harsha of Kannauj", hi: "कन्नौज के राजा हर्ष"}, {en: "Balaputradeva", hi: "सुमात्रा के राजा बालपुत्रदेव"}, {en: "Pala kings", hi: "पाल राजा धर्मपाल और देवपाल"}, {en: "Gupta kings", hi: "गुप्त राजा चन्द्रगुप्त द्वितीय विक्रमादित्य"} ], ans: 2 },
+        { id: 191, en: "Monks of which place played a major role in propagating Buddhism in China?", hi: "निम्नलिखित किस स्थान के भिक्षुओं ने चीन में बौद्ध धर्म के प्रचार में प्रमुख भूमिका निभाई :", opts: [ {en: "Kashmir", hi: "कश्मीर"}, {en: "Tibet", hi: "तिब्बत"}, {en: "Khotan", hi: "खोतान"}, {en: "Kuchi", hi: "कूची"} ], ans: 3 },
+        { id: 192, en: "The greatest centers of Buddhism in the Deccan were:", hi: "दक्कन में बौद्ध धर्म के महानतम केन्द्र थे :", opts: [ {en: "Ajanta and Ellora", hi: "अजन्ता और एलोरा"}, {en: "Nasik and Karle", hi: "नासिक और कार्ले"}, {en: "Amravati & Nagarjunakonda", hi: "अमरावती और नागार्जुन कोण्डा"}, {en: "Kanchi & Nagapattinam", hi: "कांची और नेगपत्तनम"} ], ans: 2 },
+        { id: 193, en: "Who were the last great royal patrons of Buddhism?", hi: "बौद्ध धर्म के अन्तिम महान राजकीय संरक्षक कौन थे ?", opts: [ {en: "Palas of Bengal & Bihar", hi: "बंगाल और बिहार के पाल"}, {en: "Harshavardhana", hi: "कन्नौज के हर्षवर्धन"}, {en: "Chalukyas of Gujarat", hi: "गुजरात के चालुक्य"}, {en: "Paramaras of Malwa", hi: "मालवा के परमार"} ], ans: 0 },
+        { id: 194, en: "What was the main reason for the disappearance of Buddhism from India?", hi: "भारत से बौद्ध धर्म के लोप का प्रमुख कारण क्या था ?", opts: [ {en: "Corruption in monasteries", hi: "मठ में भ्रष्टाचार"}, {en: "Revived Hindu Dharma", hi: "पुनरुज्जीवित एवं पुनः निरूपित हिन्दू धर्म"}, {en: "Atrocities on monasteries", hi: "बौद्ध मठों पर अत्याचार"}, {en: "End of royal patronage", hi: "राजाओं के संरक्षण की समाप्ति"} ], ans: 1 },
+        { id: 195, en: "Who was the main proponent of Mahayana Buddhism?", hi: "बौद्ध धर्म के महायान शाखा के प्रमुख पर्वत कौन थे ?", opts: [ {en: "Asanga", hi: "असंग"}, {en: "Vasubandhu", hi: "वसुबन्धु"}, {en: "Maitreyanatha", hi: "मैत्रेयनाथ"}, {en: "Nagarjuna", hi: "नागार्जुन"} ], ans: 3 },
+        { id: 196, en: "Buddha's mother was a princess of which region?", hi: "बुद्ध की माँ किस प्रदेश की राजकुमारी थी ?", opts: [ {en: "Videha", hi: "विदेह"}, {en: "Magadha", hi: "मगध"}, {en: "Kosala", hi: "कोसल"}, {en: "Mathura", hi: "मथुरा"} ], ans: 2 },
+        { id: 197, en: "Siddhartha had a son, whose name was?", hi: "सिद्धार्थ का एक पुत्र था, जिसका नाम था ?", opts: [ {en: "Rajiv", hi: "राजीब"}, {en: "Rahul", hi: "राहुल"}, {en: "Sarina", hi: "सरीन"}, {en: "Malayaketu", hi: "मलयकेतु"} ], ans: 1 },
+        { id: 198, en: "Buddha was basically-", hi: "बुद्ध मूलतः थे-", opts: [ {en: "Monotheist", hi: "एकेश्वर वादी"}, {en: "Atheist", hi: "अनीश्वर वादी"}, {en: "Polytheist", hi: "बहुदेव वादी"}, {en: "None of the above", hi: "उपरोक्त में से कोई नही"} ], ans: 1 },
+        { id: 199, en: "The most important mission of Ashoka for Buddhism was sent to-", hi: "बौद्ध धर्म के प्रचार के लिए भेजा गया अशोक का सबसे प्रमुख मिशन था-", opts: [ {en: "Sri Lanka", hi: "श्रीलंका"}, {en: "Bactria", hi: "बैक्ट्रिया"}, {en: "Cambodia", hi: "कम्बोडिया"}, {en: "China", hi: "चीन"} ], ans: 0 },
+        { id: 200, en: "Which disciple was with Buddha at the time of his death?", hi: "कुशीनारा में बुद्ध की मृत्यु के समय कौन शिष्य उनके साथ था ?", opts: [ {en: "Sariputra", hi: "सरिपुत्र"}, {en: "Ananda", hi: "आनन्द"}, {en: "Nagasena", hi: "नागसेन"}, {en: "Moggallana", hi: "मोगालाना"} ], ans: 1 },
+        { id: 201, en: "Who is known as the Indian Einstein?", hi: "भारतीय आइंस्टाइन के नाम से कौन जाना जाता है ?", opts: [ {en: "Kalidasa", hi: "कालीदास"}, {en: "Ashvaghosha", hi: "अश्वघोष"}, {en: "Nagarjuna", hi: "नागार्जुन"}, {en: "Dharmapala", hi: "धर्मपाल"} ], ans: 2 },
+        { id: 202, en: "Mahabodhi Temple was built in Bodhgaya where-", hi: "बोधगया में महाबोधि मन्दिर बनाया गया जहाँ-", opts: [ {en: "Buddha was born", hi: "गौतम बुद्ध पैदा हुए थे"}, {en: "Buddha attained enlightenment", hi: "गौतम बुद्ध को ज्ञान प्राप्त हुआ"}, {en: "Buddha gave first sermon", hi: "गौतम बुद्ध ने अपना प्रथम प्रवचन दिया"}, {en: "Buddha died", hi: "गौतम बुद्ध की मृत्यु हुई"} ], ans: 1 },
+        { id: 203, en: "On which stone were the first Gandhara style Buddha statues carved?", hi: "महात्मा बुद्ध की मूर्ति का सर्वप्रथम निर्माण गान्धार शैली में किया गया था। ये मूर्तियाँ किस पत्थर पर गढ़ी गई थी ?", opts: [ {en: "Slate stone (Grey Schist)", hi: "स्लेटी पत्थर"}, {en: "Marble", hi: "संगमरमर"}, {en: "Quartz", hi: "क्वार्टज"}, {en: "Granite", hi: "ग्रेनाइट"} ], ans: 0 },
+        { id: 204, en: "What does Stupa symbolize in Buddhism?", hi: "बौद्ध धर्म में स्तूप किसका प्रतीक है ?", opts: [ {en: "Mahabhinishkramana", hi: "महाभिनिष्क्रमण"}, {en: "Dharmachakra Pravartana", hi: "धर्मचक्र प्रवर्तन"}, {en: "Pratitya Samutpada", hi: "प्रतीत्य समुत्पाद"}, {en: "Mahaparinirvana", hi: "महापरिनिर्वाण"} ], ans: 3 }, // Corrected Option D
+        { id: 205, en: "The painting of Bodhisattva Padmapani is in which Ajanta cave?", hi: "बोधिसत्व पद्मपाणि का चित्र अजन्ता की किस गुफा में है ?", opts: [ {en: "Cave No. 1", hi: "पहली गुफा"}, {en: "Cave No. 2", hi: "दूसरी गुफा"}, {en: "Cave No. 16", hi: "सोलहवीं गुफा"}, {en: "Cave No. 9", hi: "नवीं गुफा"} ], ans: 0 }
+    ];
+
+    // --- GAME LOGIC ---
+    let quizData = [];
+    let currIndex = 0;
+    let score = 0;
+    let timerInterval;
+    let timerValue = 0;
+    let isTimerActive = false;
+
+    // Audio Context
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    const audioCtx = new AudioContext();
+
+    function playSound(type) {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        if (type === 'correct') {
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(1000, audioCtx.currentTime + 0.1);
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.4);
+        } else {
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+            osc.frequency.linearRampToValueAtTime(100, audioCtx.currentTime + 0.3);
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.3);
+        }
+    }
+
+    // Confetti
+    const canvas = document.getElementById("confetti-canvas");
+    const ctx = canvas.getContext("2d");
+    let particles = [];
+    
+    function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    function triggerConfetti() {
+        for (let i = 0; i < 80; i++) {
+            particles.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height - canvas.height,
+                vy: Math.random() * 5 + 2,
+                vx: Math.random() * 4 - 2,
+                color: `hsl(${Math.random() * 360}, 100%, 50%)`,
+                size: Math.random() * 6 + 3
+            });
+        }
+        animateConfetti();
+    }
+
+    function animateConfetti() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        let active = false;
+        particles.forEach((p, i) => {
+            p.y += p.vy;
+            p.x += p.vx;
+            ctx.fillStyle = p.color;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            ctx.fill();
+            if (p.y < canvas.height) active = true;
+            else particles.splice(i, 1);
+        });
+        if (active) requestAnimationFrame(animateConfetti);
+    }
+
+    function showSadEmoji() {
+        const el = document.getElementById('emoji-overlay');
+        el.style.opacity = 1;
+        el.style.animation = "shake 0.5s ease";
+        setTimeout(() => {
+            el.style.opacity = 0;
+            el.style.animation = "none";
+        }, 1200);
+    }
+
+    // Quiz Functions
+    function switchScreen(id) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+    }
+
+    function startQuiz() {
+        const timerIn = document.getElementById('timer-input').value;
+        const shuffle = document.getElementById('shuffle-toggle').checked;
+        
+        timerValue = parseInt(timerIn) || 0;
+        isTimerActive = timerValue > 0;
+        
+        quizData = shuffle ? [...rawData].sort(() => 0.5 - Math.random()) : [...rawData];
+        
+        currIndex = 0;
+        score = 0;
+        document.getElementById('total-q').textContent = quizData.length;
+        document.getElementById('score-display').textContent = 0;
+        
+        switchScreen('quiz-screen');
+        loadQuestion();
+    }
+
+    function loadQuestion() {
+        clearInterval(timerInterval);
+        if (currIndex >= quizData.length) {
+            endQuiz();
+            return;
+        }
+
+        const q = quizData[currIndex];
+        document.getElementById('curr-q').textContent = currIndex + 1;
+        document.getElementById('q-en').textContent = q.en;
+        document.getElementById('q-hi').textContent = q.hi;
+        
+        // Progress Bar
+        const pct = (currIndex / quizData.length) * 100;
+        document.getElementById('progress-fill').style.width = pct + "%";
+
+        // Options
+        const optContainer = document.getElementById('options-container');
+        optContainer.innerHTML = '';
+        
+        q.opts.forEach((opt, idx) => {
+            const btn = document.createElement('div');
+            btn.className = 'option-btn';
+            btn.innerHTML = `<span class="opt-en">${opt.en}</span><span class="opt-hi">${opt.hi}</span>`;
+            btn.onclick = () => checkAnswer(idx, btn, q.ans);
+            optContainer.appendChild(btn);
+        });
+
+        // Timer
+        const tDisp = document.getElementById('timer-display');
+        tDisp.classList.remove('pulse');
+        
+        if (isTimerActive) {
+            let timeLeft = timerValue;
+            tDisp.textContent = timeLeft;
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                tDisp.textContent = timeLeft;
+                if (timeLeft <= 5) tDisp.classList.add('pulse');
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    nextQuestion();
+                }
+            }, 1000);
+        } else {
+            tDisp.textContent = "∞";
+        }
+    }
+
+    function checkAnswer(selected, btn, correct) {
+        clearInterval(timerInterval);
+        const allOpts = document.querySelectorAll('.option-btn');
+        allOpts.forEach(b => b.style.pointerEvents = 'none');
+
+        if (selected === correct) {
+            btn.classList.add('correct');
+            playSound('correct');
+            triggerConfetti();
+            score++;
+            document.getElementById('score-display').textContent = score;
+        } else {
+            btn.classList.add('wrong');
+            allOpts[correct].classList.add('correct');
+            playSound('wrong');
+            showSadEmoji();
+        }
+
+        setTimeout(nextQuestion, 1500);
+    }
+
+    function nextQuestion() {
+        currIndex++;
+        loadQuestion();
+    }
+
+    function endQuiz() {
+        clearInterval(timerInterval);
+        switchScreen('result-screen');
+        
+        // Calculate based on attempted/seen questions if exiting early
+        const total = Math.max(currIndex, 1);
+        const percentage = Math.round((score / total) * 100);
+        
+        document.getElementById('final-percent').textContent = percentage;
+        document.getElementById('final-correct').textContent = score;
+        document.getElementById('final-total').textContent = total;
+
+        const msgEl = document.getElementById('final-msg');
+        if (percentage >= 80) msgEl.textContent = "🏆 Outstanding Performance!";
+        else if (percentage >= 50) msgEl.textContent = "👏 Well Done! Keep it up.";
+        else msgEl.textContent = "📚 Practice makes perfect! Try again.";
+    }
+</script>
+
+</body>
+</html>

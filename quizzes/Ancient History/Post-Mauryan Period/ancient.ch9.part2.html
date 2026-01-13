@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Post-Mauryan History Quiz (Q51-100)</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --border: rgba(255, 255, 255, 0.2);
+            --shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            --correct: #00e676;
+            --wrong: #ff1744;
+            --text-eng: #ffffff;
+            --text-hin: #e0e0e0;
+            --btn-hover: rgba(255, 255, 255, 0.25);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #4A00E0 0%, #8E2DE2 50%, #f953c6 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden; /* Prevent body scroll, handle in card */
+            color: white;
+        }
+
+        /* Confetti Canvas */
+        #confetti {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        /* Main Card */
+        .card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            border-radius: 25px;
+            box-shadow: var(--shadow);
+            width: 95%;
+            max-width: 800px;
+            height: 90vh;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            position: relative;
+            transition: transform 0.3s ease;
+        }
+
+        /* Scrollable Content Area */
+        .content-scroll {
+            overflow-y: auto;
+            flex-grow: 1;
+            padding-right: 5px;
+        }
+        
+        /* Custom Scrollbar */
+        .content-scroll::-webkit-scrollbar { width: 6px; }
+        .content-scroll::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); }
+        .content-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.3); border-radius: 10px; }
+
+        /* Screens */
+        .screen { display: none; flex-direction: column; height: 100%; }
+        .screen.active { display: flex; }
+
+        /* Typography */
+        h1, h2 { text-align: center; margin-bottom: 20px; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+        .sub-text { text-align: center; font-size: 0.9rem; opacity: 0.8; margin-bottom: 30px; }
+
+        /* Inputs */
+        .settings-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            margin: auto 0;
+        }
+        
+        .input-wrap { text-align: center; }
+        input[type="number"] {
+            background: rgba(0,0,0,0.2);
+            border: 1px solid var(--border);
+            padding: 10px;
+            border-radius: 10px;
+            color: white;
+            font-family: 'Poppins';
+            text-align: center;
+            font-size: 1.1rem;
+            width: 120px;
+        }
+        input:focus { outline: none; border-color: rgba(255,255,255,0.5); }
+
+        /* Toggle */
+        .toggle-wrap { display: flex; align-items: center; gap: 10px; }
+        .switch {
+            position: relative; display: inline-block; width: 50px; height: 28px;
+        }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(0,0,0,0.3); transition: .4s; border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute; content: ""; height: 20px; width: 20px; left: 4px; bottom: 4px;
+            background-color: white; transition: .4s; border-radius: 50%;
+        }
+        input:checked + .slider { background-color: var(--correct); }
+        input:checked + .slider:before { transform: translateX(22px); }
+
+        /* Buttons */
+        .btn {
+            background: var(--btn-hover);
+            border: 1px solid var(--border);
+            color: white;
+            padding: 15px 40px;
+            border-radius: 50px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+            margin-top: 20px;
+            align-self: center;
+        }
+        .btn:hover { transform: scale(1.05); background: rgba(255,255,255,0.3); }
+        .btn-finish {
+            background: rgba(255, 82, 82, 0.3);
+            font-size: 1rem;
+            padding: 10px 20px;
+            margin-top: 20px;
+            width: 100%;
+        }
+
+        /* Quiz Header */
+        .hud {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            font-weight: 700;
+            background: rgba(0,0,0,0.2);
+            padding: 10px;
+            border-radius: 15px;
+        }
+        .progress-container {
+            width: 100%;
+            height: 6px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            margin-bottom: 15px;
+            overflow: hidden;
+        }
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: var(--correct);
+            transition: width 0.3s ease;
+            box-shadow: 0 0 10px var(--correct);
+        }
+
+        /* Timer */
+        .timer-box { display: flex; align-items: center; gap: 5px; }
+        .pulse-red { animation: pulse 1s infinite; color: #ff4d4d; }
+        @keyframes pulse { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(1.1); } 100% { opacity: 1; transform: scale(1); } }
+
+        /* Question */
+        .question-box { margin-bottom: 25px; }
+        .q-en { font-size: 1.25rem; font-weight: 700; color: var(--text-eng); line-height: 1.4; margin-bottom: 8px; }
+        .q-hi { font-size: 1.1rem; font-weight: 400; color: var(--text-hin); line-height: 1.5; }
+
+        /* Options */
+        .options-grid { display: flex; flex-direction: column; gap: 12px; }
+        .option-btn {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 15px;
+            text-align: left;
+            cursor: pointer;
+            transition: background 0.2s;
+            position: relative;
+        }
+        .option-btn:hover { background: rgba(255,255,255,0.15); }
+        .opt-en { display: block; font-size: 1rem; font-weight: 600; color: white; }
+        .opt-hi { display: block; font-size: 0.95rem; color: #ddd; margin-top: 4px; }
+
+        /* Feedback Classes */
+        .correct { background: rgba(0, 230, 118, 0.4) !important; border-color: var(--correct) !important; }
+        .wrong { background: rgba(255, 23, 68, 0.4) !important; border-color: var(--wrong) !important; animation: shake 0.5s; }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        /* Emoji Overlay */
+        #emoji-overlay {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 6rem;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+            z-index: 100;
+        }
+        #emoji-overlay.show { opacity: 1; animation: pop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        @keyframes pop { 0% { transform: translate(-50%, -50%) scale(0); } 70% { transform: translate(-50%, -50%) scale(1.2); } 100% { transform: translate(-50%, -50%) scale(1); } }
+
+        /* Results */
+        .score-big {
+            font-size: 4rem;
+            font-weight: 800;
+            background: linear-gradient(to bottom, #fff, #ccc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin: 20px 0;
+        }
+        .result-msg { font-size: 1.4rem; color: #eee; text-align: center; margin-bottom: 10px; }
+        .stats { font-size: 1rem; color: #bbb; margin-bottom: 30px; text-align: center; }
+
+    </style>
+</head>
+<body>
+
+    <canvas id="confetti"></canvas>
+
+    <div class="card">
+        <div id="start-screen" class="screen active">
+            <h1>Post-Mauryan & Gupta Era<br><span style="font-size:0.6em">(Q51 - Q100)</span></h1>
+            <p class="sub-text">Bilingual History Quiz • इतिहास प्रश्नोत्तरी</p>
+
+            <div class="settings-group">
+                <div class="input-wrap">
+                    <label style="display:block; margin-bottom:5px;">Timer (Seconds)</label>
+                    <input type="number" id="timerInput" placeholder="e.g. 20" min="0">
+                    <div style="font-size:0.7em; opacity:0.6; margin-top:2px;">0 = No Timer</div>
+                </div>
+
+                <div class="toggle-wrap">
+                    <span>Normal</span>
+                    <label class="switch">
+                        <input type="checkbox" id="shuffleToggle">
+                        <span class="slider"></span>
+                    </label>
+                    <span>Shuffle</span>
+                </div>
+
+                <button class="btn" onclick="app.start()">Start Quiz 🚀</button>
+            </div>
+        </div>
+
+        <div id="quiz-screen" class="screen">
+            <div class="progress-container"><div class="progress-bar" id="progressBar"></div></div>
+            
+            <div class="hud">
+                <span id="qCount">Q: --/--</span>
+                <span id="scoreVal">Score: 0</span>
+                <div class="timer-box" id="timerBox" style="display:none;">
+                    ⏳ <span id="timerText">--</span>
+                </div>
+            </div>
+
+            <div class="content-scroll">
+                <div class="question-box">
+                    <div class="q-en" id="qEn"></div>
+                    <div class="q-hi" id="qHi"></div>
+                </div>
+
+                <div class="options-grid" id="optionsGrid"></div>
+                
+                <button class="btn btn-finish" onclick="app.finishEarly()">Finish & Show Results</button>
+            </div>
+            
+            <div id="emoji-overlay">😢</div>
+        </div>
+
+        <div id="result-screen" class="screen" style="justify-content: center; align-items: center;">
+            <h2>Quiz Completed!</h2>
+            <div class="score-big" id="finalScore">0%</div>
+            <div class="result-msg" id="finalMsg"></div>
+            <div class="stats" id="finalStats"></div>
+            <button class="btn" onclick="location.reload()">Restart Quiz 🔄</button>
+        </div>
+    </div>
+
+<script>
+    // DATA: Questions 51-100 Extracted from Images
+    const rawData = [
+        {
+            qe: "The oldest inscription of Sanskrit is found in?",
+            qh: "संस्कृत का प्राचीनतम अभिलेख प्राप्त हुआ है",
+            opts: [{e:"Sanchi",h:"सांची में"},{e:"Girnar",h:"गिरनार में"},{e:"Sindh",h:"सिंध में"},{e:"Delhi",h:"दिल्ली में"}],
+            ans: 1 // b
+        },
+        {
+            qe: "Important trade center Pratisthan was situated on the bank of which river?",
+            qh: "महत्वपूर्ण व्यापारिक केन्द्र प्रतिष्ठान किस नदी के किनारे अवस्थित था?",
+            opts: [{e:"Kaveri",h:"कावेरी"},{e:"Krishna",h:"कृष्णा"},{e:"Godavari",h:"गोदावरी"},{e:"Narmada",h:"नर्मदा"}],
+            ans: 2 // c
+        },
+        {
+            qe: "Since when is coconut cultivation known in India?",
+            qh: "भारत में नारियल की खेती कब से ज्ञात है?",
+            opts: [{e:"Mauryan Period",h:"मौर्यकाल से"},{e:"Satavahana and Kshatrapa Period",h:"सातवाहन एवं क्षत्रपों के काल से"},{e:"Gupta Period",h:"गुप्त काल से"},{e:"Pallava and Western Ganga Period",h:"पल्लव एवं पश्चिमी गंग काल से"}],
+            ans: 1 // b
+        },
+        {
+            qe: "Name of Matrudevi Uma is found on coins of whom?",
+            qh: "मातृदेवी उमा का नाम किसके सिक्कों पर मिलता है?",
+            opts: [{e:"Kuninda",h:"कुणिन्द"},{e:"Indo-Greek",h:"हिन्द-यवन"},{e:"Kushana",h:"कुषाण"},{e:"Gupta",h:"गुप्त"}],
+            ans: 2 // c
+        },
+        {
+            qe: "The royal title 'Caesar' was derived from?",
+            qh: "शाही उपाधि कैसर किससे उद्भूत थी?",
+            opts: [{e:"Persian",h:"फारसी"},{e:"Scythian",h:"सीथियन"},{e:"Chinese",h:"चीनी"},{e:"Roman",h:"रोमन"}],
+            ans: 3 // d
+        },
+        {
+            qe: "Bactria, which was the original region of the international trade system in early period, is located in which country today?",
+            qh: "बैक्ट्रिया जो प्रारम्भिक काल में अंतर्राष्ट्रीय व्यापार तन्त्र का मूल क्षेत्र था। आज के निम्नलिखित में से किस देश में स्थित था?",
+            opts: [{e:"Punjab",h:"पंजाब"},{e:"Baluchistan",h:"बलूचिस्तान"},{e:"Iran",h:"इरान"},{e:"Afghanistan",h:"अफगानिस्तान"}],
+            ans: 3 // d
+        },
+        {
+            qe: "Which rulers issued the purest gold coins in maximum quantity in India?",
+            qh: "भारत में सर्वाधिक मात्रा में शुद्ध सोने के सिक्कों को किन शासकों ने चलाया था?",
+            opts: [{e:"Indo-Greek",h:"हिन्द-यवन"},{e:"Shaka",h:"शक"},{e:"Kushana",h:"कुषाण"},{e:"Gupta",h:"गुप्त"}],
+            ans: 2 // c
+        },
+        {
+            qe: "Which of the following items made in Rome was found in most abundance in India?",
+            qh: "रोम में बनी निम्नलिखित वस्तुओं में कौन-सी एक भारत में सबसे प्रचुर रूप में मिली है?",
+            opts: [{e:"Pottery fragments",h:"भांड-खंड"},{e:"Spices",h:"मसाले"},{e:"Silk clothes",h:"रेशमी वस्त्र"},{e:"Gold coins",h:"स्वर्ण सिक्कें"}],
+            ans: 3 // d
+        },
+        {
+            qe: "After Mauryas, who controlled the North-Western border of India?",
+            qh: "मौर्यों के पश्चात् भारत की उत्तर-पश्चिम सीमा पर किसका अधिकार था?",
+            opts: [{e:"Bactrian Greek",h:"बैक्ट्रियन ग्रीक"},{e:"Kushana",h:"कुषाण"},{e:"Shaka",h:"शक"},{e:"Huna",h:"हूण"}],
+            ans: 0 // a
+        },
+        {
+            qe: "What was the main reason for the conflict between Shakas and Satavahanas in Malwa?",
+            qh: "शकों एवं सातवाहनों में मालवा में आधिपत्य के पीछे संघर्ष का प्रमुख कारण क्या था?",
+            opts: [{e:"Control over Kutch region of Gujarat",h:"गुजरात के कच्छ प्रदेश पर अधिकार"},{e:"Commercial benefit",h:"व्यापारिक लाभ हेतु"},{e:"Political expansion",h:"राजनीतिक विस्तार"},{e:"Traditional rivalry",h:"परम्परागत शत्रुता"}],
+            ans: 1 // b
+        },
+        {
+            qe: "In ancient Indian texts, in what sense is the word 'Yavan Priya' used?",
+            qh: "प्राचीन भारतीय ग्रंथों में 'यवन प्रिय' शब्द किस अर्थ में प्रयुक्त हुआ है?",
+            opts: [{e:"Pepper",h:"कालीमिर्च"},{e:"Iron",h:"लोहा"},{e:"Cotton Cloth",h:"सूतीवस्त्र"},{e:"Indigo",h:"नील"}],
+            ans: 0 // a
+        },
+        {
+            qe: "First inscribed and portrait coins found in India belong to?",
+            qh: "सर्वप्रथम भारत में लेखयुक्त तथा रूपचित्रात्मक सिक्के मिले हैं?",
+            opts: [{e:"Indo-Greek",h:"इण्डोग्रीक"},{e:"Maurya",h:"मौर्य"},{e:"Gupta",h:"गुप्त"},{e:"Satavahana",h:"सातवाहन"}],
+            ans: 0 // a
+        },
+        {
+            qe: "Who among the following were contemporaries of Kanishka?",
+            qh: "निम्न में कौन कनिष्क के समकालीन थे?",
+            opts: [{e:"Aryabhatta, Charaka, Brahmagupta",h:"आर्यभट्ट, चरक, ब्रह्मगुप्त"},{e:"Ashvaghosha, Nagarjuna, Vasumitra",h:"अश्वघोष, नागार्जुन, वसुमित्र"},{e:"Dhanvantari, Shanku, Amarasimha",h:"धन्वन्तरि, शंकु, अमरसिंह"},{e:"Hiuen Tsang, Banabhatta, Divakara Mishra",h:"ह्वेनसांग, बाणभट्ट, दिवाकर मिश्र"}],
+            ans: 1 // b
+        },
+        {
+            qe: "Which book provides information about trade during Kanishka's period?",
+            qh: "कनिष्क कालीन व्यापार की जानकारी किस पुस्तक से मिलती है?",
+            opts: [{e:"Saundarananda",h:"सौन्दरानन्द"},{e:"Buddhacharita",h:"बुद्धचरित"},{e:"Avadana Shataka",h:"अवदान शतक"},{e:"Divyavadana",h:"दिव्यावदान"}],
+            ans: 2 // c
+        },
+        {
+            qe: "Gatha Saptashati was written by?",
+            qh: "गाथा सप्तशती लिखा गया था",
+            opts: [{e:"Hala",h:"हाल"},{e:"Ajatashatru",h:"अजातशत्रु"},{e:"Ashoka",h:"अशोक"},{e:"Bimbisara",h:"बिम्बिसार"}],
+            ans: 0 // a
+        },
+        {
+            qe: "Who was the first King of Kushana dynasty?",
+            qh: "कौन प्रथम कुषाण वंश का राजा था?",
+            opts: [{e:"Kanishka",h:"कनिष्क"},{e:"Vima Kadphises",h:"विम कडफिसेज"},{e:"Kujula Kadphises",h:"कुजुल कडफिसेज"},{e:"None of the above",h:"उपर्युक्त में से कोई नहीं"}],
+            ans: 2 // c
+        },
+        {
+            qe: "Shunga rulers followed which religion?",
+            qh: "शुंग शासक निम्न में से किस धर्म को मानते थे?",
+            opts: [{e:"Brahman Religion",h:"ब्राह्मण धर्म"},{e:"Buddhism",h:"बौद्ध धर्म"},{e:"Shaivism",h:"शैव धर्म"},{e:"Jainism",h:"जैन धर्म"}],
+            ans: 0 // a
+        },
+        {
+            qe: "Gandhara style of sculpture developed between?",
+            qh: "निम्न में से किसके मध्य मूर्तिकला की गान्धार शैली का विकास हुआ?",
+            opts: [{e:"150 BC to 150 AD",h:"150 ई० पू० से 150 ई०"},{e:"100 BC to 250 AD",h:"100 ई० पू० से 250 ई०"},{e:"50 BC to 500 AD",h:"50 ई० पू० से 500 ई०"},{e:"150 BC to 250 AD",h:"150 ई० पू० से 250 ई०"}],
+            ans: 2 // c
+        },
+        {
+            qe: "Capital of Kanishka was?",
+            qh: "कनिष्क की राजधानी थी",
+            opts: [{e:"Sialkot",h:"सियालकोट"},{e:"Purushpura",h:"पुरुषपुर"},{e:"Kanishkapura",h:"कनिष्कपुर"},{e:"Jalandhar",h:"जालन्धर"}],
+            ans: 1 // b
+        },
+        {
+            qe: "Kanishka accepted?",
+            qh: "कनिष्क ने स्वीकारा",
+            opts: [{e:"Bhagavata Religion",h:"भागवत धर्म को"},{e:"Hinayana Buddhism",h:"हीनयान बौद्ध धर्म को"},{e:"Mahayana Buddhism",h:"महायान बौद्ध धर्म को"},{e:"Shaivism",h:"शैव धर्म को"}],
+            ans: 2 // c
+        },
+        {
+            qe: "Duration for adding Torana to Sanchi Stupa was?",
+            qh: "सांची स्तूप में तोरण के जोड़ने के लिए अवधि थी",
+            opts: [{e:"150 BC to 50 BC",h:"150 ई० पू० से 50 ई० पू० तक"},{e:"50 BC to 1st Century AD",h:"50 ई० पू० से प्रथम ई० शती तक"},{e:"1st Century AD to 150 AD",h:"प्रथम शती ई० से 150 ई० पू० तक"},{e:"150 BC to 250 AD",h:"150 ई० पू० से 250 ई० तक"}],
+            ans: 3 // d
+        },
+        {
+            qe: "Statue of Buddha was first made in?",
+            qh: "बुद्ध की प्रतिमा सर्वप्रथम बनायी गई",
+            opts: [{e:"Bodhgaya Style",h:"कला की बोधगया शैली में"},{e:"Gandhara Style",h:"कला की गान्धार शैली में"},{e:"Mathura Style",h:"कला की मथुरा शैली में"},{e:"Sarnath Style",h:"कला की सारनाथ शैली में"}],
+            ans: 2 // c
+        },
+        {
+            qe: "Paintings of Ajanta caves were done in?",
+            qh: "अजन्ता की गुफाओं का चित्रण किया गया था",
+            opts: [{e:"1st Century BC",h:"प्रथम शती ई० पू०"},{e:"1st Century AD",h:"प्रथम शती ई०"},{e:"2nd Century BC",h:"द्वितीय शती ई० पू०"},{e:"3rd Century AD",h:"तृतीय शती ई०"}],
+            ans: 2 // c
+        },
+        {
+            qe: "Who was the physician (Vaidya) in Kanishka's kingdom?",
+            qh: "कनिष्क के राज्य में निम्न में से कौन वैद्य था?",
+            opts: [{e:"Ashvaghosha",h:"अश्वघोष"},{e:"Mathara",h:"माठार"},{e:"Charaka",h:"चरक"},{e:"Agesilas",h:"एजेसिलास"}],
+            ans: 2 // c
+        },
+        {
+            qe: "Writer of Natyashastra was?",
+            qh: "नाट्यशास्त्र का लेखक था",
+            opts: [{e:"Vasumitra",h:"वसुमित्र"},{e:"Nagarjuna",h:"नागार्जुन"},{e:"Bharata Muni",h:"भरतमुनि"},{e:"Ashvaghosha",h:"अश्वघोष"}],
+            ans: 2 // c
+        },
+        {
+            qe: "Kushanas entered India from which side?",
+            qh: "कुषाणों ने भारत में किस ओर से प्रवेश किया?",
+            opts: [{e:"South East Asia",h:"दक्षिणी पूर्वी एशिया"},{e:"North West Border",h:"उत्तर पश्चिमी सीमा"},{e:"Arabian Sea",h:"अरग सागर"},{e:"Bay of Bengal",h:"बंगाल की खाड़ी"}],
+            ans: 1 // b
+        },
+        {
+            qe: "Who was the famous ruler of Kushana dynasty?",
+            qh: "कुषाण वंश का प्रसिद्ध शासक कौन था?",
+            opts: [{e:"Kanishka",h:"कनिष्क"},{e:"Bindusara",h:"बिन्दुसार"},{e:"Harshavardhana",h:"हर्षवर्धन"},{e:"Prithviraj Chauhan",h:"पृथ्वीराज चौहान"}],
+            ans: 0 // a
+        },
+        {
+            qe: "Rulers of which dynasty adopted the title 'Devaputra'?",
+            qh: "निम्नलिखित में से किस राजवंश के शासक देवपुत्र उपाधि धारण करते थे?",
+            opts: [{e:"Maurya",h:"मौर्य"},{e:"Shunga",h:"शुंग"},{e:"Kushana",h:"कुषाण"},{e:"Shaka-Kshatrapa",h:"शक-क्षत्रप"}],
+            ans: 2 // c
+        },
+        {
+            qe: "Who is credited with performing four Ashvamedha Yajnas?",
+            qh: "निम्नांकित में से किसे चार अश्वमेध यज्ञ करने का श्रेय दिया गया है?",
+            opts: [{e:"Pushyamitra Shunga",h:"पुष्यमित्र शुंग"},{e:"Pravarasena I",h:"प्रवरसेन I"},{e:"Samudragupta",h:"समुद्रगुप्त"},{e:"Nandivarman Pallavamalla",h:"नन्दिवर्मन पल्लवमल्ल"}],
+            ans: 1 // b
+        },
+        {
+            qe: "In which royal family did women patronize Buddhism while men followed Vedic religion?",
+            qh: "निम्नलिखित में से किस राजा परिवार में महिलायें बौद्ध धर्म को प्रश्रय देती थीं जबकि पुरुष प्रायः वैदिक धर्म का पालन करते थे?",
+            opts: [{e:"Satavahana",h:"सातवाहन"},{e:"Ikshvaku",h:"इक्ष्वाकु"},{e:"Gupta",h:"गुप्त"},{e:"Vakataka",h:"वाकाटक"}],
+            ans: 1 // b
+        },
+        {
+            qe: "Coins of which Kushana ruler depict the maximum number of Hindu deities?",
+            qh: "किस कुषाण शासक के सिक्कों पर सबसे अधिक संख्या में हिन्दू देवी-देवताओं का अंकन मिलता है?",
+            opts: [{e:"Vima Kadphises",h:"विम कडफाइसिस"},{e:"Kanishka I",h:"कनिष्क प्रथम"},{e:"Huvishka",h:"हुविष्क"},{e:"Vasudeva",h:"वासुदेव"}],
+            ans: 2 // c
+        },
+        {
+            qe: "Warangal represented the capital of which dynasty?",
+            qh: "वारंगल किस राजवंश की राजधानी का प्रतिनिधित्व करता है?",
+            opts: [{e:"Satavahana",h:"सातवाहन"},{e:"Kadamba",h:"कदम्ब"},{e:"Hoysala",h:"होयसल"},{e:"Ikshvaku",h:"इक्ष्वाकु"}],
+            ans: 3 // d
+        },
+        {
+            qe: "Match the following:<br>A. Devaputra, B. Gaulmika, C. Kulyavapa, D. Ahar<br>1. Land measure 2. Administrative unit 3. Royal title 4. State official",
+            qh: "निम्न को सुमेलित कीजिए :<br>A. देवपुत्र, B. गौल्मिक, C. कुल्यवाप, D. आहार",
+            opts: [{e:"4, 2, 3, 1",h:"4, 2, 3, 1"},{e:"3, 4, 1, 2",h:"3, 4, 1, 2"},{e:"2, 1, 4, 3",h:"2, 1, 4, 3"},{e:"1, 3, 2, 4",h:"1, 3, 2, 4"}],
+            ans: 1 // b
+        },
+        {
+            qe: "Which of the following rulers is called the protector of Varna system?",
+            qh: "निम्न शासकों में से किसको वर्ण व्यवस्था का रक्षक कहा गया है?",
+            opts: [{e:"Pushyamitra Shunga",h:"पुष्यमित्र शुंग"},{e:"Kharavela",h:"खारवेल"},{e:"Gautamiputra Satakarni",h:"गौतमीपुत्र शातकर्णी"},{e:"Vasudeva",h:"वासुदेव"}],
+            ans: 2 // c
+        },
+        {
+            qe: "Who started land grants to Brahmins and Buddhists?",
+            qh: "ब्राह्मणों एवं बौद्धों को भूमिदान का आरम्भ किसने किया?",
+            opts: [{e:"Shunga",h:"शुंग"},{e:"Satavahana",h:"सातवाहन"},{e:"Vakataka",h:"वाकाटक"},{e:"Gupta",h:"गुप्त"}],
+            ans: 1 // b
+        },
+        {
+            qe: "Who is credited with issuing the first gold coins in India?",
+            qh: "निम्नलिखित में से किस शासक को भारत में सर्वप्रथम स्वर्ण मुद्रा जारी करने का श्रेय दिया जाता है?",
+            opts: [{e:"Kujula Kadphises",h:"कुजुल कडफिसेस"},{e:"Kanishka I",h:"कनिष्क प्रथम"},{e:"Vima Kadphises",h:"विम कडफिसेस"},{e:"Menander",h:"मिनेण्डर"}],
+            ans: 3 // d
+        },
+        {
+            qe: "The oldest evidence of land grant is found in inscriptions of?",
+            qh: "भूमिदान का प्राचीनतम साक्ष्य किसके अभिलेखों में मिलता है?",
+            opts: [{e:"Mauryas",h:"मौर्यों के"},{e:"Kushanas",h:"कुषाणों के"},{e:"Satavahanas",h:"सातवाहनों के"},{e:"Guptas",h:"गुप्तों के"}],
+            ans: 2 // c
+        },
+        {
+            qe: "Which of the following dynasties issued Lead coins?",
+            qh: "निम्नलिखित राजवंशों में से किसने सीसे के सिक्के चलाये?",
+            opts: [{e:"Maurya",h:"मौर्य"},{e:"Satavahana",h:"सातवाहन"},{e:"Western Kshatrapa",h:"पश्चिम क्षत्रप"},{e:"Gupta",h:"गुप्त"}],
+            ans: 1 // b
+        },
+        {
+            qe: "Which dynasty issued the maximum number of copper coins?",
+            qh: "किस राजवंश ने सर्वाधिक तांबे के सिक्के जारी किये?",
+            opts: [{e:"Maurya",h:"मौर्य"},{e:"Kushana",h:"कुषाण"},{e:"Gupta",h:"गुप्त"},{e:"Shaka",h:"शक"}],
+            ans: 1 // b
+        },
+        {
+            qe: "The official language of Satavahanas was?",
+            qh: "सातवाहनों की शासकीय भाषा थी",
+            opts: [{e:"Prakrit",h:"प्राकृत"},{e:"Sanskrit",h:"संस्कृत"},{e:"Tamil",h:"तमिल"},{e:"Telugu",h:"तेलुगू"}],
+            ans: 0 // a
+        },
+        {
+            qe: "Trade with South-East Asia was carried out from which port on the East coast of India?",
+            qh: "भारत के पूर्वी तट पर स्थित निम्नलिखित में से किस बंदरगाह से दक्षिण-पूर्व एशिया के साथ व्यापार और वाणिज्य होता था?",
+            opts: [{e:"Arikamedu",h:"अरिकामेडु"},{e:"Tamralipti",h:"ताम्रलिप्ति"},{e:"Kalyan",h:"कल्याण"},{e:"Sopara",h:"सोपारा"}],
+            ans: 1 // b
+        },
+        {
+            qe: "Kushanas issued coins of which metal(s)?",
+            qh: "कुषाणों ने किन धातु/अधातुओं के सिक्के जारी किये?",
+            opts: [{e:"Only Gold",h:"केवल सोने के"},{e:"Gold and Silver",h:"सोने और चाँदी के"},{e:"Gold and Copper",h:"सोने और ताँबे के"},{e:"Gold, Silver and Copper",h:"सोने, चाँदी और ताँबे के"}],
+            ans: 2 // c
+        },
+        {
+            qe: "With which country did India develop great trade relations in 2nd century BC?",
+            qh: "वह देश जिसके साथ भारत ने द्वितीय शताब्दी ईसा पूर्व में महान व्यापारिक सम्बन्ध विकसित किये थे",
+            opts: [{e:"Rome",h:"रोम"},{e:"Greece",h:"यूनान"},{e:"Egypt",h:"मिस्र"},{e:"China",h:"चीन"}],
+            ans: 0 // a
+        },
+        {
+            qe: "How many professions are mentioned in 'Milindapanho'?",
+            qh: "मिलिन्दपन्हो में कुल कितने व्यवसायों का उल्लेख मिलता है?",
+            opts: [{e:"75 Professions",h:"75 व्यवसाय"},{e:"80 Professions",h:"80 व्यवसाय"},{e:"85 Professions",h:"85 व्यवसाय"},{e:"90 Professions",h:"90 व्यवसाय"}],
+            ans: 0 // a
+        },
+        {
+            qe: "Who issued coins with the image of four-armed Vishnu?",
+            qh: "चतुर्भुजी विष्णु की आकृति युक्त सिक्के किसने चलवाये?",
+            opts: [{e:"Menander",h:"मिनाण्डर"},{e:"Huvishka",h:"हुविष्क"},{e:"Demetrius",h:"डेमेट्रियस"},{e:"Kadphises II",h:"कडफिसेस II"}],
+            ans: 1 // b
+        },
+        {
+            qe: "Who introduced the system like 'Dyarchy' (Dual Rule) for the first time in India?",
+            qh: "भारत में पहली बार 'द्वैध शासन' जैसी व्यवस्था की शुरूआत किसने की है?",
+            opts: [{e:"English",h:"अंग्रेजों ने"},{e:"Kushanas",h:"कुषाण ने"},{e:"Muslims",h:"मुसलमानों ने"},{e:"Rajput Rulers",h:"राजपूत शासकों ने"}],
+            ans: 1 // b
+        },
+        {
+            qe: "Coins with images of Nandi and Shiva were circulated by which ruler?",
+            qh: "नन्दी और शिव की मूर्ति से युक्त सिक्कों का प्रचलन निम्न में से किस शासक द्वारा किया गया?",
+            opts: [{e:"Huvishka",h:"हुविष्क"},{e:"Vasudeva",h:"वासुदेव"},{e:"Yaudheya",h:"यौधेय"},{e:"Vima Kadphises",h:"विम कडफिसेस"}],
+            ans: 3 // d
+        },
+        {
+            qe: "Who established control over the Silk Route of Central Asia?",
+            qh: "मध्य एशिया के सिद्ध रेशम मार्ग पर किसने अधिकार प्राप्त किया?",
+            opts: [{e:"Ashoka",h:"अशोक"},{e:"Kanishka",h:"कनिष्क"},{e:"Menander",h:"मिनाण्डर"},{e:"Harsha",h:"हर्ष"}],
+            ans: 1 // b
+        },
+        {
+            qe: "Name of Mother Goddess Uma is inscribed on whose coins?",
+            qh: "मातृ देवी उमा का नाम किसके सिक्कों पर अंकित है?",
+            opts: [{e:"Kuninda",h:"कुणिन्द"},{e:"Indo-Greek",h:"हिन्द-यवन"},{e:"Kushana",h:"कुषाण"},{e:"Gupta",h:"गुप्त"}],
+            ans: 2 // c
+        },
+        {
+            qe: "Which is the oldest inscription related to land grant?",
+            qh: "भूमिदान से सम्बन्धित सबसे प्राचीन अभिलेख है",
+            opts: [{e:"Satavahana Inscription",h:"सातवाहन अभिलेख"},{e:"Maurya Inscription",h:"मौर्य अभिलेख"},{e:"Gupta Inscription",h:"गुप्त अभिलेख"},{e:"Vakataka Inscription",h:"वाकाटक अभिलेख"}],
+            ans: 0 // a
+        }
+    ];
+
+    const app = {
+        questions: [],
+        currIdx: 0,
+        score: 0,
+        timer: null,
+        timeLeft: 0,
+        audio: null,
+        
+        init: function() {
+            this.audio = new (window.AudioContext || window.webkitAudioContext)();
+        },
+
+        start: function() {
+            if(!this.audio) this.init();
+            
+            // Get Settings
+            const tInput = document.getElementById('timerInput').value;
+            this.timerSetting = (tInput && parseInt(tInput) > 0) ? parseInt(tInput) : 0;
+            const shuffle = document.getElementById('shuffleToggle').checked;
+
+            // Prepare Data
+            this.questions = [...rawData];
+            if(shuffle) this.shuffleArray(this.questions);
+
+            // Reset States
+            this.currIdx = 0;
+            this.score = 0;
+            document.getElementById('start-screen').classList.remove('active');
+            document.getElementById('quiz-screen').classList.add('active');
+            
+            this.loadQuestion();
+        },
+
+        shuffleArray: function(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        },
+
+        loadQuestion: function() {
+            clearInterval(this.timer);
+            const q = this.questions[this.currIdx];
+            const total = this.questions.length;
+
+            // UI Text
+            document.getElementById('qCount').innerText = `Q: ${this.currIdx + 1}/${total}`;
+            document.getElementById('scoreVal').innerText = `Score: ${this.score}`;
+            document.getElementById('progressBar').style.width = `${(this.currIdx / total) * 100}%`;
+            
+            document.getElementById('qEn').innerText = `${this.currIdx + 51}. ${q.qe}`;
+            document.getElementById('qHi').innerText = q.qh;
+
+            // Options
+            const grid = document.getElementById('optionsGrid');
+            grid.innerHTML = '';
+            q.opts.forEach((opt, idx) => {
+                const btn = document.createElement('div');
+                btn.className = 'option-btn';
+                btn.innerHTML = `
+                    <span class="opt-en">${String.fromCharCode(65+idx)}. ${opt.e}</span>
+                    <span class="opt-hi">${opt.h}</span>
+                `;
+                btn.onclick = () => this.handleAnswer(idx, btn);
+                grid.appendChild(btn);
+            });
+
+            // Timer
+            const tBox = document.getElementById('timerBox');
+            const tText = document.getElementById('timerText');
+            tText.classList.remove('pulse-red');
+
+            if(this.timerSetting > 0) {
+                tBox.style.display = 'flex';
+                this.timeLeft = this.timerSetting;
+                tText.innerText = this.timeLeft;
+                
+                this.timer = setInterval(() => {
+                    this.timeLeft--;
+                    tText.innerText = this.timeLeft;
+                    if(this.timeLeft <= 5) tText.classList.add('pulse-red');
+                    if(this.timeLeft <= 0) {
+                        clearInterval(this.timer);
+                        this.handleTimeOut();
+                    }
+                }, 1000);
+            } else {
+                tBox.style.display = 'none';
+            }
+        },
+
+        handleAnswer: function(selectedIdx, btn) {
+            clearInterval(this.timer);
+            const q = this.questions[this.currIdx];
+            const allBtns = document.querySelectorAll('.option-btn');
+            allBtns.forEach(b => b.style.pointerEvents = 'none');
+
+            if(selectedIdx === q.ans) {
+                this.score++;
+                document.getElementById('scoreVal').innerText = `Score: ${this.score}`;
+                btn.classList.add('correct');
+                this.playSound('correct');
+                this.fireConfetti();
+            } else {
+                btn.classList.add('wrong');
+                allBtns[q.ans].classList.add('correct');
+                this.playSound('wrong');
+                this.showEmoji();
+            }
+
+            setTimeout(() => this.nextQ(), 1500);
+        },
+
+        handleTimeOut: function() {
+            const q = this.questions[this.currIdx];
+            const allBtns = document.querySelectorAll('.option-btn');
+            allBtns.forEach(b => b.style.pointerEvents = 'none');
+            allBtns[q.ans].classList.add('correct'); // Show correct
+            this.playSound('wrong');
+            setTimeout(() => this.nextQ(), 2000);
+        },
+
+        nextQ: function() {
+            this.currIdx++;
+            if(this.currIdx < this.questions.length) {
+                this.loadQuestion();
+            } else {
+                this.finish();
+            }
+        },
+
+        finishEarly: function() {
+            clearInterval(this.timer);
+            // Logic: Calculate score based on questions seen so far.
+            // If currIdx is 5 (6th question), user answered 5.
+            // If user clicks finish while ON question 6, we count it as 'attempted' or just count correct vs total so far?
+            // Usually "Finish" means stop here. We will base % on currIdx (questions presented fully).
+            // But if they haven't answered the current one, it shouldn't count as wrong, just skipped.
+            // For simplicity, we compare Score vs (currIdx).
+            
+            // If clicked immediately without answering Q1:
+            if(this.currIdx === 0) {
+                 // Nothing happened
+            }
+            this.finish();
+        },
+
+        finish: function() {
+            document.getElementById('quiz-screen').classList.remove('active');
+            document.getElementById('result-screen').classList.add('active');
+
+            // Prevent division by zero if finished immediately
+            const totalConsidered = this.currIdx === 0 ? 1 : this.currIdx; 
+            // Note: If finish called automatically at end, currIdx = length.
+            // If finish early, currIdx is the question index we were on.
+
+            const pct = Math.round((this.score / (this.questions.length)) * 100); 
+            // NOTE: Requirement says "results based on questions answered so far".
+            // Let's change calculation to be based on attempts?
+            // Actually standard quiz apps show score vs Total Deck usually. 
+            // But prompt says "based on questions answered so far". 
+            
+            let effectiveTotal = this.currIdx;
+            // If we finished normally, effectiveTotal is length. 
+            // If early exit, effectiveTotal is how many we passed. 
+            if (effectiveTotal === 0) effectiveTotal = 1;
+
+            const finalPct = Math.round((this.score / effectiveTotal) * 100);
+
+            const scoreEl = document.getElementById('finalScore');
+            const msgEl = document.getElementById('finalMsg');
+            const statsEl = document.getElementById('finalStats');
+
+            scoreEl.innerText = `${finalPct}%`;
+
+            if(finalPct >= 80) msgEl.innerText = "🏆 Outstanding Performance!";
+            else if(finalPct >= 50) msgEl.innerText = "👏 Well Done! Keep it up.";
+            else msgEl.innerText = "📚 Practice makes perfect! Try again.";
+
+            statsEl.innerText = `You scored ${this.score} out of ${effectiveTotal} attempted questions.`;
+        },
+
+        playSound: function(type) {
+            const osc = this.audio.createOscillator();
+            const gain = this.audio.createGain();
+            osc.connect(gain);
+            gain.connect(this.audio.destination);
+
+            if(type === 'correct') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(600, this.audio.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(1200, this.audio.currentTime + 0.1);
+                gain.gain.setValueAtTime(0.2, this.audio.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.audio.currentTime + 0.5);
+                osc.start(); osc.stop(this.audio.currentTime + 0.5);
+            } else {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(150, this.audio.currentTime);
+                osc.frequency.linearRampToValueAtTime(100, this.audio.currentTime + 0.3);
+                gain.gain.setValueAtTime(0.2, this.audio.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.audio.currentTime + 0.3);
+                osc.start(); osc.stop(this.audio.currentTime + 0.3);
+            }
+        },
+
+        showEmoji: function() {
+            const el = document.getElementById('emoji-overlay');
+            el.classList.add('show');
+            setTimeout(() => el.classList.remove('show'), 1000);
+        },
+
+        fireConfetti: function() {
+            const canvas = document.getElementById('confetti');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            
+            const particles = [];
+            for(let i=0; i<80; i++) {
+                particles.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height - canvas.height,
+                    color: `hsl(${Math.random()*360}, 100%, 50%)`,
+                    size: Math.random() * 5 + 2,
+                    speed: Math.random() * 5 + 2
+                });
+            }
+
+            let frame = 0;
+            function animate() {
+                ctx.clearRect(0,0,canvas.width, canvas.height);
+                let active = false;
+                particles.forEach(p => {
+                    p.y += p.speed;
+                    if(p.y < canvas.height) active = true;
+                    ctx.fillStyle = p.color;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.size, 0, Math.PI*2);
+                    ctx.fill();
+                });
+                if(active && frame < 100) {
+                    frame++;
+                    requestAnimationFrame(animate);
+                } else {
+                    ctx.clearRect(0,0,canvas.width, canvas.height);
+                }
+            }
+            animate();
+        }
+    };
+</script>
+</body>
+</html>

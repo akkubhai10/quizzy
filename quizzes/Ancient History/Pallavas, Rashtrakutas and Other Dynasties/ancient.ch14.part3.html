@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>History Master: Questions 101-156</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+    :root {
+        --glass-bg: rgba(255, 255, 255, 0.1);
+        --glass-border: rgba(255, 255, 255, 0.2);
+        --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        --text-color: #ffffff;
+        --text-dim: #e0e0e0;
+        --accent: #00d2ff; /* Cyan Blue Accent */
+        --correct: #00e676;
+        --wrong: #ff1744;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+
+    body {
+        font-family: 'Poppins', sans-serif;
+        /* Vibrant Mesh Gradient */
+        background-color: #4158D0;
+        background-image: linear-gradient(43deg, #4158D0 0%, #C850C0 46%, #FFCC70 100%);
+        background-size: 200% 200%;
+        animation: gradientBG 15s ease infinite;
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        color: var(--text-color);
+        overflow: hidden; 
+    }
+
+    @keyframes gradientBG {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+
+    /* Glassmorphism Card */
+    .glass-card {
+        background: var(--glass-bg);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid var(--glass-border);
+        border-radius: 25px;
+        box-shadow: var(--glass-shadow);
+        width: 95%;
+        max-width: 800px;
+        height: 92vh; 
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        overflow: hidden;
+    }
+
+    /* Screens */
+    .screen {
+        padding: 20px;
+        height: 100%;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        opacity: 0;
+        visibility: hidden;
+        position: absolute;
+        transition: opacity 0.4s ease;
+        z-index: 1;
+    }
+
+    .screen.active {
+        opacity: 1;
+        visibility: visible;
+        z-index: 10;
+    }
+
+    /* Start Screen */
+    h1 { font-size: 2.2rem; margin-bottom: 5px; text-shadow: 0 4px 10px rgba(0,0,0,0.3); line-height: 1.2; }
+    .subtitle { font-size: 1rem; opacity: 0.9; margin-bottom: 30px; letter-spacing: 1px; font-weight: 300; }
+
+    .input-group { margin-bottom: 20px; width: 100%; max-width: 280px; text-align: left; }
+    label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 0.9rem; letter-spacing: 0.5px; }
+    
+    input[type="number"] {
+        width: 100%;
+        padding: 12px;
+        border-radius: 12px;
+        border: 1px solid rgba(255,255,255,0.3);
+        background: rgba(0, 0, 0, 0.2);
+        color: white;
+        font-family: inherit;
+        font-size: 1.1rem;
+        outline: none;
+        transition: border-color 0.3s;
+    }
+    input[type="number"]:focus { border-color: var(--accent); }
+
+    .toggle-container {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: rgba(255, 255, 255, 0.05);
+        padding: 12px 20px;
+        border-radius: 15px;
+        margin-bottom: 30px;
+        width: 100%;
+        max-width: 280px;
+        border: 1px solid rgba(255,255,255,0.1);
+    }
+
+    input[type="checkbox"] { width: 20px; height: 20px; accent-color: var(--accent); cursor: pointer; }
+
+    .btn-main {
+        padding: 16px 45px;
+        font-size: 1.1rem;
+        font-weight: 700;
+        border: none;
+        border-radius: 50px;
+        background: white;
+        color: #333;
+        cursor: pointer;
+        transition: transform 0.2s, box-shadow 0.2s;
+        box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    .btn-main:hover { transform: scale(1.05); box-shadow: 0 15px 25px rgba(0,0,0,0.3); }
+
+    /* Quiz Screen Layout */
+    #quiz-screen { justify-content: flex-start; padding: 0; }
+
+    .quiz-header {
+        width: 100%;
+        padding: 15px 20px;
+        background: rgba(0, 0, 0, 0.15);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-weight: 600;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+        z-index: 20;
+    }
+
+    .progress-container { position: absolute; top: 0; left: 0; width: 100%; height: 5px; background: rgba(255,255,255,0.1); }
+    .progress-bar {
+        height: 100%;
+        background: var(--accent);
+        width: 0%;
+        transition: width 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+        box-shadow: 0 0 15px var(--accent);
+    }
+
+    .timer-badge {
+        font-weight: bold;
+        background: rgba(255,255,255,0.15);
+        padding: 5px 15px;
+        border-radius: 20px;
+        min-width: 70px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        font-family: monospace;
+        font-size: 1.2rem;
+    }
+    .timer-badge.danger { color: #ff5252; animation: pulse 1s infinite; background: rgba(255, 0, 0, 0.1); border: 1px solid #ff5252; }
+
+    @keyframes pulse { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.7; transform: scale(0.95); } 100% { opacity: 1; transform: scale(1); } }
+
+    /* Scrollable Content */
+    .quiz-content {
+        width: 100%;
+        flex: 1;
+        overflow-y: auto;
+        padding: 20px 20px 90px 20px; /* Bottom padding for footer */
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .question-box {
+        background: rgba(0, 0, 0, 0.25);
+        padding: 25px;
+        border-radius: 20px;
+        width: 100%;
+        margin-bottom: 25px;
+        text-align: left;
+        border-left: 5px solid var(--accent);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+
+    .q-en { font-size: 1.15rem; font-weight: 700; margin-bottom: 12px; line-height: 1.4; color: #fff; }
+    .q-hi { font-size: 1rem; color: var(--text-dim); line-height: 1.6; font-weight: 400; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px; }
+
+    .options-grid { display: grid; grid-template-columns: 1fr; gap: 15px; width: 100%; }
+
+    .option-btn {
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 15px 20px;
+        border-radius: 15px;
+        color: white;
+        text-align: left;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+    }
+
+    .option-btn:hover:not(:disabled) { background: rgba(255, 255, 255, 0.2); border-color: rgba(255,255,255,0.4); transform: translateY(-2px); }
+    .option-btn:disabled { cursor: default; opacity: 1; }
+
+    .opt-en { font-size: 1rem; font-weight: 600; margin-bottom: 4px; }
+    .opt-hi { font-size: 0.9rem; color: #ccc; }
+
+    /* Feedback Colors */
+    .correct-ans { background: var(--correct) !important; border-color: var(--correct) !important; color: #003300; box-shadow: 0 0 15px var(--correct); }
+    .correct-ans .opt-hi { color: #004d1a; }
+    .wrong-ans { background: var(--wrong) !important; border-color: var(--wrong) !important; opacity: 0.8; }
+    
+    .shake { animation: shake 0.5s; }
+    @keyframes shake { 0% { transform: translateX(0); } 25% { transform: translateX(-10px); } 50% { transform: translateX(10px); } 75% { transform: translateX(-10px); } 100% { transform: translateX(0); } }
+
+    /* Footer Controls */
+    .footer-controls {
+        width: 100%;
+        padding: 15px;
+        background: rgba(20, 20, 40, 0.8);
+        backdrop-filter: blur(10px);
+        display: flex;
+        justify-content: center;
+        border-top: 1px solid rgba(255,255,255,0.1);
+        position: absolute;
+        bottom: 0;
+        z-index: 20;
+    }
+    
+    .btn-finish {
+        background: transparent;
+        border: 2px solid rgba(255,255,255,0.4);
+        color: white;
+        padding: 10px 30px;
+        border-radius: 30px;
+        cursor: pointer;
+        font-size: 0.95rem;
+        font-weight: 600;
+        transition: all 0.3s;
+    }
+    .btn-finish:hover { background: rgba(255,255,255,0.15); border-color: white; }
+
+    /* Result Screen */
+    .score-circle {
+        width: 180px;
+        height: 180px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 70%);
+        border: 4px solid rgba(255,255,255,0.3);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        margin: 30px auto;
+        box-shadow: 0 0 30px rgba(0,0,0,0.2);
+    }
+    .score-big { font-size: 4rem; font-weight: 800; color: var(--accent); text-shadow: 0 0 10px rgba(0, 210, 255, 0.4); }
+    .score-label { font-size: 1rem; text-transform: uppercase; letter-spacing: 2px; opacity: 0.7; }
+    
+    .feedback-msg { font-size: 1.4rem; margin-bottom: 30px; font-weight: 600; color: #fff; max-width: 80%; }
+    
+    .emoji-feedback { font-size: 4rem; margin-bottom: 10px; display: none; filter: drop-shadow(0 0 10px rgba(0,0,0,0.5)); }
+    .emoji-feedback.show { display: block; animation: popIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+    
+    @keyframes popIn { 0% { transform: scale(0) rotate(-45deg); opacity: 0; } 100% { transform: scale(1) rotate(0deg); opacity: 1; } }
+
+    #confetti { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; }
+
+    /* Mobile adjustments */
+    @media (max-width: 480px) {
+        .glass-card { height: 100vh; width: 100%; border-radius: 0; border: none; }
+        h1 { font-size: 2rem; }
+        .q-en { font-size: 1rem; }
+        .q-hi { font-size: 0.9rem; }
+        .footer-controls { padding: 10px; }
+    }
+    
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<canvas id="confetti"></canvas>
+
+<div class="glass-card">
+    
+    <div id="start-screen" class="screen active">
+        <h1>Rajput Era & Kashmir</h1>
+        <p class="subtitle">Set 3: Questions 101-156</p>
+        
+        <div class="input-group">
+            <label>⏱ Timer (sec/question)</label>
+            <input type="number" id="timerInput" placeholder="0 = No Timer" min="5">
+        </div>
+
+        <div class="toggle-container">
+            <label for="shuffleToggle">🔀 Shuffle Questions</label>
+            <input type="checkbox" id="shuffleToggle">
+        </div>
+
+        <button class="btn-main" onclick="startQuiz()">Start Quiz</button>
+    </div>
+
+    <div id="quiz-screen" class="screen">
+        <div class="progress-container"><div class="progress-bar" id="progressBar"></div></div>
+        
+        <div class="quiz-header">
+            <span id="qCount">Q: 1/56</span>
+            <div id="timerBadge" class="timer-badge" style="display:none;">
+                <span>00</span>
+            </div>
+            <span>Score: <span id="scoreVal">0</span></span>
+        </div>
+
+        <div class="quiz-content">
+            <div class="emoji-feedback" id="quizEmoji"></div>
+            <div class="question-box">
+                <div class="q-en" id="qTextEn">...</div>
+                <div class="q-hi" id="qTextHi">...</div>
+            </div>
+            <div class="options-grid" id="optionsContainer">
+                </div>
+        </div>
+
+        <div class="footer-controls">
+            <button class="btn-finish" onclick="finishQuiz()">Finish & Show Results</button>
+        </div>
+    </div>
+
+    <div id="result-screen" class="screen">
+        <div class="emoji-feedback show" id="resultEmoji">🏆</div>
+        <h2>Quiz Completed!</h2>
+        
+        <div class="score-circle">
+            <span class="score-big" id="finalScore">0</span>
+            <span class="score-label" id="scoreLabel">out of 56</span>
+        </div>
+
+        <p class="feedback-msg" id="finalMsg">Well Done!</p>
+        <button class="btn-main" onclick="restartQuiz()">Restart Quiz</button>
+    </div>
+</div>
+
+<script>
+    /* ================= DATA: Questions 101-156 ================= */
+    const rawQuestions = [
+    {
+        e: "Which Rathor king is referred to as 'Vividh Vidhya Vichar Vachaspati' in his inscriptions?",
+        h: "किस राठौर वंशी राजा को उसके लेखों मे विविध विद्याविचार वाचस्पति कहा गया है-",
+        opts: [ {e:"Chandradeva", h:"चन्द्रदेव"}, {e:"Govindachandra", h:"गोविन्दचन्द्र"}, {e:"Jayachandra", h:"जयचन्द्र"}, {e:"Mulachandra", h:"मूलचन्द्र"} ],
+        ans: 1
+    },
+    {
+        e: "Who wrote the book named 'Kritya Kalpataru'?",
+        h: "कृत्यकल्पतरू नामक ग्रंथ की रचना किसने की थी?",
+        opts: [ {e:"Govindachandra", h:"गोविन्दचन्द्र"}, {e:"Chand Bardai", h:"चन्दबरदाई"}, {e:"Lakshmidhara", h:"लक्ष्मीधर"}, {e:"Vidyadhar", h:"विद्याधर"} ],
+        ans: 2
+    },
+    {
+        e: "Which famous poet was patronized by Jayachandra and wrote 'Naishadha Charita' and 'Khandan-Khand-Khadya'?",
+        h: "किस प्रख्यात कवि को जयचंद्र ने संरक्षण प्रदान किया था जिन्होंने नैषध चरित एवं खंडन-खंड-खाद्य नामक ग्रंथ की रचना की थी?",
+        opts: [ {e:"Sri Shail", h:"श्री शैल"}, {e:"Sri Harsha", h:"श्रीहर्ष"}, {e:"Chand Bardai", h:"चन्दबरदाई"}, {e:"Vidyadhar", h:"विद्याधर"} ],
+        ans: 1
+    },
+    {
+        e: "Prithviraj-III kidnapped Sanyogita, the daughter of which king, from her swayamvara?",
+        h: "पृथ्वीराज-3 ने किस राजा की पुत्री संयोगिता को स्वयंवर से अपहरण कर लिया था?",
+        opts: [ {e:"Jayachandra", h:"जयचन्द्र"}, {e:"Govindachandra", h:"गोविन्दचन्द्र"}, {e:"Yashpal", h:"यशपाल"}, {e:"Chandradeva", h:"चन्द्रदेव"} ],
+        ans: 0
+    },
+    {
+        e: "Battle of Chandawar (1194 AD) was fought between?",
+        h: "चंदावर का युद्ध 1194 ई० मे किसके मध्य हुआ था?",
+        opts: [ {e:"Mahmud Ghaznavi and Jayachandra", h:"महमूद गजनवी और जयचंद"}, {e:"Prithviraj Chauhan and Md Ghori", h:"पृथ्वीराज चौहान और मुहम्मद गौरी"}, {e:"Md Ghori and Jayachandra", h:"मुहम्मद गौरी और जयचंद"}, {e:"Mahmud Ghaznavi and Prithviraj-3", h:"महमूद गजनवी और पृथ्वीराज-3"} ],
+        ans: 2
+    },
+    {
+        e: "Which king ended the rule of Gahadavala dynasty by capturing Kannauj?",
+        h: "कलांतर में कन्नौज पर अधिकार कर किस राजा ने गहड़वाल वंश के शासन को समाप्त कर दिया?",
+        opts: [ {e:"Iltutmish", h:"इल्तुतमिश"}, {e:"Qutbuddin Aibak", h:"कुतुबुद्दीन ऐबक"}, {e:"Alauddin Khilji", h:"अलाउद्दीन खिलजी"}, {e:"Balban", h:"बलबन"} ],
+        ans: 0
+    },
+    {
+        e: "Who founded the Chauhan dynasty of Shakambhari (Ajmer)?",
+        h: "शाकंभरी अजमेर के चौहान वंश की स्थापना किसने की थी?",
+        opts: [ {e:"Ajayaraja", h:"अजयराज"}, {e:"Vasudeva", h:"वासुदेव"}, {e:"Vigraharaja IV", h:"विग्रहराज-4"}, {e:"Prithviraj III", h:"पृथ्वीराज-3"} ],
+        ans: 1
+    },
+    {
+        e: "Chauhan rulers were feudatories of which dynasty?",
+        h: "चौहान शासक किस वंश के सामंत थे?",
+        opts: [ {e:"Gahadavala", h:"गहड़वाल वंश"}, {e:"Chandela", h:"चंदेल वंश"}, {e:"Pratihara", h:"प्रतिहार वंश"}, {e:"Paramara", h:"परमार वंश"} ],
+        ans: 2
+    },
+    {
+        e: "Which Chauhan ruler established the city of Ajmer and made it his capital?",
+        h: "किस चौहान शासक ने अजमेर नगर की स्थापना कर उसे अपनी राजधानी बनाया?",
+        opts: [ {e:"Vigraharaja IV", h:"विग्रहराज-4"}, {e:"Arnoraja", h:"अर्णोराज"}, {e:"Vasudeva", h:"वासुदेव"}, {e:"Ajayaraja", h:"अजयराज"} ],
+        ans: 3
+    },
+    {
+        e: "Which of the following statements is true?",
+        h: "निम्न में कथनों पर विचार करे और सही कथन का चुनाव करे- (1. Arnoraja defeated Sultan Mahmud's army, 2. Visaladeva wrote Harikeli drama, 3. Harikeli text on Adhai Din Ka Jhonpra walls)",
+        opts: [ {e:"1 and 2", h:"1 और 2"}, {e:"2 and 3", h:"2 और 3"}, {e:"1 and 3", h:"1 और 3"}, {e:"1, 2 and 3", h:"1, 2, और 3"} ],
+        ans: 3
+    },
+    {
+        e: "Somadeva, author of 'Kathasaritsagara' and 'Lalitvigraharaja', lived in whose court?",
+        h: "कथासरितसागर एवं ललितविग्रहराज नामक ग्रंथ के रचनाकार सोमदेव किसके दरबार में रहते थे?",
+        opts: [ {e:"Ajayaraja", h:"अजयराज"}, {e:"Vigraharaja IV", h:"विग्रहराज-4"}, {e:"Prithviraj Chauhan", h:"पृथ्वीराज चौहान"}, {e:"Arnoraja", h:"अर्णोराज"} ],
+        ans: 1
+    },
+    {
+        e: "Which statement is true regarding Prithviraj III?",
+        h: "निम्न में कौन-सा कथन सही है? (1. Called Rai Pithora, 2. Made Delhi capital, 3. Defeated in 1st Tarain)",
+        opts: [ {e:"1 and 2", h:"1 और 2"}, {e:"2 and 3", h:"2 और 3"}, {e:"1 and 3", h:"1 और 3"}, {e:"1, 2 and 3", h:"1, 2, और 3"} ],
+        ans: 0
+    },
+    {
+        e: "Battle of Tarain was fought between whom?",
+        h: "तराईन का युद्ध किनके-किनके मध्य हुआ था?",
+        opts: [ {e:"Mahmud Ghaznavi and Prithviraj-3", h:"महमूद गजनवी और पृथ्वीराज-3"}, {e:"Md Ghori and Prithviraj Chauhan", h:"मुहम्मद गौरी और पृथ्वीराज चौहान"}, {e:"Mahmud Ghaznavi and Vigraharaja IV", h:"महमूद गजनवी और विग्रहराज-4"}, {e:"Md Ghori and Bisaldev", h:"मुहम्मद गौरी और बीसलदेव"} ],
+        ans: 1
+    },
+    {
+        e: "Which statement is FALSE?",
+        h: "निम्न में कौन-सा कथन असत्य है? (1. Tarain I 1191, 2. Tarain II 1192, 3. Chand Bardai wrote Prithviraj Vijaya, 4. Qutbuddin Aibak ended Chauhan power)",
+        opts: [ {e:"1st Tarain in 1191", h:"तराईन का प्रथम युद्ध 1191 ई. में हुआ था"}, {e:"2nd Tarain in 1192", h:"तराईन का द्वितीय युद्ध 1192 ई. में हुआ था"}, {e:"Chand Bardai wrote Prithviraj Vijaya", h:"पृथ्वीराज विजय नामक संस्कृत काव्य की रचना चन्द्रबरदाई ने किया हैं"}, {e:"Aibak ended Chauhan power", h:"चौहानो की सत्ता का अंत कुतुबुद्दीन ऐबक ने किया था"} ],
+        ans: 2
+    },
+    {
+        e: "Who is the author of 'Prithviraj Raso'?",
+        h: "पृथ्वीराजरासो के रचयिता कौन थे?",
+        opts: [ {e:"Kavi Vidyadhar", h:"कवि विद्याधर"}, {e:"Chand Bardai", h:"चन्द्रबरदाई"}, {e:"Sri Harsha", h:"श्रीहर्ष"}, {e:"Vatsayana", h:"वात्स्यायन"} ],
+        ans: 1
+    },
+    {
+        e: "Where was the capital of Chandela dynasty of Jejakbhukti?",
+        h: "जेजाकमुक्ति के चंदेल वंश की राजधानी कहाँ थी?",
+        opts: [ {e:"Bundelkhand", h:"बुंदेलखंड"}, {e:"Ujjain", h:"उज्जैन"}, {e:"Khajuraho", h:"खजुराहो"}, {e:"Kannauj", h:"कन्नौज"} ],
+        ans: 2
+    },
+    {
+        e: "Who built the famous Vishnu Temple (Chaturbhuj Temple) at Khajuraho?",
+        h: "खजुराहो के प्रसिद्ध विष्णु मंदिर (चतुर्भुज मंदिर) का निर्माण किसने करवाया था?",
+        opts: [ {e:"Yashovarman", h:"यशोवर्मन"}, {e:"Dhangadeva", h:"धंगदेव"}, {e:"Vidyadhar", h:"विद्याधर"}, {e:"Paramardideva", h:"परमादिदेव"} ],
+        ans: 0
+    },
+    {
+        e: "Which Chandela ruler merged Malwa-Chedi and Mahakoshal into his empire?",
+        h: "मालवा छेदी और महाकोशल को जीतकर अपने साम्राज्य मे किस चंदेल शासक ने मिलाया था?",
+        opts: [ {e:"Vidyadhar", h:"विद्याधर"}, {e:"Paramardideva", h:"परमादिदेव"}, {e:"Dhangadeva", h:"धंगदेव"}, {e:"Yashovarman", h:"यशोवर्मन"} ],
+        ans: 0
+    },
+    {
+        e: "Which statement is true regarding Chandela rulers?",
+        h: "निम्न में चंदेल शासको के संबंध मे कौन-सा कथन सही है? (1. Dhangadeva made Kalinjar capital, 2. Dhangadeva won Gwalior)",
+        opts: [ {e:"Only 1", h:"केवल-1"}, {e:"Only 2", h:"केवल-2"}, {e:"1 and 2", h:"1 और 2"}, {e:"None", h:"NONE"} ],
+        ans: 2
+    },
+    {
+        e: "Dhangadeva built Jinanatha, Vishvanatha, and Vaidyanatha temples at?",
+        h: "धंगदेव ने जिननाथ, विश्वनाथ तथा वैद्यनाथ मंदिर का निर्माण कहाँ पर करवाया था",
+        opts: [ {e:"Khajuraho", h:"खजुराहो"}, {e:"Kalinjar", h:"कलिंजर"}, {e:"Delhi", h:"दिल्ली"}, {e:"Ajmer", h:"अजमेर"} ],
+        ans: 0
+    },
+    {
+        e: "Which ruler built the world-famous temples of Khajuraho?",
+        h: "किस शासक ने खजुराहो के विश्व विख्यात मंदिर का निर्माण करवाया था?",
+        opts: [ {e:"Dhangadeva", h:"धंगदेव"}, {e:"Yashovarman", h:"यशोवर्मन"}, {e:"Vidyadhar", h:"विद्याधर"}, {e:"Paramardideva", h:"परमादिदेव"} ],
+        ans: 0
+    },
+    {
+        e: "Vidyadhara killed which Pratihara ruler for surrendering to Mahmud Ghazni without fighting?",
+        h: "विद्याधर ने किस प्रतिहार शासक का बध कर दिया था क्योकी वह महमूद गजनवी से युद्ध करने के बजाय भाग खड़ा हुआ?",
+        opts: [ {e:"Mahipala II", h:"महिपाल-2"}, {e:"Rajyapala", h:"राज्यपाल"}, {e:"Yashpal", h:"यशपाल"}, {e:"Paramardideva", h:"परमादिदेव"} ],
+        ans: 1
+    },
+    {
+        e: "Who defeated Paramara Bhoja and Kalchuri Gangeyadeva and merged them into Chandela empire?",
+        h: "मालवा के परमार शासक भोज तथा कलचुरी शासक गांगेयदेव को पराजित कर किसने चंदेल साम्राज्य मे मिलाया था?",
+        opts: [ {e:"Paramardideva", h:"परमादिदेव"}, {e:"Yashovarman", h:"यशोवर्मन"}, {e:"Vidyadhara", h:"विद्याधर"}, {e:"Gandadeva", h:"गंडदेव"} ],
+        ans: 2
+    },
+    {
+        e: "Who was the last powerful ruler of Chandela dynasty?",
+        h: "चंदेल वंश का अंतिम शक्तिशाली शासक कौन था?",
+        opts: [ {e:"Paramardideva", h:"परमादिदेव"}, {e:"Yashovarman", h:"यशोवर्मन"}, {e:"Vidyadhara", h:"विद्याधर"}, {e:"Gandadeva", h:"गंडदेव"} ],
+        ans: 0
+    },
+    {
+        e: "Who founded the Paramara dynasty of Malwa?",
+        h: "मालवा के परमार वंश की स्थापना किसने की थी?",
+        opts: [ {e:"Vakpati", h:"वाकपति"}, {e:"Raja Bhoj", h:"राजाभोज"}, {e:"Krishnaraja (Upendra)", h:"कृष्णराज (उपेन्द्र)"}, {e:"Kumarapala", h:"कुमारपाल"} ],
+        ans: 2
+    },
+    {
+        e: "Where was the initial capital of Paramaras?",
+        h: "परमारो की आरंभिक राजधानी कहाँ थी?",
+        opts: [ {e:"Bundelkhand", h:"बुंदेलखंड"}, {e:"Ujjain", h:"उज्जैन"}, {e:"Dhar", h:"धार"}, {e:"Kannauj", h:"कन्नौज"} ],
+        ans: 1
+    },
+    {
+        e: "Which Paramara ruler took titles like Srivallabha, Prithvivallabha, and Amoghavarsha?",
+        h: "किस परमार शासक ने श्रीवल्लभ, पृथ्वीवल्लभ तथा अमोघवर्ष जैसी उपाधि धारण की थी?",
+        opts: [ {e:"Krishnaraja", h:"कृष्णराज"}, {e:"Vakpati Munja", h:"वाकपति मुंज"}, {e:"Raja Bhoj", h:"राजा भोज"}, {e:"Upendra", h:"उपेन्द्र"} ],
+        ans: 1
+    },
+    {
+        e: "Which Paramara ruler defeated the Huns?",
+        h: "किस परमार शासक ने हूणों को पराजित किया था?",
+        opts: [ {e:"Raja Bhoj", h:"राजाभोज"}, {e:"Krishnaraja", h:"कृष्णराज"}, {e:"Vakpati Munja", h:"वाकपति मुंज"}, {e:"Upendranath", h:"उपेन्द्रनाथ"} ],
+        ans: 2
+    },
+    {
+        e: "Scholars like Padmagupta, Dhananjaya, Dhanika, and Halayudha lived in whose court?",
+        h: "पद्मगुप्त धनंजय, धनिक तथा हलायुध जैसे विद्वान किसके दरबार में रहते थे?",
+        opts: [ {e:"Mihir Bhoja", h:"मिहिर भोज"}, {e:"Raja Bhoj", h:"राजाभोज"}, {e:"Prithviraj Chauhan", h:"पृथ्वीराज चौहान"}, {e:"Vakpati Munja", h:"वाकपतिमुंज"} ],
+        ans: 3
+    },
+    {
+        e: "Which statement is true regarding Raja Bhoj?",
+        h: "निम्न में कौन-सा कथन सही है? (1. Defeated Turks, 2. Made Dhar capital, 3. Took title Navavikramaditya - wait, Tribhuvan Narayan is correct title, key says 1 and 2)",
+        opts: [ {e:"1 and 2", h:"1 और 2"}, {e:"2 and 3", h:"2 और 3"}, {e:"1 and 3", h:"1 और 3"}, {e:"1, 2 and 3", h:"1, 2, और 3"} ],
+        ans: 0
+    },
+    {
+        e: "Raja Bhoj wrote 'Samarangana Sutradhara'. It is based on which subject?",
+        h: "समरांगण सूत्रधार ग्रंथ की रचना राजा भोज ने किया था यह किस विषय पर आधारित है?",
+        opts: [ {e:"Medical Science", h:"चिकित्साशास्त्र"}, {e:"Ayurveda Sarvasva", h:"आयुर्वेदसर्वस्त"}, {e:"Architecture", h:"स्थापत्य शास्त्र"}, {e:"All of these", h:"इनमे से सभी"} ],
+        ans: 2
+    },
+    {
+        e: "Who was the founder of Solanki/Chalukya dynasty of Anhilwad?",
+        h: "अन्हिलवाड़ा के चालुक्य या सोलंकी वंश के संस्थापक कौन थे?",
+        opts: [ {e:"Bhim I", h:"भीम प्रथम"}, {e:"Mularaja I", h:"मूलराज-1"}, {e:"Siddharaja", h:"सिद्धराज"}, {e:"Kumarapala", h:"कुमारपाल"} ],
+        ans: 1
+    },
+    {
+        e: "Which statement is true regarding Solanki rulers?",
+        h: "निम्न में कौन-सा कथन सही है? (1. Capital Anhilwad, 2. Patron of Vaishnavism - false, usually Jain/Shaiva)",
+        opts: [ {e:"Only 1", h:"केवल -1"}, {e:"Only 2", h:"केवल -2"}, {e:"1 and 2", h:"1 और 2"}, {e:"None", h:"इनमे से कोई नहीं"} ],
+        ans: 0
+    },
+    {
+        e: "Who was the Solanki/Chalukya ruler during Mahmud Ghazni's invasion?",
+        h: "महमूद गजनवी के आक्रमण के समय सोलंकी/चालुक्य वंश का शासक कौन था?",
+        opts: [ {e:"Bhim I", h:"भीम-1"}, {e:"Mularaja II", h:"मूलराज-2"}, {e:"Kumarapala", h:"कुमारपाल"}, {e:"Jayasimha Siddharaja", h:"जयसिंह सिद्धराज"} ],
+        ans: 0
+    },
+    {
+        e: "Who built the Dilwara Jain Temple?",
+        h: "दिलवाड़ा के जैन मंदिर का निर्माण किसने करवाया था?",
+        opts: [ {e:"Chandela Rulers", h:"चंदेल शासकों ने"}, {e:"Rashtrakuta Rulers", h:"राष्ट्रकूट शासकों ने"}, {e:"Chalukya (Solanki) Rulers", h:"चालुक्य शासकों ने"}, {e:"Sena Rulers", h:"सेन शासकों ने"} ],
+        ans: 2
+    },
+    {
+        e: "Famous Jain Scholar Hemchandra lived in whose court?",
+        h: "प्रसिद्ध जैन आचार्य हेमचन्द्र किसके दरबार में रहतेथे?",
+        opts: [ {e:"Ajayapala", h:"अजयपाल"}, {e:"Kumarapala", h:"कुमारपाल"}, {e:"Bhim II", h:"भीम-2"}, {e:"Jayasimha", h:"जयसिंह"} ],
+        ans: 3
+    },
+    {
+        e: "Who finally rebuilt the Somnath Temple?",
+        h: "सोमनाथ मंदिर का अंतिम रूप से पुनर्निर्माण किसने करवाया था?",
+        opts: [ {e:"Bhim II", h:"भीम-2"}, {e:"Kumarapala", h:"कुमारपाल"}, {e:"Ajayapala", h:"अजयपाल"}, {e:"Jayasimha", h:"जयसिंह"} ],
+        ans: 1
+    },
+    {
+        e: "Which Chalukya ruler defeated Md Ghori near Mount Abu?",
+        h: "किस चालुक्य शासक ने माउंट आबू के निकट मु. गौरी का हराया था?",
+        opts: [ {e:"Bhim II", h:"भीम-2"}, {e:"Mularaja II", h:"मूलराज-2"}, {e:"Ajayapala", h:"अजयपाल"}, {e:"Kumarapala", h:"कुमारपाल"} ],
+        ans: 1
+    },
+    {
+        e: "Who foiled Md Ghori's invasion of Gujarat?",
+        h: "मुहम्मद गौरी के गुजरात आक्रमण को किसने विफल किया था?",
+        opts: [ {e:"Bhim II", h:"भीम-2"}, {e:"Mularaja II", h:"मूलराज-2"}, {e:"Ajayapala", h:"अजयपाल"}, {e:"Kumarapala", h:"कुमारपाल"} ],
+        ans: 0
+    },
+    {
+        e: "Who was the last king of Chalukya (Solanki) dynasty?",
+        h: "चालुक्य वंश का अंतिम राजा कौन था?",
+        opts: [ {e:"Ajayapala", h:"अजयपाल"}, {e:"Mularaja II", h:"मूलराज-2"}, {e:"Bhim I", h:"भीम-1"}, {e:"Bhim II", h:"भीम-2"} ],
+        ans: 3
+    },
+    {
+        e: "Which text gives information about the Hindu Kingdom of Kashmir?",
+        h: "कश्मीर के हिंदू राज्य के विषय में जानकारी हमें किस ग्रंथ से मिलती है?",
+        opts: [ {e:"Ratnavali", h:"रत्नावली"}, {e:"Panchatantra", h:"पंचतंत्र"}, {e:"Mudrarakshasa", h:"मुद्राराक्षस"}, {e:"Rajatarangini", h:"रजतंरगिनी"} ],
+        ans: 3
+    },
+    {
+        e: "Which dynasty did NOT rule Kashmir?",
+        h: "कश्मीर पर किन शासकों ने शासन नही किया है?",
+        opts: [ {e:"Karkota Dynasty", h:"कार्कोट वंश"}, {e:"Utpala Dynasty", h:"उत्पल वंश"}, {e:"Sena Dynasty", h:"सेन वंश"}, {e:"Lohara Dynasty", h:"लोहार वंश"} ],
+        ans: 2
+    },
+    {
+        e: "Who founded the Karkota Dynasty?",
+        h: "कार्कोट वंश की स्थापना किसने की थी?",
+        opts: [ {e:"Durlabhaka", h:"दुर्लभक"}, {e:"Durlabhavardhana", h:"दुर्लभवर्धन"}, {e:"Lalitaditya", h:"ललितादित्य"}, {e:"Jayapida", h:"जयापीड"} ],
+        ans: 1
+    },
+    {
+        e: "Which Karkota ruler was called cruel and beastly by Kalhana?",
+        h: "कल्हण ने कार्कोट वंश के किस शासक को क्रूर एवं निर्दयी बताया है?",
+        opts: [ {e:"Tarapida", h:"तारापीड"}, {e:"Chandrapida", h:"चन्द्रापीड"}, {e:"Jayapida", h:"जयापीड"}, {e:"Lalitaditya", h:"ललितादित्य"} ],
+        ans: 0
+    },
+    {
+        e: "Who was the most powerful ruler of Karkota Dynasty?",
+        h: "कार्कोट वंश का सबसे शक्तिशाली शासक कौन था?",
+        opts: [ {e:"Durlabhavardhana", h:"दुर्लभवर्धन"}, {e:"Lalitaditya", h:"ललितादित्य"}, {e:"Jayapida", h:"जयापीड"}, {e:"Chandrapida", h:"चन्द्रापीड"} ],
+        ans: 1
+    },
+    {
+        e: "Who built the Martand Temple in Kashmir?",
+        h: "कश्मीर में मार्तण्ड मंदिर का निर्माण किसने करवाया था?",
+        opts: [ {e:"Durlabhavardhana", h:"दुर्लभवर्धन"}, {e:"Lalitaditya", h:"ललितादित्य"}, {e:"Jayapida", h:"जयापीड"}, {e:"Chandrapida", h:"चन्द्रापीड"} ],
+        ans: 1
+    },
+    {
+        e: "Where did Lalitaditya Muktapida defeat ruler Yashovarman?",
+        h: "ललितादित्य मुक्तापिड ने कहाँ के शासक यशोवर्मन को पराजित किया था?",
+        opts: [ {e:"Kannauj", h:"कन्नौज"}, {e:"Bengal", h:"बंगाल"}, {e:"Ujjain", h:"उज्जैन"}, {e:"Karnataka", h:"कर्नाटक"} ],
+        ans: 0
+    },
+    {
+        e: "What is the correct order of Hindu dynasties in Kashmir?",
+        h: "कश्मीर में हिन्दू राजवंशों के शासन का सही क्रम क्या है?",
+        opts: [ {e:"Karkota, Lohara, Utpala", h:"कार्कोट वंश, लोहार वंश, उत्पल वंश"}, {e:"Utpala, Karkota, Lohara", h:"उत्पल वंश, कार्कोट वंश, लोहार वंश"}, {e:"Lohara, Karkota, Utpala", h:"लोहार वंश, कार्कोट वंश, उत्पल वंश"}, {e:"Karkota, Utpala, Lohara", h:"कार्कोट वंश, उत्पल वंश, लोहार वंश"} ],
+        ans: 3
+    },
+    {
+        e: "Who was the founder of Utpala Dynasty?",
+        h: "उत्पल वंश का संस्थापक कौन था?",
+        opts: [ {e:"Rani Didda", h:"रानी दिद्दा"}, {e:"Avantivarman", h:"अवंतिवर्मन"}, {e:"Sangramraj", h:"संग्रामराज"}, {e:"Jayasimha", h:"जयसिंह"} ],
+        ans: 1
+    },
+    {
+        e: "Who founded the city named Avantipur?",
+        h: "अवन्तिपुर नामक नगर की स्थापना किसने की थी?",
+        opts: [ {e:"Lalitaditya", h:"ललितादित्य"}, {e:"Rani Didda", h:"रानी दिद्दा"}, {e:"Avantivarman", h:"अवंतिवर्मन"}, {e:"Sangramraj", h:"संग्रामराज"} ],
+        ans: 2
+    },
+    {
+        e: "Who was the founder of Lohara Dynasty?",
+        h: "लोहार वंश का संस्थापक कौन था?",
+        opts: [ {e:"Lalitaditya", h:"ललितादित्य"}, {e:"Jayasimha", h:"जयसिंह"}, {e:"Avantivarman", h:"अवंतिवर्मन"}, {e:"Sangramraj", h:"संग्रामराज"} ],
+        ans: 3
+    },
+    {
+        e: "Kalhana was a dependent poet of which King?",
+        h: "कल्हण किस राजा का आश्रित कवि था?",
+        opts: [ {e:"Ananta", h:"अनंत"}, {e:"Harsha", h:"हर्ष"}, {e:"Jayasimha", h:"जयसिंह"}, {e:"Lalitaditya", h:"ललितादित्य"} ],
+        ans: 1
+    },
+    {
+        e: "Which statement is true regarding Kashmir?",
+        h: "निम्न में कौन-सा कथन सही है? (1. Harsha called Nero of Kashmir, 2. Famine during Harsha, 3. Jayasimha last Lohara ruler)",
+        opts: [ {e:"1 and 2", h:"1 और 2"}, {e:"2 and 3", h:"2 और 3"}, {e:"1 and 3", h:"1 और 3"}, {e:"1, 2 and 3", h:"1, 2, और 3"} ],
+        ans: 3
+    },
+    {
+        e: "Rajatarangini was composed during whose reign?",
+        h: "कल्हण ने राजतरंगिणी की रचना किसके शासन काल मे किया था?",
+        opts: [ {e:"Ananta", h:"अनंत"}, {e:"Lalitaditya", h:"ललितादित्य"}, {e:"Harsha", h:"हर्ष"}, {e:"Jayasimha", h:"जयसिंह"} ],
+        ans: 3
+    },
+    {
+        e: "Which statement is true?",
+        h: "निम्न में कौन-सा कथन सही है? (1. 1339 Kashmir under Turks, 2. Zain-ul-Abidin called Akbar of Kashmir)",
+        opts: [ {e:"Only 1", h:"केवल-1"}, {e:"Only 2", h:"केवल-2"}, {e:"1 and 2", h:"1 और 2"}, {e:"Neither 1 nor 2", h:"न तो 1 न ही 2"} ],
+        ans: 2
+    },
+    {
+        e: "Who was the last ruler of Karkota Dynasty?",
+        h: "कार्कोट वंश का अंतिम शासक कौन था?",
+        opts: [ {e:"Chandrapida", h:"चन्द्रापीड"}, {e:"Tarapida", h:"तारापीड"}, {e:"Muktapida", h:"मुक्तापीड"}, {e:"Jayapida/Chippatajayapida", h:"जयापीड"} ],
+        ans: 3
+    }
+    ];
+
+    /* ================= LOGIC & STATE ================= */
+    let currentQIndex = 0;
+    let score = 0;
+    let quizData = [];
+    let timerInterval = null;
+    let timeLeft = 0;
+    let timePerQuestion = 0; 
+    let isAnswered = false;
+
+    // Web Audio Context
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    const audioCtx = new AudioContext();
+
+    function playSound(type) {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        if (type === 'correct') {
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(1000, audioCtx.currentTime + 0.1);
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.4);
+        } else if (type === 'wrong') {
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+            osc.frequency.linearRampToValueAtTime(100, audioCtx.currentTime + 0.3);
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.3);
+        }
+    }
+
+    /* ================= APP FUNCTIONS ================= */
+    
+    function startQuiz() {
+        const timerInp = document.getElementById('timerInput').value;
+        const shuffleInp = document.getElementById('shuffleToggle').checked;
+        
+        timePerQuestion = timerInp ? parseInt(timerInp) : 0;
+        
+        // Clone Data
+        quizData = [...rawQuestions];
+        
+        if (shuffleInp) {
+            for (let i = quizData.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [quizData[i], quizData[j]] = [quizData[j], quizData[i]];
+            }
+        }
+
+        currentQIndex = 0;
+        score = 0;
+        document.getElementById('scoreVal').innerText = '0';
+        
+        document.getElementById('start-screen').classList.remove('active');
+        document.getElementById('quiz-screen').classList.add('active');
+
+        loadQuestion();
+    }
+
+    function loadQuestion() {
+        if (currentQIndex >= quizData.length) {
+            finishQuiz();
+            return;
+        }
+
+        const data = quizData[currentQIndex];
+        isAnswered = false;
+        
+        // UI Updates - Showing 1/56 to indicate progress within THIS set
+        document.getElementById('qCount').innerText = `Q: ${currentQIndex + 1}/${quizData.length}`;
+        document.getElementById('progressBar').style.width = `${((currentQIndex) / quizData.length) * 100}%`;
+        
+        // Reset Feedback
+        const emojiDiv = document.getElementById('quizEmoji');
+        emojiDiv.style.display = 'none';
+        emojiDiv.className = 'emoji-feedback';
+
+        // Timer Setup
+        clearInterval(timerInterval);
+        const timerBadge = document.getElementById('timerBadge');
+        if (timePerQuestion > 0) {
+            timerBadge.style.display = 'flex';
+            timerBadge.classList.remove('danger');
+            timeLeft = timePerQuestion;
+            timerBadge.innerHTML = `⏳ ${timeLeft}`;
+            
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                timerBadge.innerHTML = `⏳ ${timeLeft}`;
+                if (timeLeft <= 5) timerBadge.classList.add('danger');
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    handleTimeOut();
+                }
+            }, 1000);
+        } else {
+            timerBadge.style.display = 'none';
+        }
+
+        // Content Injection
+        document.getElementById('qTextEn').innerHTML = data.e;
+        document.getElementById('qTextHi').innerHTML = data.h;
+        
+        const container = document.getElementById('optionsContainer');
+        container.innerHTML = '';
+        
+        data.opts.forEach((opt, idx) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.onclick = () => checkAnswer(idx, btn);
+            btn.innerHTML = `<span class="opt-en">${opt.e}</span><span class="opt-hi">${opt.h}</span>`;
+            container.appendChild(btn);
+        });
+    }
+
+    function checkAnswer(selectedIndex, btnElement) {
+        if (isAnswered) return;
+        isAnswered = true;
+        clearInterval(timerInterval);
+
+        const data = quizData[currentQIndex];
+        const allBtns = document.querySelectorAll('.option-btn');
+        const correctIndex = data.ans;
+
+        allBtns.forEach(b => b.disabled = true);
+
+        if (selectedIndex === correctIndex) {
+            btnElement.classList.add('correct-ans');
+            playSound('correct');
+            score++;
+            document.getElementById('scoreVal').innerText = score;
+            triggerConfetti();
+        } else {
+            if (selectedIndex !== -1) {
+                btnElement.classList.add('wrong-ans');
+                btnElement.classList.add('shake');
+            }
+            allBtns[correctIndex].classList.add('correct-ans');
+            playSound('wrong');
+            
+            const emojiDiv = document.getElementById('quizEmoji');
+            emojiDiv.innerText = '😢';
+            emojiDiv.classList.add('show');
+            emojiDiv.style.display = 'block';
+        }
+
+        setTimeout(() => {
+            currentQIndex++;
+            loadQuestion();
+        }, 1500);
+    }
+
+    function handleTimeOut() {
+        checkAnswer(-1, null); 
+    }
+
+    function finishQuiz() {
+        clearInterval(timerInterval);
+        document.getElementById('quiz-screen').classList.remove('active');
+        document.getElementById('result-screen').classList.add('active');
+        
+        const totalQuestions = quizData.length;
+        const percentage = (score / totalQuestions) * 100;
+        
+        document.getElementById('finalScore').innerText = score;
+        document.getElementById('scoreLabel').innerText = `out of ${totalQuestions}`;
+
+        const msgEl = document.getElementById('finalMsg');
+        const emojiEl = document.getElementById('resultEmoji');
+        
+        if (percentage >= 80) {
+            msgEl.innerText = "🏆 Outstanding Performance!";
+            emojiEl.innerText = "🏆";
+            triggerConfetti();
+        } else if (percentage >= 50) {
+            msgEl.innerText = "👏 Well Done! Keep it up.";
+            emojiEl.innerText = "👏";
+        } else {
+            msgEl.innerText = "📚 Practice makes perfect! Try again.";
+            emojiEl.innerText = "📚";
+        }
+    }
+
+    function restartQuiz() {
+        document.getElementById('result-screen').classList.remove('active');
+        document.getElementById('start-screen').classList.add('active');
+    }
+
+    /* ================= CONFETTI SYSTEM ================= */
+    const canvas = document.getElementById("confetti");
+    const ctx = canvas.getContext("2d");
+    let particles = [];
+
+    function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    function triggerConfetti() {
+        for (let i = 0; i < 100; i++) {
+            particles.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height - canvas.height,
+                vx: Math.random() * 4 - 2,
+                vy: Math.random() * 4 + 2,
+                color: `hsl(${Math.random() * 360}, 100%, 50%)`,
+                size: Math.random() * 6 + 2
+            });
+        }
+        animateConfetti();
+    }
+
+    function animateConfetti() {
+        if (particles.length === 0) return;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        particles.forEach((p, i) => {
+            p.x += p.vx;
+            p.y += p.vy;
+            p.vy += 0.05; 
+            
+            ctx.fillStyle = p.color;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            ctx.fill();
+
+            if (p.y > canvas.height) particles.splice(i, 1);
+        });
+
+        requestAnimationFrame(animateConfetti);
+    }
+</script>
+</body>
+</html>

@@ -24,7 +24,7 @@
           appId: "42da365d-9d3f-41c1-a926-68466de8ca52",
           safari_web_id: "web.onesignal.auto.48d27e8c-8806-4444-9c7d-8f3e2e0d9b1c",
           notifyButton: {
-            enable: true, /* Bell Icon Enable kiya hai taaki user subscribe kar sake */
+            enable: true, 
           },
           allowLocalhostAsSecureOrigin: true,
         });
@@ -186,7 +186,54 @@
         .app-brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 1.2rem; color: var(--primary); }
         .header-logo-img { width: 32px; height: 32px; border-radius: 8px; object-fit: cover; display: none; }
         
+        /* HEADER ACTIONS (BELL + HAMBURGER) */
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
         .hamburger { font-size: 1.5rem; cursor: pointer; color: var(--text); padding: 5px; }
+
+        /* NOTIFICATION STYLES */
+        .notif-btn {
+            position: relative;
+            color: var(--text);
+            font-size: 1.3rem;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .notif-btn:active { transform: scale(0.9); }
+        .notif-dot {
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            width: 10px;
+            height: 10px;
+            background: #ef4444; /* Red color */
+            border-radius: 50%;
+            border: 2px solid var(--surface);
+            display: block;
+        }
+        .notif-card {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 12px;
+        }
+        .notif-card img {
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+        .notif-time {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-bottom: 5px;
+            display: block;
+        }
 
         /* --- 8. MAIN CONTENT --- */
         #main-content { margin-top: var(--header-height); padding: 20px; padding-bottom: 80px; max-width: 800px; margin-left: auto; margin-right: auto; }
@@ -385,7 +432,15 @@
             <img src="" id="header-logo-img" class="header-logo-img">
             <span id="app-name-display">Quizzy</span>
         </div>
-        <i class="fas fa-bars hamburger" onclick="toggleSidebar()"></i>
+        
+        <div class="header-actions">
+            <div class="notif-btn" onclick="openNotifications()">
+                <i class="fas fa-bell"></i>
+                <span id="notif-badge" class="notif-dot hidden"></span>
+            </div>
+
+            <i class="fas fa-bars hamburger" onclick="toggleSidebar()"></i>
+        </div>
     </header>
 
     <main id="main-content" class="hidden">
@@ -582,6 +637,9 @@
             loadConfig();
             checkAdmin();
             initBanners();
+            
+            // NEW: Listen for Notifications
+            listenToBroadcasts();
 
             // --- SEARCH BAR LOGIC ---
             // Handles Moving Search to top on focus & restoring on blur
@@ -1101,7 +1159,7 @@
             }
         }
 
-        // --- REPORT QUIZ FUNCTIONS (Fixes for Z-Index) ---
+        // --- REPORT QUIZ FUNCTIONS ---
         function openReportQuizModal() {
             const html = `
                 <p style="margin-bottom:10px; color:var(--text-muted);">Describe the problem (e.g., Wrong Answer, Broken Layout):</p>
@@ -1130,6 +1188,69 @@
                 closeModal();
                 toast("Report submitted. Admins will check it.");
             }).catch(err => toast("Error: " + err.message));
+        }
+
+        // --- NOTIFICATION CENTER LOGIC ---
+        let notificationList = [];
+
+        function listenToBroadcasts() {
+            // Fetch last 10 notifications
+            db.ref('broadcasts').limitToLast(10).on('value', snap => {
+                const data = snap.val() || {};
+                // Convert object to array and sort (Newest First)
+                notificationList = Object.values(data).sort((a,b) => b.timestamp - a.timestamp);
+                
+                checkUnreadNotifications();
+            });
+        }
+
+        function checkUnreadNotifications() {
+            if(notificationList.length === 0) return;
+
+            const lastSeenTime = localStorage.getItem('quizzy_last_notif_time') || 0;
+            const latestNotifTime = notificationList[0].timestamp;
+
+            // If the newest notification is newer than what we last saw, show Red Dot
+            if(latestNotifTime > lastSeenTime) {
+                document.getElementById('notif-badge').classList.remove('hidden');
+            } else {
+                document.getElementById('notif-badge').classList.add('hidden');
+            }
+        }
+
+        function openNotifications() {
+            // 1. Hide Red Dot (Mark as read locally)
+            document.getElementById('notif-badge').classList.add('hidden');
+            
+            // 2. Save current timestamp as "Last Seen"
+            if(notificationList.length > 0) {
+                localStorage.setItem('quizzy_last_notif_time', notificationList[0].timestamp);
+            }
+
+            // 3. Build HTML
+            let html = '';
+            if(notificationList.length === 0) {
+                html = '<div style="text-align:center; padding:20px; color:var(--text-muted);">No notifications yet.</div>';
+            } else {
+                html = '<div style="max-height: 60vh; overflow-y: auto;">';
+                notificationList.forEach(n => {
+                    const date = new Date(n.timestamp).toLocaleDateString();
+                    const time = new Date(n.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                    
+                    html += `
+                        <div class="notif-card">
+                            ${n.imageUrl ? `<img src="${n.imageUrl}">` : ''}
+                            <span class="notif-time"><i class="far fa-clock"></i> ${date} at ${time}</span>
+                            <div style="font-weight:600; color:var(--primary); margin-bottom:5px;">${n.title}</div>
+                            <p style="font-size:0.9rem; color:var(--text); margin-bottom:10px;">${n.message}</p>
+                            ${n.link ? `<a href="${n.link}" target="_blank" class="btn btn-primary" style="padding:8px; font-size:0.85rem; width:100%; text-decoration:none;">Open Link <i class="fas fa-external-link-alt"></i></a>` : ''}
+                        </div>
+                    `;
+                });
+                html += '</div>';
+            }
+
+            openModal('Notifications 🔔', html);
         }
 
         // --- PWA SERVICE WORKER REGISTRATION ---

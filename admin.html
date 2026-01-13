@@ -241,7 +241,13 @@
     <main class="main-content">
 
         <div id="view-dashboard" class="view-section">
-            <h2 style="margin-bottom:25px;">Dashboard Overview</h2>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:25px;">
+                <h2>Dashboard Overview</h2>
+                <button class="btn btn-primary" onclick="openNotificationModal()">
+                    <i class="fas fa-bell"></i> Send Notification
+                </button>
+            </div>
+
             <div class="stats-grid">
                 <div class="stat-box">
                     <div class="stat-icon"><i class="fas fa-users"></i></div>
@@ -443,14 +449,19 @@
         const auth = firebase.auth();
         const db = firebase.database();
 
-        // --- 2. GLOBAL STATE ---
+        // --- 2. NOTIFICATION CONFIGURATION ---
+        // IMPORTANT: Replace 'YOUR_REST_API_KEY_HERE' with your real key from OneSignal Settings > Keys & IDs
+        const ONE_SIGNAL_APP_ID = "42da365d-9d3f-41c1-a926-68466de8ca52";
+        const ONE_SIGNAL_API_KEY = "os_v2_app_ilndmxm5h5a4dkjgnbdg32gkkkk3ytbcj3tufpmi5ci7macht276s3ja4qn36csetmntejtypnwhgqkzwh2ytnjv5dydvtwp5za52oq"; 
+
+        // --- 3. GLOBAL STATE ---
         let appState = {
             user: null,
             subjectsData: {},
             view: 'subjects', // subjects | chapters | quizzes | reports | users
             activeSubjectId: null,
             activeChapterId: null,
-            usersData: {} // Local cache for users
+            usersData: {} 
         };
 
         // --- HISTORY HANDLER ---
@@ -471,7 +482,7 @@
             }
         };
 
-        // --- 3. AUTH & INITIALIZATION ---
+        // --- 4. AUTH & INITIALIZATION ---
         auth.onAuthStateChanged(user => {
             if(user) {
                 db.ref('admins/' + user.uid).once('value', snap => {
@@ -501,10 +512,10 @@
             listenToConfig();
             listenToBanners(); 
             listenToReports();
-            listenToUsers(); // Initialize User Listener
+            listenToUsers(); 
         }
 
-        // --- 4. REALTIME STATS ---
+        // --- 5. REALTIME STATS ---
         function listenToStats() {
             db.ref('users').on('value', snap => {
                 const count = snap.exists() ? snap.numChildren() : 0;
@@ -529,7 +540,7 @@
             document.getElementById('stat-quizzes').innerText = quizCount;
         }
 
-        // --- 5. CONTENT MANAGER ---
+        // --- 6. CONTENT MANAGER ---
         function listenToSubjects() {
             db.ref('subjects').on('value', snap => {
                 appState.subjectsData = snap.val() || {};
@@ -660,7 +671,7 @@
             renderManager();
         }
 
-        // --- 6. USER MANAGEMENT (FIXED & WORKING) ---
+        // --- 7. USER MANAGEMENT ---
         function listenToUsers() {
             db.ref('users').on('value', snap => {
                 appState.usersData = snap.val() || {};
@@ -668,7 +679,6 @@
             });
         }
 
-        // Filter functionality for Users
         document.getElementById('user-search').addEventListener('input', renderUsers);
 
         function renderUsers() {
@@ -681,7 +691,6 @@
             const users = appState.usersData;
             const keys = Object.keys(users);
             
-            // Filter logic
             const filteredKeys = keys.filter(key => {
                 const u = users[key];
                 const name = u.name ? u.name.toLowerCase() : "";
@@ -698,25 +707,19 @@
 
             filteredKeys.forEach(uid => {
                 const user = users[uid];
-                
-                // --- STATUS CHECK (FIXED) ---
                 const isBanned = user.isBanned === true;
                 
-                // --- BADGE RENDERING (FIXED) ---
                 const statusBadge = isBanned 
                     ? `<span class="badge badge-danger" style="background:#fee2e2; color:#b91c1c;">Banned</span>` 
                     : `<span class="badge badge-success" style="background:#d1fae5; color:#047857;">Active</span>`;
                 
-                // --- ACTION BUTTON RENDERING (FIXED) ---
                 let actionBtn = '';
                 if(uid === appState.user.uid) {
                     actionBtn = `<button class="btn" disabled style="opacity:0.5; background:#ddd; cursor:not-allowed;">Admin</button>`;
                 } else {
                     if (isBanned) {
-                        // Agar Banned hai, toh UNBAN ka button dikhana hai (Green)
                         actionBtn = `<button class="btn btn-success" style="padding:6px 12px; font-size:0.8rem;" onclick="toggleBan('${uid}')">Unban User</button>`;
                     } else {
-                        // Agar Active hai, toh BLOCK ka button dikhana hai (Red)
                         actionBtn = `<button class="btn btn-danger" style="padding:6px 12px; font-size:0.8rem;" onclick="toggleBan('${uid}')">Block/Ban</button>`;
                     }
                 }
@@ -735,31 +738,26 @@
             });
         }
 
-        // --- BAN LOGIC (FIXED) ---
         function toggleBan(uid) {
             if(uid === appState.user.uid) return toast("You cannot ban yourself.");
             
-            // App state se current status check kar rahe hain taaki latest value mile
             if (!appState.usersData || !appState.usersData[uid]) {
                 return toast("User data error. Please refresh.");
             }
 
             const user = appState.usersData[uid];
             const currentStatus = user.isBanned === true; 
-            const newStatus = !currentStatus; // Toggle logic
+            const newStatus = !currentStatus; 
             
             db.ref('users/' + uid).update({ isBanned: newStatus })
                 .then(() => {
-                    if (newStatus) {
-                        toast("User Blocked Successfully! 🚫");
-                    } else {
-                        toast("User Unbanned Successfully! ✅");
-                    }
+                    if (newStatus) toast("User Blocked Successfully! 🚫");
+                    else toast("User Unbanned Successfully! ✅");
                 })
                 .catch(err => toast("Error: " + err.message));
         }
 
-        // --- 7. CONFIG & OTHER LISTENERS ---
+        // --- 8. CONFIG & LISTENERS ---
         function listenToConfig() {
             db.ref('config').on('value', snap => {
                 const c = snap.val() || {};
@@ -936,24 +934,39 @@
             });
         }
 
-        // --- 8. UTILS & MODALS ---
+        // --- 9. UTILS & MODALS ---
         function openModal(title, fields, saveCb) {
             document.getElementById('modal-title').innerText = title;
             const container = document.getElementById('modal-fields');
-            container.innerHTML = '';
-            fields.forEach(f => {
-                container.innerHTML += `
-                    <div class="input-group">
-                        <label>${f.label}</label>
-                        <input type="text" id="${f.id}" class="input-field" 
-                            value="${f.value || ''}" 
-                            placeholder="${f.placeholder || ''}">
-                    </div>`;
-            });
+            
+            // Handle Notification HTML which is string based
+            if(typeof fields === 'string') {
+                container.innerHTML = fields;
+            } else {
+                // Handle Standard Array fields
+                container.innerHTML = '';
+                fields.forEach(f => {
+                    container.innerHTML += `
+                        <div class="input-group">
+                            <label>${f.label}</label>
+                            <input type="text" id="${f.id}" class="input-field" 
+                                value="${f.value || ''}" 
+                                placeholder="${f.placeholder || ''}">
+                        </div>`;
+                });
+            }
+
             const oldBtn = document.getElementById('modal-save-btn');
             const newBtn = oldBtn.cloneNode(true);
             oldBtn.parentNode.replaceChild(newBtn, oldBtn);
-            newBtn.onclick = saveCb;
+            
+            // Show button by default
+            newBtn.style.display = 'block';
+
+            if(saveCb) {
+                newBtn.onclick = saveCb;
+            }
+
             document.getElementById('generic-modal').classList.add('active');
         }
 
@@ -1045,6 +1058,106 @@
                 });
             });
         }
+
+        // --- 10. NOTIFICATION FUNCTIONS (ONESIGNAL) ---
+function openNotificationModal() {
+    const html = `
+        <div class="input-group">
+            <label>Title</label>
+            <input type="text" id="notif-title" class="input-field" placeholder="New Quiz Added!">
+        </div>
+        <div class="input-group">
+            <label>Message</label>
+            <input type="text" id="notif-message" class="input-field" placeholder="Test your skills now...">
+        </div>
+        <div class="input-group">
+            <label>Big Image URL (Optional)</label>
+            <input type="text" id="notif-image" class="input-field" placeholder="https://...">
+        </div>
+        <div class="input-group">
+            <label>Link to Open (Optional)</label>
+            <input type="text" id="notif-url" class="input-field" placeholder="https://quizzy2026.netlify.app/..." value="https://quizzy2026.netlify.app/">
+        </div>
+        
+        <div class="input-group">
+            <label>Action Button Text (Optional)</label>
+            <input type="text" id="notif-btn" class="input-field" placeholder="e.g. Play Now 🎮">
+            <small style="color:var(--text-muted);">Leave empty if you don't want a button.</small>
+        </div>
+
+        <div style="text-align:right; margin-top:15px;">
+            <button class="btn btn-primary" onclick="sendOneSignalPush()">🚀 Send Now</button>
+        </div>
+    `;
+    
+    openModal('Broadcast Notification', html);
+    
+    const defaultBtn = document.getElementById('modal-save-btn');
+    if(defaultBtn) defaultBtn.style.display = 'none';
+}
+
+function sendOneSignalPush() {
+    const title = document.getElementById('notif-title').value;
+    const msg = document.getElementById('notif-message').value;
+    const imgUrl = document.getElementById('notif-image').value;
+    let targetUrl = document.getElementById('notif-url').value;
+    const btnText = document.getElementById('notif-btn').value; // Get Button Text
+
+    if(!title || !msg) return toast("Title aur Message likhna zaroori hai!");
+    if(!targetUrl) targetUrl = "https://quizzy2026.netlify.app/"; 
+
+    const btn = document.querySelector('#generic-modal .btn-primary');
+    btn.innerText = "Sending...";
+    btn.disabled = true;
+
+    // Base Payload
+    const payload = {
+        app_id: ONE_SIGNAL_APP_ID,
+        included_segments: ['Total Subscriptions'], 
+        headings: { en: title },
+        contents: { en: msg },
+        url: targetUrl,
+        chrome_web_image: imgUrl, 
+        big_picture: imgUrl
+    };
+
+    // SIRF TAB ADD KAREIN JAB USER NE BUTTON TEXT LIKHA HO
+    if(btnText && btnText.trim() !== "") {
+        payload.buttons = [
+            {"id": "action_btn", "text": btnText, "icon": "ic_menu_send"}
+        ];
+    }
+
+    const options = {
+        method: 'POST',
+        headers: {
+            accept: 'application/json',
+            'content-type': 'application/json',
+            Authorization: 'Basic ' + ONE_SIGNAL_API_KEY
+        },
+        body: JSON.stringify(payload)
+    };
+
+    fetch('https://onesignal.com/api/v1/notifications', options)
+        .then(response => response.json())
+        .then(response => {
+            console.log(response);
+            if(response.id) {
+                toast("✅ Notification Sent Successfully!");
+                closeModal(); 
+            } else {
+                toast("❌ Error: " + (response.errors ? response.errors[0] : "Check Console"));
+                btn.innerText = "Retry";
+                btn.disabled = false;
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            toast("❌ Network Error");
+            btn.innerText = "Retry";
+            btn.disabled = false;
+        });
+}
 
         function deleteNode(path) {
             if(confirm("Are you sure you want to delete this?")) {

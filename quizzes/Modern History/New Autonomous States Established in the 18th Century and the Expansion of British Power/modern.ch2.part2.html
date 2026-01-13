@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern History Quiz (Part 2) | आधुनिक इतिहास प्रश्नोत्तरी</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --text-primary: #ffffff;
+            --text-secondary: #e0e0e0;
+            --text-hindi: #dcdcdc;
+            --accent-green: #00e676;
+            --accent-red: #ff1744;
+            --mesh-1: #6200ea; /* Deep Purple */
+            --mesh-2: #2962ff; /* Blue */
+            --mesh-3: #c51162; /* Pink */
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, var(--mesh-1), var(--mesh-2), var(--mesh-3));
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--text-primary);
+            overflow: hidden;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* --- Glass Container --- */
+        .app-container {
+            width: 95%;
+            max-width: 650px;
+            height: 92vh; /* Fixed height for mobile feel */
+            background: var(--glass-bg);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid var(--glass-border);
+            border-radius: 25px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* --- Screens --- */
+        .screen {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            overflow-y: hidden; 
+            display: none;
+        }
+
+        .screen.active {
+            display: flex;
+            animation: fadeIn 0.4s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* --- Start Screen --- */
+        .start-content {
+            margin: auto;
+            width: 100%;
+            text-align: center;
+            overflow-y: auto;
+        }
+
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 5px;
+            text-shadow: 0 4px 6px rgba(0,0,0,0.2);
+        }
+
+        .subtitle {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            margin-bottom: 25px;
+        }
+
+        .input-group {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 15px;
+            border-radius: 15px;
+            margin-bottom: 15px;
+            text-align: left;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        input[type="number"] {
+            width: 100%;
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px solid var(--glass-border);
+            background: rgba(255,255,255,0.1);
+            color: white;
+            font-family: inherit;
+            font-size: 1rem;
+            outline: none;
+        }
+
+        .toggle-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 26px;
+        }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(255,255,255,0.2);
+            transition: .4s;
+            border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider { background-color: var(--accent-green); }
+        input:checked + .slider:before { transform: translateX(24px); }
+
+        .btn-primary {
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: 50px;
+            background: white;
+            color: var(--mesh-1);
+            font-weight: 800;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        .btn-primary:hover {
+            transform: scale(1.02);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+        }
+
+        /* --- Quiz UI --- */
+        .quiz-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .progress-container {
+            width: 100%;
+            height: 5px;
+            background: rgba(255,255,255,0.15);
+            margin-bottom: 15px;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        .progress-bar {
+            height: 100%;
+            background: var(--accent-green);
+            width: 0%;
+            transition: width 0.3s ease;
+            box-shadow: 0 0 10px var(--accent-green);
+        }
+
+        .timer { font-variant-numeric: tabular-nums; }
+        .timer.pulse-red { color: var(--accent-red); animation: pulse 1s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+
+        /* SCROLLABLE QUESTION AREA */
+        .scroll-area {
+            flex: 1;
+            overflow-y: auto;
+            padding-right: 5px;
+            margin-bottom: 10px;
+        }
+        /* Custom Scrollbar */
+        .scroll-area::-webkit-scrollbar { width: 5px; }
+        .scroll-area::-webkit-scrollbar-track { background: transparent; }
+        .scroll-area::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.3); border-radius: 5px; }
+
+        .question-box {
+            background: rgba(0,0,0,0.15);
+            padding: 20px;
+            border-radius: 20px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .q-text-en {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            line-height: 1.4;
+        }
+        .q-text-hi {
+            font-size: 1rem;
+            color: var(--text-hindi);
+            line-height: 1.5;
+            font-weight: 400;
+        }
+
+        .options-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding-bottom: 10px;
+        }
+
+        .option-btn {
+            background: rgba(255, 255, 255, 0.07);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 16px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+        }
+        .option-btn:active { transform: scale(0.98); background: rgba(255,255,255,0.15); }
+
+        .opt-en { font-weight: 600; font-size: 1rem; color: #fff; margin-bottom: 2px;}
+        .opt-hi { font-size: 0.9rem; color: var(--text-hindi); }
+
+        .option-btn.correct {
+            background: rgba(0, 230, 118, 0.2);
+            border-color: var(--accent-green);
+            box-shadow: 0 0 15px rgba(0, 230, 118, 0.2);
+        }
+        .option-btn.wrong {
+            background: rgba(255, 23, 68, 0.2);
+            border-color: var(--accent-red);
+        }
+
+        /* FOOTER */
+        .quiz-footer {
+            margin-top: auto;
+            padding-top: 10px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+        .btn-finish {
+            width: 100%;
+            padding: 14px;
+            border-radius: 15px;
+            border: 1px solid var(--accent-red);
+            background: rgba(255, 23, 68, 0.15);
+            color: #ff8a80;
+            font-weight: 700;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn-finish:hover { background: rgba(255, 23, 68, 0.25); color: white; }
+
+        /* --- Feedback Overlay --- */
+        .feedback-overlay {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 5rem;
+            pointer-events: none;
+            z-index: 100;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .feedback-overlay.show { opacity: 1; }
+        .shake { animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both; }
+        @keyframes shake {
+            10%, 90% { transform: translate(-52%, -50%); }
+            20%, 80% { transform: translate(-48%, -50%); }
+            30%, 50%, 70% { transform: translate(-54%, -50%); }
+            40%, 60% { transform: translate(-46%, -50%); }
+        }
+
+        /* --- Result Screen --- */
+        .result-content { margin: auto; text-align: center; width: 100%; overflow-y: auto; }
+        .score-circle {
+            width: 140px; height: 140px;
+            border-radius: 50%;
+            border: 6px solid rgba(255,255,255,0.2);
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: rgba(0,0,0,0.1);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .message { font-size: 1.2rem; margin-bottom: 30px; font-weight: 600; color: var(--text-secondary); }
+        .stats { display: flex; justify-content: center; gap: 20px; margin-bottom: 20px; text-align: left; }
+        .stat-item p { font-size: 0.9rem; color: #ccc; margin-bottom: 5px; }
+        .stat-item h3 { font-size: 1.5rem; }
+
+        #confetti-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <div id="feedback-correct" class="feedback-overlay">🎉</div>
+        <div id="feedback-wrong" class="feedback-overlay">😢</div>
+        <canvas id="confetti-canvas"></canvas>
+
+        <div class="screen active" id="start-screen">
+            <div class="start-content">
+                <h1>History Quiz</h1>
+                <p class="subtitle">Questions 51 - 111</p>
+
+                <div class="input-group">
+                    <label>⏱️ Timer (Sec/Question)</label>
+                    <input type="number" id="timerInput" placeholder="0 = No Timer" min="0">
+                </div>
+
+                <div class="input-group toggle-container">
+                    <label>🔀 Shuffle Questions</label>
+                    <label class="switch">
+                        <input type="checkbox" id="shuffleInput">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <button class="btn-primary" onclick="startQuiz()">Start Quiz 🚀</button>
+            </div>
+        </div>
+
+        <div class="screen" id="quiz-screen">
+            <div class="quiz-header">
+                <span id="q-counter">Q: 51/111</span>
+                <span id="timer-display" class="timer"></span>
+                <span id="score-counter">Score: 0</span>
+            </div>
+
+            <div class="progress-container">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+
+            <div class="scroll-area">
+                <div class="question-box">
+                    <div class="q-text-en" id="q-en">...</div>
+                    <div class="q-text-hi" id="q-hi">...</div>
+                </div>
+                <div class="options-grid" id="options-container"></div>
+            </div>
+
+            <div class="quiz-footer">
+                <button class="btn-finish" onclick="finishQuiz()">⏹ Finish & Show Results</button>
+            </div>
+        </div>
+
+        <div class="screen" id="result-screen">
+            <div class="result-content">
+                <h2>Quiz Completed!</h2>
+                <div class="score-circle" id="final-score">0%</div>
+                <p class="message" id="result-message">Fetching results...</p>
+                
+                <div class="stats">
+                    <div class="stat-item">
+                        <p>Correct</p>
+                        <h3 id="res-correct" style="color:var(--accent-green)">0</h3>
+                    </div>
+                    <div class="stat-item">
+                        <p>Wrong</p>
+                        <h3 id="res-wrong" style="color:var(--accent-red)">0</h3>
+                    </div>
+                    <div class="stat-item">
+                        <p>Total</p>
+                        <h3 id="res-total">0</h3>
+                    </div>
+                </div>
+
+                <button class="btn-primary" onclick="location.reload()">🔄 Restart Quiz</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- DATA (Transcribed Questions 51-111) ---
+        const rawData = [
+            { id: 51, en: "How long did the Dual Government system in Bengal last?", hi: "बंगाल का द्वैध शासन कब से कब तक चला ?", options: [{ en: "1757 to 1767", hi: "1757 से 1767 तक" }, { en: "1764 to 1793", hi: "1764 से 1793 तक" }, { en: "1765 to 1772", hi: "1765 से 1772 तक" }, { en: "1760 to 1793", hi: "1760 से 1793 तक" }], correct: 2 },
+            { id: 52, en: "Clive was made the Governor of Bengal in-", hi: "क्लाइव को बंगाल का गवर्नर बनाया गया-", options: [{ en: "1756 AD", hi: "1756 ई० में" }, { en: "1757 AD", hi: "1757 ई० में" }, { en: "1758 AD", hi: "1758 ई० में" }, { en: "1759 AD", hi: "1759 ई० में" }], correct: 2 },
+            { id: 53, en: "The Battle of Plassey (1757) was of immense historical importance because:", hi: "प्लासी का युद्ध (1757 ई०) अत्यधिक ऐतिहासिक महत्व का था क्योंकि-", options: [{ en: "It ended French power in India", hi: "इसने भारत में फ्रेंच शक्ति का अंत कर दिया" }, { en: "It paved the way for British rule in Bengal", hi: "इसने बंगाल में ब्रिटिश वर्चस्व के लिए मार्ग प्रशस्त किया" }, { en: "Eliminated all army under Watson", hi: "एडमिरल वाटसन-कर्नल क्लाइव के अधीन सारी सेना का सफाया हो गया" }, { en: "All traitors against Siraj were killed", hi: "सिराजुद्दौला के खिलाफ सभी विश्वासघाती मारे गये" }], correct: 1 },
+            { id: 54, en: "The secret of success of the East India Company in India was:", hi: "भारत में ईस्ट इंडिया कंपनी की सफलता का राज था-", options: [{ en: "Lack of nationalism in India", hi: "भारत में राष्ट्रीय भावना की कमी" }, { en: "Western trained army & modern arms", hi: "कंपनी की सेना को पश्चिमी प्रशिक्षण मिला था तथा आधुनिक हथियार थे" }, { en: "Lack of unity among Indian soldiers", hi: "भारतीय सैनिकों में राष्ट्रीय भावना का अभाव" }, { en: "All of the above", hi: "उपर्युक्त तीनों" }], correct: 3 },
+            { id: 55, en: "Who joined Mir Qasim and Shuja-ud-Daula in declaring war on the English and was defeated at Buxar?", hi: "निम्न में से किसने मीर कासिम तथा शुजाउद्दौला के साथ मिलकर अंग्रेजी ईस्ट इंडिया पर युद्ध घोषित किया और वे बाद में बक्सर के युद्ध में पराजित हुए?", options: [{ en: "Jahandar Shah", hi: "जहाँदार शाह" }, { en: "Farrukhsiyar", hi: "फर्रुखसियर" }, { en: "Muhammad Shah", hi: "मुहम्मद शाह" }, { en: "Shah Alam II", hi: "शाह आलम II" }], correct: 3 },
+            { id: 56, en: "Who was the Mughal Emperor when the Battle of Plassey was fought?", hi: "ईस्ट इंडिया कंपनी और बंगाल के नवाब के बीच जब प्लासी का युद्ध हुआ उस समय मुगल सम्राट् कौन था?", options: [{ en: "Ahmad Shah", hi: "अहमद शाह" }, { en: "Alamgir II", hi: "अजीजुद्दीन आलमगीर II" }, { en: "Muhammad Shah", hi: "मुहम्मद शाह" }, { en: "Shah Alam II", hi: "शाह आलम II" }], correct: 1 },
+            { id: 57, en: "The main cause of conflict between Nawab Siraj-ud-Daula and the East India Company was-", hi: "नवाब सिराजुद्दौला एवं ईस्ट इंडिया कंपनी के बीच संघर्ष का प्रमुख कारण था-", options: [{ en: "British opposed Siraj's accession", hi: "अंग्रेजों ने सिराजुद्दौला के राज्यारोहण का विरोध किया" }, { en: "Misuse of trade privileges (Dastaks)", hi: "अंग्रेजों ने व्यापार छूटों का दुरुपयोग किया" }, { en: "British attacked French colony Chandernagore", hi: "अंग्रेजों ने बंगाल में फ्रांसीसियों के उपनिवेश चन्द्रनगर पर हमला किया" }, { en: "Black Hole Tragedy", hi: "काला कारावास (ब्लैक होल) की घटना का होना" }], correct: 1 },
+            { id: 58, en: "Only a few chieftains supported Siraj-ud-Daula in the Battle of Plassey. Who were they?\n1. Mohan Lal 2. Rai Durlabh 3. Rajballabh 4. Mir Madan 5. Khadim Khan", hi: "प्लासी के युद्ध में केवल कुछ सरदारों ने सिराजुद्दौला का साथ दिया। ये सरदार निम्न में से कौन थे?\n1. मोहन लाल 2. राय दुर्लभ 3. राजवल्लभ 4. मीर मदान 5. खादिम खाँ", options: [{ en: "1, 2 and 4", hi: "1, 2 एवं 4" }, { en: "2 and 4", hi: "2 एवं 4" }, { en: "1 and 4", hi: "1 एवं 4" }, { en: "1, 4 and 5", hi: "1, 4 एवं 5" }], correct: 2 },
+            { id: 59, en: "Where did the 'Black Hole Tragedy' take place, in which 123 out of 146 people died of suffocation?", hi: "काल कोठरी (ब्लैक होल) की घटना, जिसमें 146 में से 123 लोग एक छोटी कोठरी में बंद कर दिए जाने के कारण मर गए थे, कहाँ घटी थी?", options: [{ en: "Murshidabad", hi: "मुर्शिदाबाद" }, { en: "Dhaka", hi: "ढाका" }, { en: "Munger", hi: "मुंगेर" }, { en: "Calcutta", hi: "कलकत्ता" }], correct: 3 },
+            { id: 60, en: "'After the Battle of Plassey, a night of eternal gloom began for India.' Which Bengali poet said this?", hi: "'प्लासी के युद्ध के बाद भारत के लिए शाश्वत दुःख की काली रात का आरंभ हुआ'- यह किस बंगला कवि का कथन है?", options: [{ en: "Nabin Chandra Sen", hi: "नवीन चन्द्र सेन" }, { en: "Bankim Chandra Chatterjee", hi: "बंकिम चन्द्र चटर्जी" }, { en: "Rabindranath Tagore", hi: "रवीन्द्रनाथ टैगोर" }, { en: "Kazi Nazrul Islam", hi: "काजी नजरुल इस्लाम" }], correct: 0 },
+            { id: 61, en: "Whom did Robert Clive appoint as the Deputy Diwan of Bihar?", hi: "निम्नलिखित में से किस भारतीय को रॉबर्ट क्लाइव ने बिहार का नायब दीवान नियुक्त किया था?", options: [{ en: "Amichand", hi: "अमीचंद" }, { en: "Manik Chand", hi: "मानक चंद" }, { en: "Rai Durlabh", hi: "राय दुर्लभ" }, { en: "Raja Shitab Rai", hi: "राजा शिताब राय" }], correct: 3 },
+            { id: 62, en: "From which Mughal Emperor did Murshid Quli Jafar Khan get the Subedari of Bengal (1717) and Odisha (1719)?", hi: "मुर्शिद कुली जाफर खाँ को बंगाल (1717 ई०) तथा उड़ीसा (1719 ई०) की सूबेदारी किस मुगल बादशाह से मिली?", options: [{ en: "Bahadur Shah", hi: "बहादुरशाह" }, { en: "Jahandar Shah", hi: "जहाँदारशाह" }, { en: "Farrukhsiyar", hi: "फर्रुखसियर" }, { en: "Muhammad Shah", hi: "मुहम्मदशाह" }], correct: 2 },
+            { id: 63, en: "Who founded Murshidabad and made it the capital of Bengal instead of Dhaka?", hi: "किसने मुर्शिदाबाद की स्थापना की तथा उसे ढाका के स्थान पर बंगाल की राजधानी बनायी?", options: [{ en: "Murshid Quli Jafar Khan", hi: "मुर्शिद कुली जाफर खां" }, { en: "Shujauddin", hi: "शुजाउद्दीन" }, { en: "Alivardi Khan", hi: "अलीवर्दी खां" }, { en: "Siraj-ud-Daula", hi: "सिराजुद्दौला" }], correct: 0 },
+            { id: 64, en: "The main cause of the dispute between Bengal ruler Murshid Quli Jafar Khan and the English East India Company was-", hi: "बंगाल के शासक मुर्शिद कुली जाफर खां एवं अंग्रेजी ईस्ट इंडिया कंपनी के विवाद का सर्वप्रमुख कारण था-", options: [{ en: "Different interpretation of Farrukhsiyar's 1717 Farman", hi: "मुगल बादशाह फर्रुखसियर द्वारा 1717 में जारी फरमान की मुर्शिद अली जाफर खां एवं ब्रिटिश कंपनी द्वारा अलग-अलग व्याख्या" }, { en: "Attack on Murshid Quli by British", hi: "अंग्रेजों का मुर्शिद कुली जाफर खां पर हमला" }, { en: "Fortification of Calcutta", hi: "कलकत्ता की किलेबंदी" }, { en: "None of these", hi: "इनमें से कोई नहीं" }], correct: 0 },
+            { id: 65, en: "Which Mughal Emperor granted the Subedari of Bihar to Bengal Nawab Shujauddin in 1733?", hi: "किस मुगल बादशाह ने 1733 ई० में बिहार की सूबेदारी बंगाल के नवाब शुजाउद्दीन को प्रदान की?", options: [{ en: "Bahadur Shah I", hi: "बहादुरशाह I" }, { en: "Farrukhsiyar", hi: "फर्रुखसियर" }, { en: "Muhammad Shah 'Rangeela'", hi: "मुहम्मदशाह 'रंगीला'" }, { en: "Ahmad Shah I", hi: "अहमदशाह I" }], correct: 2 },
+            { id: 66, en: "Which Nawab of Bengal compared Europeans to a 'beehive', saying 'If not disturbed they will give honey, if disturbed they will sting to death'?", hi: "बंगाल के किस नवाब ने यूरोपीय लोगों की तुलना 'मधुमक्खी के छत्ते से की जिसे यदि न छेड़ा जाय तो शहद देगी, पर यदि छत्ते के साथ छेड़छाड़ की गई तो मधुमक्खियाँ काट-काट कर प्राण ले सकती थी?", options: [{ en: "Alivardi Khan", hi: "अलीवर्दी खाँ" }, { en: "Siraj-ud-Daula", hi: "सिराजुद्दौला" }, { en: "Mir Jafar", hi: "मीर जाफर" }, { en: "Mir Qasim", hi: "मीर कासिम" }], correct: 0 },
+            { id: 67, en: "Which Nawab said to the British regarding fortification: 'You are merchants, what need have you of a fortress? Under my protection you have no fear'?", hi: "अंग्रेजों द्वारा कलकत्ता तथा फ्रांसीसियों द्वारा चन्द्रनगर की किलेबन्दी सुदृढ़ करने का विरोध करते बंगाल के किस नवाब ने कहा 'तुम व्यापारी हो, तुम्हें किले का क्या करना है? मेरे संरक्षण में रहते हुए तुम्हें शत्रुओं का कोई भय नहीं'?", options: [{ en: "Shujauddin", hi: "शुजाउद्दीन" }, { en: "Sarfaraz Khan", hi: "सरफराज खाँ" }, { en: "Alivardi Khan", hi: "अलीवर्दी खाँ" }, { en: "Siraj-ud-Daula", hi: "सिराजुद्दौला" }], correct: 2 },
+            { id: 68, en: "Who was the Nawab of Bengal who knew he could drive the English out but 'the sea would catch fire'?", hi: "बंगाल का वह नवाब कौन था जो जानता था कि वह अंग्रेजों को बंगाल की भूमि से निकाल बाहर कर सकता है किन्तु ऐसी स्थिति में उसके ही शब्दों में 'समुद्र में आग लग जाएगी'?", options: [{ en: "Alivardi Khan", hi: "अलीवर्दी खाँ" }, { en: "Siraj-ud-Daula", hi: "सिराजुद्दौला" }, { en: "Mir Jafar", hi: "मीर जाफर" }, { en: "Mir Qasim", hi: "मीर कासिम" }], correct: 0 },
+            { id: 69, en: "Which Nawab advised his successor: 'Do not think of weakening the English, French and Dutch together. The English are the strongest...'", hi: "बंगाल के किस नवाब ने अपने उत्तराधिकारी को यह सलाह दी: 'तीनों--अंग्रेज, फ्रांसीसी एवं डच-को एक साथ निर्बल करने का विचार मत करना। इन तीनों में अंग्रेज सबसे सशक्त हैं। पहले उसका अन्त करना...'", options: [{ en: "Alivardi Khan", hi: "अलीवर्दी खाँ" }, { en: "Siraj-ud-Daula", hi: "सिराजुद्दौला" }, { en: "Mir Jafar", hi: "मीर जाफर" }, { en: "Mir Qasim", hi: "मीर कासिम" }], correct: 0 },
+            { id: 70, en: "Who was the successor of Bengal Nawab Alivardi Khan?", hi: "बंगाल के नवाब अलीवर्दी खां का उत्तराधिकारी कौन हुआ?", options: [{ en: "Siraj-ud-Daula", hi: "सिराजुद्दौला" }, { en: "Sarfaraz", hi: "सरफराज" }, { en: "Mir Jafar", hi: "मीर जाफर" }, { en: "Mir Qasim", hi: "मीर कासिम" }], correct: 0 },
+            { id: 71, en: "Which statements are correct regarding conflict between Siraj and EIC?\n1. Fortification of Calcutta\n2. Misuse of Dastaks\n3. Shelter to fugitive Krishnavallabh", hi: "इन कथनों में से कौन-सा/से कथन सही है/हैं?\n1. अंग्रेजों द्वारा कलकत्ते की किलेबंदी\n2. अंग्रेजों द्वारा दस्तक (Free pass) का दुरुपयोग\n3. भगोड़े कृष्णवल्लभ को कलकत्ता में अंग्रेजों द्वारा शरण देना", options: [{ en: "Only 1", hi: "केवल 1" }, { en: "Only 2", hi: "केवल 2" }, { en: "1 and 2", hi: "1 और 2" }, { en: "1, 2 and 3", hi: "1, 2 और 3" }], correct: 3 },
+            { id: 72, en: "Match the following Events with Dates:\nA. Calcutta seized by Siraj\nB. Black Hole Tragedy\nC. Treaty of Alinagar\nD. Battle of Plassey", hi: "सुमेलित कीजिए--\nसूची-I (घटना) सूची-II (तिथि)\nA. कलकत्ता पर नवाब सिराजुद्दौला द्वारा अधिकार, B. कालकोठरी की त्रासदी, C. अलीनगर की संधि, D. प्लासी का युद्ध", options: [{ en: "A-1, B-2, C-3, D-4", hi: "1-2-3-4" }, { en: "A-2, B-1, C-3, D-4", hi: "2-1-3-4" }, { en: "A-1, B-2, C-4, D-3", hi: "1-2-4-3" }, { en: "A-4, B-3, C-2, D-1", hi: "4-3-2-1" }], correct: 0 },
+            { id: 73, en: "Identify the territory known as 'Clive's Jagir', given by Mir Jafar to Clive:", hi: "बंगाल के नवाब मीर जाफर ने कठपुतली मुगल बादशाह शाह आलम II से क्लाइव को 'साबत जंग' की उपाधि एवं कुछ क्षेत्रों की जमींदारी दिलाई 'क्लाइव की जागीर' कहलानेवाले उस क्षेत्र की पहचान करें-", options: [{ en: "24 Parganas", hi: "24 परगना" }, { en: "Nadia", hi: "नदिया" }, { en: "Bardhaman", hi: "वर्द्धवान" }, { en: "None of these", hi: "इनमें से कोई नहीं" }], correct: 0 },
+            { id: 74, en: "Why did Mir Qasim shift his capital from Murshidabad to Munger?", hi: "बंगाल के नवाब मीर कासिम ने मुर्शिदाबाद के स्थान पर मुंगेर को राजधानी बनाया क्योंकि-", options: [{ en: "To stay away from Calcutta's intrigues", hi: "वह मुर्शिदाबाद के षडयंत्रमय वातावरण तथा कलकत्ता से दूर रहना चाहता था ताकि अंग्रेजों का हस्तक्षेप न हो" }, { en: "Pressure from Vansittart", hi: "बंगाल के गवर्नर वेन्सिटार्ट ने उसे ऐसा करने के लिए दबाव डाला था" }, { en: "He liked Munger's weather", hi: "मुंगेर के रमणीक वातावरण से वह बहुत प्रभावित था" }, { en: "None of these", hi: "इनमें से कोई नहीं" }], correct: 0 },
+            { id: 75, en: "Which Bengal Nawab wrote to the British Governor: 'Your gentlemen behave like they are creating disturbance in the whole country... plunder people... disrepect my officers'?", hi: "बंगाल के किस नवाब ने ब्रिटिश कंपनी के गवर्नर को लिखा : आपके भद्र पुरुष इस प्रकार व्यवहार करते हैं वे समस्त देश में गड़बड़ी फैलाते हैं। लोगों को लूटते हैं तथा मेरे अधिकारियों का अनादर करते हैं तथा उन्हें शारीरिक यातना देते हैं?", options: [{ en: "Alivardi Khan", hi: "अलीवर्दी खां" }, { en: "Siraj-ud-Daula", hi: "सिराजुद्दौला" }, { en: "Mir Jafar", hi: "मीर जाफर" }, { en: "Mir Qasim", hi: "मीर कासिम" }], correct: 3 },
+            { id: 76, en: "Which Nawab of Bengal took the extraordinary step of abolishing all trade duties and taxes for 2 years?", hi: "बंगाल के किस नवाब ने दो वर्षों के लिए सभी व्यापारियों के लिए समस्त व्यापारिक करों एवं चुंगियों को खत्म कर एक बड़ा असाधारण कदम उठाया था?", options: [{ en: "Alivardi Khan", hi: "अलीवर्दी खां" }, { en: "Siraj-ud-Daula", hi: "सिराजुद्दौला" }, { en: "Mir Qasim", hi: "मीर कासिम" }, { en: "Mir Jafar", hi: "मीर जाफर" }], correct: 2 },
+            { id: 77, en: "Consider statements about 1st Treaty of Allahabad (12 Aug 1765):\n1. Shah Alam II got Kara & Allahabad.\n2. Company got Diwani for 26 lakh annual tribute.\n3. Northern Circars recognized as British Jagir.", hi: "क्लाइव एवं मुगल बादशाह शाह आलम II के बीच हुए इलाहाबाद की प्रथम संधि (12 अगस्त 1765) के संदर्भ में इन कथनों पर विचार कीजिए-\n1. शाह आलम II को कड़ा व इलाहाबाद के जिले दिये गये।\n2. कंपनी को 26 लाख रुपये सालाना के बदले बंगाल, बिहार एवं उड़ीसा की 'दीवानी' स्थायी रूप से मिली\n3. हैदराबाद के उत्तर के जिलों उत्तरी सरकार को अंग्रेजों के जागीर के रूप में मान्यता दी गई।", options: [{ en: "Only 1", hi: "केवल 1" }, { en: "Only 2", hi: "केवल 2" }, { en: "1 and 2", hi: "1 और 2" }, { en: "1, 2 and 3", hi: "1, 2 और 3" }], correct: 2 },
+            { id: 78, en: "Which Bengal Nawab was referred to as a 'Phantom' (straw man) by a Judge of the Supreme Court?", hi: "कलकत्ता की सुप्रीम कोर्ट के एक न्यायाधीश ने बंगाल के किस नवाब को 'भूसे से भरे एक बैताल (फैन्टम)' के रूप में उल्लिखित किया?", options: [{ en: "Mir Jafar", hi: "मीर जाफर" }, { en: "Najm-ud-Daulah", hi: "नजमुद्दौला" }, { en: "Saif-ud-Daulah", hi: "सैफुद्दौला" }, { en: "Mubarak-ud-Daulah", hi: "मुबारकउद्दौला" }], correct: 3 },
+            { id: 79, en: "Col. Malleson said: 'The only objective of company officers is now to loot... it is like a bag of gold...' Who is 'it'?", hi: "कर्नल मालसन ने कहा : 'कंपनी के अधिकारियों का अब एक ही उद्देश्य- जितना लूट सको, लूटो और यह कि 'यह' सोने की ऐसी थैली है जिसमें जब जी चाहे हाथ डाल लो'- इसमें 'वह' किसके लिए प्रयुक्त किया गया है?", options: [{ en: "Siraj-ud-Daula", hi: "सिराजुद्दौला" }, { en: "Mir Jafar", hi: "मीरजाफर" }, { en: "Mir Qasim", hi: "मीर कासिम" }, { en: "Najm-ud-Daulah", hi: "नजमुद्दौला" }], correct: 1 },
+            { id: 80, en: "What were the staple export commodities of the English East India Company from Bengal in the mid-18th century?", hi: "18वीं शताब्दी के मध्य इंग्लिश ईस्ट कंपनी के द्वारा बंगाल से निर्यातित प्रमुख कच्चा माल (staple) क्या थे?", options: [{ en: "Raw cotton, oilseeds and opium", hi: "अपरिष्कृत कपास, तिलहन और अफीम" }, { en: "Sugar, salt, zinc and lead", hi: "चीनी, नमक, जस्ता और सीसा" }, { en: "Copper, silver, gold, spices and tea", hi: "ताँबा, चाँदी, सोना, मसाले और चाय" }, { en: "Cotton, Silk, Saltpeter and Opium", hi: "कपास, रेशम, शोरा और अफीम" }], correct: 3 },
+            { id: 81, en: "When was the Battle of Sukar Kheda or Shakar Kheda fought?", hi: "सुकर खेड़ा या शंकर खेड़ा का युद्ध कब हुआ था?", options: [{ en: "11 October 1784", hi: "11 october 1784" }, { en: "22 December 1866", hi: "22 december 1866" }, { en: "24 December 1824", hi: "24 december 1824" }, { en: "11 October 1724", hi: "11 october 1724" }], correct: 3 },
+            { id: 82, en: "Consider statements:\n1. Battle of Palkheda ended with Treaty of Mungi-Shevgaon.\n2. Nizam-ul-Mulk was of Asaf Jahi dynasty.", hi: "विचार कीजिए-\n1. पालखेड़ा का युद्ध मुंशी शिवगाँव के संधि के तहत समाप्त हुई जिसमें हैदराबाद के निजाम ने मराठों को चौथ सरदेशमुखी नामक कर देना स्वीकार किया।\n2. निजाम-उल-मुल्क आसफजाही वंश का था।\nउपर्युक्त में कौन-सा/से सही है/हैं-", options: [{ en: "Only 1", hi: "केवल 1" }, { en: "Only 2", hi: "केवल 2" }, { en: "1 and 2", hi: "1 & 2" }, { en: "None", hi: "None" }], correct: 2 },
+            { id: 83, en: "Who founded the independent state of Hyderabad in 1724?", hi: "हैदराबाद में स्वतंत्र राज्य की स्थापना 1724 ई. में निम्नलिखित में से किसने किया?", options: [{ en: "Chin Qilich Khan", hi: "चिनकिलिच खाँ" }, { en: "Haider Ali", hi: "हैदर अली" }, { en: "Wajid Ali Shah", hi: "वाजिद अली शाह" }, { en: "Mubariz Khan", hi: "मुबारिज खाँ" }], correct: 0 },
+            { id: 84, en: "The Battle of Palkheda (1728) was fought between?", hi: "पालखेड़ा का युद्ध 1728 ई. में लड़ा गया था?", options: [{ en: "Nizam of Hyderabad & Peshwa Baji Rao I", hi: "हैदराबाद के निजाम एवं मराठा पेशवा बाजीराव प्रथम के बीच" }, { en: "Nizam & Mughal Emperor", hi: "हैदराबाद के निजाम एवं मुगल बादशाह के बीच" }, { en: "Nizam & Baji Rao II", hi: "हैदराबाद के निजाम एवं मराठा पेशवा बाजीराव द्वितीय के बीच" }, { en: "None", hi: "None" }], correct: 0 },
+            { id: 85, en: "Who was the first Indian ruler to accept the Subsidiary Alliance proposed by Lord Wellesley in 1798?", hi: "वर्ष 1798 ई० में लार्ड वेलेस्ली द्वारा प्रस्तावित सहायक संधि (Alliance) को स्वीकार करनेवाला सबसे पहला भारतीय शासक था-", options: [{ en: "Nawab of Awadh", hi: "अवध का नवाब" }, { en: "Nizam of Hyderabad", hi: "हैदराबाद का निजाम" }, { en: "Nawab of Carnatic", hi: "कर्नाटक का नवाब" }, { en: "Raja of Mysore", hi: "मैसूर का राजा" }], correct: 1 },
+            { id: 86, en: "Who signed the Subsidiary Alliance with Lord Wellesley?\n1. Hyderabad 2. Awadh 3. Mysore 4. Bengal", hi: "निम्नलिखित में से किस-किस ने लार्ड वेलेस्ली के साथ सहायक संधि पर हस्ताक्षर किए?\n1. हैदराबाद के निजाम 2. अवध के नवाब\n3. मैसूर के राजा 4. बंगाल के नवाब", options: [{ en: "4 and 2", hi: "4 और 2" }, { en: "2 and 3", hi: "2 और 3" }, { en: "4, 2 and 4", hi: "4, 2 और 4" }, { en: "1, 2 and 3", hi: "1, 2 और 3" }], correct: 3 },
+            { id: 87, en: "Who was the founder of the autonomous state of Awadh?", hi: "निम्नलिखित में से अवध के स्वायत्त राज्य का संस्थापक कौन थे?", options: [{ en: "Shuja-ud-Daula", hi: "शुजाउद्दौला" }, { en: "Saadat Khan 'Burhan-ul-Mulk'", hi: "सादत खाँ 'बुरहान-उल-मुल्क'" }, { en: "Safdarjung", hi: "सफदरजंग" }, { en: "Sher Khan", hi: "शेर खाँ" }], correct: 1 },
+            { id: 88, en: "During which Mughal ruler did Awadh, Hyderabad, Bharatpur etc. become independent?", hi: "अवध, हैदराबाद, भरतपुर, रुहेलखंड एवं फर्रुखाबाद किस मुगल शासक के समय में स्वतंत्र हुए?", options: [{ en: "Farrukhsiyar", hi: "फर्रुखसियर" }, { en: "Muhammad Shah 'Rangeela'", hi: "मुहम्मदशाह 'रंगीला'" }, { en: "Ahmad Shah", hi: "अहमदशाह" }, { en: "Shah Alam II", hi: "शाहआलम II" }], correct: 1 },
+            { id: 89, en: "Match the following States with Founders:\nA. Bengal - Murshid Quli Khan\nB. Farrukhabad - Muhammad Khan Bangash\nC. Karnataka - Sadatullah Khan\nD. Awadh - Saadat Khan", hi: "सुमेलित कीजिए- सूची-I (राज्य) सूची-II (संस्थापक)\nA. बंगाल - मुर्शिद कुली जाफर खां, B. फर्रूखाबाद - मुहम्मद खां बंगश, C. कर्नाटक - सआदतुल्ला खां, D. अवध - सआदत खां", options: [{ en: "1-2-3-4", hi: "1-2-3-4" }, { en: "2-1-3-4", hi: "2-1-3-4" }, { en: "1-2-4-3", hi: "1-2-4-3" }, { en: "2-1-4-3", hi: "2-1-4-3" }], correct: 0 },
+            { id: 90, en: "Rulers of which state were called 'Nawab Wazir'?", hi: "किस राज्य के शासक 'नवाब वजीर' कहलाते थे?", options: [{ en: "Nawabs of Awadh", hi: "अवध के नवाब" }, { en: "Nawabs of Bengal", hi: "बंगाल के नवाब" }, { en: "Nawabs of Carnatic", hi: "कर्नाटक के नवाब" }, { en: "None", hi: "इनमें से कोई नहीं" }], correct: 0 },
+            { id: 91, en: "Consider:\n1. Hyderabad merged in 1798 via Subsidiary Alliance.\n2. Awadh merged in 1948 via Police Action.", hi: "विचार कीजिए:\n1. हैदराबाद को 1798 ई. में सहायक संधि के तहत अंग्रेजी साम्राज्य में मिलाया गया था।\n2. अवध को पुलिस कारवाई (ऑपरेशन पोलो) के द्वारा भारत में 1948 ई. में मिलाया गया था।", options: [{ en: "Only 1", hi: "केवल 1" }, { en: "Only 2", hi: "केवल 2" }, { en: "1 & 2", hi: "1 & 2" }, { en: "None", hi: "None" }], correct: 3 },
+            { id: 92, en: "Who introduced the new 'Revenue Settlement' in 1723?", hi: "1723 ई. में नया राजस्व बंदोबस्त 'रेवन्यू सेटलमेंट' को लागू किया था?", options: [{ en: "Saadat Khan", hi: "सआदत खाँ" }, { en: "Nizam-ul-Mulk", hi: "निजाम-उल-मुल्क" }, { en: "Wajid Ali Shah", hi: "वाजिद अली शाह" }, { en: "Begum Hazrat Mahal", hi: "बेगम हजरत महल" }], correct: 0 },
+            { id: 93, en: "Mughal Emperor Muhammad Shah Rangeela gave the title 'Burhan-ul-Mulk' to whom?", hi: "मुगल बादशाह मुहम्मद शाह रंगीला ने निम्नलिखित में से किसको 'बुरहान-उल-मुल्क' की उपाधि प्रदान किया था?", options: [{ en: "Safdarjung", hi: "सफदरजंग" }, { en: "Saadat Khan", hi: "सआदत खाँ" }, { en: "Shuja-ud-Daula", hi: "शुजाउद्दौला" }, { en: "None", hi: "None" }], correct: 1 },
+            { id: 94, en: "Who led the joint army in the Battle of Buxar?", hi: "बक्सर के युद्ध में संयुक्त सेना का नेतृत्व किसने किया था?", options: [{ en: "Mir Qasim", hi: "मीर कासिम" }, { en: "Shah Alam II", hi: "शाहआलम द्वितीय" }, { en: "Shuja-ud-Daula", hi: "शुजाउद्दौला" }, { en: "None", hi: "None" }], correct: 2 },
+            { id: 95, en: "Which ruler of Awadh is known as 'Nawab Wazir'?", hi: "अवध के किस शासक को नवाब वजीर के नाम से जाना जाता है?", options: [{ en: "Safdarjung", hi: "सफदरजंग" }, { en: "Wajid Ali Shah", hi: "वाजिद अली शाह" }, { en: "Asaf-ud-Daula", hi: "आसफउद्दौला" }, { en: "Brijis Qadir", hi: "बृजिश कादिर" }], correct: 0 },
+            { id: 96, en: "Who built the 'Bada Imambara' in Lucknow?", hi: "निम्नलिखित में से किसने लखनऊ में बड़ा 'इमामबाड़ा' बनवाया?", options: [{ en: "Asaf-ud-Daula", hi: "आसफउद्दौला" }, { en: "Saadat Khan", hi: "सआदत खाँ" }, { en: "Wajid Ali Shah", hi: "वाजिद अली शाह" }, { en: "None", hi: "None" }], correct: 0 },
+            { id: 97, en: "Which ruler supported Afghan ruler Ahmad Shah Abdali in the 3rd Battle of Panipat (1761)?", hi: "निम्नलिखित में से शासक ने पानी पथ के तृतीय युद्ध (1761) में अफगान शासक अहमद शाह अवदाली का साथ दिया था?", options: [{ en: "Asaf-ud-Daula", hi: "आसफउद्दौला" }, { en: "Shuja-ud-Daula", hi: "शुजाउद्दौला" }, { en: "Mir Qasim", hi: "मीर कासिम" }, { en: "Safdarjung", hi: "सफदरजंग" }], correct: 1 },
+            { id: 98, en: "Consider statements:\n1. Shuja-ud-Daula gave shelter to Shah Alam II.\n2. Asaf-ud-Daula shifted capital from Faizabad to Lucknow.", hi: "विचार कीजिए:\n1. शुजाउद्दौला ने मुगल बादशाह शाह आलम-II को शरण दिया था।\n2. आसफउद्दौला ने अवध की राजधानी फैजाबाद से लखनऊ स्थान्तरित किया था\nउपर्युक्त में कौन-सा/से सही है/हैं-", options: [{ en: "Only 1", hi: "केवल 1" }, { en: "Only 2", hi: "केवल 2" }, { en: "1 & 2", hi: "1 & 2" }, { en: "None", hi: "None" }], correct: 2 },
+            { id: 99, en: "Who said: 'Daro-deewar pe hasrat ki nazar karte hain...'", hi: "किसने कहा था ?\n'दरो-दीवार पे हसरत की नजर करते हैं, खुश रहो अहले-वतन हम तो सफर करते हैं'", options: [{ en: "Ashfaqulla Khan", hi: "अशफाकउल्लाह खाँ ने" }, { en: "Bahadur Shah Zafar", hi: "बहादुरशाह जफर" }, { en: "Wajid Ali Shah", hi: "वाजिद अली शाह ने" }, { en: "None", hi: "None" }], correct: 2 },
+            { id: 100, en: "Awadh was merged into the British Empire due to?", hi: "अवध को अंग्रेजी साम्राज्य में मिलाया गया था?", options: [{ en: "Subsidiary Alliance", hi: "सहायक संधि के तहत" }, { en: "Allegation of Misgovernance", hi: "कुशासन का आरोप लगाकर" }, { en: "Doctrine of Lapse", hi: "राज्य हड़प नीति के तहत" }, { en: "None", hi: "None" }], correct: 1 },
+            { id: 101, en: "Who was victorious in the First Anglo-Mysore War (1766-69)?", hi: "प्रथम आंग्ल-मैसूर युद्ध (1766-69 ई.) में कौन विजयी हुआ?", options: [{ en: "English", hi: "अंग्रेज" }, { en: "Haider Ali", hi: "हैदर अली" }, { en: "Maratha", hi: "मराठा" }, { en: "Nizam of Hyderabad", hi: "हैदराबाद का निजाम" }], correct: 1 },
+            { id: 102, en: "British General who defeated Haider Ali in the Battle of Porto Novo:", hi: "ब्रिटिश जनरल जिसने हैदर अली को पोर्टो नोवो के युद्ध में हराया-", options: [{ en: "Captain Popham", hi: "कैप्टन पौपहेम" }, { en: "Sir Eyre Coote", hi: "सर आयरकूट" }, { en: "Sir Hector Munro", hi: "सर हेक्टर मुनरो" }, { en: "General Goddard", hi: "जनरल गोड्डार्ड" }], correct: 1 },
+            { id: 103, en: "Tipu Sultan made his capital at-", hi: "टीपू सुल्तान ने अपनी राजधानी बनाई-", options: [{ en: "Srirangapatna", hi: "श्रीरंगपट्टनम में" }, { en: "Mysore", hi: "मैसूर में" }, { en: "Bangalore", hi: "बंगलौर में" }, { en: "Coimbatore", hi: "कोयम्बटूर में" }], correct: 0 },
+            { id: 104, en: "Which Indian ruler established embassies abroad on modern lines?", hi: "निम्नलिखित भारतीय शासकों में से कौन था, जिसने विदेशों में आधुनिक पद्धति से दूतावास स्थापित किए थे?", options: [{ en: "Haider Ali", hi: "हैदर अली" }, { en: "Mir Qasim", hi: "मीर कासिम" }, { en: "Shah Alam II", hi: "शाह आलम II" }, { en: "Tipu Sultan", hi: "टीपू सुल्तान" }], correct: 3 },
+            { id: 105, en: "Where did Tipu Sultan defeat the British army in 1780?", hi: "टीपू सुल्तान ने ब्रिटिश सेना को 1780 ई. में हराया था-", options: [{ en: "Hyderabad", hi: "हैदराबाद में" }, { en: "Pollilur", hi: "पोल्लीलुर में" }, { en: "Srirangapatna", hi: "सेरिंगपट्टनम में" }, { en: "Nizamabad", hi: "निजामाबाद में" }], correct: 1 },
+            { id: 106, en: "With whom did the British sign the Treaty of Srirangapatna?", hi: "अंग्रेजों ने श्रीरंगपट्टनम की संधि किसके साथ की थी?", options: [{ en: "Haider Ali", hi: "हैदर अली" }, { en: "Dupleix", hi: "डूप्ले" }, { en: "Tipu Sultan", hi: "टीपू सुल्तान" }, { en: "Nandaraj", hi: "नन्दराज" }], correct: 2 },
+            { id: 107, en: "When did Tipu Sultan die fighting the British?", hi: "टीपू सुल्तान अंग्रेजों के साथ युद्ध में कब मारे गए?", options: [{ en: "1857", hi: "1857" }, { en: "1799", hi: "1799" }, { en: "1793", hi: "1793" }, { en: "1769", hi: "1769" }], correct: 1 },
+            { id: 108, en: "Which one is correctly matched?", hi: "निम्नलिखित में से कौन एक सुमेलित है?", options: [{ en: "1st Mysore War - Haider defeated", hi: "प्रथम आंग्ल-मैसूर युद्ध - हैदर अली पराजित हुआ था।" }, { en: "2nd Mysore War - Haider defeated British", hi: "द्वितीय आंग्ल-मैसूर युद्ध - हैदर अली ने अंग्रेजों को पराजित किया।" }, { en: "3rd Mysore War - Tipu won", hi: "तृतीय आंग्ल-मैसूर युद्ध - टीपू सुल्तान युद्ध जीता..." }, { en: "4th Mysore War - Tipu defeated & killed", hi: "चतुर्थ आंग्ल-मैसूर युद्ध - टीपू पराजित किया गया और युद्ध के मध्य दिवंगत हुआ" }], correct: 3 },
+            { id: 109, en: "Begum Samru built a famous church at-", hi: "बेगम समरू ने एक अति प्रसिद्ध चर्च का निर्माण करवाया-", options: [{ en: "Mount Abu", hi: "माउन्ट आबू में" }, { en: "Nainital", hi: "नैनीताल में" }, { en: "Sardhana", hi: "सरधना में" }, { en: "Kanpur", hi: "कानपुर में" }], correct: 2 },
+            { id: 110, en: "Which statement is NOT correct?", hi: "निम्न कथनों में से कौन-सा एक सही नहीं है?", options: [{ en: "Ali Mardan Khan started revenue farming in Bengal", hi: "अली मर्दान खान ने बंगाल में राजस्व कृषि पद्धति प्रारंभ की" }, { en: "Ranjit Singh set up cannon factory in Lahore", hi: "महाराजा रणजीत सिंह ने लाहौर में तोपों के निर्माण के लिए आधुनिक ढलाई खाने स्थापित किए" }, { en: "Jai Singh translated Euclid into Sanskrit", hi: "आमेर में सवाई जयसिंह ने यूक्लिड के 'रेखागणित के तत्वों' का संस्कृत में अनुवाद कराया" }, { en: "Tipu Sultan gave money for Shringeri temple", hi: "मैसूर में टीपू सुल्तान ने श्रृंगेरी मंदिर में देवी शारदा की मूर्ति के निर्माण के लिए धन दिया" }], correct: 0 },
+            { id: 111, en: "Consider: 3rd Battle of Panipat - Abdali defeated Ibrahim Lodi?", hi: "निम्नलिखित कथनों पर विचार कीजिए-\n(1) पानीपत के तृतीय युद्ध में अहमदशाह अब्दाली ने इब्राहिम लोदी को पराजित किया।", options: [{ en: "True", hi: "सत्य" }, { en: "False", hi: "असत्य" }, { en: "Don't Know", hi: "पता नहीं" }, { en: "None", hi: "None" }], correct: 1 }
+        ];
+
+        // --- APP STATE ---
+        let currentQuestion = 0;
+        let score = 0;
+        let timerInterval;
+        let timeLeft = 0;
+        let timerSetting = 0;
+        let questions = [];
+        let isShuffled = false;
+        
+        // Audio Context
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const audioCtx = new AudioContext();
+
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            const now = audioCtx.currentTime;
+
+            if (type === 'correct') {
+                // High pitch 'Ting'
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(800, now);
+                osc.frequency.exponentialRampToValueAtTime(1200, now + 0.1);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+                osc.start(now);
+                osc.stop(now + 0.5);
+            } else {
+                // Low pitch 'Buzz'
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(150, now);
+                osc.frequency.linearRampToValueAtTime(100, now + 0.3);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+                osc.start(now);
+                osc.stop(now + 0.3);
+            }
+        }
+
+        function startQuiz() {
+            // Settings
+            timerSetting = parseInt(document.getElementById('timerInput').value) || 0;
+            isShuffled = document.getElementById('shuffleInput').checked;
+
+            // Prepare Questions
+            questions = [...rawData];
+            if (isShuffled) {
+                questions.sort(() => Math.random() - 0.5);
+            }
+
+            // Init State
+            currentQuestion = 0;
+            score = 0;
+            document.getElementById('start-screen').classList.remove('active');
+            document.getElementById('quiz-screen').classList.add('active');
+            
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            clearInterval(timerInterval);
+            if (currentQuestion >= questions.length) {
+                finishQuiz();
+                return;
+            }
+
+            const qData = questions[currentQuestion];
+            const total = questions.length;
+
+            // Update Header
+            document.getElementById('q-counter').textContent = `Q: ${currentQuestion + 1}/${total}`;
+            document.getElementById('score-counter').textContent = `Score: ${score}`;
+            document.getElementById('q-en').innerText = qData.en;
+            document.getElementById('q-hi').innerText = qData.hi;
+            
+            // Progress Bar
+            const progress = ((currentQuestion) / total) * 100;
+            document.getElementById('progressBar').style.width = `${progress}%`;
+
+            // Render Options
+            const optsContainer = document.getElementById('options-container');
+            optsContainer.innerHTML = '';
+            
+            qData.options.forEach((opt, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerHTML = `
+                    <span class="opt-en">${opt.en}</span>
+                    <span class="opt-hi">${opt.hi}</span>
+                `;
+                btn.onclick = () => handleAnswer(index, btn);
+                optsContainer.appendChild(btn);
+            });
+
+            // Reset Timer Style
+            const timerDisplay = document.getElementById('timer-display');
+            timerDisplay.classList.remove('pulse-red');
+            timerDisplay.textContent = '';
+
+            if (timerSetting > 0) startTimer();
+        }
+
+        function startTimer() {
+            timeLeft = timerSetting;
+            const timerDisplay = document.getElementById('timer-display');
+            timerDisplay.textContent = `⏱ ${timeLeft}`;
+
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                timerDisplay.textContent = `⏱ ${timeLeft}`;
+                
+                if (timeLeft < 5) timerDisplay.classList.add('pulse-red');
+
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    handleAnswer(-1, null); // Timeout considered wrong
+                }
+            }, 1000);
+        }
+
+        function handleAnswer(selectedIndex, btnElement) {
+            clearInterval(timerInterval);
+            const qData = questions[currentQuestion];
+            const correctIndex = qData.correct;
+            const allBtns = document.querySelectorAll('.option-btn');
+
+            // Lock UI
+            allBtns.forEach(b => b.disabled = true);
+
+            if (selectedIndex === correctIndex) {
+                score++;
+                if(btnElement) btnElement.classList.add('correct');
+                playSound('correct');
+                showFeedback('correct');
+                fireConfetti();
+            } else {
+                if(btnElement) btnElement.classList.add('wrong');
+                // Reveal correct
+                if (correctIndex < allBtns.length) allBtns[correctIndex].classList.add('correct');
+                playSound('wrong');
+                showFeedback('wrong');
+            }
+
+            document.getElementById('score-counter').textContent = `Score: ${score}`;
+
+            setTimeout(() => {
+                currentQuestion++;
+                loadQuestion();
+            }, 1500);
+        }
+
+        function showFeedback(type) {
+            const el = document.getElementById(`feedback-${type}`);
+            el.classList.add('show');
+            if(type === 'wrong') el.classList.add('shake');
+            setTimeout(() => {
+                el.classList.remove('show', 'shake');
+            }, 1000);
+        }
+
+        function finishQuiz() {
+            clearInterval(timerInterval);
+            document.getElementById('quiz-screen').classList.remove('active');
+            document.getElementById('result-screen').classList.add('active');
+
+            const total = questions.length;
+            const attempted = currentQuestion; 
+            // In Early Exit: Current Question index is basically how many we faced.
+            // If finished naturally, currentQuestion == total.
+            
+            const percentage = attempted > 0 ? Math.round((score / attempted) * 100) : 0;
+            
+            document.getElementById('final-score').textContent = `${percentage}%`;
+
+            const msgDisplay = document.getElementById('result-message');
+            if (percentage >= 80) msgDisplay.textContent = "🏆 Outstanding Performance!";
+            else if (percentage >= 50) msgDisplay.textContent = "👏 Well Done! Keep it up.";
+            else msgDisplay.textContent = "📚 Practice makes perfect!";
+
+            document.getElementById('res-correct').textContent = score;
+            document.getElementById('res-wrong').textContent = attempted - score;
+            document.getElementById('res-total').textContent = attempted;
+        }
+
+        // --- Confetti ---
+        function fireConfetti() {
+            const canvas = document.getElementById('confetti-canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            const pieces = [];
+            const colors = ['#00e676', '#ff00cc', '#ffffff', '#ffd700'];
+
+            for (let i = 0; i < 60; i++) {
+                pieces.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height - canvas.height,
+                    w: Math.random() * 8 + 4,
+                    h: Math.random() * 8 + 4,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    speed: Math.random() * 5 + 3,
+                    angle: Math.random() * 360
+                });
+            }
+
+            function update() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                let active = false;
+
+                pieces.forEach(p => {
+                    p.y += p.speed;
+                    p.angle += 3;
+                    ctx.save();
+                    ctx.translate(p.x, p.y);
+                    ctx.rotate(p.angle * Math.PI / 180);
+                    ctx.fillStyle = p.color;
+                    ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
+                    ctx.restore();
+
+                    if (p.y < canvas.height) active = true;
+                });
+
+                if (active) requestAnimationFrame(update);
+            }
+            update();
+        }
+    </script>
+</body>
+</html>

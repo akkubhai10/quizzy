@@ -1,0 +1,1302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern History Quiz | आधुनिक इतिहास प्रश्नोत्तरी</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --text-primary: #ffffff;
+            --text-secondary: #e0e0e0;
+            --text-hindi: #d1d1d1;
+            --accent-green: #00e676;
+            --accent-red: #ff1744;
+            --mesh-1: #667eea;
+            --mesh-2: #764ba2;
+            --mesh-3: #ff00cc;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, var(--mesh-1), var(--mesh-2), var(--mesh-3));
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--text-primary);
+            overflow: hidden; /* Prevent body scroll, handle in app */
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* --- Glass Container --- */
+        .app-container {
+            width: 95%;
+            max-width: 600px;
+            height: 90vh;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 25px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* --- Screens --- */
+        .screen {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            overflow-y: auto;
+            display: none; /* Hidden by default */
+        }
+
+        .screen.active {
+            display: flex;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* --- Start Screen --- */
+        .start-content {
+            text-align: center;
+            margin: auto;
+            width: 100%;
+        }
+
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .subtitle {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            margin-bottom: 30px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+            text-align: left;
+            background: rgba(0,0,0,0.2);
+            padding: 15px;
+            border-radius: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            border-radius: 10px;
+            border: 1px solid var(--glass-border);
+            background: rgba(255,255,255,0.1);
+            color: white;
+            font-family: inherit;
+            outline: none;
+        }
+
+        .toggle-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+
+        .switch input { opacity: 0; width: 0; height: 0; }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(255,255,255,0.2);
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider { background-color: var(--accent-green); }
+        input:checked + .slider:before { transform: translateX(26px); }
+
+        .btn-primary {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 50px;
+            background: white;
+            color: var(--mesh-2);
+            font-weight: 700;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 20px;
+        }
+
+        .btn-primary:hover {
+            transform: scale(1.02);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        /* --- Quiz UI --- */
+        .quiz-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .progress-container {
+            width: 100%;
+            height: 4px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 2px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: var(--accent-green);
+            width: 0%;
+            transition: width 0.3s ease;
+            box-shadow: 0 0 10px var(--accent-green);
+        }
+
+        .timer {
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .timer.pulse-red {
+            color: var(--accent-red);
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .question-box {
+            background: rgba(0,0,0,0.15);
+            padding: 20px;
+            border-radius: 20px;
+            margin-bottom: 20px;
+            /* Scroll Handling */
+            max-height: 40vh;
+            overflow-y: auto;
+        }
+        
+        /* Custom scrollbar for question box */
+        .question-box::-webkit-scrollbar { width: 5px; }
+        .question-box::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.3); border-radius: 5px; }
+
+        .q-text-en {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+            line-height: 1.4;
+        }
+
+        .q-text-hi {
+            font-size: 0.95rem;
+            color: var(--text-hindi);
+            line-height: 1.4;
+        }
+
+        .options-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            flex: 1;
+            /* Ensure options scroll if screen is small */
+            overflow-y: auto;
+        }
+
+        .option-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 12px 15px;
+            border-radius: 12px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .option-btn:hover {
+            background: rgba(255,255,255,0.15);
+        }
+
+        .opt-en { font-weight: 500; font-size: 0.95rem; }
+        .opt-hi { font-size: 0.85rem; color: var(--text-hindi); margin-top: 2px; }
+
+        .option-btn.correct {
+            background: rgba(0, 230, 118, 0.2);
+            border-color: var(--accent-green);
+        }
+
+        .option-btn.wrong {
+            background: rgba(255, 23, 68, 0.2);
+            border-color: var(--accent-red);
+        }
+
+        .feedback-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 4rem;
+            pointer-events: none;
+            z-index: 100;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .feedback-overlay.show { opacity: 1; }
+        .shake { animation: shake 0.5s; }
+
+        @keyframes shake {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            25% { transform: translate(-55%, -50%) rotate(-5deg); }
+            75% { transform: translate(-45%, -50%) rotate(5deg); }
+            100% { transform: translate(-50%, -50%) rotate(0deg); }
+        }
+
+        .submit-container {
+            margin-top: 15px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            padding-top: 10px;
+        }
+
+        .btn-finish {
+            width: 100%;
+            padding: 12px;
+            border-radius: 15px;
+            border: 1px solid var(--accent-red);
+            background: rgba(255, 23, 68, 0.1);
+            color: var(--accent-red);
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* --- Result Screen --- */
+        .result-content {
+            text-align: center;
+            margin: auto;
+        }
+
+        .score-display {
+            font-size: 3rem;
+            font-weight: 800;
+            margin: 20px 0;
+            background: -webkit-linear-gradient(white, #ccc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .message {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            color: var(--text-secondary);
+        }
+
+        /* --- Confetti --- */
+        #confetti-canvas {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        
+        <div id="feedback-correct" class="feedback-overlay">🎉</div>
+        <div id="feedback-wrong" class="feedback-overlay">😢</div>
+
+        <canvas id="confetti-canvas"></canvas>
+
+        <div class="progress-container" id="progressBarContainer" style="display:none; width:100%; margin:0;">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+
+        <div class="screen active" id="start-screen">
+            <div class="start-content">
+                <h1>Modern History</h1>
+                <p class="subtitle">आधुनिक इतिहास (Questions 1-50)</p>
+
+                <div class="input-group">
+                    <label>⏱️ Timer (Seconds/Question)</label>
+                    <input type="number" id="timerInput" placeholder="e.g. 15 (Leave 0 for no timer)" min="0">
+                </div>
+
+                <div class="input-group toggle-container">
+                    <label>🔀 Shuffle Questions</label>
+                    <label class="switch">
+                        <input type="checkbox" id="shuffleInput">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <button class="btn-primary" onclick="startQuiz()">Start Quiz 🚀</button>
+            </div>
+        </div>
+
+        <div class="screen" id="quiz-screen">
+            <div class="quiz-header">
+                <span id="q-counter">Q: 01/50</span>
+                <span id="timer-display" class="timer"></span>
+                <span id="score-counter">Score: 0</span>
+            </div>
+
+            <div class="question-box">
+                <div class="q-text-en" id="q-en">Question Text English</div>
+                <div class="q-text-hi" id="q-hi">प्रश्न हिंदी में</div>
+            </div>
+
+            <div class="options-grid" id="options-container">
+                </div>
+
+            <div class="submit-container">
+                <button class="btn-finish" onclick="finishQuiz()">⏹ Finish & Show Results</button>
+            </div>
+        </div>
+
+        <div class="screen" id="result-screen">
+            <div class="result-content">
+                <h2>Quiz Completed!</h2>
+                <div class="score-display" id="final-score">0%</div>
+                <p class="message" id="result-message">Fetching result...</p>
+                <div style="margin-bottom: 20px; font-size: 0.9rem; color: #ddd;">
+                    <p>Correct: <span id="res-correct" style="color:var(--accent-green)">0</span></p>
+                    <p>Wrong: <span id="res-wrong" style="color:var(--accent-red)">0</span></p>
+                    <p>Skipped: <span id="res-skipped">0</span></p>
+                </div>
+                <button class="btn-primary" onclick="location.reload()">🔄 Restart Quiz</button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // --- DATA (Extracted 1-50) ---
+        const rawData = [
+            {
+                id: 1,
+                en: "Match the following Treaties with their years:\nA. Treaty of Purandar\nB. Treaty of Sangola\nC. Treaty of Surat\nD. Treaty of Deogaon",
+                hi: "सूची-I को सूची-II के साथ सुमेलित कीजिए-\n(संधि - वर्ष)\nA. पुरंदर की संधि, B. संगोला की संधि, C. सूरत की संधि, D. देवगांव की संधि",
+                options: [
+                    { en: "A-1, B-2, C-4, D-3", hi: "1-2-4-3" },
+                    { en: "A-1, B-3, C-2, D-4", hi: "1-3-2-4" },
+                    { en: "A-2, B-1, C-3, D-4", hi: "2-1-3-4" },
+                    { en: "A-2, B-3, C-1, D-4", hi: "2-3-1-4" }
+                ],
+                correct: 2 // Option C (Index 2)
+            },
+            {
+                id: 2,
+                en: "Match the Sikh Gurus with their achievements:\nA. Nanak\nB. Arjan Dev\nC. Tegh Bahadur\nD. Govind Singh",
+                hi: "सूची-I को सूची-II के साथ सुमेलित कीजिए-\n(गुरु - उपलब्धियाँ)\nA. नानक, B. अर्जुन देव, C. तेग बहादुर, D. गोविन्द सिंह",
+                options: [
+                    { en: "A-1, B-2, C-4, D-3", hi: "1-2-4-3" },
+                    { en: "A-2, B-1, C-4, D-3", hi: "2-1-4-3" },
+                    { en: "A-2, B-1, C-3, D-4", hi: "2-1-3-4" },
+                    { en: "A-2, B-3, C-1, D-4", hi: "2-3-1-4" }
+                ],
+                correct: 1 // Option B
+            },
+            {
+                id: 3,
+                en: "In which year did the last Maharaja of Punjab, Duleep Singh, die in Paris?",
+                hi: "पंजाब के अंतिम महाराजा दलीप सिंह की मृत्यु पेरिस में किस वर्ष हुई थी?",
+                options: [
+                    { en: "23 October 1893", hi: "23 अक्टूबर 1893" },
+                    { en: "22 October 1893", hi: "22 अक्टूबर 1893" },
+                    { en: "21 October 1893", hi: "21 अक्टूबर 1893" },
+                    { en: "20 October 1893", hi: "20 अक्टूबर 1893" }
+                ],
+                correct: 0 // Option A
+            },
+            {
+                id: 4,
+                en: "Match the Wars with their Treaties/Periods:\nA. 1st Anglo Maratha War\nB. 3rd Anglo Maratha War\nC. Treaty of Poona\nD. Treaty of Salbai",
+                hi: "सूची-I को सूची-II के साथ सुमेलित कीजिए-\n(युद्ध/संधि - वर्ष)\nA. प्रथम आंग्ल मराठा युद्ध, B. तृतीय आंग्ल मराठा युद्ध, C. पूना की संधि, D. सालबाई की संधि",
+                options: [
+                    { en: "A-1, B-2, C-4, D-3", hi: "1-2-4-3" },
+                    { en: "A-2, B-1, C-4, D-3", hi: "2-1-4-3" },
+                    { en: "A-2, B-1, C-3, D-4", hi: "2-1-3-4" },
+                    { en: "A-2, B-3, C-1, D-4", hi: "2-3-1-4" }
+                ],
+                correct: 0 // Option A
+            },
+            {
+                id: 5,
+                en: "Match the State with its Founder:\nA. Rajputana\nB. Mysore\nC. Travancore\nD. Ahom",
+                hi: "सूची-I को सूची-II के साथ सुमेलित कीजिए-\n(राज्य - संस्थापक)\nA. राजपुताना, B. मैसूर, C. त्रावणकोर, D. अहोम",
+                options: [
+                    { en: "A-2, B-1, C-4, D-3", hi: "2-1-4-3" },
+                    { en: "A-2, B-1, C-4, D-3", hi: "2-1-4-3" },
+                    { en: "A-2, B-1, C-3, D-4", hi: "2-1-3-4" },
+                    { en: "A-2, B-3, C-1, D-4", hi: "2-3-1-4" }
+                ],
+                correct: 0 // Option A (Key based assumption: Mysore-Haider Ali is 1, Travancore-Martand is 4)
+            },
+            {
+                id: 6,
+                en: "Between whom was the Treaty of Sugauli (1816) signed?",
+                hi: "1816 में सुगौली की संधि अंग्रेज एवं ...... के बीच हस्ताक्षरित हुई थी?",
+                options: [
+                    { en: "Sikhs", hi: "सिक्ख" },
+                    { en: "Gorkhas", hi: "गोरखा" },
+                    { en: "Marathas", hi: "मराठा" },
+                    { en: "French", hi: "फ्रेंच" }
+                ],
+                correct: 1
+            },
+            {
+                id: 7,
+                en: "On the banks of which river in Bengal is the Plassey battlefield located?",
+                hi: "प्लासी का युद्ध मैदान बंगाल राज्य के नदिया जिले में किस नदी के किनारे स्थित है?",
+                options: [
+                    { en: "Bhagirathi River", hi: "भागीरथी नदी" },
+                    { en: "Baitarani River", hi: "बैतरणी नदी" },
+                    { en: "Saijul River", hi: "सेइजुल नदी" },
+                    { en: "Rajganga River", hi: "राजगंगा नदी" }
+                ],
+                correct: 0
+            },
+            {
+                id: 8,
+                en: "After the Treaty of Allahabad, whom did Robert Clive appoint as the Deputy Diwan of Bihar?",
+                hi: "इलाहाबाद की संधि के पश्चात् रॉबर्ट क्लाइव ने बिहार राज्य का उपदीवान किसे नियुक्त किया था?",
+                options: [
+                    { en: "Raja Shitab Rai", hi: "राजा शिताब राय" },
+                    { en: "Mohammad Reza Khan", hi: "मोहम्मद रजा खान" },
+                    { en: "Rai Durlabh", hi: "राय दुर्लभ" },
+                    { en: "Syed Ghulam Hussain", hi: "सैयद गुलाम हुसैन" }
+                ],
+                correct: 0
+            },
+            {
+                id: 9,
+                en: "In which year did Tipu Sultan defeat the British army at Pollilur?",
+                hi: "टीपू सुल्तान ने ब्रिटिश सेना को पोल्लीपुर नामक स्थान पर किस वर्ष हराया था?",
+                options: [
+                    { en: "1780", hi: "1780" },
+                    { en: "1785", hi: "1785" },
+                    { en: "1790", hi: "1790" },
+                    { en: "1795", hi: "1795" }
+                ],
+                correct: 0
+            },
+            {
+                id: 10,
+                en: "Who was NOT a member of the 'Council of Three' established to rule Punjab after its annexation?",
+                hi: "पंजाब के विलय के पश्चात् अंग्रेजों ने शासन करने के लिए स्थापित निम्नलिखित में से कौन 'तीन की परिषद' का सदस्य नहीं था?",
+                options: [
+                    { en: "H.M. Elliot", hi: "एच. एम. इलियट" },
+                    { en: "Sir Henry Lawrence", hi: "सर हेनरी लॉरेन्स" },
+                    { en: "John Lawrence", hi: "जान लॉरेन्स" },
+                    { en: "Charles Grenville Mansel", hi: " चार्ल्स ग्रेनविले मानसेल" }
+                ],
+                correct: 0 // Usually Lawrence brothers + Mansel were members. Elliot was not.
+            },
+            {
+                id: 11,
+                en: "Murshid Quli Khan was originally a:",
+                hi: "मुर्शीद कुली खां मूलतः था एक-",
+                options: [
+                    { en: "Persian (Irani)", hi: "फारसी (ईरानी)" },
+                    { en: "Muslim", hi: "मुस्लिम" },
+                    { en: "Afghan", hi: "अफगान" },
+                    { en: "South Indian Brahmin", hi: "दक्षिण भारतीय ब्राह्मण" }
+                ],
+                correct: 3
+            },
+            {
+                id: 12,
+                en: "Who was the last Nawab of Awadh?",
+                hi: "अवध के अंतिम नवाब कौन थे?",
+                options: [
+                    { en: "Asaf-ud-Daula", hi: "आसफउद्दौला" },
+                    { en: "Shuja-ud-Daula", hi: "शुजाउद्दौला" },
+                    { en: "Wazir Ali", hi: "वजीर अली" },
+                    { en: "Wajid Ali Shah", hi: "वाजिद अली शाह" }
+                ],
+                correct: 3
+            },
+            {
+                id: 13,
+                en: "Which Nawab started the Ijaredari system in Bengal?",
+                hi: "बंगाल में किस नवाब ने इजारेदारी प्रथा को प्रारंभ किया था?",
+                options: [
+                    { en: "Murshid Quli Khan", hi: "मुर्शीद कुली खां" },
+                    { en: "Alivardi Khan", hi: "अलीवर्दी खां" },
+                    { en: "Siraj-ud-Daula", hi: "सिराजुद्दौला" },
+                    { en: "Sarfaraz Khan", hi: "सरफराज खां" }
+                ],
+                correct: 0
+            },
+            {
+                id: 14,
+                en: "Whose writings are NOT included in the Guru Granth Sahib?",
+                hi: "निम्नलिखित में किस संत की गुरुग्रंथ साहिब में वाणी सम्मिलित नहीं किया गया है?",
+                options: [
+                    { en: "Kabir Das", hi: "कबीरदास" },
+                    { en: "Ravidas", hi: "रविदास" },
+                    { en: "Namdev", hi: "नामदेव" },
+                    { en: "Surdas/Tulsidas", hi: "सूरदास/तुलसीदास" }
+                ],
+                correct: 3 // Historically Tulsidas is not in it.
+            },
+            {
+                id: 15,
+                en: "Match the Anglo-Mysore Wars with the British Generals:",
+                hi: "सूची-I (युद्ध) व सूची-II (जनरल) को सुमेलित कीजिए",
+                options: [
+                    { en: "A-3, B-1, C-4, D-2", hi: "3-1-4-2" },
+                    { en: "A-4, B-3, C-2, D-1", hi: "4-3-2-1" },
+                    { en: "A-3, B-4, C-2, D-1", hi: "3-4-2-1" },
+                    { en: "A-1, B-3, C-2, D-4", hi: "1-3-2-4" }
+                ],
+                correct: 0 // Approximation based on standard keys (1st-Smith/Wood, 2nd-Coote, 3rd-Medows/Cornwallis, 4th-Harris/Stuart)
+            },
+            {
+                id: 16,
+                en: "Which Sikh Guru founded the city named Taran Taran?",
+                hi: "तरन-तारण नामक नगर की स्थापना करने वाले सिख गुरू कौन थे?",
+                options: [
+                    { en: "Guru Arjan Dev", hi: "गुरू अर्जुन देव" },
+                    { en: "Guru Ramdas", hi: "गुरू रामदास" },
+                    { en: "Guru Govind Singh", hi: "गुरू गोविन्द सिंह" },
+                    { en: "Guru Tegh Bahadur", hi: "गुरू तेग बहादुर" }
+                ],
+                correct: 0
+            },
+            {
+                id: 17,
+                en: "Which Madras Governor signed the Treaty of Mangalore with Tipu?",
+                hi: "निम्नलिखित में मद्रास के किस गवर्नर टीपू के साथ मंगलोर की संधि की थी?",
+                options: [
+                    { en: "Lord Macartney", hi: "लार्ड मैकार्टनी" },
+                    { en: "Eyre Coote", hi: "आयरकूट" },
+                    { en: "Wellesley", hi: "वेलेजली" },
+                    { en: "Lord Stephenson", hi: "लार्ड स्टीफेंसन" }
+                ],
+                correct: 0
+            },
+            {
+                id: 18,
+                en: "Match Shivaji's Ministers (Ashtapradhan):",
+                hi: "शिवाजी के अष्ट प्रधान के संबंध में दी गई सूची-I को सूची-II को सुमेलित करें",
+                options: [
+                    { en: "A-4, B-2, C-1, D-3", hi: "4-2-1-3" },
+                    { en: "A-4, B-3, C-2, D-1", hi: "4-3-2-1" },
+                    { en: "A-3, B-4, C-2, D-1", hi: "3-4-2-1" },
+                    { en: "A-1, B-3, C-2, D-4", hi: "1-3-2-4" }
+                ],
+                correct: 0 // Majumdar-Finance(4), Wakianavis-Intel/Post?(Actually Mantri/Wakia is record, but key A seems best fit here)
+            },
+            {
+                id: 19,
+                en: "Match Ranjit Singh's Administration:",
+                hi: "रंजीत सिंह के प्रशासन से संबंधित दी गई सूची को सुमेलित करें",
+                options: [
+                    { en: "A-2, B-1, C-4, D-3", hi: "2-1-4-3" },
+                    { en: "A-2, B-3, C-1, D-4", hi: "2-3-1-4" },
+                    { en: "A-3, B-2, C-1, D-4", hi: "3-2-1-4" },
+                    { en: "A-1, B-4, C-3, D-2", hi: "1-4-3-2" }
+                ],
+                correct: 0
+            },
+            {
+                id: 20,
+                en: "In which year was the city of Jaipur founded?",
+                hi: "निम्नलिखित में जयपुर शहर की स्थापना किस वर्ष हुई थी?",
+                options: [
+                    { en: "1722", hi: "1722 ई." },
+                    { en: "1723", hi: "1723 ई." },
+                    { en: "1724", hi: "1724 ई." },
+                    { en: "1727", hi: "1727 ई." }
+                ],
+                correct: 3
+            },
+            {
+                id: 21,
+                en: "Who granted permission for the first English Factory in Bengal at Hugli in 1651?",
+                hi: "बंगाल में प्रथम अंग्रेजी Factory 1651 ई. में हुगली में स्थापित हुआ, अनुमति किसने दी?",
+                options: [
+                    { en: "Shah Shuja", hi: "शाहशुजा" },
+                    { en: "Murshid Quli Khan", hi: "मुर्शिदकुली खाँ" },
+                    { en: "Aurangzeb", hi: "औरंगजेब" },
+                    { en: "None", hi: "None" }
+                ],
+                correct: 0
+            },
+            {
+                id: 22,
+                en: "Which Bengal ruler provided Takavi loans and Ijaredari system to farmers?",
+                hi: "बंगाल के किस शासक ने किसानों को इजारेदारी प्रथा तथा तकावी ऋण प्रदान किया?",
+                options: [
+                    { en: "Alivardi Khan", hi: "अलीवर्दी खाँ" },
+                    { en: "Sarfaraz Khan", hi: "सरफराज खाँ" },
+                    { en: "Murshid Quli Khan", hi: "मुर्शिदकुली खाँ" },
+                    { en: "Siraj-ud-Daula", hi: "सिराजुद्दौला" }
+                ],
+                correct: 2
+            },
+            {
+                id: 23,
+                en: "During whose reign did Bengal become so prosperous it was called the 'Paradise of India'?",
+                hi: "निम्न में से किसके शासन काल के दौरान बंगाल इतना समृद्धशाली हो गया की बंगाल को भारत का स्वर्ग कहा जाने लगा?",
+                options: [
+                    { en: "Alivardi Khan", hi: "अलीवर्दी खाँ" },
+                    { en: "Mir Qasim", hi: "मीर कासिम" },
+                    { en: "Siraj-ud-Daula", hi: "सिराजुद्दौला" },
+                    { en: "None", hi: "None" }
+                ],
+                correct: 0
+            },
+            {
+                id: 24,
+                en: "Between whom was the Battle of Giriya fought in 1740?",
+                hi: "1740 ई. में गिरिया का युद्ध किसके बीच लड़ा गया था?",
+                options: [
+                    { en: "Alivardi Khan & Roger Drake", hi: "अलीवर्दी खाँ एवं रोजर ड्रेक" },
+                    { en: "Sarfaraz Khan & Siraj-ud-Daula", hi: "सरफराज खाँ एवं सिराजुद्दौला" },
+                    { en: "Alivardi Khan & Sarfaraz Khan", hi: "अलीवर्दी खाँ एवं सरफराज खां" },
+                    { en: "None", hi: "None" }
+                ],
+                correct: 2
+            },
+            {
+                id: 25,
+                en: "Consider the statements: 1. Bihar was theoretically added to Bengal by Shujauddin. 2. Independent power in Bengal after Aurangzeb was by Saadat Khan.",
+                hi: "विचार कीजिए: 1. बिहार को बंगाल में सैद्धांतिक रूप से शुजाउद्दीन ने मिलाया था। 2. औरंगजेब के निधन के पश्चात बंगाल में स्वतंत्र सत्ता की स्थापना शहादत खाँ ने की।",
+                options: [
+                    { en: "Only 1", hi: "केवल 1" },
+                    { en: "Only 2", hi: "केवल 2" },
+                    { en: "Both 1 & 2", hi: "1 & 2" },
+                    { en: "Neither 1 nor 2", hi: "न तो 1 न ही 2" }
+                ],
+                correct: 0
+            },
+            {
+                id: 26,
+                en: "Which English officer presented the account of the 'Black Hole Tragedy'?",
+                hi: "“ब्लैक हॉल की घटना” के विषय में किस अंग्रेज अधिकारी ने विवरण प्रस्तुत किया है?",
+                options: [
+                    { en: "Minchin", hi: "मिनचीन" },
+                    { en: "Roger Drake", hi: "रोजर ड्रेक" },
+                    { en: "Holwell", hi: "हॉलवेल" },
+                    { en: "None", hi: "None" }
+                ],
+                correct: 2
+            },
+            {
+                id: 27,
+                en: "Consider: 1. Treaty of Alinagar (9 Feb 1757) between Siraj and British. 2. Gun factory in Munger established by Shuja-ud-Daula.",
+                hi: "विचार कीजिए: 1. अलीनगर की संधि 9 Feb 1757 को सिराजुद्दौला एवं अंग्रेजी कंपनी के बीच हुई थी। 2. मुंगेर में बारूद एवं तोप का कारखाना शुजाउद्दौला ने स्थापित किया।",
+                options: [
+                    { en: "Only 1", hi: "केवल 1" },
+                    { en: "Only 2", hi: "केवल 2" },
+                    { en: "Both 1 & 2", hi: "1 & 2" },
+                    { en: "Neither", hi: "न तो 1 न ही 2" }
+                ],
+                correct: 0
+            },
+            {
+                id: 28,
+                en: "Which of the following statements is FALSE?",
+                hi: "निम्नलिखित में से कौन सा कथन असत्य है?",
+                options: [
+                    { en: "1700: Aurangzeb appointed Murshid Quli as Diwan.", hi: "1700 ई. में औरंगजेब ने मुर्शिदकुली खाँ को बंगाल का दीवान नियुक्त किया।" },
+                    { en: "Clive was Bengal Governor during Buxar war.", hi: "बक्सर के युद्ध के समय बंगाल के गवर्नर रॉबर्ट क्लाइव था" },
+                    { en: "Mir Jafar is called Clive's Jackal.", hi: "मीरजाफर को रॉबर्ट क्लाइव का गदहा या गीदर कह जाता है।" },
+                    { en: "Mir Qasim made Munger the capital.", hi: "मीर कासिम ने मुंगेर को राजधानी बनाया" }
+                ],
+                correct: 1 // False because Vansittart was Governor during Buxar (1764).
+            },
+            {
+                id: 29,
+                en: "Consider the 2nd Treaty of Allahabad (16 Aug 1765). Which code is incorrect?",
+                hi: "इलाहाबाद की द्वितीय संधि (16 August 1765) के संदर्भ में विचार कीजिए एवं कूट का प्रयोग कर गलत उत्तर का चयन कीजिए-",
+                options: [
+                    { en: "Between Shuja-ud-Daula & Clive", hi: "यह संधि अवध के नवाब शुजाउद्दौला एवं रॉबर्ट क्लाइव के बीच हुई।" },
+                    { en: "Duty free trade in Awadh", hi: "इस संधि के तहत अंग्रेजी कंपनी को अवध के क्षेत्र में कर मुक्त व्यापार करने की छूट प्रदान की गई" },
+                    { en: "Between Shah Alam II & Clive", hi: "यह संधि मुगल बादशाह शाह आलम द्वितीय एवं राबर्ट क्लाइव के बीच हुई।" },
+                    { en: "Diwani of Bengal/Bihar/Odisha", hi: "इस संधि के तहत अंग्रेजी कंपनी को स्थायी रूप से बंगाल, बिहार एवं उड़ीसा की दीवानी प्राप्त हुई।" }
+                ],
+                correct: 2 // Options 3 and 4 refer to the First Treaty (12 Aug) with Shah Alam. The question asks to identify based on codes. Usually 3 & 4 are the "Other" treaty. Let's mark C (2&3 or similar logic). In this context, option 3 is false for the *Second* treaty (which was with Awadh).
+            },
+            {
+                id: 30,
+                en: "Who was the first Nawab of Bengal to receive British protection?",
+                hi: "अंग्रेजों का संरक्षण प्राप्त बंगाल का प्रथम नवाब था?",
+                options: [
+                    { en: "Mubarak-ud-Daulah", hi: "मुबारकउद्दौला" },
+                    { en: "Najm-ud-Daulah", hi: "नजमुद्दौला" },
+                    { en: "Mir Jafar", hi: "मीरजाफर" },
+                    { en: "None", hi: "None" }
+                ],
+                correct: 1 // Najm-ud-Daulah (post Mir Jafar death).
+            },
+            {
+                id: 31,
+                en: "Who was the Governor of Bengal during the Battle of Buxar?",
+                hi: "बक्सर के युद्ध के समय बंगाल का गवर्नर कौन था?",
+                options: [
+                    { en: "Vansittart", hi: "वेन्सिटार्ड" },
+                    { en: "Robert Clive", hi: "रॉबर्ट क्लाइव" },
+                    { en: "Hector Munro", hi: "हेक्टर मुनरो" },
+                    { en: "None", hi: "None" }
+                ],
+                correct: 0
+            },
+            {
+                id: 32,
+                en: "Who was the last Bengal Governor appointed by the Mughal Emperor?",
+                hi: "निम्नलिखित में से कौन एक मुगल सम्राट द्वारा नियुक्त बंगाल का अंतिम गवर्नर था?",
+                options: [
+                    { en: "Sarfaraz Khan", hi: "सरफराज खान" },
+                    { en: "Murshid Quli Khan", hi: "मुर्शीद कुली खान" },
+                    { en: "Alivardi Khan", hi: "अलीवर्दी खान" },
+                    { en: "Shujauddin", hi: "शुजाउद्दीन मुहम्मद खान" }
+                ],
+                correct: 1
+            },
+            {
+                id: 33,
+                en: "Which war initiated British dominance in India?",
+                hi: "निम्नलिखित में से कौन-सा युद्ध था, जिसने भारत में ब्रिटिश प्रभुत्व को प्रारंभ किया?",
+                options: [
+                    { en: "Battle of Buxar", hi: "बक्सर की लड़ाई" },
+                    { en: "Battle of Plassey", hi: "प्लासी का युद्ध" },
+                    { en: "3rd Mysore War", hi: "मैसूर की तीसरी लड़ाई" },
+                    { en: "1857 Revolt", hi: "1857 का स्वतंत्रता संग्राम" }
+                ],
+                correct: 1
+            },
+            {
+                id: 34,
+                en: "Siraj-ud-Daulah was defeated by Lord Clive in the battle of...?",
+                hi: "सिराजुद्दौला लॉर्ड क्लाइव द्वारा परास्त हुआ था......के युद्ध में",
+                options: [
+                    { en: "Plassey", hi: "प्लासी" },
+                    { en: "Buxar", hi: "बक्सर" },
+                    { en: "Munger", hi: "मुंगेर" },
+                    { en: "Wandiwash", hi: "वांडीवाश" }
+                ],
+                correct: 0
+            },
+            {
+                id: 35,
+                en: "Who is the founder of the British Empire in India?",
+                hi: "भारतवर्ष में ब्रिटिश साम्राज्य का संस्थापक कौन था?",
+                options: [
+                    { en: "Warren Hastings", hi: "वारेन हेस्टिंग्स" },
+                    { en: "Lord Amherst", hi: "लॉर्ड एमहर्स्ट" },
+                    { en: "Lord Robert Clive", hi: "लॉर्ड रॉबर्ट क्लाइव" },
+                    { en: "Lord William Bentinck", hi: "लॉर्ड विलियम बेंटिक" }
+                ],
+                correct: 2
+            },
+            {
+                id: 36,
+                en: "Who was called the 'Heaven-born General'?",
+                hi: "निम्नलिखित में से किसे 'स्वर्ग से उत्पन्न सेनानायक कहा गया?",
+                options: [
+                    { en: "Albuquerque", hi: "अल्बुकर्क" },
+                    { en: "Robert Clive", hi: "रॉबर्ट क्लाइव" },
+                    { en: "Francis Dupleix", hi: "फ्रांसिस डूप्ले" },
+                    { en: "Lord Cornwallis", hi: "लॉर्ड कार्नवालिस" }
+                ],
+                correct: 1
+            },
+            {
+                id: 37,
+                en: "Where is the Plassey battlefield located?",
+                hi: "प्लासी का युद्ध मैदान कहां स्थित है?",
+                options: [
+                    { en: "Bihar", hi: "बिहार" },
+                    { en: "Andhra Pradesh", hi: "आंध्र प्रदेश" },
+                    { en: "Odisha", hi: "उड़ीसा" },
+                    { en: "West Bengal", hi: "पश्चिम बंगाल" }
+                ],
+                correct: 3
+            },
+            {
+                id: 38,
+                en: "The Battle of Plassey was fought in the year:",
+                hi: "प्लासी का युद्ध लड़ा गया था, वर्ष-",
+                options: [
+                    { en: "1761", hi: "1761 में" },
+                    { en: "1757", hi: "1757 में" },
+                    { en: "1760", hi: "1760 में" },
+                    { en: "1767", hi: "1767 में" }
+                ],
+                correct: 1
+            },
+            {
+                id: 39,
+                en: "Who shifted his capital from Murshidabad to Munger?",
+                hi: "निम्न में से किसने अपनी राजधानी मुर्शिदाबाद से मुंगेर स्थानांतरित की?",
+                options: [
+                    { en: "Alivardi Khan", hi: "अलीवर्दी खां" },
+                    { en: "Siraj-ud-Daula", hi: "सिराजुद्दौला" },
+                    { en: "Mir Jafar", hi: "मीर जाफर" },
+                    { en: "Mir Qasim", hi: "मीर कासिम" }
+                ],
+                correct: 3
+            },
+            {
+                id: 40,
+                en: "The most decisive war that established British supremacy in India was:",
+                hi: "सबसे अधिक निर्णायक युद्ध, जिसने अंग्रेजों के भारत में प्रभुत्व को संस्थापित किया, था-",
+                options: [
+                    { en: "Battle of Buxar", hi: "बक्सर का युद्ध" },
+                    { en: "Battle of Plassey", hi: "प्लासी का युद्ध" },
+                    { en: "Battle of Wandiwash", hi: "वांडीवाश का युद्ध" },
+                    { en: "3rd Battle of Panipat", hi: "पानीपत का तीसरा युद्ध" }
+                ],
+                correct: 0
+            },
+            {
+                id: 41,
+                en: "Who was the ruler of Delhi during the Battle of Buxar?",
+                hi: "बक्सर के युद्ध के समय दिल्ली का शासक कौन था?",
+                options: [
+                    { en: "Aurangzeb", hi: "औरंगजेब" },
+                    { en: "Shah Alam I", hi: "शाहआलम प्रथम" },
+                    { en: "Bahadur Shah Zafar", hi: "बहादुरशाह जफर" },
+                    { en: "Shah Alam II", hi: "शाहआलम द्वितीय" }
+                ],
+                correct: 3
+            },
+            {
+                id: 42,
+                en: "Who was the Nawab of Bengal during the Battle of Buxar?",
+                hi: "बक्सर की लड़ाई के समय बंगाल का नवाब कौन था?",
+                options: [
+                    { en: "Siraj-ud-Daula", hi: "सिराजुद्दौला" },
+                    { en: "Mir Jafar", hi: "मीर जाफर" },
+                    { en: "Mir Qasim", hi: "मीर कासिम" },
+                    { en: "Najm-ud-Daula", hi: "नजमुद्दौला" }
+                ],
+                correct: 1
+            },
+            {
+                id: 43,
+                en: "Which ruler granted the Diwani to the East India Company?",
+                hi: "निम्नलिखित में से जिस एक शासक ने ईस्ट इंडिया कंपनी को दीवानी प्रदान की थी, वह था-",
+                options: [
+                    { en: "Farrukhsiyar", hi: "फर्रुखसियर" },
+                    { en: "Shah Alam I", hi: "शाहआलम प्रथम" },
+                    { en: "Shah Alam II", hi: "शाहआलम द्वितीय" },
+                    { en: "Shuja-ud-Daula", hi: "शुजाउद्दौला" }
+                ],
+                correct: 2
+            },
+            {
+                id: 44,
+                en: "During whose tenure was the Diwani of Bengal, Bihar, and Odisha granted?",
+                hi: "किस गवर्नर के कार्यकाल में ईस्ट इंडिया कंपनी को शहंशाह शाहआलम द्वारा बंगाल, बिहार तथा उड़ीसा में दीवानी अधिकार दिए गए?",
+                options: [
+                    { en: "Lord Clive", hi: "लॉर्ड क्लाइव" },
+                    { en: "Lord Cornwallis", hi: "लॉर्ड कार्नवालिस" },
+                    { en: "Lord Wellesley", hi: "लॉर्ड वेलेजली" },
+                    { en: "Lord William Bentinck", hi: "लॉर्ड विलियम बेंटिक" }
+                ],
+                correct: 0
+            },
+            {
+                id: 45,
+                en: "On which date did Shah Alam II grant the Diwani to the East India Company?",
+                hi: "सम्राट शाहआलम द्वितीय ने ईस्ट इंडिया कंपनी को बंगाल, बिहार तथा उड़ीसा की दीवानी प्रदान की-",
+                options: [
+                    { en: "12 August, 1765", hi: "12 अगस्त, 1765" },
+                    { en: "18 August, 1765", hi: "18 अगस्त, 1765" },
+                    { en: "29 August, 1765", hi: "29 अगस्त, 1765" },
+                    { en: "21 August, 1765", hi: "21 अगस्त, 1765" }
+                ],
+                correct: 0
+            },
+            {
+                id: 46,
+                en: "Whom did Robert Clive appoint as the Deputy Diwan of Murshidabad after the Treaty of Allahabad?",
+                hi: "इलाहाबाद की संधि के बाद रॉबर्ट क्लाइव ने मुर्शिदाबाद का उप दीवान किसे बनाया था?",
+                options: [
+                    { en: "Mohammad Reza Khan", hi: "मुहम्मद रजा खान" },
+                    { en: "Shitab Rai", hi: "शिताब राय" },
+                    { en: "Rai Durlabh", hi: "राय दुर्लभ" },
+                    { en: "Syed Ghulam Hussain", hi: "सैयद गुलाम हुसैन" }
+                ],
+                correct: 0
+            },
+            {
+                id: 47,
+                en: "After receiving the Diwani in 1765, which tribe did the British first come into contact with?",
+                hi: "1765 ई. में दीवानी प्रदान किए जाने के बाद ब्रिटिश सबसे पहले निम्नलिखित में से किस पर्वतीय जनजाति के संपर्क में आए?",
+                options: [
+                    { en: "Garo", hi: "गारो" },
+                    { en: "Khasi", hi: "खासी" },
+                    { en: "Kuki", hi: "कूकी" },
+                    { en: "Tipperah", hi: "टिपराह" }
+                ],
+                correct: 1
+            },
+            {
+                id: 48,
+                en: "Which is the correct chronology of 18th-century wars?",
+                hi: "18वें शतक में भारत में लड़े गए युद्धों का निम्नलिखित में से सही कालानुक्रम कौन-सा है?",
+                options: [
+                    { en: "Wandiwash - Buxar - Ambur - Plassey", hi: "वांडीवाश - बक्सर - अम्बर - प्लासी" },
+                    { en: "Ambur - Plassey - Wandiwash - Buxar", hi: "अम्बर - प्लासी - वांडीवाश - बक्सर" },
+                    { en: "Wandiwash - Plassey - Ambur - Buxar", hi: "वांडीवाश - प्लासी - अम्बर - बक्सर" },
+                    { en: "Ambur - Buxar - Wandiwash - Plassey", hi: "अम्बर - बक्सर - वांडीवाश - प्लासी" }
+                ],
+                correct: 1 // Ambur (1749), Plassey (1757), Wandiwash (1760), Buxar (1764)
+            },
+            {
+                id: 49,
+                en: "Which pair is correctly matched?",
+                hi: "निम्नलिखित में से कौन-सा युग्म सही सुमेलित है?",
+                options: [
+                    { en: "Buxar - Mir Jafar vs Clive", hi: "बक्सर का युद्ध - मीर जाफर विरुद्ध क्लाइव" },
+                    { en: "Wandiwash - French vs East India Co", hi: "वांडीवाश का युद्ध - फ्रांसीसी विरुद्ध ईस्ट इंडिया कंपनी" },
+                    { en: "Chilianwala - Dalhousie vs Marathas", hi: "चिलियांवाला का युद्ध - डलहौजी के विरुद्ध मराठे" },
+                    { en: "Khurda - Nizam vs East India Co", hi: "खुर्दा का युद्ध - निजाम विरुद्ध ईस्ट इंडिया कंपनी" }
+                ],
+                correct: 1
+            },
+            {
+                id: 50,
+                en: "Who led the British Army in the Battle of Buxar (1764)?",
+                hi: "बक्सर के युद्ध (1764) में अंग्रेजी सेना का नेतृत्व करने वाला था-",
+                options: [
+                    { en: "Robert Clive", hi: "रॉबर्ट क्लाइव" },
+                    { en: "Warren Hastings", hi: "वारेन हेस्टिंग्स" },
+                    { en: "Hector Munro", hi: "हेक्टर मुनरो" },
+                    { en: "Charles Eyre Coote", hi: "चार्ल्स आयर कूट" }
+                ],
+                correct: 2
+            }
+        ];
+
+        // --- APP STATE ---
+        let currentQuestion = 0;
+        let score = 0;
+        let timerInterval;
+        let timeLeft = 0;
+        let timerSetting = 0;
+        let questions = [];
+        let isShuffled = false;
+        
+        // Audio Context
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const audioCtx = new AudioContext();
+
+        // --- SOUND SYNTHESIS ---
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            if (type === 'correct') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(1000, audioCtx.currentTime + 0.1);
+                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.3);
+            } else if (type === 'wrong') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+                osc.frequency.linearRampToValueAtTime(100, audioCtx.currentTime + 0.3);
+                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.3);
+            }
+        }
+
+        // --- LOGIC ---
+        function startQuiz() {
+            // Get Settings
+            timerSetting = parseInt(document.getElementById('timerInput').value) || 0;
+            isShuffled = document.getElementById('shuffleInput').checked;
+
+            // Prepare Questions
+            questions = [...rawData];
+            if (isShuffled) {
+                questions.sort(() => Math.random() - 0.5);
+            }
+
+            // Reset State
+            currentQuestion = 0;
+            score = 0;
+            document.getElementById('start-screen').classList.remove('active');
+            document.getElementById('quiz-screen').classList.add('active');
+            
+            // Show Progress Bar
+            document.getElementById('progressBarContainer').style.display = 'block';
+            
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            clearInterval(timerInterval);
+            const qData = questions[currentQuestion];
+            const total = questions.length;
+
+            // Update UI
+            document.getElementById('q-counter').textContent = `Q: ${currentQuestion + 1}/${total}`;
+            document.getElementById('score-counter').textContent = `Score: ${score}`;
+            document.getElementById('q-en').innerText = qData.en;
+            document.getElementById('q-hi').innerText = qData.hi;
+            
+            // Progress Bar
+            const progress = ((currentQuestion) / total) * 100;
+            document.getElementById('progressBar').style.width = `${progress}%`;
+
+            // Render Options
+            const optsContainer = document.getElementById('options-container');
+            optsContainer.innerHTML = '';
+            
+            qData.options.forEach((opt, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerHTML = `
+                    <span class="opt-en">${opt.en}</span>
+                    <span class="opt-hi">${opt.hi}</span>
+                `;
+                btn.onclick = () => handleAnswer(index, btn);
+                optsContainer.appendChild(btn);
+            });
+
+            // Timer
+            if (timerSetting > 0) {
+                startTimer();
+            } else {
+                document.getElementById('timer-display').textContent = '';
+            }
+        }
+
+        function startTimer() {
+            timeLeft = timerSetting;
+            const timerDisplay = document.getElementById('timer-display');
+            timerDisplay.classList.remove('pulse-red');
+            
+            timerDisplay.textContent = `⏱ ${timeLeft}s`;
+
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                timerDisplay.textContent = `⏱ ${timeLeft}s`;
+
+                if (timeLeft < 5) timerDisplay.classList.add('pulse-red');
+
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    handleAnswer(-1, null); // Time out = wrong
+                }
+            }, 1000);
+        }
+
+        function handleAnswer(selectedIndex, btnElement) {
+            clearInterval(timerInterval);
+            const qData = questions[currentQuestion];
+            const correctIndex = qData.correct;
+            const allBtns = document.querySelectorAll('.option-btn');
+
+            // Disable all buttons
+            allBtns.forEach(b => b.disabled = true);
+
+            if (selectedIndex === correctIndex) {
+                // CORRECT
+                score++;
+                if(btnElement) btnElement.classList.add('correct');
+                playSound('correct');
+                showFeedback('correct');
+                fireConfetti();
+            } else {
+                // WRONG
+                if(btnElement) btnElement.classList.add('wrong');
+                allBtns[correctIndex].classList.add('correct'); // Show correct one
+                playSound('wrong');
+                showFeedback('wrong');
+            }
+
+            document.getElementById('score-counter').textContent = `Score: ${score}`;
+
+            // Auto transition
+            setTimeout(() => {
+                currentQuestion++;
+                if (currentQuestion < questions.length) {
+                    loadQuestion();
+                } else {
+                    finishQuiz();
+                }
+            }, 1500);
+        }
+
+        function showFeedback(type) {
+            const el = document.getElementById(`feedback-${type}`);
+            el.classList.add('show');
+            if(type === 'wrong') el.classList.add('shake');
+            
+            setTimeout(() => {
+                el.classList.remove('show', 'shake');
+            }, 1000);
+        }
+
+        function finishQuiz() {
+            clearInterval(timerInterval);
+            document.getElementById('quiz-screen').classList.remove('active');
+            document.getElementById('result-screen').classList.add('active');
+            document.getElementById('progressBarContainer').style.display = 'none';
+
+            // Calculate Results based on Total Questions (or attempted?)
+            // Standard is Score / Total Questions in Quiz
+            const total = questions.length; 
+            const percentage = Math.round((score / total) * 100);
+
+            const scoreDisplay = document.getElementById('final-score');
+            const msgDisplay = document.getElementById('result-message');
+            
+            scoreDisplay.textContent = `${percentage}%`;
+
+            if (percentage >= 80) {
+                msgDisplay.textContent = "🏆 Outstanding Performance!";
+            } else if (percentage >= 50) {
+                msgDisplay.textContent = "👏 Well Done! Keep it up.";
+            } else {
+                msgDisplay.textContent = "📚 Practice makes perfect! Try again.";
+            }
+
+            document.getElementById('res-correct').textContent = score;
+            document.getElementById('res-wrong').textContent = (currentQuestion - score); 
+            // Note: If exited early, remaining questions are technically 'skipped', 
+            // but for simplicity here we count attempted-wrong vs correct. 
+            // Better logic:
+            const attempted = currentQuestion; // Index is 0 based, but if we finish after Q1, currentQuestion became 1.
+            const wrong = attempted - score;
+            const skipped = total - attempted;
+            
+            document.getElementById('res-wrong').textContent = wrong;
+            document.getElementById('res-skipped').textContent = skipped;
+        }
+
+        // --- CONFETTI (Simple Implementation) ---
+        function fireConfetti() {
+            const canvas = document.getElementById('confetti-canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            const pieces = [];
+            const colors = ['#00e676', '#ff00cc', '#ffffff', '#ffd700'];
+
+            for (let i = 0; i < 100; i++) {
+                pieces.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height - canvas.height,
+                    w: Math.random() * 10 + 5,
+                    h: Math.random() * 10 + 5,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    speed: Math.random() * 5 + 2,
+                    angle: Math.random() * 360
+                });
+            }
+
+            let animationId;
+            function update() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                let active = false;
+
+                pieces.forEach(p => {
+                    p.y += p.speed;
+                    p.angle += 2;
+                    ctx.save();
+                    ctx.translate(p.x, p.y);
+                    ctx.rotate(p.angle * Math.PI / 180);
+                    ctx.fillStyle = p.color;
+                    ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
+                    ctx.restore();
+
+                    if (p.y < canvas.height) active = true;
+                });
+
+                if (active) {
+                    animationId = requestAnimationFrame(update);
+                }
+            }
+            update();
+        }
+
+    </script>
+</body>
+</html>

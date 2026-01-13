@@ -184,7 +184,7 @@
         }
         .modal.active .modal-content { transform: translateY(0); }
 
-        /* --- 10. QUIZ OVERLAY (UPDATED CSS FOR FIX) --- */
+        /* --- 10. QUIZ OVERLAY --- */
         #quiz-overlay {
             position: fixed; inset: 0; background: white; z-index: 1000;
             display: flex; flex-direction: column;
@@ -367,7 +367,8 @@
             subjects: [],
             activeSubject: null,
             activeChapter: null,
-            view: 'subjects' 
+            view: 'home', // home | chapters | quizzes | playing
+            quizActive: false
         };
 
         const els = {
@@ -409,11 +410,39 @@
 
             if(localStorage.getItem('quizzy_dark') === 'true') document.body.classList.add('dark-mode');
 
+            // Initialize History for Navigation Fix
+            history.replaceState({ view: 'home' }, null, "");
+
             showSkeletons();
             loadContent();
             loadConfig();
             checkAdmin();
         }
+
+        // --- 4. NAVIGATION HISTORY HANDLER (NEW) ---
+        window.onpopstate = function(event) {
+            const historyState = event.state;
+
+            // Agar koi quiz chal raha hai to pehle use band karein
+            if (state.quizActive) {
+                closeQuiz(false); // false = don't push history, just close UI
+                return;
+            }
+
+            if (!historyState || historyState.view === 'home') {
+                renderSubjects(false);
+            } else if (historyState.view === 'chapters') {
+                openSubject(historyState.subId, false);
+            } else if (historyState.view === 'quizzes') {
+                // Ensure activeSubject is set
+                if(state.activeSubject && state.activeSubject.id === historyState.subId) {
+                    openChapter(historyState.chapId, false);
+                } else {
+                    // Fallback
+                    openSubject(historyState.subId, false);
+                }
+            }
+        };
 
         function loadConfig() {
             db.ref('config').once('value', snap => {
@@ -445,7 +474,7 @@
                 '</div>';
         }
 
-        // --- 4. NAVIGATION & RENDERING ---
+        // --- 5. RENDERING ---
         function loadContent() {
             db.ref('subjects').once('value', snap => {
                 state.subjects = [];
@@ -478,9 +507,16 @@
             });
         }
         
-        function renderSubjects() {
-            state.view = 'subjects';
+        // MODIFIED: Accepts pushHistory param
+        function renderSubjects(pushHistory = true) {
+            state.view = 'home';
+            state.quizActive = false;
             els.breadcrumbs.classList.add('hidden');
+
+            // Add to history stack
+            if(pushHistory) {
+                history.pushState({ view: 'home' }, null, "");
+            }
             
             if(state.subjects.length > 0) {
                  els.content.innerHTML = '<div class="grid-container" id="sub-grid"></div>';
@@ -503,14 +539,21 @@
             }
         }
 
-        function openSubject(id) {
+        // MODIFIED: Accepts pushHistory param
+        function openSubject(id, pushHistory = true) {
             const sub = state.subjects.find(s => s.id === id);
+            if(!sub) return;
             state.activeSubject = sub;
             state.view = 'chapters';
 
+            // Add to history stack
+            if(pushHistory) {
+                history.pushState({ view: 'chapters', subId: id }, null, "");
+            }
+
             els.breadcrumbs.classList.remove('hidden');
             document.getElementById('bc-current').innerText = sub.name;
-            document.getElementById('bc-current').onclick = null;
+            document.getElementById('bc-current').onclick = null; 
 
             els.content.innerHTML = '<div id="list-container"></div>';
             const container = document.getElementById('list-container');
@@ -539,14 +582,23 @@
             });
         }
 
-        function openChapter(chapId) {
+        // MODIFIED: Accepts pushHistory param
+        function openChapter(chapId, pushHistory = true) {
             const sub = state.activeSubject;
             const chap = sub.chapters[chapId];
             state.activeChapter = chap;
             state.view = 'quizzes';
 
+            // Add to history stack
+            if(pushHistory) {
+                history.pushState({ view: 'quizzes', subId: sub.id, chapId: chapId }, null, "");
+            }
+
             document.getElementById('bc-current').innerText = sub.name;
-            document.getElementById('bc-current').onclick = () => renderSubjects();
+            // Breadcrumb back click
+            document.getElementById('bc-current').onclick = () => {
+                history.back(); // Simulate back button
+            };
 
             els.content.innerHTML = `<h3>${chap.name}</h3><div id="list-container" style="margin-top:15px;"></div>`;
             const container = document.getElementById('list-container');
@@ -573,26 +625,23 @@
             });
         }
 
-        // --- 5. UPDATED QUIZ LOGIC (GHOST EFFECT FIX) ---
+        // --- 6. QUIZ LOGIC (With History) ---
         function startQuiz(url, title) {
+            state.quizActive = true;
             const overlay = document.getElementById('quiz-overlay');
             const frame = document.getElementById('quiz-frame');
 
-            // 1. Show Overlay
-            overlay.classList.remove('hidden');
-            
-            // 2. Hide Frame immediately (Ghost effect fix)
-            frame.style.opacity = "0";
+            // Add to history
+            history.pushState({ view: 'playing' }, null, "");
 
-            // 3. Clear source first
+            overlay.classList.remove('hidden');
+            frame.style.opacity = "0";
             frame.src = "about:blank";
 
-            // 4. Load new URL with slight delay to ensure clear
             setTimeout(() => {
                 frame.src = url;
             }, 50);
 
-            // 5. Fade in when loaded
             frame.onload = () => {
                 if(frame.src !== "about:blank") {
                     frame.style.opacity = "1";
@@ -600,19 +649,23 @@
             };
         }
 
-        function closeQuiz() {
+        // MODIFIED: Accepts pushHistory param
+        function closeQuiz(goBackInHistory = true) {
+            state.quizActive = false;
             const overlay = document.getElementById('quiz-overlay');
             const frame = document.getElementById('quiz-frame');
 
-            // 1. Hide Overlay
             overlay.classList.add('hidden');
-
-            // 2. Clear Frame and Reset Opacity
             frame.style.opacity = "0";
             frame.src = "about:blank"; 
+            
+            // If closed via button, manually go back in history
+            if(goBackInHistory) {
+                history.back();
+            }
         }
 
-        // --- 6. MENU & UTILS ---
+        // --- 7. MENU & UTILS ---
         function toggleSidebar() {
             els.sidebar.classList.toggle('active');
             els.overlay.classList.toggle('active');
@@ -717,7 +770,7 @@
         // Search
         document.getElementById('search-input').addEventListener('input', (e) => {
             const term = e.target.value.toLowerCase();
-            if(!term) { renderSubjects(); return; }
+            if(!term) { renderSubjects(false); return; } // Search clear shouldn't push history
             let html = '<div class="text-center" style="margin-bottom:10px;">Search Results:</div>';
             state.subjects.forEach(sub => {
                 if(sub.name.toLowerCase().includes(term)) {

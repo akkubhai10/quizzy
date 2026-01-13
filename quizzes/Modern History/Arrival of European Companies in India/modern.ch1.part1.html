@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Modern History Quiz: Q1-51 (Full Text)</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+    :root {
+        --glass-bg: rgba(255, 255, 255, 0.1);
+        --glass-border: rgba(255, 255, 255, 0.2);
+        --text-english: #ffffff;
+        --text-hindi: #e0e0e0;
+        --accent: #ff00cc;
+        --correct: #4cd964;
+        --wrong: #ff3b30;
+    }
+
+    * { box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
+
+    body {
+        margin: 0;
+        padding: 0;
+        font-family: 'Poppins', sans-serif;
+        background: linear-gradient(-45deg, #3a1c71, #d76d77, #ffaf7b, #2c3e50);
+        background-size: 400% 400%;
+        animation: gradient 15s ease infinite;
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        color: white;
+        overflow-x: hidden;
+    }
+
+    @keyframes gradient {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+
+    /* Glassmorphism Container */
+    .app-container {
+        width: 95%;
+        max-width: 900px;
+        min-height: 700px;
+        background: var(--glass-bg);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid var(--glass-border);
+        border-radius: 25px;
+        padding: 25px;
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        transition: height 0.3s ease;
+    }
+
+    /* Helpers */
+    .hidden { display: none !important; }
+    .flex-center { display: flex; justify-content: center; align-items: center; flex-direction: column; }
+    
+    .btn {
+        background: rgba(255, 255, 255, 0.15);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        padding: 14px 40px;
+        border-radius: 50px;
+        color: white;
+        font-weight: 700;
+        font-size: 1.1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin-top: 25px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    .btn:hover { background: rgba(255, 255, 255, 0.3); transform: scale(1.05); box-shadow: 0 0 20px rgba(255,255,255,0.2); }
+
+    /* Start Screen */
+    .start-content { text-align: center; width: 100%; max-width: 450px; }
+    .input-group { margin: 25px 0; width: 100%; }
+    .input-group label { display: block; margin-bottom: 10px; font-size: 1rem; opacity: 0.9; }
+    .input-group input[type="number"] {
+        width: 100%;
+        background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.3);
+        padding: 15px; border-radius: 12px; color: white; text-align: center; font-size: 1.3rem;
+        outline: none;
+    }
+    .toggle-container { display: flex; align-items: center; gap: 15px; justify-content: center; cursor: pointer; }
+    .toggle-checkbox { width: 22px; height: 22px; accent-color: var(--accent); cursor: pointer; }
+
+    /* Quiz Header */
+    .quiz-header {
+        display: flex; justify-content: space-between; align-items: center;
+        margin-bottom: 20px; font-size: 0.95rem; font-weight: 600;
+        padding: 0 10px;
+    }
+    
+    /* Progress Bar */
+    .progress-track {
+        position: absolute; top: 0; left: 0; width: 100%; height: 6px;
+        background: rgba(255,255,255,0.1); border-radius: 25px 25px 0 0; overflow: hidden;
+    }
+    .progress-fill {
+        height: 100%; background: var(--accent); width: 0%;
+        box-shadow: 0 0 15px var(--accent); transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Timer */
+    .timer-badge {
+        background: rgba(0,0,0,0.3); padding: 8px 18px; border-radius: 30px;
+        display: flex; align-items: center; gap: 8px; min-width: 90px; justify-content: center;
+    }
+    .pulse-red { animation: pulseRed 1s infinite; color: #ff4d4d; font-weight: 800; text-shadow: 0 0 10px red; }
+    @keyframes pulseRed { 0% { transform: scale(1); } 50% { transform: scale(1.15); } 100% { transform: scale(1); } }
+
+    /* Question Area */
+    .question-box {
+        background: rgba(0,0,0,0.2); padding: 30px; border-radius: 20px;
+        margin-bottom: 30px; text-align: left; min-height: 150px;
+        display: flex; flex-direction: column; justify-content: center;
+        border: 1px solid rgba(255,255,255,0.05);
+        overflow-y: auto; max-height: 400px; /* Allow scrolling for very long questions */
+    }
+    .q-en { font-size: 1.1rem; font-weight: 700; color: var(--text-english); margin-bottom: 12px; line-height: 1.6; white-space: pre-wrap; }
+    .q-hi { font-size: 0.95rem; font-weight: 400; color: var(--text-hindi); line-height: 1.6; opacity: 0.95; white-space: pre-wrap; }
+
+    /* Options */
+    .options-grid {
+        display: grid; grid-template-columns: 1fr; gap: 15px;
+        width: 100%; margin-bottom: 20px; flex-grow: 1;
+    }
+    @media (min-width: 700px) { .options-grid { grid-template-columns: 1fr 1fr; } }
+
+    .option-btn {
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        padding: 18px; border-radius: 18px;
+        text-align: left; cursor: pointer; transition: all 0.2s ease;
+        display: flex; flex-direction: column; position: relative; overflow: hidden;
+    }
+    .option-btn:hover:not([disabled]) { background: rgba(255, 255, 255, 0.2); transform: translateY(-3px); border-color: rgba(255,255,255,0.4); }
+    .opt-en { font-weight: 600; font-size: 1rem; color: white; margin-bottom: 5px; }
+    .opt-hi { font-size: 0.9rem; color: #ccc; }
+
+    /* Feedback Colors */
+    .correct { background: rgba(76, 217, 100, 0.5) !important; border-color: #4cd964 !important; box-shadow: 0 0 20px rgba(76, 217, 100, 0.3); }
+    .wrong { background: rgba(255, 59, 48, 0.5) !important; border-color: #ff3b30 !important; box-shadow: 0 0 20px rgba(255, 59, 48, 0.3); }
+
+    /* Animations */
+    .feedback-emoji {
+        position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+        font-size: 7rem; z-index: 100; pointer-events: none;
+        animation: shake 0.6s cubic-bezier(.36,.07,.19,.97) both;
+    }
+    @keyframes shake {
+        10%, 90% { transform: translate(-53%, -50%); }
+        20%, 80% { transform: translate(-47%, -50%); }
+        30%, 50%, 70% { transform: translate(-53%, -50%); }
+        40%, 60% { transform: translate(-47%, -50%); }
+    }
+
+    #confetti-canvas {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        pointer-events: none; z-index: 9999;
+    }
+
+    /* Result Screen */
+    .score-big { 
+        font-size: 5rem; font-weight: 800; margin: 15px 0; 
+        background: linear-gradient(to bottom, #fff, #a0a0a0); 
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent; 
+        filter: drop-shadow(0 4px 10px rgba(0,0,0,0.3));
+    }
+    .message { font-size: 1.5rem; margin-bottom: 25px; text-align: center; color: #fff; }
+    
+    .submit-btn {
+        background: linear-gradient(45deg, #FF512F, #DD2476);
+        border: none; padding: 12px 30px; font-size: 1rem;
+        margin-top: auto; align-self: center; box-shadow: 0 4px 15px rgba(221, 36, 118, 0.4);
+    }
+    .submit-btn:hover { transform: scale(1.05); box-shadow: 0 6px 20px rgba(221, 36, 118, 0.6); }
+
+</style>
+</head>
+<body>
+
+<canvas id="confetti-canvas"></canvas>
+
+<div class="app-container">
+    <div class="progress-track"><div class="progress-fill" id="progress-bar"></div></div>
+
+    <div id="start-screen" class="flex-center" style="height: 100%; padding: 40px 0;">
+        <h1 style="margin:0; font-size: 3rem; text-align: center;">History Quiz</h1>
+        <h3 style="margin: 10px 0 40px 0; font-weight: 400; opacity: 0.8;">Questions 1-51 (Complete Text)</h3>
+        
+        <div class="start-content">
+            <div class="input-group">
+                <label>Timer per Question (Seconds)</label>
+                <input type="number" id="timer-input" placeholder="e.g. 20 (0 = No Timer)" min="0">
+            </div>
+
+            <div class="toggle-container" onclick="document.getElementById('shuffle-toggle').click()">
+                <input type="checkbox" id="shuffle-toggle" class="toggle-checkbox">
+                <label for="shuffle-toggle">Shuffle Questions</label>
+            </div>
+
+            <button class="btn" onclick="startQuiz()">Start Quiz</button>
+        </div>
+    </div>
+
+    <div id="quiz-screen" class="hidden" style="flex-grow: 1; display: flex; flex-direction: column;">
+        <div class="quiz-header">
+            <span id="q-counter">Q: 01/51</span>
+            <div class="timer-badge" id="timer-box">
+                <span style="font-size:1.2rem">⏳</span> <span id="timer-text">--</span>
+            </div>
+            <span id="score-display">Score: 0</span>
+        </div>
+
+        <div class="question-box">
+            <div class="q-en" id="q-text-en">Loading...</div>
+            <div class="q-hi" id="q-text-hi">Loading...</div>
+        </div>
+
+        <div class="options-grid" id="options-container">
+            </div>
+
+        <button class="btn submit-btn" onclick="endQuiz()">Finish & Show Results</button>
+    </div>
+
+    <div id="result-screen" class="hidden flex-center" style="padding: 40px 0; height: 100%;">
+        <h2 style="margin-bottom:0">Quiz Completed!</h2>
+        <div class="score-big" id="final-score">0%</div>
+        <div class="message" id="result-msg">Message</div>
+        <p id="stats-text" style="font-size: 1.2rem; opacity: 0.9;">You answered X out of Y correctly.</p>
+        <button class="btn" onclick="location.reload()">Restart Quiz</button>
+    </div>
+</div>
+
+<script>
+    /* DATA SOURCE: Modern History Gyan Bindu GS (Pages 1, 2, 3, 4, 5).
+       ANSWER KEY: Page 13.
+       SCOPE: Questions 1 to 51.
+       NOTE: Full text preserved for match-the-column questions as requested ("pura question likho").
+    */
+    const rawQuestions = [
+        {
+            qEn: "Match List-I with List-II:\n\nList-I (Year):\nA. 1510\nB. 1686\nC. 1580\nD. 1503\n\nList-II (Event):\n1. Aurangzeb defeated the English\n2. Albuquerque captured Goa\n3. Portuguese established first fort in Cochin\n4. Spain captured Portugal",
+            qHi: "सूची-I को सूची-II से सुमेलित कीजिए-\n\nसूची-I:\nA. 1510\nB. 1686\nC. 1580\nD. 1503\n\nसूची-II:\n1. औरंगजेब ने अंग्रेजों को हराया।\n2. अल्बुकर्क का गोवा पर अधिकार\n3. पुर्तगालियों का प्रथम दुर्ग कोचीन में स्थापित\n4. स्पेन का पुर्तगाल पर अधिकार",
+            optEn: ["A-3, B-2, C-1, D-4", "A-2, B-1, C-4, D-3", "A-1, B-2, C-4, D-3", "A-4, B-3, C-2, D-1"],
+            optHi: ["(a)", "(b)", "(c)", "(d)"],
+            correct: 1 // (b) A2, B1, C4, D3
+        },
+        {
+            qEn: "Which of the following events happened first?\n(a) First Jesuit mission arrival in Akbar's court\n(b) Marco Polo's visit to China (1254)\n(c) Vasco da Gama's arrival in Calicut\n(d) Captain William Hawkins' arrival in Surat",
+            qHi: "निम्नलिखित में कौन-सी घटना सबसे पहले हुई ?\n(a) अकबर के दरबार में प्रथम जेसुईट मिशन आगमन\n(b) मार्को पोलो की चीन यात्रा (1254)\n(c) वास्कोडिगामा की कालीकट यात्रा\n(d) कैप्टन विलियम हॉकिन्स का सूरत आगमन",
+            optEn: ["First Jesuit mission", "Marco Polo's visit (1254)", "Vasco da Gama's arrival", "William Hawkins' arrival"],
+            optHi: ["अकबर के दरबार में मिशन", "मार्को पोलो की चीन यात्रा", "वास्कोडिगामा की यात्रा", "विलियम हॉकिन्स का आगमन"],
+            correct: 1 // (b)
+        },
+        {
+            qEn: "Which of the following ships was NOT part of the fleet during Vasco da Gama's arrival in India?",
+            qHi: "वास्कोडिगामा के भारत आगमन पर जहाजों के जत्थों में कौन-सी जहाज शामिल नहीं थी ?",
+            optEn: ["Rafael", "Gabriel", "Berrio", "Estada"],
+            optHi: ["राफेल", "गैब्रियाल", "बेरियो", "इस्टाडा"],
+            correct: 3 // (d)
+        },
+        {
+            qEn: "Vasco da Gama traveled to India three times in total. In which of the following years did he NOT arrive in India?",
+            qHi: "वास्कोडिगामा ने कुल तीन बार भारत की यात्रा किया था, निम्नलिखित में किस वर्ष उसका भारत आगमन नहीं हुआ ?",
+            optEn: ["1498", "1503", "1524", "1545"],
+            optHi: ["1498", "1503", "1524", "1545"],
+            correct: 3 // (d)
+        },
+        {
+            qEn: "Who among the following was the first English Governor of Bengal?",
+            qHi: "निम्नलिखित में बंगाल का प्रथम गवर्नर अंग्रेज कौन था ?",
+            optEn: ["William Hedges", "William Edsworth", "John Baker", "Robert Clive"],
+            optHi: ["विलियम हैजेज", "विलियम एडसवर्थ", "जॉन बेकर", "राबर्ट क्लाइव"],
+            correct: 0 // (a)
+        },
+        {
+            qEn: "Who among the following was NOT included in the John Surman Mission that reached the Mughal Court?",
+            qHi: "मुगल दरबार पहुँचने वाले जॉन सरमन मिशन में कौन शामिल नहीं था ?",
+            optEn: ["Sir John Surman", "Dr. Hamilton", "Khwaja Sehurd", "Edward William"],
+            optHi: ["सर जान सरमन", "डॉ. हैमिल्टन", "ख्वाजा सेहूर्ड", "एडवर्ड विलियम"],
+            correct: 3 // (d)
+        },
+        {
+            qEn: "Items were gifted to Hawkins by King James I of England. Which of the following was NOT included?",
+            qHi: "इंग्लैंड के सम्राट जेम्स प्रथम के द्वारा हॉकिंस को वस्तुएँ भेंट किया गया। निम्नलिखित में क्या-क्या शामिल नहीं था ?",
+            optEn: ["6 Pictures in King James's court", "Red Buggy", "Lens Spectacles", "Ayurvedic water of Thames River"],
+            optHi: ["जेम्स प्रथम के दरबार में 6 चित्र", "लाल बग्घी", "लेंस युक्त चश्मा", "थेम्स नदी का आयुर्वेदिक पानी"],
+            correct: 3 // (d)
+        },
+        {
+            qEn: "Match List-I with List-II:\n\nList-I (Person):\nA. John Mildenhall\nB. Vasco da Gama\nC. Franco Martin\nD. Tasman (Holland)\n\nList-II (Speciality):\n1. Explorer of Spice Route\n2. First traveler to India\n3. Explorer of Tasmania (Holland)\n4. First Governor of Pondicherry",
+            qHi: "सूची-I को सूची-II को सुमेलित कीजिए तथा दिए गए कूट की सहायता से सही उत्तर मिलाइए।\n\nसूची-I (व्यक्ति):\nA. जान मिल्डेन हॉल\nB. वास्कोडिगामा\nC. फ्रैंको मार्टिन\nD. तस्मान (हॉलैंड)\n\nसूची-II (विशेषताएँ):\n1. मशाला मार्ग के खोजकर्त्ता\n2. भारत आने वाला प्रथम यात्री\n3. तस्मानिया (हॉलैंड) के खोजकर्त्ता\n4. पॉडिचेरी का प्रथम गवर्नर",
+            optEn: ["A-3, B-2, C-1, D-4", "A-4, B-3, C-2, D-1", "A-1, B-2, C-4, D-3", "A-2, B-1, C-4, D-3"],
+            optHi: ["(a)", "(b)", "(c)", "(d)"],
+            correct: 3 // (d) A2, B1, C4, D3
+        },
+        {
+            qEn: "Match List-I with List-II:\n\nList-I (War):\nA. Buxar\nB. Wandiwash\nC. Swally\nD. Porto Novo\n\nList-II (English General):\n1. Clive\n2. Thomas Best\n3. Hector Munro\n4. Sir Eyre Coote",
+            qHi: "सूची-I व सूची-II को सुमेलित कीजिए तथा दिए गए कूट की सहायता से सही उत्तर मिलाइए।\n\nसूची-I (युद्ध):\nA. बक्सर\nB. वांडिवास\nC. स्वाल्ली\nD. पोर्टोनोवा\n\nसूची-II (अंग्रेज सेनापति):\n1. क्लाइव\n2. थामस बेस्ट\n3. हेक्टर मुनरो\n4. सर आयर कूट",
+            optEn: ["A-3, B-2, C-1, D-4", "A-4, B-3, C-2, D-1", "A-3, B-4, C-2, D-1", "A-2, B-1, C-4, D-3"],
+            optHi: ["(a)", "(b)", "(c) (Corrected from key logic)", "(d)"],
+            correct: 2 // (c) A-3 (Munro), B-4 (Coote), C-2 (Best), D-1 (Clive/Other) - Note: Key says (c).
+        },
+        {
+            qEn: "By what name was the Chittagong port in Bengal known during the Portuguese period?",
+            qHi: "बंगाल स्थित चटगांव बंदरगाह पुर्तगाल काल में किस नाम से जाना जाता था ?",
+            optEn: ["Porto Grande", "Porto Adam", "Porto James", "Porto Alice"],
+            optHi: ["पोर्टोग्राण्डे", "पोटोएडम", "पोटोजेम्स", "पोटोएलिस"],
+            correct: 0 // (a)
+        },
+        {
+            qEn: "Match List-I with List-II:\n\nList-I (Existing Factory):\nA. Pulicat\nB. Surat\nC. Cochin\nD. Masulipatnam\n\nList-II (Establishment Year):\n1. 1663\n2. 1616\n3. 1610\n4. 1605",
+            qHi: "सूची-I व सूची-II को सुमेलित कीजिए।\n\nसूची-I (उपस्थित फैक्ट्री):\nA. पुलीकट\nB. सूरत\nC. कोचीन\nD. मसुलीपट्टनम\n\nसूची-II (स्थापना वर्ष):\n1. 1663\n2. 1616\n3. 1610\n4. 1605",
+            optEn: ["A-3, B-2, C-1, D-4", "A-4, B-3, C-2, D-1", "A-3, B-1, C-2, D-4", "A-2, B-1, C-4, D-3"],
+            optHi: ["(a)", "(b)", "(c)", "(d)"],
+            correct: 0 // (a) A3 (1610), B2 (1616), C1 (1663), D4 (1605)
+        },
+        {
+            qEn: "Match List-I with List-II:\n\nList-I (City):\nA. Chandigarh\nB. Hyderabad\nC. Bombay\nD. Madras\n\nList-II (Founder):\n1. Muhammad Quli Qutb Shah\n2. Le Corbusier\n3. Francis Day\n4. Gerald Aungier",
+            qHi: "सूची-I व सूची-II को सुमेलित कीजिए।\n\nसूची-I (शहर):\nA. चंडीगढ़\nB. हैदराबाद\nC. बंबई\nD. मद्रास\n\nसूची-II (संस्थापक):\n1. मुहम्मद कुली कुतुबशाह\n2. ली कार्बुजियो\n3. फ्रांसिस डे\n4. जेराल्ड आंगियार",
+            optEn: ["A-3, B-2, C-4, D-1", "A-1, B-4, C-3, D-2", "A-2, B-1, C-4, D-3", "A-4, B-1, C-2, D-3"],
+            optHi: ["(a)", "(b)", "(c)", "(d)"],
+            correct: 2 // (c) A2, B1, C4, D3
+        },
+        {
+            qEn: "Match List-I with List-II:\n\nList-I (Company established by English):\nA. Bombay\nB. Madras\nC. Surat\nD. Masulipatnam\n\nList-II (Establishment Year):\n1. 1639\n2. 1611\n3. 1613\n4. 1533 (likely typo for earlier Portuguese context or other)",
+            qHi: "सूची-I व सूची-II को सुमेलित कीजिए।\n\nसूची-I (अंग्रेज द्वारा स्थापित कंपनी):\nA. बाम्बे\nB. मद्रास\nC. सूरत\nD. मसुलीपट्टनम\n\nसूची-II (स्थापना वर्ष):\n1. 1639\n2. 1611\n3. 1613\n4. 1533",
+            optEn: ["A-3, B-2, C-1, D-4", "A-4, B-1, C-3, D-2", "A-3, B-1, C-2, D-4", "A-2, B-1, C-4, D-3"],
+            optHi: ["(a)", "(b)", "(c)", "(d)"],
+            correct: 1 // (b) A4 (Bombay-actually acquired later/typo), B1 (1639), C3 (1613), D2 (1611) - Best fit is (b)
+        },
+        {
+            qEn: "Match List-I with List-II:\n\nList-I (European Company):\nA. Dutch\nB. English\nC. Portuguese\nD. French\n\nList-II (First Established Factory):\n1. Goa\n2. Pondicherry\n3. Hooghly\n4. Chinsura",
+            qHi: "सूची-I व सूची-II को सुमेलित कीजिए।\n\nसूची-I (यूरोपीय कंपनी):\nA. डच\nB. इंग्लिश\nC. पुर्तगाल\nD. फ्रेंच\n\nसूची-II (प्रथम स्थापित फैक्ट्री):\n1. गोवा\n2. पॉडिचेरी\n3. हुगली\n4. चिनसुरा",
+            optEn: ["A-3, B-2, C-1, D-4", "A-4, B-1, C-3, D-2 (Not standard)", "A-4, B-3, C-1, D-2 (Best fit context)", "A-2, B-1, C-4, D-3"],
+            optHi: ["(a)", "(b)", "(c)", "(d)"],
+            correct: 1 // (b) per key. Note: This question has ambiguous options relative to standard history, following key (b).
+        },
+        {
+            qEn: "Which concept was first propounded by Dupleix in India?",
+            qHi: "भारत में डुप्ले के द्वारा कौन-सी अवधारणा सर्वप्रथम प्रतिपादित किया था ?",
+            optEn: ["Subsidiary Alliance", "Commercial Aggressive Policy", "Policy of Commercial Tourism", "None of the above"],
+            optHi: ["सहायक संधि", "व्यापारिक आक्रामक नीति", "व्यावसायिक पर्यटन की नीति", "उपर्युक्त में से कोई नहीं"],
+            correct: 0 // (a)
+        },
+        {
+            qEn: "Under whose leadership did the British establish their first factory in Hooghly, Bengal in 1651?",
+            qHi: "वर्ष 1651 में किसके नेतृत्व में अंग्रेजों ने बंगाल स्थित हुगली में अपनी प्रथम कारखाना स्थापित किया था ?",
+            optEn: ["Bridgeman", "William Hedges", "John Baker", "Robert Clive"],
+            optHi: ["ब्रिजमैन", "विलियम हैजेज", "जानबेकर", "राबर्ट क्लाइव"],
+            correct: 0 // (a)
+        },
+        {
+            qEn: "Match List-I with List-II:\n\nList-I (War):\nA. Battle of Bedara\nB. Battle of Ambur\nC. Battle of Buxar\nD. Battle of Wandiwash\n\nList-II (Year):\n1. 1749\n2. 1759\n3. 1760\n4. 1764",
+            qHi: "सूची-I व सूची-II को सुमेलित कीजिए।\n\nसूची-I (युद्ध):\nA. बेदरा का युद्ध\nB. अम्बूर का युद्ध\nC. बक्सर युद्ध\nD. वांडिवास का युद्ध\n\nसूची-II (वर्ष):\n1. 1749\n2. 1759\n3. 1760\n4. 1764",
+            optEn: ["A-3, B-2, C-1, D-4", "A-4, B-3, C-2, D-1", "A-2, B-1, C-4, D-3", "A-2, B-1, C-4, D-3"],
+            optHi: ["(a)", "(b)", "(c)", "(d)"],
+            correct: 3 // (d) A2 (1759), B1 (1749), C4 (1764), D3 (1760)
+        },
+        {
+            qEn: "Which of the following events happened first?",
+            qHi: "निम्नलिखित में कौन-सी घटना सबसे पहले हुई थी ?",
+            optEn: ["Battle of Plassey", "Battle of Ambur", "Siege of Arcot", "Bartholomew Dias' voyage to India"],
+            optHi: ["प्लासी का युद्ध", "अम्बूर का युद्ध", "अर्काट का घेरा", "बार्थोलोम्यो दियास की भारत यात्रा"],
+            correct: 3 // (d)
+        },
+        {
+            qEn: "Which of the following is the Malayalam name of Calicut?",
+            qHi: "निम्नलिखित में कौन-सा कालीकट का मलपाली नाम है ?",
+            optEn: ["Kozhikode", "Komikode", "Kunni Code", "None of the above"],
+            optHi: ["कोझिकोड", "कोमीकोड", "कुन्नी कोड", "उपर्युक्त में से कोई नहीं"],
+            correct: 0 // (a)
+        },
+        {
+            qEn: "From which King of Chandragiri did the French get Madras on lease?",
+            qHi: "चांदगिरी के किस राजा से मद्रास फ्रांसीसियों को पट्टे पर प्राप्त हुआ था ?",
+            optEn: ["Darmela Venkatappa", "Venkatappa Darmela", "Amlu Darmela", "Darmela Anupatham"],
+            optHi: ["दारमेला वेंकटप्पा", "वेंकटप्पा दारमेला", "अम्लू दारमेला", "दारमेला अनुप्रथम"],
+            correct: 0 // (a)
+        },
+        {
+            qEn: "In 1699 (contextual correction for '1949'), who arrived as an ambassador to the English court representing the English Company Trading 'In the East'?",
+            qHi: "1949 (संदर्भ 1699) में ब्रिटेन के संसद द्वारा स्थापित कंपनी इंग्लिश कंपनी ट्रेडिंग 'इन द ईस्ट' का दूत बनकर अंग्रेज के दरबार में कौन पहुँचा था ?",
+            optEn: ["William Wordsworth", "William Norris", "William Canning", "William P.A. Sud"],
+            optHi: ["विलियम वर्डस्वर्थ", "विलियम नारिश", "विलियम कैनिंग", "विलियम पी. ए. सुंड"],
+            correct: 1 // (b) William Norris
+        },
+        {
+            qEn: "Match List-I with List-II:\n\nList-I (European Company):\nA. Portuguese\nB. Kenya (Likely typo for Danish/Other)\nC. English\nD. Swedish\n\nList-II (First Governor):\n1. William Hawkins\n2. Sir Thomas Roe\n3. Virnichao\n4. F.D. Almeida",
+            qHi: "सूची-I व सूची-II को सुमेलित कीजिए।\n\nसूची-I (यूरोपीय कंपनी):\nA. पुर्तगाली\nB. केनिहा\nC. अंग्रेज\nD. स्वीडिश\n\nसूची-II (प्रथम गवर्नर):\n1. विलियम यूसोलिंक्स\n2. सर टामस रो\n3. विर्निचाओ\n4. एफ. डी. अल्मेडा",
+            optEn: ["A-3, B-2, C-1, D-4", "A-4, B-3, C-2, D-1", "A-3, B-1, C-2, D-4", "A-2, B-1, C-4, D-3"],
+            optHi: ["(a)", "(b)", "(c)", "(d)"],
+            correct: 1 // (b) A4 (Almeida), B3, C2, D1
+        },
+        {
+            qEn: "Which of the following statements is NOT correct?",
+            qHi: "निम्नलिखित में से कौन-सा कथन सही नहीं है ?",
+            optEn: ["(a) John Surman led the delegation to Farrukhsiyar.", "(b) 3rd Carnatic War was affected by the Seven Years' War.", "(c) Danish company failed and sold factories to British in 1745.", "(d) French East India Company established in 1664 by Francois."],
+            optHi: ["(a) मुगल सम्राट फर्रूखसियर से विशेष व्यापारिक सुविधा प्राप्त करने वाले शिष्टमंडल का मुखिया जॉन सुरमन था।", "(b) तृतीय कर्नाटक युद्ध यूरोप के सप्तवर्षीय युद्ध से प्रभावित था।", "(c) डेनिस कंपनी भारत से अपनी स्थिति मजबूत करने में असफल रही और 1745 तक अपनी सारी फैक्ट्री अंग्रेजों को बेचकर चली गई।", "(d) 1664 में फ्रांस के सम्राट लुई चौदहवाँ के मंत्री फ्रँकोइस के प्रयास से फ्रेंच ईस्ट इंडिया कंपनी की स्थापना हुई थी।"],
+            correct: 1 // (b) Key indicates this. Note: Statement (b) is factually correct in history, but exam keys often have specific nuances. Following provided key.
+        },
+        {
+            qEn: "When did Vasco da Gama come to India for the second time?",
+            qHi: "वास्कोडिगामा भारत की यात्रा पर दूसरी बार कब आया ?",
+            optEn: ["1503 AD", "1502 AD", "1505", "None"],
+            optHi: ["1503 AD", "1502 AD", "1505", "None"],
+            correct: 1 // (b)
+        },
+        {
+            qEn: "With the help of which Gujarati merchant did Vasco da Gama reach Calicut (Malabar Coast) on 17 May 1498?",
+            qHi: "वास्कोडिगामा गुजरात के किस व्यापारी की सहायता से 17 May 1498 को भारत के कालीकट (मालाबार तट) पहुँचा ?",
+            optEn: ["Abdul Munid", "Zamorin", "Shaista Khan", "Sher Khan Lodi"],
+            optHi: ["अब्दुल मुनीद", "जैमोरीन", "शाइस्ता खाँ", "शेर खाँ लोदी"],
+            correct: 0 // (a)
+        },
+        {
+            qEn: "Which of the following is related to 'Blue Water Policy'?",
+            qHi: "निम्न में से कौन 'नीला जल योजना' (ब्लू वाटर नीति) से संबंधित है ?",
+            optEn: ["Francisco de Almeida", "Albuquerque", "Dupleix", "Robert Clive"],
+            optHi: ["फ्रांसिस्को द अल्मीडा", "अल्बुकर्क", "डुप्ले", "राबर्ट क्लाइव"],
+            correct: 0 // (a)
+        },
+        {
+            qEn: "Who were the first to establish trade relations with India in medieval times?",
+            qHi: "मध्यकाल में सर्वप्रथम भारत से व्यापार संबंध स्थापित करने वाले थे-",
+            optEn: ["Dutch", "English", "French", "Portuguese"],
+            optHi: ["डच", "अंग्रेज", "फ्रांसीसी", "पुर्तगाली"],
+            correct: 3 // (d)
+        },
+        {
+            qEn: "When did Vasco da Gama come to India?",
+            qHi: "वास्कोडिगामा भारत कब आया था ?",
+            optEn: ["1496", "1497", "1498", "1600"],
+            optHi: ["1496", "1497", "1498", "1600"],
+            correct: 2 // (c)
+        },
+        {
+            qEn: "Who became the first Portuguese Viceroy in India?",
+            qHi: "पुर्तगाली उपनिवेश का प्रथम वायसराय भारत में कौन हुआ ?",
+            optEn: ["Diaz", "Vasco da Gama", "Almeida", "Albuquerque"],
+            optHi: ["डियाज", "वास्कोडिगामा", "अल्मीडा", "अल्बुकर्क"],
+            correct: 2 // (c)
+        },
+        {
+            qEn: "Who welcomed Vasco da Gama at Calicut?",
+            qHi: "निम्नलिखित में से किसने वास्कोडिगामा का कालीकट में स्वागत किया था ?",
+            optEn: ["Gaspar Correa", "Albuquerque", "Zamorin", "Don Almeida"],
+            optHi: ["गेस्पर कोरिया", "अल्बुकर्क", "जमोरिन", "डॉन अलमेदा"],
+            correct: 2 // (c)
+        },
+        {
+            qEn: "Match List-I with List-II:\n\nList-I (Sea Traveler):\nA. Vasco da Gama\nB. Christopher Columbus\nC. Captain Cook\nD. Tasman\n\nList-II (Country):\n1. Spain\n2. Portugal\n3. Holland\n4. Great Britain",
+            qHi: "सूची-I को सूची-II से सुमेल कीजिए तथा नीचे दिए गए कूट से सही उत्तर चुनिए-\n\nसूची-I (समुद्र यात्री):\nA. वास्कोडिगामा\nB. क्रिस्टोफर कोलम्बस\nC. कैप्टन कुक\nD. तस्मान\n\nसूची-II (देश):\n1. स्पेन\n2. पुर्तगाल\n3. हॉलैंड\n4. ग्रेट ब्रिटेन",
+            optEn: ["A-3, B-2, C-1, D-4", "A-2, B-1, C-4, D-3", "A-1, B-4, C-3, D-2", "A-4, B-3, C-2, D-1"],
+            optHi: ["(a)", "(b)", "(c)", "(d)"],
+            correct: 1 // (b) A2, B1, C4, D3
+        },
+        {
+            qEn: "Who was the real founder of Portuguese power in India?",
+            qHi: "भारत में पुर्तगाली शक्ति का वास्तविक संस्थापक कौन था ?",
+            optEn: ["Vasco da Gama", "Albuquerque", "Bartholomew Dias", "George Oxenden"],
+            optHi: ["वास्कोडिगामा", "अल्बुकर्क", "बार्थोलोम्यू डायज", "जॉर्ज ऑक्सडन"],
+            correct: 1 // (b)
+        },
+        {
+            qEn: "Which statement is NOT correct regarding the entry of European powers in India?",
+            qHi: "भारत में यूरोपीय शक्तियों के प्रवेश के संदर्भ में निम्न में से कौन-सा कथन सही नहीं है ?",
+            optEn: ["(a) Portuguese captured Goa in 1499.", "(b) English established first factory in South India at Masulipatnam.", "(c) English established first factory in East India in Orissa in 1633.", "(d) French captured Madras in 1746 under Dupleix."],
+            optHi: ["(a) पुर्तगालियों ने 1499 में गोवा पर कब्जा किया था।", "(b) अंग्रेजों ने अपना पहला कारखाना दक्षिण भारत में मछलीपट्टनम् में लगाया।", "(c)", "(d)"],
+            correct: 0 // (a)
+        },
+        {
+            qEn: "Where did the Portuguese build their first fortress in India?",
+            qHi: "पुर्तगालियों ने भारत में निम्नलिखित में से किस स्थान पर प्रथम दुर्ग का निर्माण किया था ?",
+            optEn: ["Anjidiv", "Cannanore", "Cochin", "Goa"],
+            optHi: ["अंजीदीप में", "कन्नानोर में", "कोचीन में", "गोवा में"],
+            correct: 2 // (c)
+        },
+        {
+            qEn: "Who were the first Europeans to set up sea trade centers in India?",
+            qHi: "किन यूरोपियों ने भारत में प्रथमतः सामुद्रिक व्यापारिक केंद्र स्थापित किए ?",
+            optEn: ["English", "French", "Portuguese", "Dutch"],
+            optHi: ["अंग्रेज", "फ्रांसीसी", "पुर्तगाली", "डच"],
+            correct: 2 // (c)
+        },
+        {
+            qEn: "Which of the following factories in Bengal was established by the Portuguese?",
+            qHi: "बंगाल की निम्नलिखित फैक्ट्रियों में से एक जो पुर्तगालियों द्वारा स्थापित की गई, वह थी-",
+            optEn: ["Bandel", "Chinsura", "Hooghly", "Serampore"],
+            optHi: ["बांदेल", "चिनसुरा", "हुगली", "श्रीरामपुर"],
+            correct: 2 // (c)
+        },
+        {
+            qEn: "Consider the statements regarding Pondicherry:\n1. The first European power to occupy Pondicherry were the Portuguese.\n2. The second European power to occupy Pondicherry were the French.\n3. The English never occupied Pondicherry.\nWhich of the above statements is/are correct?",
+            qHi: "पांडिचेरी (वर्तमान पुदुचेरी) के संदर्भ में निम्नलिखित कथनों पर विचार कीजिए-\n1. पांडिचेरी पर कब्जा करने वाली पहली यूरोपीय शक्ति पुर्तगाली थे।\n2. पांडिचेरी पर कब्जा करने वाली दूसरी यूरोपीय शक्ति फ्रांसीसी थे।\n3. अंग्रेजों ने कभी पांडिचेरी पर कब्जा नहीं किया।\nउपर्युक्त में से कौन-सा/से कथन सही है/हैं?",
+            optEn: ["Only 1", "Only 2 and 3", "Only 3", "1, 2 and 3"],
+            optHi: ["(a) केवल 1", "(b) केवल 2 और 3", "(c) केवल 3", "(d) 1, 2 और 3"],
+            correct: 0 // (a)
+        },
+        {
+            qEn: "Who used Hooghly as a base for piracy in the Bay of Bengal?",
+            qHi: "हुगली को बंगाल की खाड़ी में समुद्री लूटपाट के लिए किसने अड्डा बनाया था ?",
+            optEn: ["Portuguese", "French", "Danish", "English"],
+            optHi: ["पुर्तगालियों ने", "फ्रांसवासियों ने", "डेनमार्कवासियों ने", "अंग्रेजों ने"],
+            correct: 0 // (a)
+        },
+        {
+            qEn: "Match List-I with List-II:\n\nList-I (Sea Traveler):\nA. Newland (Likely typo)\nB. Brazil\nC. Australia\nD. Tasmania\n\nList-II (Discovered Country):\n1. Alvarez Cabral\n2. Tasman (Holland)\n3. Tasman (Holland)\n4. Captain Cook",
+            qHi: "सूची-I व सूची-II को सुमेलित कीजिए तथा दिए गए कूट की सहायता से सही उत्तर मिलाइए।\n\nसूची-I (समुद्री यात्री):\nA. न्यूलीलैंड\nB. ब्राजील\nC. आस्ट्रेलिया\nD. तस्मानिया\n\nसूची-II (खोजे गए देश):\n1. अल्वारेज कैब्राल\n2. तस्मान हॉलैंड\n3. तस्मान हॉलैंड\n4. कैप्टन कुक",
+            optEn: ["A-3, B-2, C-1, D-4", "A-4, B-3, C-2, D-1", "A-3, B-1, C-2, D-4", "A-2, B-1, C-4, D-3"],
+            optHi: ["(a)", "(b)", "(c)", "(d)"],
+            correct: 3 // (d) 
+        },
+        {
+            qEn: "Who started the first Joint Stock Company to trade with India?",
+            qHi: "भारत के साथ व्यापार के लिए सर्वप्रथम संयुक्त पूंजी कंपनी किन लोगों ने आरंभ की ?",
+            optEn: ["Portuguese", "Dutch", "French", "Danish"],
+            optHi: ["पुर्तगाली", "डच", "फ्रेंच", "डेनिश"],
+            correct: 1 // (b)
+        },
+        {
+            qEn: "Which one of the following statements is correct?",
+            qHi: "निम्नलिखित कथनों में से कौन-सा एक सही है ?",
+            optEn: ["(a) Modern Kochi was a Dutch colony till independence.", "(b) Dutch defeated Portuguese and built Fort Williams in Kochi.", "(c) Modern Kochi was first Dutch then Portuguese.", "(d) Modern Kochi was never part of British colony."],
+            optHi: ["(a) आधुनिक कोच्चि भारत की स्वतंत्रता तक डच उपनिवेश था।", "(b) डचों पुर्तगालियों को पराजित किया और आधुनिक कोच्चि में उन्होंने फोर्ट विलियम्स का निर्माण किया।", "(c) आधुनिक कोच्चि पहले डच उपनिवेश था जिस पर बाद में पुर्तगालियों का अधिकार हो गया।", "(d) आधुनिक कोच्चि कभी भी ब्रिटिश उपनिवेश का भाग नहीं था।"],
+            correct: 1 // (b)
+        },
+        {
+            qEn: "The secret of success of East India Company in India was:",
+            qHi: "भारत में ईस्ट इंडिया कंपनी की सफलता का राज था-",
+            optEn: ["(a) Lack of nationalism in India", "(b) Western military training and modern arms", "(c) Indian soldiers lacked nationalism, served anyone paying well", "(d) All of the above"],
+            optHi: ["(a) भारत में राष्ट्रीय भावना की कमी।", "(b) कंपनी की सेना को पश्चिमी प्रशिक्षण मिला था तथा उनके पास आधुनिक हथियार थे।", "(c) भारतीय सैनिकों में राष्ट्रीय भावना का अभाव था जिसके फलस्वरूप कोई जो उन्हें अच्छा वेतन दे, अपनी सेवा में लगा सकता था।", "(d) उपर्युक्त तीनों"],
+            correct: 3 // (d)
+        },
+        {
+            qEn: "Which British company received the first charter to trade in India by land route?",
+            qHi: "निम्नलिखित ब्रिटिश कंपनियों में से किसे भारत में व्यापार करने का पहला अधिकार-पत्र प्राप्त हुआ था ?",
+            optEn: ["Levant Company", "East India Company", "The English Company Trading to East Indies", "Ostend Company"],
+            optHi: ["लीवेंट कंपनी", "ईस्ट इंडिया कंपनी", "दी इंग्लिश कंपनी ट्रेडिंग टू ईस्ट इंडीज", "ओस्टेंड कंपनी"],
+            correct: 0 // (a)
+        },
+        {
+            qEn: "Who was the Mughal Emperor when the British East India Company was formed in London?",
+            qHi: "लंदन में ब्रिटिश ईस्ट इंडिया कंपनी के गठन के समय भारत का निम्नलिखित में से कौन बादशाह था ?",
+            optEn: ["Akbar", "Jahangir", "Shah Jahan", "Aurangzeb"],
+            optHi: ["अकबर", "जहांगीर", "शाहजहां", "औरंगजेब"],
+            correct: 0 // (a)
+        },
+        {
+            qEn: "During whose reign did the English East India Company establish its first factory in India?",
+            qHi: "किस मुगल सम्राट के काल में इंग्लिश ईस्ट इंडिया कंपनी ने भारत में सर्वप्रथम कारखाना स्थापित किया ?",
+            optEn: ["Akbar", "Jahangir", "Shah Jahan", "Aurangzeb"],
+            optHi: ["अकबर", "जहांगीर", "शाहजहां", "औरंगजेब"],
+            correct: 1 // (b)
+        },
+        {
+            qEn: "Where was the first factory of East India Company established?",
+            qHi: "ईस्ट इंडिया कंपनी की प्रथम फैक्ट्री स्थापित की गई थी ?",
+            optEn: ["Pune", "Goa", "Pondicherry", "Surat"],
+            optHi: ["पुणे में", "गोवा में", "पांडिचेरी में", "सूरत में"],
+            correct: 3 // (d)
+        },
+        {
+            qEn: "Which English officer defeated the Portuguese at Swally?",
+            qHi: "निम्नलिखित में किस अंग्रेज अधिकारी ने पुर्तगालियों को स्वाल्ली (Sowlley) के स्थान पर हराया था ?",
+            optEn: ["William Hawkins", "Thomas Best", "Thomas Roe", "Josiah Child"],
+            optHi: ["विलियम हॉकिन्स", "थॉमस बेस्ट", "थॉमस रो", "जोशिया चाइल्ड"],
+            correct: 1 // (b)
+        },
+        {
+            qEn: "Which European trading company first established its factory in Surat?",
+            qHi: "निम्नलिखित यूरोपीय व्यापारिक कंपनियों में से किसने सूरत में सर्वप्रथम अपना कारखाना स्थापित किया ?",
+            optEn: ["Dutch", "English", "French", "Portuguese"],
+            optHi: ["डचों ने", "अंग्रेजों ने", "फ्रांसीसियों ने", "पुर्तगालियों ने"],
+            correct: 1 // (b)
+        },
+        {
+            qEn: "In 1613, where was the English East India Company permitted to set up a factory?",
+            qHi: "वर्ष 1613 में अंग्रेजी ईस्ट इंडिया कंपनी को कहां एक कारखाना (व्यापार स्थल) स्थापित करने की अनुमति मिली ?",
+            optEn: ["Bangalore", "Madras", "Masulipatnam", "Surat"],
+            optHi: ["बंगलौर", "मद्रास", "मसूलीपट्टनम", "सूरत"],
+            correct: 3 // (d)
+        },
+        {
+            qEn: "Where was the Western Presidency of the East India Company in the early period?",
+            qHi: "ईस्ट इंडिया कंपनी के प्रारंभिक दौर में वेस्टर्न प्रेसीडेंसी कहां थी ?",
+            optEn: ["Surat", "Satara", "Bombay", "Panaji"],
+            optHi: ["सूरत", "सतारा", "बॉम्बे", "पणजी"],
+            correct: 0 // (a)
+        },
+        {
+            qEn: "From whom did the British East India Company take Bombay?",
+            qHi: "ब्रिटिश ईस्ट इंडिया कंपनी ने बंबई किससे लिया था ?",
+            optEn: ["Dutch", "French", "Danish", "Portuguese"],
+            optHi: ["डचों से", "फ्रांसीसियों से", "डेनिसों से", "पुर्तगालियों से"],
+            correct: 3 // (d)
+        }
+    ];
+
+    /* Logic Engine */
+    let quizData = [];
+    let currentIdx = 0;
+    let score = 0;
+    let timerRef;
+    let timeLimit = 0;
+
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    function synthSound(type) {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        const now = audioCtx.currentTime;
+        if (type === 'ting') {
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(600, now);
+            osc.frequency.exponentialRampToValueAtTime(1000, now + 0.1);
+            gain.gain.setValueAtTime(0.3, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+            osc.start(now);
+            osc.stop(now + 0.5);
+        } else {
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(150, now);
+            osc.frequency.linearRampToValueAtTime(50, now + 0.4);
+            gain.gain.setValueAtTime(0.3, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+            osc.start(now);
+            osc.stop(now + 0.4);
+        }
+    }
+
+    function startQuiz() {
+        const timerVal = document.getElementById('timer-input').value;
+        timeLimit = timerVal ? parseInt(timerVal) : 0;
+        const doShuffle = document.getElementById('shuffle-toggle').checked;
+
+        quizData = [...rawQuestions];
+        if(doShuffle) quizData.sort(() => Math.random() - 0.5);
+
+        currentIdx = 0;
+        score = 0;
+        document.getElementById('start-screen').classList.add('hidden');
+        document.getElementById('quiz-screen').classList.remove('hidden');
+        
+        if(timeLimit > 0) {
+            document.getElementById('timer-box').style.visibility = 'visible';
+        } else {
+            document.getElementById('timer-box').style.visibility = 'hidden';
+        }
+
+        loadQuestion();
+    }
+
+    function loadQuestion() {
+        if(currentIdx >= quizData.length) { endQuiz(); return; }
+
+        const q = quizData[currentIdx];
+        
+        // Render Text
+        document.getElementById('q-counter').textContent = `Q: ${currentIdx + 1}/${quizData.length}`;
+        document.getElementById('score-display').textContent = `Score: ${score}`;
+        document.getElementById('q-text-en').textContent = q.qEn;
+        document.getElementById('q-text-hi').textContent = q.qHi;
+        document.getElementById('progress-bar').style.width = `${(currentIdx / quizData.length) * 100}%`;
+
+        // Render Options
+        const container = document.getElementById('options-container');
+        container.innerHTML = '';
+        
+        q.optEn.forEach((opt, i) => {
+            const btn = document.createElement('div');
+            btn.className = 'option-btn';
+            btn.innerHTML = `<span class="opt-en">${opt}</span><span class="opt-hi">${q.optHi[i]}</span>`;
+            btn.onclick = () => handleAnswer(i, btn);
+            container.appendChild(btn);
+        });
+
+        if(timeLimit > 0) runTimer();
+    }
+
+    function runTimer() {
+        clearInterval(timerRef);
+        let timeLeft = timeLimit;
+        const tDisplay = document.getElementById('timer-text');
+        tDisplay.classList.remove('pulse-red');
+        tDisplay.textContent = timeLeft;
+
+        timerRef = setInterval(() => {
+            timeLeft--;
+            tDisplay.textContent = timeLeft;
+            if(timeLeft < 5) tDisplay.classList.add('pulse-red');
+            if(timeLeft <= 0) {
+                clearInterval(timerRef);
+                timeOut();
+            }
+        }, 1000);
+    }
+
+    function handleAnswer(idx, btn) {
+        clearInterval(timerRef);
+        lockAll();
+        
+        const q = quizData[currentIdx];
+        if(idx === q.correct) {
+            score++;
+            btn.classList.add('correct');
+            synthSound('ting');
+            fireConfetti();
+        } else {
+            btn.classList.add('wrong');
+            synthSound('buzz');
+            showEmoji();
+            // Show correct
+            document.querySelectorAll('.option-btn')[q.correct].classList.add('correct');
+        }
+
+        setTimeout(() => {
+            currentIdx++;
+            loadQuestion();
+        }, 1500);
+    }
+
+    function timeOut() {
+        lockAll();
+        synthSound('buzz');
+        showEmoji();
+        const q = quizData[currentIdx];
+        document.querySelectorAll('.option-btn')[q.correct].classList.add('correct');
+        setTimeout(() => {
+            currentIdx++;
+            loadQuestion();
+        }, 1500);
+    }
+
+    function lockAll() {
+        document.querySelectorAll('.option-btn').forEach(b => b.style.pointerEvents = 'none');
+    }
+
+    function showEmoji() {
+        const e = document.createElement('div');
+        e.textContent = '😢';
+        e.className = 'feedback-emoji';
+        document.body.appendChild(e);
+        setTimeout(() => e.remove(), 600);
+    }
+
+    function endQuiz() {
+        clearInterval(timerRef);
+        document.getElementById('quiz-screen').classList.add('hidden');
+        document.getElementById('result-screen').classList.remove('hidden');
+        document.getElementById('progress-bar').style.width = '100%';
+
+        const pct = Math.round((score / (currentIdx || 1)) * 100);
+        document.getElementById('final-score').textContent = `${pct}%`;
+        document.getElementById('stats-text').textContent = `You answered ${score} out of ${currentIdx} correctly.`;
+        
+        const msg = document.getElementById('result-msg');
+        if(pct >= 80) {
+            msg.textContent = "🏆 Outstanding Performance!";
+            fireConfetti();
+        } else if(pct >= 50) {
+            msg.textContent = "👏 Well Done! Keep it up.";
+        } else {
+            msg.textContent = "📚 Practice makes perfect! Try again.";
+        }
+    }
+
+    function fireConfetti() {
+        const canvas = document.getElementById('confetti-canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        
+        const particles = [];
+        const colors = ['#f00', '#0f0', '#00f', '#ff0', '#0ff', '#f0f'];
+        
+        for(let i=0; i<100; i++) {
+            particles.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height - canvas.height,
+                c: colors[Math.floor(Math.random() * colors.length)],
+                s: Math.random() * 5 + 5,
+                vx: Math.random() * 4 - 2,
+                vy: Math.random() * 5 + 2
+            });
+        }
+
+        function draw() {
+            ctx.clearRect(0,0,canvas.width, canvas.height);
+            let active = false;
+            particles.forEach(p => {
+                p.x += p.vx;
+                p.y += p.vy;
+                ctx.fillStyle = p.c;
+                ctx.fillRect(p.x, p.y, p.s, p.s);
+                if(p.y < canvas.height) active = true;
+            });
+            if(active) requestAnimationFrame(draw);
+        }
+        draw();
+    }
+</script>
+</body>
+</html>

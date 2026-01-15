@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chapter 15: Inter-State Relations Quiz</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-bg: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+            --glass: rgba(255, 255, 255, 0.1);
+            --border: rgba(255, 255, 255, 0.2);
+            --correct: #27ae60;
+            --wrong: #c0392b;
+            --hindi: #dcdde1;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+
+        body {
+            background: var(--primary-bg);
+            background-attachment: fixed;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 15px;
+            color: white;
+        }
+
+        .quiz-card {
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            border-radius: 25px;
+            width: 100%;
+            max-width: 600px;
+            padding: 25px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+            position: relative;
+            overflow-y: auto;
+            max-height: 95vh;
+        }
+
+        #progress {
+            position: fixed; top: 0; left: 0; height: 5px;
+            background: #fdbb2d; width: 0%; transition: 0.3s; z-index: 1000;
+        }
+
+        .stats { display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 15px; font-weight: 600; }
+        
+        .timer-circle { text-align: center; font-size: 1.5rem; margin-bottom: 15px; }
+        .red-alert { color: #ff4757; animation: pulse 0.7s infinite; }
+        @keyframes pulse { 50% { opacity: 0.2; } }
+
+        .question-box { margin-bottom: 25px; }
+        .q-en { font-size: 1.1rem; font-weight: 600; display: block; margin-bottom: 5px; }
+        .q-hi { font-size: 0.95rem; color: var(--hindi); display: block; font-style: italic; }
+
+        .options { display: grid; gap: 10px; }
+        .opt {
+            background: rgba(255,255,255,0.07);
+            border: 1px solid var(--border);
+            padding: 15px;
+            border-radius: 15px;
+            color: white;
+            text-align: left;
+            cursor: pointer;
+            transition: 0.3s;
+            display: flex;
+            flex-direction: column;
+        }
+        .opt:hover:not([disabled]) { background: rgba(255,255,255,0.2); transform: translateX(5px); }
+        .opt-en { font-size: 0.9rem; }
+        .opt-hi { font-size: 0.8rem; color: var(--hindi); }
+
+        .btn-correct { background: var(--correct) !important; border: none; }
+        .btn-wrong { background: var(--wrong) !important; border: none; }
+
+        .btn {
+            width: 100%; padding: 15px; border-radius: 15px; border: none;
+            background: white; color: #1a2a6c; font-weight: 700; cursor: pointer;
+            margin-top: 20px; transition: 0.3s;
+        }
+        .exit-btn { background: #e67e22; color: white; margin-top: 30px; }
+
+        #emoji { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 80px; display: none; }
+        .shake { animation: shake 0.5s; }
+        @keyframes shake { 0%, 100% { transform: translate(-50%, -50%); } 25% { transform: translate(-60%, -50%); } 75% { transform: translate(-40%, -50%); } }
+
+        .hidden { display: none; }
+        input[type="number"] { width: 100%; padding: 12px; border-radius: 10px; border: none; margin: 10px 0; }
+    </style>
+</head>
+<body>
+
+<div id="progress"></div>
+
+<div id="start" class="quiz-card">
+    <h1 style="text-align:center; margin-bottom:10px;">Chapter 15 Quiz</h1>
+    <h3 style="text-align:center; font-weight:300; margin-bottom:20px;">Inter-State Relations</h3>
+    <label>Timer per question (0 for off):</label>
+    <input type="number" id="t-in" value="30">
+    <label style="display:block; margin:15px 0;"><input type="checkbox" id="shuf"> Shuffle Questions</label>
+    <button class="btn" onclick="initQuiz()">Start Quiz</button>
+</div>
+
+<div id="game" class="quiz-card hidden">
+    <div id="emoji">😢</div>
+    <div class="stats"><span id="count"></span><span id="score">Score: 0</span></div>
+    <div class="timer-circle" id="t-disp">⏱️ <span id="t-val">30</span></div>
+    <div class="question-box">
+        <span class="q-en" id="q-en"></span>
+        <span class="q-hi" id="q-hi"></span>
+    </div>
+    <div class="options" id="opts"></div>
+    <button class="btn exit-btn" onclick="finish()">Finish & Result</button>
+</div>
+
+<div id="result" class="quiz-card hidden" style="text-align:center;">
+    <h2>Final Report</h2>
+    <div style="font-size: 3rem; margin: 20px 0;" id="f-score"></div>
+    <p id="msg" style="margin-bottom: 30px;"></p>
+    <button class="btn" onclick="location.reload()">Restart</button>
+</div>
+
+<script>
+    const data = [
+        { qe: "Which provision did the Constitution make for Inter-State harmony?", qh: "संविधान ने अंतर्राज्यीय सौहार्द के लिए निम्न में से कौन-से प्रावधान किया है ?", options: [{e:"Adjudication of inter-state water disputes", h:"अंतर्राज्यीय जल-विवादों का न्याय निर्णयन"}, {e:"Coordination by Inter-State Council", h:"अंतर्राज्यीय परिषद द्वारा समन्वयता"}, {e:"Full faith to public acts, records and judicial proceedings", h:"सार्वजनिक कानूनों, दस्तावेजों तथा न्यायिक प्रक्रियाओं को मान्यता"}, {e:"All of the above", h:"इनमें से सभी"}], correct: 3 },
+        { qe: "Article 262 of the Indian Constitution is related to:", qh: "भारतीय संविधान का अनुच्छेद 262 संबंधित है-", options: [{e:"Inter-State water dispute", h:"अंतर्राज्यीय जल विवाद"}, {e:"Inter-State trade", h:"अंतर्राज्यीय व्यापार संबंध"}, {e:"Inter-State transit", h:"अंतर्राज्यीय पारगमन संबंध"}, {e:"All of the above", h:"उपर्युक्त सभी"}], correct: 0 },
+        { qe: "Who has the power to make laws regarding Inter-State river water distribution?", qh: "अंतर्राज्यीय नदी जल बंटवारे से संबंधित कानून बनाने का अधिकार किसके पास है ?", options: [{e:"Legislative Assembly", h:"विधानसभा"}, {e:"Parliament", h:"संसद"}, {e:"President", h:"राष्ट्रपति"}, {e:"Rajya Sabha only", h:"केवल राज्यसभा"}], correct: 1 },
+        { qe: "Which Article provides for the formation of an Inter-State Council for coordination?", qh: "निम्नलिखित में से संविधान का कौन-सा अनुच्छेद केंद्र तथा राज्यों के बीच समन्वय के लिए अंतर्राज्यीय परिषद का गठन की व्यवस्था करता है ?", options: [{e:"256", h:"256"}, {e:"262", h:"262"}, {e:"263", h:"263"}, {e:"352", h:"352"}], correct: 2 },
+        { qe: "The Mahanadi Water Disputes Tribunal (2018) involves which states?", qh: "महानदी जल विवाद न्यायाधिकरण 2018 से संबंधित राज्य है-", options: [{e:"Goa and Karnataka", h:"गोवा और कर्नाटक"}, {e:"Odisha and West Bengal", h:"ओडिशा और पं. बंगाल"}, {e:"Odisha and Chhattisgarh", h:"ओडिशा और छत्तीसगढ़"}, {e:"Odisha and Madhya Pradesh", h:"ओडिशा और मध्यप्रदेश"}], correct: 2 },
+        { qe: "The Vamsadhara River Dispute Tribunal is related to which states?", qh: "वंशधारा नदी विवाद न्यायाधिकरण से संबंधित राज्य है ?", options: [{e:"Goa and Maharashtra", h:"गोवा और महाराष्ट्र"}, {e:"Odisha and Andhra Pradesh", h:"ओडिशा और आंध्रप्रदेश"}, {e:"Maharashtra and Karnataka", h:"महाराष्ट्र एवं कर्नाटक"}, {e:"Rajasthan and Gujarat", h:"राजस्थान एवं गुजरात"}], correct: 1 },
+        { qe: "On whose recommendation was the Inter-State Council established?", qh: "निम्नलिखित में से किस समिति के सिफारिश पर अंतर्राज्यीय परिषद की स्थापना किया गया ?", options: [{e:"Sarkaria Commission", h:"सरकारिया आयोग"}, {e:"Punchhi Commission", h:"पुंछी आयोग"}, {e:"Dinesh Goswami Committee", h:"दिनेश गोस्वामी समिति"}, {e:"K. Santhanam Committee", h:"के. संथानम समिति"}], correct: 0 },
+        { qe: "When was the Inter-State Council established?", qh: "अंतर्राज्यीय परिषद की स्थापना कब किया गया ?", options: [{e:"Year 1990", h:"वर्ष 1990"}, {e:"Year 1988", h:"वर्ष 1988"}, {e:"Year 1996", h:"वर्ष 1996"}, {e:"Year 1992", h:"वर्ष 1992"}], correct: 0 },
+        { qe: "Who is the Chairman of the Inter-State Council?", qh: "अंतर्राज्यीय परिषद के अध्यक्ष कौन होते हैं ?", options: [{e:"President", h:"राष्ट्रपति"}, {e:"Prime Minister", h:"प्रधानमंत्री"}, {e:"Home Minister", h:"भारत के गृहमंत्री"}, {e:"Cabinet Secretary", h:"भारत के कैबिनेट सचिव"}], correct: 1 },
+        { qe: "How many meetings of the Inter-State Council should occur in a year at minimum?", qh: "अंतर्राज्यीय परिषद का एक वर्ष में कम से कम कितनी बैठक होनी चाहिए ?", options: [{e:"At least three", h:"कम से कम तीन"}, {e:"At least four", h:"कम से कम चार"}, {e:"At least two", h:"कम से कम दो"}, {e:"At least one", h:"कम से कम एक"}], correct: 0 },
+        { qe: "Which Part of the Constitution discusses trade and commerce within the territory of India?", qh: "संविधान के किस भाग में भारतीय क्षेत्र में व्यापार, वाणिज्य तथा समागम की चर्चा है ?", options: [{e:"Part - XIV", h:"भाग- XIV"}, {e:"Part - XV", h:"भाग- XV"}, {e:"Part - XVI", h:"भाग- XVI"}, {e:"Part - XIII", h:"भाग- XIII"}], correct: 3 },
+        { qe: "When were Zonal Councils established?", qh: "क्षेत्रीय परिषद की स्थापना कब किया गया ?", options: [{e:"1956", h:"1956"}, {e:"1955", h:"1955"}, {e:"1957", h:"1957"}, {e:"1958", h:"1958"}], correct: 0 },
+        { qe: "Number of Zonal Councils in India is:", qh: "भारत में क्षेत्रीय परिषदों की संख्या है-", options: [{e:"Four", h:"चार"}, {e:"Six", h:"छ:"}, {e:"Five", h:"पाँच"}, {e:"Eight", h:"आठ"}], correct: 2 },
+        { qe: "Who is the Chairman of a Zonal Council?", qh: "क्षेत्रीय परिषद का अध्यक्ष होता है-", options: [{e:"Prime Minister", h:"प्रधानमंत्री"}, {e:"Home Minister", h:"गृहमंत्री"}, {e:"President", h:"राष्ट्रपति"}, {e:"All of these", h:"इनमें से सभी"}], correct: 1 },
+        { qe: "When was the North-Eastern Council established?", qh: "पूर्वोत्तर क्षेत्रीय परिषद की स्थापना कब किया गया ?", options: [{e:"1971", h:"1971"}, {e:"1972", h:"1972"}, {e:"1973", h:"1973"}, {e:"1974", h:"1974"}], correct: 0 }
+    ];
+
+    let qs = [], idx = 0, pts = 0, timerVal = 30, tLeft = 0, iv;
+    const ac = new (window.AudioContext || window.webkitAudioContext)();
+
+    function snd(f1, f2) {
+        let os = ac.createOscillator(), gn = ac.createGain();
+        os.connect(gn); gn.connect(ac.destination);
+        os.frequency.setValueAtTime(f1, ac.currentTime);
+        if(f2) os.frequency.exponentialRampToValueAtTime(f2, ac.currentTime + 0.1);
+        gn.gain.setValueAtTime(0.1, ac.currentTime); gn.gain.linearRampToValueAtTime(0, ac.currentTime + 0.3);
+        os.start(); os.stop(ac.currentTime + 0.3);
+    }
+
+    function initQuiz() {
+        timerVal = parseInt(document.getElementById('t-in').value);
+        qs = [...data];
+        if(document.getElementById('shuf').checked) qs.sort(() => Math.random() - 0.5);
+        document.getElementById('start').classList.add('hidden');
+        document.getElementById('game').classList.remove('hidden');
+        render();
+    }
+
+    function render() {
+        if(idx >= qs.length) return finish();
+        const cur = qs[idx];
+        document.getElementById('q-en').innerText = cur.qe;
+        document.getElementById('q-hi').innerText = cur.qh;
+        document.getElementById('count').innerText = `Q: ${idx+1}/${qs.length}`;
+        document.getElementById('progress').style.width = `${((idx+1)/qs.length)*100}%`;
+        
+        const c = document.getElementById('opts');
+        c.innerHTML = '';
+        cur.options.forEach((o, i) => {
+            const b = document.createElement('button');
+            b.className = 'opt';
+            b.innerHTML = `<span class="opt-en">${o.e}</span><span class="opt-hi">${o.h}</span>`;
+            b.onclick = () => solve(i);
+            c.appendChild(b);
+        });
+
+        if(timerVal > 0) {
+            tLeft = timerVal;
+            clearInterval(iv);
+            const d = document.getElementById('t-val');
+            const box = document.getElementById('t-disp');
+            d.innerText = tLeft;
+            box.classList.remove('red-alert');
+            iv = setInterval(() => {
+                tLeft--; d.innerText = tLeft;
+                if(tLeft < 5) box.classList.add('red-alert');
+                if(tLeft <= 0) solve(-1);
+            }, 1000);
+        } else document.getElementById('t-disp').classList.add('hidden');
+    }
+
+    function solve(i) {
+        clearInterval(iv);
+        const cur = qs[idx];
+        const bs = document.querySelectorAll('.opt');
+        bs.forEach(b => b.disabled = true);
+
+        if(i === cur.correct) {
+            bs[i].classList.add('btn-correct');
+            pts++; snd(500, 900);
+        } else {
+            if(i !== -1) bs[i].classList.add('btn-wrong');
+            bs[cur.correct].classList.add('btn-correct');
+            snd(150, 50);
+            const e = document.getElementById('emoji');
+            e.style.display = 'block'; e.classList.add('shake');
+            setTimeout(() => { e.style.display = 'none'; e.classList.remove('shake'); }, 1000);
+        }
+        document.getElementById('score').innerText = `Score: ${pts}`;
+        setTimeout(() => { idx++; render(); }, 1500);
+    }
+
+    function finish() {
+        clearInterval(iv);
+        document.getElementById('game').classList.add('hidden');
+        document.getElementById('result').classList.remove('hidden');
+        document.getElementById('f-score').innerText = `${pts}/${qs.length}`;
+        const p = (pts/qs.length)*100;
+        document.getElementById('msg').innerText = p >= 80 ? "🏆 Master of Inter-State Relations!" : p >= 50 ? "👏 Great Job!" : "📚 Study hard and try again!";
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chapter 16: Emergency Provisions Quiz</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-bg: linear-gradient(135deg, #2c3e50, #000000, #c0392b);
+            --glass: rgba(255, 255, 255, 0.1);
+            --border: rgba(255, 255, 255, 0.2);
+            --correct: #27ae60;
+            --wrong: #e74c3c;
+            --hindi: #bdc3c7;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+
+        body {
+            background: var(--primary-bg);
+            background-attachment: fixed;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 15px;
+            color: white;
+        }
+
+        .quiz-card {
+            background: var(--glass);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid var(--border);
+            border-radius: 30px;
+            width: 100%;
+            max-width: 650px;
+            padding: 30px;
+            box-shadow: 0 15px 50px rgba(0,0,0,0.5);
+            position: relative;
+            overflow-y: auto;
+            max-height: 95vh;
+        }
+
+        #progress {
+            position: fixed; top: 0; left: 0; height: 6px;
+            background: #e74c3c; width: 0%; transition: 0.3s; z-index: 1000;
+        }
+
+        .stats { display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 20px; font-weight: 600; color: #ecf0f1; }
+        
+        .timer-ui { text-align: center; font-size: 1.6rem; margin-bottom: 20px; font-weight: bold; }
+        .pulse-warning { color: #ff3e3e; animation: pulse 0.6s infinite; }
+        @keyframes pulse { 50% { opacity: 0.3; } }
+
+        .question-box { margin-bottom: 30px; }
+        .q-en { font-size: 1.2rem; font-weight: 600; display: block; margin-bottom: 10px; line-height: 1.3; }
+        .q-hi { font-size: 1rem; color: var(--hindi); display: block; border-left: 3px solid #e74c3c; padding-left: 12px; }
+
+        .options-list { display: grid; gap: 12px; }
+        .opt-btn {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border);
+            padding: 18px;
+            border-radius: 18px;
+            color: white;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            flex-direction: column;
+        }
+        .opt-btn:hover:not([disabled]) { background: rgba(255,255,255,0.15); transform: translateY(-3px); }
+        .opt-en { font-size: 1rem; font-weight: 500; }
+        .opt-hi { font-size: 0.85rem; color: var(--hindi); margin-top: 5px; }
+
+        .correct-ans { background: var(--correct) !important; border-color: transparent; }
+        .wrong-ans { background: var(--wrong) !important; border-color: transparent; }
+
+        .btn-action {
+            width: 100%; padding: 16px; border-radius: 15px; border: none;
+            background: white; color: #2c3e50; font-weight: 700; cursor: pointer;
+            margin-top: 25px; transition: 0.3s; font-size: 1rem;
+        }
+        .finish-trigger { background: #d35400; color: white; margin-top: 35px; }
+
+        #feedback-emoji { position: absolute; top: 45%; left: 50%; transform: translate(-50%, -50%); font-size: 100px; display: none; z-index: 10; }
+        .shake-ui { animation: shake 0.4s ease-in-out; }
+        @keyframes shake { 0%, 100% { transform: translate(-50%, -50%); } 25% { transform: translate(-55%, -50%); } 75% { transform: translate(-45%, -50%); } }
+
+        .hidden-ui { display: none !important; }
+        input[type="number"] { width: 100%; padding: 14px; border-radius: 12px; border: 1px solid var(--border); background: rgba(255,255,255,0.1); color: white; margin: 15px 0; }
+    </style>
+</head>
+<body>
+
+<div id="progress"></div>
+
+<div id="screen-start" class="quiz-card">
+    <h1 style="text-align:center; color: #e74c3c;">Chapter 16 Exam</h1>
+    <h3 style="text-align:center; font-weight:300; margin-bottom:30px;">Emergency Provisions (आपातकालीन प्रावधान)</h3>
+    
+    <div style="margin-bottom: 20px;">
+        <label>Timer (Seconds per question, 0 to disable):</label>
+        <input type="number" id="input-timer" value="30">
+    </div>
+
+    <label style="display:flex; align-items:center; gap:10px; cursor:pointer;">
+        <input type="checkbox" id="check-shuffle" style="width:20px; height:20px;"> Randomize Question Order
+    </label>
+
+    <button class="btn-action" onclick="launchQuiz()">Start Examination</button>
+</div>
+
+<div id="screen-quiz" class="quiz-card hidden-ui">
+    <div id="feedback-emoji">😢</div>
+    <div class="stats">
+        <span id="label-q">Question: 0/0</span>
+        <span id="label-score">Score: 0</span>
+    </div>
+    
+    <div class="timer-ui" id="ui-timer">⏱️ <span id="val-timer">30</span>s</div>
+
+    <div class="question-box">
+        <span class="q-en" id="text-q-en"></span>
+        <span class="q-hi" id="text-q-hi"></span>
+    </div>
+
+    <div class="options-list" id="list-opts"></div>
+
+    <button class="btn-action finish-trigger" onclick="conclude()">End Exam & Show Results</button>
+</div>
+
+<div id="screen-result" class="quiz-card hidden-ui" style="text-align:center;">
+    <h2 style="color: #e74c3c;">Performance Report</h2>
+    <div style="font-size: 4rem; margin: 30px 0; font-weight: bold;" id="result-score"></div>
+    <p id="result-msg" style="margin-bottom: 35px; font-size: 1.2rem;"></p>
+    <button class="btn-action" onclick="location.reload()">Restart Quiz</button>
+</div>
+
+<script>
+    const emergencyData = [
+        { en: "Which Part of the Constitution deals with Emergency provisions?", hi: "संविधान के किस भाग में आपातकालीन प्रावधान संबंधित है ?", opts: [{e:"Part 17", h:"भाग- 17"}, {e:"Part 18", h:"भाग- 18"}, {e:"Part 14", h:"भाग- 14"}, {e:"Part 20", h:"भाग- 20"}], ans: 1 },
+        { en: "What was the purpose of adding Emergency provisions in the Constitution?", hi: "संविधान में आपातकालीन प्रावधान को जोड़ने का उद्देश्य था ?", opts: [{e:"To maintain sovereignty", h:"देश की संप्रभुता को बनाये रखना"}, {e:"To protect unity & integrity", h:"एकता और अखंडता रक्षा करना"}, {e:"To protect Democratic system", h:"लोकतांत्रिक राजनीतिक व्यवस्था तथा संविधान की सुरक्षा"}, {e:"All of the above", h:"उपर्युक्त में सभी"}], ans: 3 },
+        { en: "How many types of Emergency are mentioned in the Constitution?", hi: "संविधान में कितने प्रकार की आपातकाल की चर्चा है ?", opts: [{e:"Three", h:"तीन"}, {e:"Four", h:"चार"}, {e:"Five", h:"पाँच"}, {e:"Six", h:"छह"}], ans: 0 },
+        { en: "Article 352 is related to:", hi: "अनुच्छेद 352 का संबंध है-", opts: [{e:"Financial Emergency", h:"वित्तीय आपातकाल"}, {e:"President's Rule", h:"राज्यों में संवैधानिक तंत्र की विफलता"}, {e:"National Emergency", h:"राष्ट्रीय आपातकाल"}, {e:"All of these", h:"इनमें से सभी"}], ans: 2 },
+        { en: "Article 356 is related to which Emergency?", hi: "राष्ट्रपति शासन किन अनुच्छेद से संबंधित है ?", opts: [{e:"356", h:"356"}, {e:"352", h:"352"}, {e:"355", h:"355"}, {e:"360", h:"360"}], ans: 0 },
+        { en: "On what grounds can the President declare a National Emergency?", hi: "राष्ट्रपति निम्नलिखित में से किस आधार पर आपातकाल की घोषणा कर सकता है ?", opts: [{e:"War", h:"युद्ध"}, {e:"External Aggression", h:"बाह्य आक्रमण"}, {e:"Armed Rebellion", h:"सशस्त्र विद्रोह"}, {e:"All of the above", h:"इनमें से सभी"}], ans: 3 },
+        { en: "Which amendment replaced 'Internal Disturbance' with 'Armed Rebellion'?", hi: "किस संविधान संशोधन द्वारा आपातकाल के तीसरे आधार 'आंतरिक गड़बड़ी' को 'सशस्त्र विद्रोह' से विस्थापित कर दिया गया ?", opts: [{e:"46th", h:"46वें"}, {e:"42nd", h:"42वें"}, {e:"44th", h:"44वें"}, {e:"38th", h:"38वें"}], ans: 2 },
+        { en: "National Emergency can be declared only on the written advice of:", hi: "राष्ट्रीय आपातकाल की उद्घोषणा की जा सकती है ?", opts: [{e:"President's discretion", h:"राष्ट्रपति के द्वारा अपने विवेक से"}, {e:"Advice of Prime Minister", h:"राष्ट्रपति द्वारा केवल प्रधानमंत्री के सलाह पर"}, {e:"Advice of the Cabinet", h:"राष्ट्रपति द्वारा मंत्रिमंडल के सलाह पर"}, {e:"Advice of Lok Sabha Speaker", h:"राष्ट्रपति द्वारा लोकसभा स्पीकर के सलाह पर"}], ans: 2 },
+        { en: "Approval of National Emergency must be given by Parliament within:", hi: "संसद के दोनों सदनों द्वारा आपातकाल की उद्घोषणा जारी होने के कितने माह बाद अनुमोदित होना आवश्यक है ?", opts: [{e:"Three months", h:"तीन माह"}, {e:"Two months", h:"दो माह"}, {e:"One month", h:"एक माह"}, {e:"Six months", h:"छह माह"}], ans: 2 },
+        { en: "Article 360 is related to:", hi: "संविधान के अनुच्छेद 360 संबंधित है-", opts: [{e:"President's Rule", h:"राष्ट्रपति शासन से"}, {e:"Financial Emergency", h:"वित्तीय आपातकाल से"}, {e:"National Emergency", h:"राष्ट्रीय आपातकाल से"}, {e:"All of these", h:"उपर्युक्त में सभी"}], ans: 1 },
+        { en: "Who said Article 356 is like a 'Dead Letter'?", hi: "अनुच्छेद 356 के संदर्भ में यह किसने कहा कि यह उग्र शक्ति एक 'मृत पत्र' की भांति होगी ?", opts: [{e:"Dr. Ambedkar", h:"डॉ. अंबेडकर"}, {e:"K.M. Munshi", h:"के.एम मुंशी"}, {e:"C.T. Ravi", h:"सी.टी. रवि"}, {e:"Pandit Nehru", h:"पंडित नेहरू"}], ans: 0 },
+        { en: "Which case is related to President's Rule?", hi: "बोम्मई मामले संबंधित है-", opts: [{e:"President's Rule", h:"राष्ट्रपति शासन"}, {e:"Federal system", h:"संघीय व्यवस्था"}, {e:"9th Schedule", h:"संविधान की 9वीं अनुसूची से"}, {e:"All of the above", h:"उपर्युक्त में सभी"}], ans: 0 },
+        { en: "In which state was President's Rule first applied?", hi: "सर्वप्रथम राष्ट्रपति शासन का प्रयोग कब और किस राज्य में किया गया ?", opts: [{e:"1951, Punjab", h:"1951, पंजाब"}, {e:"1951, Kerala", h:"1951, केरल"}, {e:"1969, Kerala", h:"1969, केरल"}, {e:"1950, Madras", h:"1950, मद्रास"}], ans: 0 },
+        { en: "Financial Emergency can be approved by Parliament by:", hi: "वित्तीय आपातकाल को मंजूरी देने वाला प्रस्ताव संसद के किसी भी सदन द्वारा किस बहुमत से पारित किया जाना आवश्यक है ?", opts: [{e:"Two-thirds majority", h:"दो तिहाई बहुमत"}, {e:"Simple majority", h:"सामान्य बहुमत"}, {e:"One-third majority", h:"एक तिहाई बहुमत"}, {e:"Three-fourths majority", h:"तीन चौथाई बहुमत"}], ans: 1 },
+        { en: "How many times has Financial Emergency been declared in India?", hi: "भारत में अभी तक कितनी बार वित्तीय आपातकाल घोषित किया गया है ?", opts: [{e:"One", h:"एक बार"}, {e:"Two", h:"दो बार"}, {e:"Zero", h:"कभी नहीं"}, {e:"Three", h:"तीन बार"}], ans: 2 }
+    ];
+
+    let currentQ = [], qIdx = 0, score = 0, tSet = 30, tRem = 0, interval;
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    function playTone(freq1, freq2) {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.frequency.setValueAtTime(freq1, audioCtx.currentTime);
+        if(freq2) osc.frequency.exponentialRampToValueAtTime(freq2, audioCtx.currentTime + 0.1);
+        gain.gain.setValueAtTime(0.1, audioCtx.currentTime); gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.4);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.4);
+    }
+
+    function launchQuiz() {
+        tSet = parseInt(document.getElementById('input-timer').value) || 0;
+        currentQ = [...emergencyData];
+        if(document.getElementById('check-shuffle').checked) currentQ.sort(() => Math.random() - 0.5);
+        document.getElementById('screen-start').classList.add('hidden-ui');
+        document.getElementById('screen-quiz').classList.remove('hidden-ui');
+        showQ();
+    }
+
+    function showQ() {
+        if(qIdx >= currentQ.length) return conclude();
+        const data = currentQ[qIdx];
+        document.getElementById('text-q-en').innerText = data.en;
+        document.getElementById('text-q-hi').innerText = data.hi;
+        document.getElementById('label-q').innerText = `Question: ${qIdx + 1}/${currentQ.length}`;
+        document.getElementById('progress').style.width = `${((qIdx + 1) / currentQ.length) * 100}%`;
+        
+        const optCont = document.getElementById('list-opts');
+        optCont.innerHTML = '';
+        data.opts.forEach((o, i) => {
+            const b = document.createElement('button');
+            b.className = 'opt-btn';
+            b.innerHTML = `<span class="opt-en">${o.e}</span><span class="opt-hi">${o.h}</span>`;
+            b.onclick = () => verify(i);
+            optCont.appendChild(b);
+        });
+
+        if(tSet > 0) {
+            tRem = tSet;
+            clearInterval(interval);
+            const uiVal = document.getElementById('val-timer');
+            const uiBox = document.getElementById('ui-timer');
+            uiVal.innerText = tRem;
+            uiBox.classList.remove('pulse-warning');
+            interval = setInterval(() => {
+                tRem--; uiVal.innerText = tRem;
+                if(tRem < 5) uiBox.classList.add('pulse-warning');
+                if(tRem <= 0) verify(-1);
+            }, 1000);
+        } else document.getElementById('ui-timer').classList.add('hidden-ui');
+    }
+
+    function verify(choice) {
+        clearInterval(interval);
+        const data = currentQ[qIdx];
+        const btns = document.querySelectorAll('.opt-btn');
+        btns.forEach(b => b.disabled = true);
+
+        if(choice === data.ans) {
+            btns[choice].classList.add('correct-ans');
+            score++; playTone(600, 1000);
+        } else {
+            if(choice !== -1) btns[choice].classList.add('wrong-ans');
+            btns[data.ans].classList.add('correct-ans');
+            playTone(200, 80);
+            const emo = document.getElementById('feedback-emoji');
+            emo.style.display = 'block'; emo.classList.add('shake-ui');
+            setTimeout(() => { emo.style.display = 'none'; emo.classList.remove('shake-ui'); }, 1000);
+        }
+        document.getElementById('label-score').innerText = `Score: ${score}`;
+        setTimeout(() => { qIdx++; showQ(); }, 1500);
+    }
+
+    function conclude() {
+        clearInterval(interval);
+        document.getElementById('screen-quiz').classList.add('hidden-ui');
+        document.getElementById('screen-result').classList.remove('hidden-ui');
+        document.getElementById('result-score').innerText = `${score}/${currentQ.length}`;
+        const ratio = score / currentQ.length;
+        document.getElementById('result-msg').innerText = ratio >= 0.8 ? "🏆 Constitutional Expert!" : ratio >= 0.5 ? "👏 Well Prepared!" : "📚 Re-read Articles 352-360!";
+    }
+</script>
+</body>
+</html>

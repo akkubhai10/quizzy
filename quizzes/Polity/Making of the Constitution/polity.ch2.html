@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Indian Polity: Making of Constitution (124 Questions)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --text-main: #ffffff;
+            --text-hindi: #e0e0e0;
+            --accent-green: #00e676;
+            --accent-red: #ff1744;
+            --accent-blue: #2979ff;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Poppins', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background: linear-gradient(45deg, #240b36, #c31432, #2c3e50, #4ca1af);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--text-main);
+            overflow: hidden; /* Prevent body scroll, handle in card */
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Glassmorphism Card */
+        .app-container {
+            width: 100%;
+            max-width: 800px;
+            height: 100vh; /* Full height on mobile */
+            max-height: 95vh;
+            background: var(--glass-bg);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid var(--glass-border);
+            border-radius: 0; /* Square on mobile default */
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        @media(min-width: 768px) {
+            .app-container {
+                height: 90vh;
+                border-radius: 25px;
+            }
+        }
+
+        /* Scrollable Content Area */
+        .scroll-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            padding-bottom: 80px; /* Space for bottom button */
+        }
+        
+        .scroll-area::-webkit-scrollbar { width: 5px; }
+        .scroll-area::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.3); border-radius: 10px; }
+
+        /* Screens */
+        .screen { display: none; width: 100%; animation: fadeIn 0.4s ease; }
+        .screen.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Typography */
+        h1 { font-size: 1.8rem; text-align: center; margin-bottom: 10px; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+        .subtitle { text-align: center; color: #ddd; font-size: 0.9rem; margin-bottom: 30px; }
+
+        /* Inputs & Buttons */
+        .controls { display: flex; flex-direction: column; gap: 15px; align-items: center; margin-top: 20px; }
+        
+        input[type="number"] {
+            padding: 12px; border-radius: 12px; border: 1px solid var(--glass-border);
+            background: rgba(0,0,0,0.3); color: white; text-align: center; font-size: 1rem; width: 200px;
+        }
+
+        .toggle-box { display: flex; align-items: center; gap: 10px; background: rgba(0,0,0,0.2); padding: 10px 20px; border-radius: 20px; }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none; padding: 15px 40px; border-radius: 50px;
+            color: white; font-size: 1.1rem; font-weight: 600; cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s; box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        .btn-primary:active { transform: scale(0.95); }
+
+        /* Quiz Header */
+        .quiz-header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 15px 20px; background: rgba(0,0,0,0.2); border-bottom: 1px solid var(--glass-border);
+        }
+        .progress-container { position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: rgba(255,255,255,0.1); }
+        .progress-bar { height: 100%; background: var(--accent-green); width: 0%; transition: width 0.3s; box-shadow: 0 0 10px var(--accent-green); }
+
+        .timer-circle {
+            width: 45px; height: 45px; border-radius: 50%; border: 3px solid white;
+            display: flex; justify-content: center; align-items: center; font-weight: bold;
+        }
+        .pulse-red { border-color: var(--accent-red); color: var(--accent-red); animation: pulse 1s infinite; }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+
+        /* Question Card */
+        .question-box {
+            background: rgba(0,0,0,0.2); padding: 20px; border-radius: 15px; margin-bottom: 20px;
+            border-left: 4px solid var(--accent-blue);
+        }
+        .q-en { font-size: 1.1rem; font-weight: 600; margin-bottom: 8px; line-height: 1.4; }
+        .q-hi { font-size: 1rem; color: var(--text-hindi); font-weight: 400; line-height: 1.4; }
+
+        /* Options */
+        .options-grid { display: grid; gap: 12px; }
+        .option-btn {
+            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+            padding: 15px; border-radius: 12px; text-align: left; cursor: pointer;
+            transition: background 0.2s; display: flex; flex-direction: column;
+        }
+        .option-btn:hover { background: rgba(255,255,255,0.15); }
+        .opt-en { font-size: 0.95rem; font-weight: 500; margin-bottom: 2px; }
+        .opt-hi { font-size: 0.85rem; color: #ccc; }
+
+        .correct { background: rgba(0, 230, 118, 0.3) !important; border: 1px solid var(--accent-green) !important; }
+        .wrong { background: rgba(255, 23, 68, 0.3) !important; border: 1px solid var(--accent-red) !important; }
+        .disabled { pointer-events: none; opacity: 0.8; }
+
+        /* Footer Button */
+        .footer-action {
+            position: absolute; bottom: 0; left: 0; width: 100%;
+            padding: 15px; background: rgba(0,0,0,0.4); backdrop-filter: blur(10px);
+            display: flex; justify-content: center; border-top: 1px solid var(--glass-border);
+        }
+        .btn-finish { background: #ff5722; padding: 10px 30px; font-size: 0.9rem; }
+
+        /* Results */
+        .result-circle {
+            width: 150px; height: 150px; border-radius: 50%;
+            background: conic-gradient(var(--accent-green) 0%, transparent 0%);
+            margin: 0 auto 20px; display: flex; justify-content: center; align-items: center;
+            font-size: 2.5rem; font-weight: bold; border: 10px solid rgba(255,255,255,0.1);
+        }
+
+        /* Emoji Overlay */
+        #emoji-overlay {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 5rem; z-index: 9999; display: none; pointer-events: none;
+        }
+        .shake { animation: shake 0.5s; }
+        @keyframes shake { 0%, 100% {transform:translate(-50%,-50%) rotate(0deg);} 25% {transform:translate(-55%,-50%) rotate(-5deg);} 75% {transform:translate(-45%,-50%) rotate(5deg);} }
+
+        /* Confetti */
+        .confetti { position: fixed; width: 8px; height: 8px; top: -10px; z-index: 9999; animation: fall linear forwards; }
+        @keyframes fall { to { transform: translateY(100vh) rotate(720deg); } }
+
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <div id="emoji-overlay"></div>
+    <div class="progress-container"><div class="progress-bar" id="progressBar"></div></div>
+
+    <div id="start-screen" class="screen active scroll-area">
+        <h1>Indian Polity Master</h1>
+        <p class="subtitle">Making of the Constitution (124 Questions)</p>
+        
+        <div class="controls">
+            <label>Timer (Seconds per Question)</label>
+            <input type="number" id="timerInput" placeholder="0 for no timer" value="0">
+            
+            <div class="toggle-box">
+                <input type="checkbox" id="shuffleToggle" style="width:20px; height:20px;">
+                <span>Shuffle Questions</span>
+            </div>
+
+            <button class="btn-primary" onclick="app.start()">Start Quiz 🚀</button>
+        </div>
+        
+        <div style="margin-top: 40px; font-size: 0.8rem; text-align: center; color: rgba(255,255,255,0.6);">
+            Topics: Constituent Assembly, Committees, Sessions, Interim Govt.
+        </div>
+    </div>
+
+    <div id="quiz-screen" class="screen" style="display:none; height: 100%; display: flex; flex-direction: column;">
+        <div class="quiz-header">
+            <div id="q-counter">Q: 1/124</div>
+            <div id="score-display">Score: 0</div>
+            <div id="timer-display" class="timer-circle" style="display:none"></div>
+        </div>
+
+        <div class="scroll-area" id="question-container">
+            </div>
+
+        <div class="footer-action">
+            <button class="btn-primary btn-finish" onclick="app.finish()">Finish & Show Results</button>
+        </div>
+    </div>
+
+    <div id="result-screen" class="screen scroll-area" style="text-align: center;">
+        <h1>Quiz Completed!</h1>
+        <div class="result-circle" id="final-circle">
+            <span id="final-percent">0%</span>
+        </div>
+        <h2 id="final-msg" style="margin-bottom: 20px;"></h2>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 30px;">
+            <div style="background:rgba(0,0,0,0.2); padding:10px; border-radius:10px;">
+                <div style="color:var(--accent-green); font-size:1.5rem; font-weight:bold;" id="res-correct">0</div>
+                <div style="font-size:0.8rem">Correct</div>
+            </div>
+            <div style="background:rgba(0,0,0,0.2); padding:10px; border-radius:10px;">
+                <div style="color:var(--accent-red); font-size:1.5rem; font-weight:bold;" id="res-wrong">0</div>
+                <div style="font-size:0.8rem">Wrong/Skip</div>
+            </div>
+        </div>
+
+        <button class="btn-primary" onclick="location.reload()">Restart Quiz 🔄</button>
+    </div>
+</div>
+
+<script>
+// --- FULL DATASET (124 QUESTIONS) ---
+// Structure: q=English, h=Hindi, o=Options[{e,h}], a=CorrectIndex(0-3)
+const DB = [
+{q:"By whom was the idea of the formation of the Constituent Assembly of India given for the first time?",h:"भारत के संविधान सभा के गठन का विचार पहली बार किसके द्वारा दिया गया ?",o:[{e:"Dr. Bhimrao Ambedkar",h:"डॉ भीमराव अम्बेडकर"},{e:"K. T. Shah",h:"के. टी. शाह"},{e:"M. N. Roy",h:"एम. एन. रॉय"},{e:"Pt. Jawaharlal Nehru",h:"पंडित जवाहर लाल नेहरू"}],a:2},
+{q:"In which year did the idea of Constituent Assembly first come in India?",h:"भारत में संविधान सभा का विचार सर्वप्रथम किस वर्ष आया ?",o:[{e:"1934 AD",h:"1934 ई."},{e:"1936 AD",h:"1936 ई."},{e:"1929 AD",h:"1929 ई."},{e:"1938 AD",h:"1938 ई."}],a:0},
+{q:"When did the Indian National Congress officially demand the formation of a Constituent Assembly for the first time?",h:"भारतीय राष्ट्रीय कांग्रेस ने पहली बार भारत के संविधान निर्माण के लिए अधिकारिक रूप में संविधान सभा की गठन की मांग कब की ?",o:[{e:"1946 AD",h:"1946 ई."},{e:"1934 AD",h:"1934 ई."},{e:"1929 AD",h:"1929 ई."},{e:"1935 AD",h:"1935 ई."}],a:3},
+{q:"When did Pt. Jawaharlal Nehru declare on behalf of INC that the Constitution of free India must be framed by a Constituent Assembly elected on the basis of adult franchise?",h:"भारतीय राष्ट्रीय कांग्रेस की ओर से पंडित जवाहरलाल नेहरू यह घोषणा कब की, कि स्वतंत्र भारत के संविधान का निर्माण व्यस्क मताधिकार के आधार पर चुनी गई संविधान सभा द्वारा किया जायेगा ?",o:[{e:"1934 AD",h:"1934 ई."},{e:"1938 AD",h:"1938 ई."},{e:"1946 AD",h:"1946 ई."},{e:"1929 AD",h:"1929 ई."}],a:1},
+{q:"When was the Constituent Assembly constituted under the proposals suggested by the Cabinet Mission Plan?",h:"कैबिनेट मिशन योजना के तहत् सुझाए गये प्रस्तावों के तहत् संविधान सभा का गठन कब हुआ ?",o:[{e:"December 1946",h:"दिसंबर 1946"},{e:"January 1946",h:"जनवरी 1946"},{e:"February 1946",h:"फरवरी 1946"},{e:"November 1946",h:"नवंबर 1946"}],a:3},
+{q:"What was the total membership strength of the Constituent Assembly under Cabinet Mission Plan?",h:"कैबिनेट मिशन योजना के तहत् संविधान सभा की कुल सदस्य संख्या होनी थी ?",o:[{e:"392",h:"392"},{e:"296",h:"296"},{e:"389",h:"389"},{e:"295",h:"295"}],a:2},
+{q:"How many seats were fixed for British India in the Constituent Assembly formed under Cabinet Mission Plan?",h:"कैबिनेट मिशन योजना के तहत् गठित संविधान सभा में ब्रिटिश भारत से कितने सदस्य संख्या निर्धारित थी ?",o:[{e:"296",h:"296"},{e:"389",h:"389"},{e:"299",h:"299"},{e:"93",h:"93"}],a:0},
+{q:"How many seats were to be allotted to Princely States in Constituent Assembly formed under Cabinet Mission Plan?",h:"कैबिनेट मिशन योजना के तहत् गठित संविधान सभा में देशी रियासतों से कितनी सीटें आवंटित की जानी थी ?",o:[{e:"93",h:"93"},{e:"94",h:"94"},{e:"97",h:"97"},{e:"98",h:"98"}],a:0},
+{q:"Out of 296 seats allotted to British India, how many members were to be drawn from Governors' Provinces?",h:"कैबिनेट मिशन योजना के तहत् ब्रिटिश भारत को आवंटित 296 सीटों में से कितने सदस्यों का चयन गवर्नरों के प्रांतों से होना था ?",o:[{e:"294",h:"294"},{e:"296",h:"296"},{e:"292",h:"292"},{e:"293",h:"293"}],a:2},
+{q:"How many members were to be selected from Chief Commissioners' Provinces under Cabinet Mission Plan?",h:"कैबिनेट मिशन योजना के तहत् गठित संविधान सभा में मुख्य आयुक्तों के प्रांतों से कितने सदस्यों का चयन किया जाना था ?",o:[{e:"5",h:"5"},{e:"4",h:"4"},{e:"6",h:"6"},{e:"7",h:"7"}],a:1},
+{q:"Consider features of Constituent Assembly proposed by Cabinet Mission: 1. Seats allotted in proportion to population. 2. One seat per 10 lakh people. Which is wrong?",h:"कैबिनेट मिशन योजना द्वारा प्रस्तावित संविधान सभा... 1. हर प्रांत व देशी रियासतों को उनकी जनसंख्या के अनुपात में... 2. लगभग प्रत्येक दस लाख लोगों पर एक सीट... उपयुक्त में कौन-सा/से कथन गलत है/हैं ?",o:[{e:"Only 1",h:"केवल 1"},{e:"Only 2",h:"केवल 2"},{e:"Both 1 and 2",h:"1 और 2 दोनों"},{e:"Neither 1 nor 2",h:"न तो 1 और न ही 2"}],a:2},
+{q:"How were members from Princely States to be selected under Cabinet Mission Plan?",h:"कैबिनेट मिशन योजना द्वारा प्रस्तावित संविधान सभा में देशी रियासतों के सदस्यों का चयन किया जाना था ?",o:[{e:"Direct election by people",h:"जनता द्वारा प्रत्यक्ष निर्वाचन से"},{e:"By Hindu and Sikh men",h:"हिन्दु और सिखों पुरूषों द्वारा"},{e:"By Heads of Princely States",h:"देशी रियासतों के प्रमुखों द्वारा"},{e:"All of the above",h:"इनमे से सभी"}],a:2},
+{q:"When were elections held for the Constituent Assembly?",h:"संविधान सभा के लिए चुनाव हुआ ?",o:[{e:"July-August 1946",h:"जुलाई-अगस्त 1946"},{e:"Dec-Jan 1946",h:"दिसंबर-दिसंबर 1946"},{e:"Jan-March 1946",h:"जनवरी-मार्च 1946"},{e:"April-May 1946",h:"अप्रैल-मई 1946"}],a:0},
+{q:"How many seats did INC win in the election held in July-August 1946 out of 296?",h:"संविधान सभा के लिए जुलाई-अगस्त 1946 में हुये चुनाव... भारतीय राष्ट्रीय कांग्रेस कितने सीटों पर विजय रही ?",o:[{e:"196",h:"196"},{e:"208",h:"208"},{e:"93",h:"93"},{e:"204",h:"204"}],a:1},
+{q:"How many seats did Muslim League win in the election held in July-August 1946?",h:"संविधान सभा के लिए जुलाई-अगस्त में हुये चुनाव... मुस्लिम लीग विजय रहा ?",o:[{e:"89",h:"89"},{e:"93",h:"93"},{e:"73",h:"73"},{e:"74",h:"74"}],a:2},
+{q:"Consider statements: 1. Election was by direct election by adult voters. 2. Included all communities except women. Which is true?",h:"1. संविधान सभा का चुनाव भारत के व्यस्क मतदाताओं द्वारा प्रत्यक्ष रूप से हुआ। 2. इसमें महिलाओं को छोड़कर सभी समुदायों को प्रतिनिधित्व मिला। कौन-सा/से कथन सत्य है/हैं ?",o:[{e:"Only 1",h:"केवल 1"},{e:"Only 2",h:"केवल 2"},{e:"Both 1 and 2",h:"1 और 2 दोनों"},{e:"Neither 1 nor 2",h:"न तो 1 और न ही 2"}],a:3},
+{q:"When was the first meeting of the Constituent Assembly held?",h:"संविधान सभा की पहली बैठक कब हुई थी ?",o:[{e:"9 Dec 1946",h:"9 दिसंबर 1946"},{e:"11 Dec 1946",h:"11 दिसंबर 1946"},{e:"13 Dec 1946",h:"13 दिसंबर 1946"},{e:"26 Nov 1945",h:"26 नवंबर 1945"}],a:0},
+{q:"How many members attended the first meeting of the Constituent Assembly?",h:"संविधान सभा की पहली बैठक में कितने सदस्यों ने भाग लिया ?",o:[{e:"212",h:"212"},{e:"296",h:"296"},{e:"389",h:"389"},{e:"211",h:"211"}],a:3},
+{q:"Who presided over the first meeting of the Constituent Assembly?",h:"संविधान सभा की पहली बैठक में अध्यक्षता किसने की ?",o:[{e:"Sachchidanand Sinha",h:"सच्चिदानंद सिन्हा"},{e:"Dr. Rajendra Prasad",h:"डॉ राजेन्द्र प्रसाद"},{e:"Dr. H.C. Mukherjee",h:"डॉ एच. सी. मुखर्जी"},{e:"V.T. Krishnamachari",h:"वी.टी. कृष्णामाचारी"}],a:0},
+{q:"Following the practice of which country was Dr. Sachchidanand Sinha elected as temporary President?",h:"निम्नलिखित में से किस देश की तरह संविधान सभा की वरिष्ठ सदस्य डॉ. सच्चिदानंद सिन्हा को सभा का अस्थायी अध्यक्ष चुना गया ?",o:[{e:"America",h:"अमेरिका"},{e:"Japan",h:"जापान"},{e:"France",h:"फ्रांस"},{e:"Britain",h:"ब्रिटेन"}],a:2},
+{q:"Who was made the permanent President of the Constituent Assembly?",h:"संविधान सभा का स्थायी अध्यक्ष किसे बनाया गया ?",o:[{e:"Dr. Rajendra Prasad",h:"डॉ. राजेन्द्र प्रसाद"},{e:"Sachchidanand Sinha",h:"सच्चिदानंद सिन्हा"},{e:"V.T. Krishnamachari",h:"वी.टी. कृष्णामाचारी"},{e:"Dr. H.C. Mukherjee",h:"डॉ. एच.सी. मुखर्जी"}],a:0},
+{q:"Who was elected as the Vice-President of the Constituent Assembly?",h:"संविधान सभा के उपाध्यक्ष किसे निर्वाचित किया गया ?",o:[{e:"Dr. Rajendra Prasad",h:"डॉ. राजेन्द्र प्रसाद"},{e:"Dr. H.C. Mukherjee",h:"डॉ एच. सी. मुखर्जी"},{e:"V.T. Krishnamachari",h:"वी. टी. कृष्णामाचारी"},{e:"Both b and c",h:"b और c दोनों"}],a:3},
+{q:"What was the number of Vice-Presidents in the Constituent Assembly?",h:"संविधान सभा में उपाध्यक्ष की संख्या कितनी थी ?",o:[{e:"Four",h:"चार"},{e:"Three",h:"तीन"},{e:"Two",h:"दो"},{e:"Seven",h:"सात"}],a:2},
+{q:"When was the Objectives Resolution moved in the Constituent Assembly?",h:"संविधान सभा में उद्देश्य प्रस्ताव कब पेश किया गया ?",o:[{e:"14 Dec 1946",h:"14 दिसंबर 1946"},{e:"13 Dec 1946",h:"13 दिसंबर 1946"},{e:"11 Dec 1948",h:"11 दिसंबर 1948"},{e:"9 Dec 1946",h:"9 दिसंबर 1946"}],a:1},
+{q:"By whom was the Objectives Resolution moved in the Constituent Assembly?",h:"संविधान सभा में उद्देश्य प्रस्ताव किसके द्वारा पेश किया गया ?",o:[{e:"V.T. Krishnamachari",h:"वी.टी. कृष्णामाचारी"},{e:"Pt. Nehru",h:"पंडित नेहरू"},{e:"Dr. Rajendra Prasad",h:"डॉ. राजेन्द्र प्रसाद"},{e:"Mahatma Gandhi",h:"महात्मा गाँधी"}],a:1},
+{q:"When was the Preamble adopted by the Constituent Assembly?",h:"संविधान सभा द्वारा प्रस्तावना को कब स्वीकार किया गया ?",o:[{e:"11 Dec 1946",h:"11 दिसंबर 1946"},{e:"9 Dec 1946",h:"9 दिसंबर 1946"},{e:"22 Jan 1947",h:"22 जनवरी 1947"},{e:"13 Dec 1946",h:"13 दिसंबर 1946"}],a:2},
+{q:"When was the Constitution adopted by the Constituent Assembly?",h:"संविधान सभा द्वारा संविधान को कब अंगीकार किया गया ?",o:[{e:"26 Nov 1949",h:"26 नवंबर 1949"},{e:"22 July 1947",h:"22 जुलाई 1947"},{e:"25 Nov 1950",h:"25 नवंबर 1950"},{e:"26 Jan 1950",h:"26 जनवरी 1950"}],a:0},
+{q:"When was India's membership of the Commonwealth ratified by the Constituent Assembly?",h:"संविधान सभा द्वारा राष्ट्रमंडल में भारत की सदस्यता का सत्यापन कब किया गया ?",o:[{e:"May 1947",h:"मई 1947"},{e:"June 1949",h:"जून 1949"},{e:"May 1949",h:"मई 1949"},{e:"July 1950",h:"जुलाई 1950"}],a:2},
+{q:"When was the National Flag adopted by the Constituent Assembly?",h:"संविधान सभा द्वारा राष्ट्रीय ध्वज को अंगीकार कब किया गया ?",o:[{e:"22 July 1947",h:"22 जुलाई 1947"},{e:"24 Jan 1950",h:"24 जनवरी 1950"},{e:"24 Jan 1949",h:"24 जनवरी 1949"},{e:"3 June 1947",h:"3 जून 1947"}],a:0},
+{q:"When was the National Anthem adopted by the Constituent Assembly?",h:"संविधान सभा द्वारा राष्ट्रीय गान को कब अपनाया गया ?",o:[{e:"24 Jan 1949",h:"24 जनवरी 1949"},{e:"26 Jan 1950",h:"26 जनवरी 1950"},{e:"24 Jan 1950",h:"24 जनवरी 1950"},{e:"3 July 1949",h:"3 जुलाई 1949"}],a:2},
+{q:"When was the National Song adopted by the Constituent Assembly?",h:"संविधान सभा द्वारा राष्ट्रीय गीत कब अपनाया गया ?",o:[{e:"26 Jan 1950",h:"26 जनवरी 1950"},{e:"24 Jan 1950",h:"24 जनवरी 1950"},{e:"3 Aug 1949",h:"3 अगस्त 1949"},{e:"26 Nov 1949",h:"26 नवंबर 1949"}],a:1},
+{q:"When was Dr. Rajendra Prasad elected as the President of India?",h:"डॉ. राजेन्द्र प्रसाद को भारत का राष्ट्रपति कब चुना गया ?",o:[{e:"24 Jan 1950",h:"24 जनवरी 1950"},{e:"26 Nov 1949",h:"26 नवंबर 1949"},{e:"24 Jan 1949",h:"24 जनवरी 1949"},{e:"26 Jan 1950",h:"26 जनवरी 1950"}],a:0},
+{q:"How many days did it take to make the Constitution?",h:"संविधान निर्माण में कुल कितने दिन लगें ?",o:[{e:"2y 11m 12d",h:"2 साल 11 माह 12 दिन"},{e:"2y 6m 26d",h:"2 साल 6 माह 26 दिन"},{e:"2y 5m 9d",h:"2 साल 5 माह 9 दिन"},{e:"2y 11m 18d",h:"2 साल 11 माह 18 दिन"}],a:3},
+{q:"After considering the draft, the process of making it started?",h:"संविधान सभा ने संविधान के प्रारूप पर विचार करने के बाद इसकी निर्माण की प्रक्रिया शुरू किया ?",o:[{e:"115",h:"115"},{e:"114",h:"114"},{e:"127",h:"127"},{e:"126",h:"126"}],a:1},
+{q:"Total expenditure on making the Constitution?",h:"संविधान निर्माण पर कुल कितने खर्च हुआ है ?",o:[{e:"66 Lakh",h:"66 लाख"},{e:"64 Lakh",h:"64 लाख"},{e:"65 Lakh",h:"65 लाख"},{e:"68 Lakh",h:"68 लाख"}],a:1},
+{q:"When was the final session of Constituent Assembly held?",h:"संविधान सभा की अंतिम बैठक कब हुई है ?",o:[{e:"24 Jan 1950",h:"24 जनवरी 1950"},{e:"26 Jan 1950",h:"26 जनवरी 1950"},{e:"26 Nov 1949",h:"26 नवंबर 1949"},{e:"25 Jan 1950",h:"25 जनवरी 1950"}],a:0},
+{q:"Chairman of Union Powers Committee?",h:"संविधान निर्माण हेतु गठित संघ शक्ति समिति के अध्यक्ष थें-",o:[{e:"Rajendra Prasad",h:"डॉ. राजेन्द्र प्रसाद"},{e:"Sardar Patel",h:"सरदार पटेल"},{e:"Pt. Nehru",h:"पंडित नेहरू"},{e:"J.B. Kripalani",h:"जे.बी. कृपलानी"}],a:2},
+{q:"Chairman of Union Constitution Committee?",h:"संविधान निर्माण हेतु गठित संघीय संविधान समिति के अध्यक्ष थें-",o:[{e:"Pt. Nehru",h:"पंडित नेहरू"},{e:"Sardar Patel",h:"सरदार पटेल"},{e:"J.B. Kripalani",h:"जे.बी. कृपलानी"},{e:"Rajendra Prasad",h:"डॉ राजेन्द्र प्रसाद"}],a:0},
+{q:"Chairman of Provincial Constitution Committee?",h:"प्रांतीय संविधान समिति के अध्यक्ष थें-",o:[{e:"Sardar Patel",h:"सरदार पटेल"},{e:"J.B. Kripalani",h:"जे.बी. कृपलानी"},{e:"Rajendra Prasad",h:"डॉ राजेन्द्र प्रसाद"},{e:"Pt. Nehru",h:"पंडित नेहरू"}],a:0},
+{q:"Chairman of Drafting Committee?",h:"संविधान के प्रारूप समिति के अध्यक्ष कौन थें ?",o:[{e:"H.C. Mukherjee",h:"एच सी मुखर्जी"},{e:"J.B. Kripalani",h:"जे.बी. कृपलानी"},{e:"Gopinath Bardoloi",h:"गोपीनाथ बोदोलोई"},{e:"Ambedkar Saheb",h:"अम्बेडकर साहब"}],a:3},
+{q:"Chairman of Fundamental Rights Committee?",h:"संविधान निर्माण हेतु गठित मौलिक अधिकारों से संबंधित समिति के अध्यक्ष कौन थें ?",o:[{e:"Sardar Patel",h:"सरदार पटेल"},{e:"Pt. Nehru",h:"पंडित नेहरू"},{e:"Dr. Ambedkar",h:"डॉ भीमराव अम्बेडकर"},{e:"H.C. Mukherjee",h:"एच.सी. मुखर्जी"}],a:0},
+{q:"Chairman of Advisory Committee on Minorities?",h:"संविधान सभा में अल्पसंख्यकों के लिए गठित परामर्शदाता समिति के अध्यक्ष थें-",o:[{e:"Pt. Nehru",h:"पंडित नेहरू"},{e:"Ambedkar Saheb",h:"अम्बेडकर साहब"},{e:"H.C. Mukherjee",h:"एच. सी. मुखर्जी"},{e:"Sardar Patel",h:"सरदार पटेल"}],a:3},
+{q:"Chairman of Advisory Committee on Tribes/Excluded Areas?",h:"संविधान सभा में जनजातियों एवं बहिष्कृत क्षेत्रों के लिए गठित सलाहकार समिति के अध्यक्ष कौन थें ?",o:[{e:"Pt. Nehru",h:"पंडित नेहरू"},{e:"J.B. Kripalani",h:"जे.बी. कृपलानी"},{e:"Sardar Patel",h:"सरदार पटेल"},{e:"H.C. Mukherjee",h:"एच.सी. मुखर्जी"}],a:2},
+{q:"Chairman of Fundamental Rights Sub-Committee?",h:"संविधान निर्माण हेतु गठित मौलिक अधिकार उप-समिति के अध्यक्ष कौन थें ?",o:[{e:"J.B. Kripalani",h:"जे.बी. कृपलानी"},{e:"H.C. Mukherjee",h:"एच.सी. मुखर्जी"},{e:"Sardar Patel",h:"सरदार पटेल"},{e:"Pt. Nehru",h:"पंडित नेहरू"}],a:0},
+{q:"Chairman of Minorities Sub-Committee?",h:"संविधान सभा में गठित अल्पसंख्यक उप-समिति के अध्यक्ष कौन थें ?",o:[{e:"J.B. Kripalani",h:"जे.बी. कृपलानी"},{e:"H.C. Mukherjee",h:"एच.सी. मुखर्जी"},{e:"Sardar Patel",h:"सरदार पटेल"},{e:"Pt. Nehru",h:"पंडित नेहरू"}],a:1},
+{q:"Chairman of North-East Frontier Tribal Areas Sub-Committee?",h:"संविधान निर्माण हेतु गठित उत्तर-पूर्व सीमांत जनजातीय क्षेत्र असम को छोड़कर... उप-समिति के अध्यक्ष थें ?",o:[{e:"A.V. Thakkar",h:"ए. वी. ठक्कर"},{e:"Sardar Patel",h:"सरदार पटेल"},{e:"Rajendra Prasad",h:"डॉ. राजेन्द्र प्रसाद"},{e:"G.V. Mavalankar",h:"जी. वी. मावलंकर"}],a:3},
+{q:"Chairman of Steering/Rules Committee?",h:"संचालन/नियम समिति के अध्यक्ष कौन थें ?",o:[{e:"Rajendra Prasad",h:"डॉ. राजेन्द्र प्रसाद"},{e:"Sardar Patel",h:"सरदार पटेल"},{e:"A.V. Thakkar",h:"ए. वी. ठक्कर"},{e:"Gopinath Bardoloi",h:"गोपीनाथ बोदोलोई"}],a:0},
+{q:"Chairman of Committee for Negotiating with States?",h:"संविधान सभा में राज्यों के लिए गठित समिति या राज्यों से समझौता करने वाली समिति के अध्यक्ष थें-",o:[{e:"Pt. Nehru",h:"पंडित नेहरू"},{e:"A.V. Thakkar",h:"ए. वी. ठक्कर"},{e:"Sardar Patel",h:"सरदार पटेल"},{e:"Gopinath Bardoloi",h:"गोपीनाथ बोदोलोई"}],a:0},
+{q:"Chairman of Committee on Finance and Staff?",h:"संविधान सभा में वित्त एवं कर्मचारी से संबंधित मुद्दो पर विचार करने के लिए किसके अध्यक्षता में समिति का गठन किया गया ?",o:[{e:"Alladi Krishnaswami",h:"अल्लादी कृष्णस्वामी अय्यर"},{e:"Dr. Rajendra Prasad",h:"डॉ. राजेन्द्र प्रसाद"},{e:"Dr. K.M. Munshi",h:"डॉ. के. एम. मुंशी"},{e:"All of these",h:"इनमें से सभी"}],a:1},
+{q:"Chairman of Credentials Committee?",h:"संविधान सभा में पहचान से संबंधित समिति के अध्यक्ष थें-",o:[{e:"K.M. Munshi",h:"के.एम. मुंशी"},{e:"B. Pattabhi Sitaramayya",h:"बी. पट्टाभीसीतारमैय्या"},{e:"Alladi Krishnaswami",h:"अल्लादी कृष्णस्वामी अय्यर"},{e:"H.C. Mukherjee",h:"एच सी मुखर्जी"}],a:2},
+{q:"Dr. K.M. Munshi was related to?",h:"डॉ. के. एम. मुंशी संबंधित थें-",o:[{e:"Credentials Committee",h:"पहचान समिति"},{e:"Finance Committee",h:"वित्त समिति"},{e:"Order of Business Committee",h:"कार्य संचालन समिति"},{e:"Tribal Committee",h:"जनजातीय समिति"}],a:2},
+{q:"Chairman of Ad-hoc Committee on National Flag?",h:"संविधान निर्माण हेतु गठित राष्ट्रीय ध्वज से संबंधित समिति के अध्यक्ष कौन थें ?",o:[{e:"G.V. Mavalankar",h:"जी. वी. मावलंकर"},{e:"Dr. Rajendra Prasad",h:"डॉ राजेन्द्र प्रसाद"},{e:"B. Pattabhi Sitaramayya",h:"बी. पट्टाभीसीतारमैय्या"},{e:"K.M. Munshi",h:"के. एम. मुंशी"}],a:1},
+{q:"Chairman of House Committee?",h:"संविधान निर्माण हेतु गठित 'सदन समिति' के अध्यक्ष किन्हें चुना गया था ?",o:[{e:"Dr. Rajendra Prasad",h:"डॉ राजेन्द्र प्रसाद"},{e:"B. Pattabhi Sitaramayya",h:"बी. पट्टाभीसीतारमैय्या"},{e:"K.M. Munshi",h:"के. एम. मुंशी"},{e:"G.V. Mavalankar",h:"जी. वी. मावलंकर"}],a:1},
+{q:"Who was Chairman of a Committee but not a member of Constituent Assembly?",h:"निम्नलिखित में से कौन ऐसे व्यक्ति थें जो संविधान निर्माण हेतु गठित समिति के अध्यक्ष/अध्यक्षता थे लेकिन संविधान सभा का सदस्य नहीं थें ?",o:[{e:"Nalini Ranjan Sarkar",h:"नलिनी रंजन सरकार"},{e:"S.K. Dar",h:"एस. के. डार"},{e:"S. Varadachari",h:"एस. वरदाचारी"},{e:"All of these",h:"इनमें से सभी"}],a:3},
+{q:"Chairman of Ad-hoc Committee on Supreme Court?",h:"संविधान सभा में सर्वोच्च न्यायालय के लिए गठित तदर्थ समिति के अध्यक्ष कौन थें ?",o:[{e:"B. Pattabhi Sitaramayya",h:"बी. पट्टाभीसीतारमैय्या"},{e:"S. Varadachari",h:"एस. वरदाचारी"},{e:"G.V. Mavalankar",h:"जी. वी. मावलंकर"},{e:"Dr. K.M. Munshi",h:"डॉ. के. एम. मुंशी"}],a:1},
+{q:"Chairman of Committee on Functions of Constituent Assembly?",h:"संविधान सभा के कार्यों के लिए गठित समिति के अध्यक्ष कौन थें ?",o:[{e:"G.V. Mavalankar",h:"जी. वी. मावलंकर"},{e:"Ranjan Sarkar",h:"रंजन सरकार"},{e:"Dinesh Singh",h:"दिनेश सिंह"},{e:"Sachchidanand Sinha",h:"सच्चिदानंद सिन्हा"}],a:0},
+{q:"Chairman of Committee on Chief Commissioners' Provinces?",h:"संविधान सभा में मुख्य आयुक्तों के प्रांतों के लिए गठित समिति के अध्यक्ष थें-",o:[{e:"Ranjan Sarkar",h:"रंजन सरकार"},{e:"Dinesh Singh",h:"दिनेश सिंह"},{e:"B. Pattabhi Sitaramayya",h:"बी. पट्टाभीसीतारमैय्या"},{e:"S.K. Dar",h:"एस. के. डार"}],a:2},
+{q:"Chairman of Expert Committee on Financial Provisions?",h:"संघीय संविधान के वित्तीय प्रावधानों संबंधी समिति के अध्यक्ष कौन थें ?",o:[{e:"S.K. Dar",h:"एस. के. डार"},{e:"Nalini Ranjan Sarkar",h:"नलिनी रंजन सरकार"},{e:"B. Pattabhi Sitaramayya",h:"बी. पट्टाभीसीतारमैय्या"},{e:"Alladi Krishnaswami",h:"अल्लादी कृष्ण स्वामी अय्यर"}],a:1},
+{q:"Chairman of Linguistic Provinces Commission?",h:"संविधान सभा में भाषाई प्रांत से संबंधित आयोग के अध्यक्ष कौन थें ?",o:[{e:"Usha Nath Sen",h:"ऊषा नाथ सेन"},{e:"Nalini Ranjan Sarkar",h:"नलिनी रंजन सरकार"},{e:"S.K. Dar",h:"एस. के. डार"},{e:"B. Pattabhi Sitaramayya",h:"बी. पट्टाभीसीतारमैय्या"}],a:2},
+{q:"Chairman of Special Committee to examine Draft Constitution?",h:"प्रारूप संविधान की जांच के लिए विशेष समिति के अध्यक्ष कौन थें ?",o:[{e:"Pt. Nehru",h:"पंडित नेहरू"},{e:"S.K. Dar",h:"एस. के. डार"},{e:"Usha Nath Sen",h:"ऊषा नाथ सेन"},{e:"Dinesh Singh",h:"दिनेश सिंह"}],a:0},
+{q:"Chairman of Press Gallery Committee?",h:"संविधान सभा में प्रेस व दीर्घा समिति के अध्यक्ष थें-",o:[{e:"Pt. Nehru",h:"पंडित नेहरू"},{e:"S. Varadachari",h:"एस. वरदाचारी"},{e:"Usha Nath Sen",h:"ऊषा नाथ सेन"},{e:"S.K. Dar",h:"एस. के. डार"}],a:2},
+{q:"Chairman of Ad-hoc Committee on Citizenship?",h:"संविधान सभा में नागरिकता पर गठित तदर्थ समिति के अध्यक्ष कौन थें ?",o:[{e:"S.K. Dar",h:"एस. के. डार"},{e:"Usha Nath Sen",h:"ऊषा नाथ सेन"},{e:"Jawaharlal Nehru",h:"जवाहरलाल नेहरू"},{e:"S. Varadachari",h:"एस. वरदाचारी"}],a:3},
+{q:"When was the Drafting Committee constituted?",h:"संविधान सभा की प्रारूप समिति का गठन कब हुआ ?",o:[{e:"29 Aug 1947",h:"29 अगस्त 1947"},{e:"26 July 1946",h:"26 जुलाई 1946"},{e:"12 Dec 1946",h:"12 दिसंबर 1946"},{e:"13 Dec 1946",h:"13 दिसंबर 1946"}],a:0},
+{q:"Number of members in Drafting Committee?",h:"संविधान सभा के प्रारूप समिति के सदस्यों की संख्या कितनी थी ?",o:[{e:"Seven",h:"सात"},{e:"Nine",h:"नौ"},{e:"Eight",h:"आठ"},{e:"Fourteen",h:"चौदह"}],a:0},
+{q:"Who was NOT a member of Drafting Committee?",h:"निम्नलिखित में से कौन व्यक्ति संविधान सभा के प्रारूप समिति के सदस्य नहीं थें ?",o:[{e:"K.M. Munshi",h:"के. एम. मुंशी"},{e:"Rajendra Prasad",h:"राजेन्द्र प्रसाद"},{e:"N. Gopalaswami",h:"एन. गोपालस्वामी आयंगर"},{e:"Alladi Krishnaswami",h:"अल्लादी कृष्णस्वामी अय्यर"}],a:1},
+{q:"Who was related to Drafting Committee?",h:"निम्नलिखित में से कौन व्यक्ति संविधान सभा के प्रारूप समिति से संबंधित थें ?",o:[{e:"Dr. Ambedkar",h:"डॉ. भीमराव अंबेडकर"},{e:"Syed Mohammad Saadulla",h:"सैय्यद मोहम्मद सादुल्ला"},{e:"N. Madhava Rau",h:"एन. माधव"},{e:"All of these",h:"इनमें से सभी"}],a:3},
+{q:"Who replaced B.L. Mitter in Drafting Committee?",h:"संविधान के प्रारूप समिति में बी. एल. मित्र के त्याग-पत्र के कारण उनके जगह पर किन्हें चुना गया ?",o:[{e:"T.T. Krishnamachari",h:"टी. टी. कृष्णामाचारी"},{e:"N. Madhava Rau",h:"एन. माधव राव"},{e:"D.P. Khaitan",h:"डी पी खेतान"},{e:"S. Varadachari",h:"एस. वरदाचारी"}],a:1},
+{q:"Who replaced D.P. Khaitan in Drafting Committee?",h:"टी. टी. कृष्णामाचारी को किनके जगह पर संविधान के प्रारूप समिति में चुना गया ?",o:[{e:"B.L. Mitter",h:"बी. एल. मित्र"},{e:"S. Varadachari",h:"एस. वरदाचारी"},{e:"Syed Mohammad Saadulla",h:"सैय्यद मोहम्मद सादुल्ला"},{e:"D.P. Khaitan",h:"डी पी खेतान"}],a:3},
+{q:"When was the first draft of Constitution published?",h:"भारत के संविधान के पहला प्रारूप को कब प्रकाशित किया गया ?",o:[{e:"Feb 1948",h:"फरवरी 1948"},{e:"Jan 1948",h:"जनवरी 1948"},{e:"Dec 1947",h:"दिसंबर 1947"},{e:"June 1947",h:"जून 1947"}],a:0},
+{q:"When was the second draft published?",h:"संविधान सभा के प्रारूप समिति द्वारा संविधान के दूसरा प्रारूप को कब प्रकाशित किया गया ?",o:[{e:"Nov 1948",h:"नवंबर 1948"},{e:"Oct 1948",h:"अक्टूबर 1948"},{e:"June 1948",h:"जून 1948"},{e:"Dec 1948",h:"दिसंबर 1948"}],a:1},
+{q:"How many meetings of Drafting Committee held?",h:"संविधान प्रारूप समिति की कितनी बैठक हुई है ?",o:[{e:"142",h:"142"},{e:"143",h:"143"},{e:"141",h:"141"},{e:"149",h:"149"}],a:2},
+{q:"When did Dr. Ambedkar present final draft?",h:"डॉ. बी. आर. अम्बेडकर ने संविधान सभा में संविधान का अंतिम प्रारूप कब पेश किया ?",o:[{e:"9 Nov 1948",h:"9 नवंबर 1948"},{e:"4 Nov 1948",h:"4 नवंबर 1948"},{e:"15 Nov 1948",h:"15 नवंबर 1948"},{e:"16 Nov 1948",h:"16 नवंबर 1948"}],a:1},
+{q:"When was Constitution read for first time in Assembly?",h:"संविधान सभा में संविधान पहली बार कब पढ़ा गया ?",o:[{e:"15 Nov 1948",h:"15 नवंबर 1948"},{e:"4 Nov 1948",h:"4 नवंबर 1948"},{e:"16 Jan 1948",h:"16 जनवरी 1948"},{e:"9 Nov 1948",h:"9 नवंबर 1948"}],a:1},
+{q:"Duration of First Reading of Constitution?",h:"संविधान पर पहली चर्चा संविधान सभा में कब से कब तक चली ?",o:[{e:"4 Nov - 9 Nov 1948",h:"4 नवंबर 1948 से 9 नवंबर 1948 तक"},{e:"12 Nov - 18 Nov 1948",h:"12 नवंबर 1948 से 18 नवंबर 1948 तक"},{e:"29 Nov - 5 Dec 1948",h:"29 नवंबर 1948 से 5 दिसंबर 1948 तक"},{e:"16 Dec - 20 Dec 1948",h:"16 दिसंबर 1948 से 20 दिसंबर 1948 तक"}],a:0},
+{q:"Who moved the motion 'The Constitution as settled by the Assembly be passed'?",h:"'द कॉन्स्टिट्यूशन ऐज सैटल्ड बाइ द असेम्बली बी पास्ड' प्रस्ताव संविधान सभा में किसके द्वारा पेश किया गया ?",o:[{e:"Dr. Rajendra Prasad",h:"डॉ. राजेन्द्र प्रसाद"},{e:"Dr. B.R. Ambedkar",h:"डॉ. बी. आर अम्बेडकर"},{e:"B.L. Mitter",h:"बी. एल. मित्र"},{e:"Pt. Nehru",h:"पंडित नेहरू"}],a:1},
+{q:"How many members signed the Constitution?",h:"भारतीय संविधान पर कुल कितने सदस्यों ने हस्ताक्षर किया है ?",o:[{e:"299",h:"299"},{e:"284",h:"284"},{e:"276",h:"276"},{e:"278",h:"278"}],a:1},
+{q:"Number of Articles in original Constitution?",h:"मूल संविधान में कितने अनुच्छेद थें ?",o:[{e:"396",h:"396"},{e:"398",h:"398"},{e:"379",h:"379"},{e:"395",h:"395"}],a:3},
+{q:"Number of Schedules in original Constitution?",h:"मूल संविधान में अनुसूचियाँ थी-",o:[{e:"7",h:"7"},{e:"8",h:"8"},{e:"9",h:"9"},{e:"12",h:"12"}],a:1},
+{q:"Why was Constitution enforced on 26 Jan 1950?",h:"संविधान को 26 जनवरी 1950 को क्यों लागू किया गया ?",o:[{e:"Auspicious day",h:"यह दिन बहुत अच्छा था"},{e:"Nehru's birthday",h:"इस दिन वर्ष 1869 में पंडित नेहरू का जन्म हुआ था।"},{e:"1930 Independence Day",h:"26 जनवरी 1930 को पहला स्वतंत्रता/स्वाधीनता दिवस मनाया गया था।"},{e:"None",h:"इनमें से कोई नहीं।"}],a:2},
+{q:"Number of members in Expert Committee formed by Congress?",h:"कांग्रेस पार्टी द्वारा गठित संविधान सभा के मसौदे तैयार करने के लिए गठित विशेषज्ञ समिति में सदस्यों की संख्या कितनी थी ?",o:[{e:"8",h:"8"},{e:"9",h:"9"},{e:"10",h:"10"},{e:"17",h:"17"}],a:0},
+{q:"Who was member of Congress Expert Committee (July 1946)?",h:"कांग्रेस पार्टी द्वारा 8 जुलाई 1946 को गठित संविधान सभा के प्रारूप तैयार करने के लिए विशेषज्ञ समिति के सदस्य थें-",o:[{e:"Pt. Nehru",h:"पंडित नेहरू"},{e:"M. Asaf Ali",h:"एम. आसफ अली"},{e:"K.M. Munshi",h:"के. एम. मुंशी"},{e:"All of these",h:"इनमें से सभी"}],a:4},
+{q:"Who was member of Congress Expert Committee?",h:"8 जुलाई 1946 को गठित कांग्रेस पार्टी द्वारा संविधान सभा के प्रारूप तैयार करने के लिए विशेषज्ञ समिति के सदस्य थें-",o:[{e:"N. Gopalaswami",h:"एन. गोपाल स्वामी आयंगर"},{e:"D.R. Gadgil",h:"डी आर गाडगिल"},{e:"Humayun Kabir",h:"हुमायूँ कबीर"},{e:"K. Santhanam",h:"के. संथानम"},{e:"All of these",h:"इनमें से सभी"}],a:4},
+{q:"On what grounds is Constitution criticized?",h:"निम्नलिखित में से किन आधारों पर संविधान की आलोचना की जाती है ?",o:[{e:"Not Representative Body",h:"यह प्रतिनिधि निकाय नहीं थी"},{e:"Lack of Sovereignty",h:"संप्रभुता का अभाव"},{e:"Time Consuming",h:"समय की बर्बादी"},{e:"All of these",h:"इनमें से सभी"}],a:3},
+{q:"On what grounds is Constitution criticized? (Part 2)",h:"निम्नलिखित में से किन आधारों पर संविधान की आलोचना की जाती है ?",o:[{e:"Congress Domination",h:"कांग्रेस का प्रभुत्व"},{e:"Lawyer-Politician Domination",h:"वकीलों और राजनीतिज्ञों का प्रभुत्व"},{e:"Hindu Domination",h:"हिन्दुओं का प्रभुत्व"},{e:"All of these",h:"इनमें से सभी"}],a:3},
+{q:"Which symbol/seal was adopted by Assembly?",h:"संविधान सभा द्वारा निम्नलिखित में से किसे प्रतीक चिन्ह या मुहर के रूप में अपनाया गया ?",o:[{e:"Elephant",h:"हाथी"},{e:"Horse",h:"घोड़ा"},{e:"Lion",h:"शेर"},{e:"Bull",h:"वृषभ"}],a:0},
+{q:"Who was appointed as Constitutional Advisor?",h:"निम्नलिखित में से किन व्यक्ति को संविधान सभा के लिए संवैधानिक सलाहकार के रूप में नियुक्त किया गया ?",o:[{e:"B.N. Rau",h:"बी. एन. राव"},{e:"K.T. Shah",h:"के. टी. शाह"},{e:"K. Santhanam",h:"के. संथानम"},{e:"None",h:"इनमें से कोई नहीं।"}],a:0},
+{q:"Who was appointed as Secretary of Constituent Assembly?",h:"निम्नलिखित में से किस व्यक्ति को संविधान सभा का सचिव नियुक्त किया गया ?",o:[{e:"L.N. Mukherjee",h:"एल. एन. मुखर्जी"},{e:"H.V.R. Iyengar",h:"एस. वी. आर आयंगर"},{e:"Prem Behari Raizada",h:"प्रेम बिहारी रायजदा"},{e:"Rammanohar Sinha",h:"राममनोहर सिन्हा"}],a:1},
+{q:"Who was the Chief Draftsman of Constituent Assembly?",h:"संविधान सभा का मुख्य प्रारूपकार (चीफ ड्राफ्ट मैन) कौन थें ?",o:[{e:"L.N. Mukherjee",h:"एल. एन. मुखर्जी"},{e:"H.V.R. Iyengar",h:"एस. वी. आर आयंगर"},{e:"Prem Behari Raizada",h:"प्रेम बिहारी रायजदा"},{e:"Rammanohar Sinha",h:"राममनोहर सिन्हा"}],a:0},
+{q:"Who was the Calligrapher of Indian Constitution?",h:"भारतीय संविधान के प्रमुख सुलेखक (Calligrapher) कौन थें ?",o:[{e:"L.N. Mukherjee",h:"एल. एन. मुखर्जी"},{e:"H.V.R. Iyengar",h:"एस. वी. आर आयंगर"},{e:"Prem Behari Raizada",h:"प्रेम बिहारी रायजदा"},{e:"Rammanohar Sinha",h:"राममनोहर सिन्हा"}],a:2},
+{q:"Who beautified the original Preamble?",h:"संविधान के मूल प्रस्तावना को किसके द्वारा हस्तलिखित किया गया था ?",o:[{e:"Rammanohar Sinha",h:"राममनोहर सिन्हा"},{e:"Beohar Rammanohar Sinha",h:"बिहारी नारायण रायजादा"},{e:"Nandalal Bose",h:"नंदलाल बोस"},{e:"L.N. Mukherjee",h:"एल एन मुखर्जी"}],a:1},
+{q:"Who decorated the original version of Constitution?",h:"संविधान के मूल संस्करण पर ज्यामितीय सौंदर्यीकरण किनके द्वारा किया गया ?",o:[{e:"Rammanohar Sinha",h:"राममनोहर सिन्हा"},{e:"Beohar Rammanohar Sinha",h:"बिहारी नारायण रायजादा"},{e:"Nandalal Bose",h:"वसंत कृष्ण वैद्य"},{e:"All of these",h:"इनमें से सभी।"}],a:3},
+{q:"Who calligraphed the Hindi version of original Constitution?",h:"मूल संविधान के हिन्दी संस्करण का सुलेखन किसके द्वारा किया गया ?",o:[{e:"Vasant Krishan Vaidya",h:"वसंत कृष्ण वैद्य"},{e:"Nandalal Bose",h:"नंदलाल बोस"},{e:"Prem Behari Narain",h:"प्रेम बिहारी नारायण"},{e:"Rammanohar Sinha",h:"राममनोहर सिन्हा"}],a:0},
+{q:"Which party won only one seat in Assembly elections?",h:"संविधान सभा के लिए हुये चुनावों में निम्नांकित में से किन दलों ने केवल एक सीट जीती ?",o:[{e:"Unionist Party",h:"यूनियनिस्ट पार्टी"},{e:"Unionist Muslim",h:"यूनियनिस्ट मुस्लिम"},{e:"Unionist Scheduled Caste",h:"यूनियनिस्ट शेड्यूल्ड कास्ट"},{e:"All of these",h:"इनमें से सभी"}],a:3},
+{q:"How many seats did Independents win in July-Aug 1946 election?",h:"संविधान सभा के लिए जुलाई-अगस्त 1946 में हुये चुनाव के लिए इंडिपेंडेंट्स पार्टी ने कितने सीटें जीती थी ?",o:[{e:"8",h:"8"},{e:"16",h:"16"},{e:"11",h:"11"},{e:"73",h:"73"}],a:0},
+{q:"Number of Hindu community representatives in Assembly?",h:"संविधान सभा में हिन्दु समुदाय की प्रतिनिधियों की संख्या थी ?",o:[{e:"163",h:"163"},{e:"173",h:"173"},{e:"198",h:"198"},{e:"208",h:"208"}],a:0},
+{q:"Number of Muslim representatives in Assembly?",h:"संविधान सभा में मुस्लिम प्रतिनिधियों की संख्या थी-",o:[{e:"30",h:"30"},{e:"80",h:"80"},{e:"84",h:"84"},{e:"31",h:"31"}],a:1},
+{q:"Number of SC representatives in Assembly?",h:"संविधान सभा में अनुसूचित जाति की प्रतिनिधियों की संख्या कितनी थी ?",o:[{e:"32",h:"32"},{e:"33",h:"33"},{e:"31",h:"31"},{e:"34",h:"34"}],a:2},
+{q:"Number of Indian Christians in Assembly?",h:"संविधान सभा में भारतीय ईसाई की संख्या संख्या कितनी थी ?",o:[{e:"6",h:"6"},{e:"7",h:"7"},{e:"8",h:"8"},{e:"9",h:"9"}],a:0},
+{q:"Number of Backward Tribes in Assembly?",h:"संविधान सभा में पिछड़ी जनजातियों की संख्या कितनी थी ?",o:[{e:"6",h:"6"},{e:"7",h:"7"},{e:"9",h:"9"},{e:"12",h:"12"}],a:0},
+{q:"Number of Anglo-Indians in Assembly?",h:"संविधान सभा में एंग्लो-इंडियन की संख्या कितनी थी ?",o:[{e:"3",h:"3"},{e:"4",h:"4"},{e:"5",h:"5"},{e:"7",h:"7"}],a:0},
+{q:"Number of Parsi members in Assembly?",h:"संविधान सभा में पारसी सदस्यों की संख्या कितनी थी ?",o:[{e:"3",h:"3"},{e:"4",h:"4"},{e:"5",h:"5"},{e:"6",h:"6"}],a:0},
+{q:"How many members from Madras State?",h:"संविधान सभा में मद्रास राज्य से कितने सदस्य शामिल हुए थें ?",o:[{e:"21",h:"21"},{e:"69",h:"69"},{e:"55",h:"55"},{e:"71",h:"71"}],a:3}, // Answer key says 102. option (d) in key. Wait, visual check: 102(d) 49(d). Screenshot of answer key says 102 is blank. Let's look at 102 image. Options: 21, 69, 55, 71. Key says (d) which is 71? But Madras was 49. Wait. United Province was 55. Let's stick to key: 102->(a) wait, Key 102 is (c) in image? No, wait. 102 is empty in answer grid image? Ah, row 101-105. 101(a), 102(d), 103(a), 104(c), 105(a). 102 is (d) which is 71? Actually Madras was 49. Let's map strict to key provided in image.
+{q:"How many members from Bombay Province?",h:"संविधान सभा में बॉम्बे प्रांत से कितने सदस्य शामिल हुए थें ?",o:[{e:"21",h:"21"},{e:"65",h:"65"},{e:"55",h:"55"},{e:"71",h:"71"}],a:0},
+{q:"How many members from West Bengal?",h:"संविधान सभा में पश्चिम बंगाल राज्य से सदस्य शामिल हुए थें-",o:[{e:"21",h:"21"},{e:"65",h:"65"},{e:"19",h:"19"},{e:"71",h:"71"}],a:2},
+{q:"How many members from East Punjab?",h:"संविधान सभा में पूर्वी पंजाब से सदस्यों की संख्या कितनी थी ?",o:[{e:"12",h:"12"},{e:"16",h:"16"},{e:"24",h:"24"},{e:"27",h:"27"}],a:0},
+{q:"How many members from Bihar Province?",h:"संविधान सभा में बिहार प्रांत से कितने सदस्य ने भाग लिया था ?",o:[{e:"9",h:"9"},{e:"36",h:"36"},{e:"24",h:"24"},{e:"27",h:"27"}],a:1},
+{q:"How many members from United Provinces?",h:"संविधान सभा में संयुक्त प्रांत से कुल कितने सदस्यों ने भाग लिया था ?",o:[{e:"55",h:"55"},{e:"12",h:"12"},{e:"36",h:"36"},{e:"17",h:"17"}],a:0},
+{q:"How many members from Central Provinces and Berar?",h:"संविधान सभा में मध्य प्रांत एवं बरार से कुल कितने सदस्यों ने भाग लिया था ?",o:[{e:"17",h:"17"},{e:"8",h:"8"},{e:"9",h:"9"},{e:"1",h:"1"}],a:0},
+{q:"How many members from Assam Province?",h:"संविधान सभा में असम प्रांत से कितने सदस्यों ने भाग लिया था ?",o:[{e:"9",h:"9"},{e:"8",h:"8"},{e:"14",h:"14"},{e:"1",h:"1"}],a:1},
+{q:"How many members from Orissa Province?",h:"संविधान सभा में उड़ीसा प्रांत से कुल कितने सदस्यों ने भाग लिया था ?",o:[{e:"9",h:"9"},{e:"8",h:"8"},{e:"14",h:"14"},{e:"7",h:"7"}],a:0},
+{q:"Which states had only 1 member?",h:"संविधान सभा में निम्नलिखित में से किन राज्यों से सदस्यों की संख्या केवल 1 थी ?",o:[{e:"Ajmer-Marwar",h:"अजमेर-मारवाड़"},{e:"Coorg",h:"कुर्ग"},{e:"Delhi",h:"दिल्ली"},{e:"All of these",h:"इनमें से सभी।"}],a:3},
+{q:"Which Princely State had max members?",h:"संविधान सभा में निम्नलिखित में से किन देशी रियासतों से सदस्यों की संख्या सर्वाधिक थी ?",o:[{e:"Mayurbhanj",h:"मयूरभंज"},{e:"Patiala",h:"पटियाला"},{e:"Mysore",h:"मैसूर"},{e:"Kota",h:"कोटा"}],a:2},
+{q:"Duration of First Session of Assembly?",h:"संविधान सभा का पहला सत्र कब से कब तक चला ?",o:[{e:"9-23 Dec 1946",h:"9-23 दिसंबर 1946"},{e:"25-25 Feb 1947",h:"25-25 फरवरी 1947"},{e:"9-22 Dec 1946",h:"9-22 दिसंबर 1946"},{e:"11-22 Dec 1946",h:"11-22 दिसंबर 1946"}],a:0},
+{q:"Which session was for one day only?",h:"संविधान सभा का कौन-सा सत्र केवल एक दिन का था ?",o:[{e:"Seventh",h:"सातवा"},{e:"Sixth",h:"छठा"},{e:"Eighth",h:"आठवा"},{e:"Third",h:"तीसरा"}],a:1},
+{q:"When was 6th Session called?",h:"संविधान सभा का छठा सत्र कब एक दिन के लिए बुलाया गया ?",o:[{e:"16 May 1949",h:"16 मई 1949"},{e:"31 July 1947",h:"31 जुलाई 1947"},{e:"27 Jan 1948",h:"27 जनवरी 1948"},{e:"26 Nov 1949",h:"26 नवंबर 1949"}],a:2},
+{q:"Which was the longest session?",h:"संविधान सभा का सबसे लंबा सत्र कौन-सा चला था ?",o:[{e:"Sixth",h:"छठा"},{e:"Eighth",h:"आठवा"},{e:"Tenth",h:"दसवां"},{e:"Seventh",h:"सातव"}],a:3},
+{q:"Duration of Final (11th) Session?",h:"संविधान सभा की अंतिम सत्र अर्थात ग्यारहवां सत्र की अवधि क्या थी ?",o:[{e:"6-26 Nov 1949",h:"6-26 नवंबर 1949"},{e:"14-26 Nov 1949",h:"14-26 नवंबर 1949"},{e:"15-26 Nov 1949",h:"15-26 नवंबर 1949"},{e:"12-26 Nov 1949",h:"12-26 नवंबर 1949"}],a:1},
+{q:"Which session was 20-25 Jan 1947?",h:"संविधान सभा का किस सत्र की कार्य अवधि 20-25 जनवरी 1947 थी ?",o:[{e:"First",h:"पहला"},{e:"Second",h:"दुसरा"},{e:"Third",h:"तीसरा"},{e:"Fourth",h:"चौथा"}],a:1},
+{q:"Duration of 3rd Session?",h:"संविधान सभा की तीसरा सत्र की कार्य अवधि क्या थी ?",o:[{e:"28 Apr - 2 May 1947",h:"28 अप्रैल से 2 मई 1947"},{e:"26 Apr - 24 May 1947",h:"26 अप्रैल से 24 मई 1947"},{e:"25 Apr - 2 May 1947",h:"25 अप्रैल से 2 मई 1947"},{e:"29 Apr - 17 May 1947",h:"29 अप्रैल से 17 मई 1947"}],a:0},
+{q:"Duration of 4th Session?",h:"संविधान सभा की चौथा सत्र का कार्य अवधि क्या है ?",o:[{e:"14-31 May 1947",h:"14-31 मई 1947"},{e:"14-31 July 1947",h:"14-31 जुलाई 1947"},{e:"2-5 June 1947",h:"2-5 जून 1947"},{e:"6-7 July 1947",h:"6-7 जुलाई 1947"}],a:1},
+{q:"Duration of 5th Session?",h:"संविधान सभा की पांचवा सत्र की कार्य अवधि क्या थी ?",o:[{e:"14-30 July 1947",h:"14-30 जुलाई 1947"},{e:"14-30 Nov 1947",h:"14-30 नवंबर 1947"},{e:"14-30 Aug 1947",h:"14-30 अगस्त 1947"},{e:"15-26 June 1947",h:"15-26 जून 1947"}],a:2},
+{q:"Which session was 4 Nov 1948 - 8 Jan 1949?",h:"संविधान सभा की किस सत्र का कार्यकाल 4 नवंबर 1948 से 8 जनवरी 1949 तक था ?",o:[{e:"Seventh",h:"सातवा"},{e:"Sixth",h:"छठा"},{e:"Eighth",h:"आठवां"},{e:"Ninth",h:"नवां"}],a:0},
+{q:"Which session was 16 May - 16 June 1949?",h:"संविधान सभा की किस सत्र कार्यकाल 16 मई से 16 जून 1949 तक था ?",o:[{e:"Seventh",h:"सातवा"},{e:"Sixth",h:"छठा"},{e:"Eighth",h:"आठवां"},{e:"Ninth",h:"नवां"}],a:2},
+{q:"Duration of 10th Session?",h:"संविधान सभा के दसवां सत्र की कार्यकाल की अवधि क्या थी ?",o:[{e:"14-26 Nov 1949",h:"14-26 नवंबर 1949"},{e:"6-17 Oct 1949",h:"6-17 अक्टूबर 1949"},{e:"16-26 June 1949",h:"16-26 जून 1949"},{e:"None",h:"इनमें से कोई नहीं।"}],a:1}
+];
+
+const app = {
+    questions: [],
+    currIndex: 0,
+    score: 0,
+    timer: null,
+    limit: 0,
+    audioCtx: null,
+    stats: { correct: 0, wrong: 0 },
+
+    init: () => {
+        app.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    },
+
+    playTone: (type) => {
+        if (!app.audioCtx) return;
+        const osc = app.audioCtx.createOscillator();
+        const gain = app.audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(app.audioCtx.destination);
+
+        if (type === 'correct') {
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(600, app.audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(1200, app.audioCtx.currentTime + 0.1);
+            gain.gain.setValueAtTime(0.1, app.audioCtx.currentTime);
+            gain.gain.linearRampToValueAtTime(0, app.audioCtx.currentTime + 0.3);
+        } else {
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(150, app.audioCtx.currentTime);
+            osc.frequency.linearRampToValueAtTime(100, app.audioCtx.currentTime + 0.3);
+            gain.gain.setValueAtTime(0.1, app.audioCtx.currentTime);
+            gain.gain.linearRampToValueAtTime(0, app.audioCtx.currentTime + 0.3);
+        }
+        osc.start();
+        osc.stop(app.audioCtx.currentTime + 0.3);
+    },
+
+    start: () => {
+        app.init();
+        const tVal = document.getElementById('timerInput').value;
+        app.limit = tVal ? parseInt(tVal) : 0;
+        const isShuffle = document.getElementById('shuffleToggle').checked;
+        
+        app.questions = [...DB];
+        if(isShuffle) app.questions.sort(() => Math.random() - 0.5);
+
+        app.currIndex = 0;
+        app.score = 0;
+        app.stats = { correct: 0, wrong: 0 };
+        
+        document.getElementById('start-screen').classList.remove('active');
+        document.getElementById('quiz-screen').classList.add('active');
+        document.getElementById('timer-display').style.display = app.limit > 0 ? 'flex' : 'none';
+        
+        app.loadQuestion();
+    },
+
+    loadQuestion: () => {
+        if(app.currIndex >= app.questions.length) {
+            app.finish();
+            return;
+        }
+
+        const q = app.questions[app.currIndex];
+        const container = document.getElementById('question-container');
+        
+        // Update Header
+        document.getElementById('q-counter').innerText = `Q: ${app.currIndex + 1}/${app.questions.length}`;
+        document.getElementById('score-display').innerText = `Score: ${app.score}`;
+        document.getElementById('progressBar').style.width = `${((app.currIndex)/app.questions.length)*100}%`;
+
+        // Render Content
+        container.innerHTML = `
+            <div class="question-box">
+                <div class="q-en">${q.q}</div>
+                <div class="q-hi">${q.h}</div>
+            </div>
+            <div class="options-grid">
+                ${q.o.map((opt, i) => `
+                    <div class="option-btn" onclick="app.check(${i}, this)">
+                        <span class="opt-en">(${String.fromCharCode(65+i)}) ${opt.e}</span>
+                        <span class="opt-hi">${opt.h}</span>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+
+        // Reset Timer
+        clearInterval(app.timer);
+        const tCircle = document.getElementById('timer-display');
+        tCircle.classList.remove('pulse-red');
+        if(app.limit > 0) {
+            let left = app.limit;
+            tCircle.innerText = left;
+            app.timer = setInterval(() => {
+                left--;
+                tCircle.innerText = left;
+                if(left < 6) tCircle.classList.add('pulse-red');
+                if(left <= 0) {
+                    clearInterval(app.timer);
+                    app.handleTimeout(q.a);
+                }
+            }, 1000);
+        }
+    },
+
+    check: (idx, btn) => {
+        if(document.querySelector('.disabled')) return; // Prevent double click
+        clearInterval(app.timer);
+        
+        const q = app.questions[app.currIndex];
+        const opts = document.querySelectorAll('.option-btn');
+        opts.forEach(o => o.classList.add('disabled'));
+
+        if(idx === q.a) {
+            btn.classList.add('correct');
+            app.score++;
+            app.stats.correct++;
+            app.playTone('correct');
+            app.triggerConfetti();
+        } else {
+            btn.classList.add('wrong');
+            opts[q.a].classList.add('correct');
+            app.stats.wrong++;
+            app.playTone('wrong');
+            app.triggerShake();
+        }
+
+        setTimeout(() => {
+            app.currIndex++;
+            app.loadQuestion();
+        }, 1200);
+    },
+
+    handleTimeout: (correctIdx) => {
+        const opts = document.querySelectorAll('.option-btn');
+        opts.forEach(o => o.classList.add('disabled'));
+        opts[correctIdx].classList.add('correct');
+        app.stats.wrong++; // Count timeout as wrong
+        app.playTone('wrong');
+        app.triggerShake();
+        setTimeout(() => {
+            app.currIndex++;
+            app.loadQuestion();
+        }, 1200);
+    },
+
+    finish: () => {
+        clearInterval(app.timer);
+        document.getElementById('quiz-screen').classList.remove('active');
+        document.getElementById('result-screen').classList.add('active');
+
+        const total = app.questions.length;
+        const percent = Math.round((app.score / total) * 100);
+        
+        document.getElementById('final-percent').innerText = `${percent}%`;
+        document.getElementById('res-correct').innerText = app.stats.correct;
+        document.getElementById('res-wrong').innerText = app.stats.wrong;
+
+        let msg = "";
+        if(percent >= 80) msg = "🏆 Outstanding Performance!";
+        else if(percent >= 50) msg = "👏 Well Done! Keep it up.";
+        else msg = "📚 Practice makes perfect! Try again.";
+        document.getElementById('final-msg').innerText = msg;
+    },
+
+    triggerShake: () => {
+        const ol = document.getElementById('emoji-overlay');
+        ol.innerHTML = '😢';
+        ol.style.display = 'block';
+        ol.classList.add('shake');
+        setTimeout(() => {
+            ol.style.display = 'none';
+            ol.classList.remove('shake');
+        }, 500);
+    },
+
+    triggerConfetti: () => {
+        for(let i=0; i<30; i++) {
+            const conf = document.createElement('div');
+            conf.classList.add('confetti');
+            conf.style.left = Math.random() * 100 + 'vw';
+            conf.style.backgroundColor = `hsl(${Math.random() * 360}, 100%, 50%)`;
+            conf.style.animationDuration = (Math.random() * 3 + 2) + 's';
+            document.body.appendChild(conf);
+            setTimeout(() => conf.remove(), 4000);
+        }
+    }
+};
+</script>
+</body>
+</html>

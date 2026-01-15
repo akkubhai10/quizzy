@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Federal System Quiz - Gyan Bindu GS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --glass: rgba(255, 255, 255, 0.1);
+            --border: rgba(255, 255, 255, 0.2);
+            --success: #4caf50;
+            --error: #f44336;
+            --text-en: #ffffff;
+            --text-hi: #dddddd;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(45deg, #6a11cb, #2575fc, #ff0080);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 15px;
+            color: white;
+            overflow-x: hidden;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .glass-card {
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            border-radius: 25px;
+            width: 100%;
+            max-width: 600px;
+            padding: 30px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            position: relative;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        /* Scrollbar for Mobile */
+        .glass-card::-webkit-scrollbar { width: 5px; }
+        .glass-card::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+
+        .progress-container {
+            position: fixed;
+            top: 0; left: 0; width: 100%;
+            height: 6px; background: rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+        #progress-bar {
+            height: 100%; width: 0%;
+            background: linear-gradient(90deg, #00f2fe, #4facfe);
+            box-shadow: 0 0 10px #4facfe;
+            transition: width 0.3s ease;
+        }
+
+        .header-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9rem;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .timer-box {
+            text-align: center;
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+        }
+        .pulse-red { color: #ff4d4d; animation: pulse 0.5s infinite; }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+
+        .question-box h2 { font-size: 1.2rem; margin-bottom: 5px; color: var(--text-en); }
+        .question-box p { font-size: 1rem; margin-bottom: 20px; color: var(--text-hi); font-weight: 300; }
+
+        .options-grid { display: flex; flex-direction: column; gap: 12px; }
+        .option-btn {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border);
+            padding: 15px;
+            border-radius: 12px;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.2s;
+            color: white;
+            display: flex;
+            flex-direction: column;
+        }
+        .option-btn:hover:not(:disabled) { background: rgba(255,255,255,0.15); transform: translateY(-2px); }
+        .option-btn span.hi { font-size: 0.85rem; color: #ccc; margin-top: 4px; }
+        
+        .correct { background: var(--success) !important; border-color: #fff; }
+        .wrong { background: var(--error) !important; border-color: #fff; }
+        
+        .btn-primary {
+            background: #fff; color: #000; border: none;
+            padding: 12px 25px; border-radius: 50px;
+            font-weight: bold; cursor: pointer;
+            margin-top: 20px; width: 100%;
+            transition: transform 0.2s;
+        }
+        .btn-primary:hover { transform: scale(1.05); }
+
+        .hidden { display: none; }
+
+        /* Animations */
+        #sad-emoji {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 100px; z-index: 10000; pointer-events: none;
+        }
+        .shake { animation: shake 0.5s; }
+        @keyframes shake {
+            0%, 100% { transform: translate(-50%, -50%); }
+            20%, 60% { transform: translate(-55%, -50%); }
+            40%, 80% { transform: translate(-45%, -50%); }
+        }
+
+        .confetti {
+            position: fixed; width: 10px; height: 10px; background: #fff;
+            top: -10px; z-index: 9999; animation: fall linear forwards;
+        }
+        @keyframes fall { to { transform: translateY(100vh) rotate(360deg); } }
+
+        /* Start Screen Styles */
+        .input-group { margin-bottom: 15px; text-align: left; }
+        .input-group label { display: block; margin-bottom: 5px; font-size: 0.9rem; }
+        .input-group input, .input-group select {
+            width: 100%; padding: 10px; border-radius: 10px; border: 1px solid var(--border);
+            background: rgba(0,0,0,0.2); color: white;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="progress-container"><div id="progress-bar"></div></div>
+
+    <div id="start-screen" class="glass-card">
+        <h1 style="margin-bottom: 20px; text-align: center;">Federal System Quiz<br><span style="font-size: 0.6em;">संघीय व्यवस्था</span></h1>
+        <div class="input-group">
+            <label>Timer per Question (seconds, 0 for none):</label>
+            <input type="number" id="timer-input" value="15" min="0">
+        </div>
+        <div class="input-group">
+            <label><input type="checkbox" id="shuffle-input"> Shuffle Questions</label>
+        </div>
+        <button class="btn-primary" onclick="startQuiz()">Start Quiz / क्विज शुरू करें</button>
+    </div>
+
+    <div id="quiz-screen" class="glass-card hidden">
+        <div class="header-info">
+            <div id="q-counter">Question: 0/0</div>
+            <div id="score-display">Score: 0</div>
+        </div>
+        <div id="timer-display" class="timer-box"></div>
+        <div class="question-box">
+            <h2 id="q-text-en"></h2>
+            <p id="q-text-hi"></p>
+        </div>
+        <div id="options-container" class="options-grid"></div>
+        <button class="btn-primary" style="background: rgba(255,0,0,0.3); color: white; margin-top: 30px;" onclick="showResults()">Finish & Show Results</button>
+    </div>
+
+    <div id="result-screen" class="glass-card hidden">
+        <h2 id="result-message" style="text-align: center; margin-bottom: 20px;"></h2>
+        <div style="text-align: center; font-size: 2rem; margin-bottom: 20px;">Your Score: <span id="final-score"></span></div>
+        <button class="btn-primary" onclick="location.reload()">Restart Quiz</button>
+    </div>
+
+    <div id="sad-emoji" class="hidden">😢</div>
+
+    <script>
+        const quizData = [
+            { qEn: "On what basis have political scientists divided the government?", qHi: "राजनीति शास्त्रियों ने राष्ट्रीय सरकार एवं क्षेत्रीय सरकार के संबंधों के आधार पर सरकार को विभाजित किया है?", optionsEn: ["Unitary", "Federal", "Both a and b", "None of these"], optionsHi: ["एकात्मक", "संघीय", "a और b दोनों", "इनमें से कोई नहीं"], correct: 2 },
+            { qEn: "What is meant by unitary or single government?", qHi: "एकल या एकात्मक सरकार का अभिप्राय है?", optionsEn: ["Power is in Union or State Govt", "Division of power between Union and State", "Both a and b", "None of these"], optionsHi: ["कार्य शक्तियाँ या तो संघ सरकार या राज्य सरकार में होती हैं।", "शक्तियों का विभाजन संघ एवं राज्यों के बीच होता है।", "a और b दोनों", "इनमें से कोई नहीं"], correct: 0 },
+            { qEn: "Which country is an example of Unitary government?", qHi: "एकात्मक शासन व्यवस्था वाला देश का कुछ उदाहरण है-", optionsEn: ["Britain/Japan", "France", "None of these", "All of the above"], optionsHi: ["ब्रिटेन/जापान", "फ्रांस", "इनमें से कोई नहीं", "उपर्युक्त में से सभी"], correct: 3 },
+            { qEn: "Which country is an example of Federal government?", qHi: "संघीय शासन व्यवस्था वाला देश का कुछ उदाहरण है?", optionsEn: ["America", "India", "Canada", "All of the above"], optionsHi: ["अमेरिका", "भारत", "कनाडा", "उपर्युक्त में से सभी"], correct: 3 },
+            { qEn: "From which word is 'Federal' derived?", qHi: "संघ शासन को किस शब्द से ग्रहण किया गया है?", optionsEn: ["Foedus", "Deridus", "Trendus", "Oligarchy"], optionsHi: ["फेराडस", "डेरडस", "फ्रेंडस", "ऑलीगार्गी"], correct: 0 },
+            { qEn: "By what name are the units of federation called in America?", qHi: "अमेरिका में संघों के इकाइयों को किस नाम से पुकारा जाता है?", optionsEn: ["State", "Republic", "Canton", "None of these"], optionsHi: ["राज्य", "गणतंत्र", "कैंटोन", "इनमें से कोई नहीं"], correct: 0 },
+            { qEn: "By what name are states called in Switzerland?", qHi: "स्विट्जरलैंड में राज्यों को किस नाम से पुकारा जाता है?", optionsEn: ["State", "Province", "Republic", "Canton"], optionsHi: ["राज्य", "प्रांत", "गणतंत्र", "कैंटोन"], correct: 3 },
+            { qEn: "Which is the world's first and oldest federal power?", qHi: "विश्व का पहला व प्राचीनतम संघीय शक्ति वाला देश है?", optionsEn: ["India", "America", "Britain", "Canada"], optionsHi: ["भारत", "अमेरिका", "ब्रिटेन", "कनाडा"], correct: 1 },
+            { qEn: "What type of government system exists in India?", qHi: "भारत में किस प्रकार का शासन व्यवस्था है?", optionsEn: ["Federal", "Unitary", "Quasi-federal", "None of these"], optionsHi: ["संघीय", "एकात्मक", "अर्द्धसंघीय", "इनमें से कोई नहीं"], correct: 0 },
+            { qEn: "Why did the constitution makers adopt a federal system in India?", qHi: "संविधान निर्माताओं ने भारत में संघीय शासन व्यवस्था किन कारणों से अपनाया?", optionsEn: ["Large size of country", "Social and cultural diversity", "Mixed culture", "All of the above"], optionsHi: ["देश का वृहद आकार", "सामाजिक एवं सांस्कृतिक विविधता", "मिश्रित संस्कृति", "उपर्युक्त में से सभी"], correct: 3 },
+            { qEn: "Consider the statements: 1. 'Federation' is never used in the Constitution. 2. India is defined as Union of States.", qHi: "निम्नलिखित कथनों पर विचार कीजिये: 1. संविधान में संघ प्रयोग कभी भी नहीं हुआ है। 2. भारत को राज्यों के संघ के रूप में परिभाषित किया गया है।", optionsEn: ["Only 1", "Only 2", "1 and 2 both", "Neither 1 nor 2"], optionsHi: ["केवल 1", "केवल 2", "1 और 2 दोनों", "न तो 1 और न ही 2"], correct: 2 },
+            { qEn: "Indian federal system is based on which country's model?", qHi: "भारत में संघीय व्यवस्था किस देश के मॉडल पर आधारित है?", optionsEn: ["America", "Canada", "France", "Switzerland"], optionsHi: ["अमेरिका", "कनाडा", "फ्रांस", "स्विट्जरलैंड"], correct: 1 },
+            { qEn: "Consider: 1. Canadian model adopted. 2. Center made more powerful than states.", qHi: "कथनों पर विचार कीजिये: 1. कनाडा मॉडल आधारित संघीय व्यवस्था। 2. राज्यों की तुलना में केंद्र को ज्यादा शक्तिशाली बनाया गया।", optionsEn: ["Only 1", "Only 2", "1 and 2 both", "Neither 1 nor 2"], optionsHi: ["केवल 1", "केवल 2", "1 और 2 दोनों", "न तो 1 और न ही 2"], correct: 2 },
+            { qEn: "Which of these are federal features of the Constitution?", qHi: "निम्नलिखित में से कौन संविधान की संघीय विशेषताएँ हैं?", optionsEn: ["Dual Polity", "Written Constitution", "Independent Judiciary", "All of the above"], optionsHi: ["द्वैध राजपद्धति", "लिखित संविधान", "स्वतंत्र न्यायपालिका", "उपर्युक्त में में सभी"], correct: 3 },
+            { qEn: "Which feature is NOT of a Federal Constitution?", qHi: "निम्नलिखित में कौन-सी विशेषताएँ संघीय संविधान की नहीं है?", optionsEn: ["Single Citizenship", "Written Constitution", "Bicameralism", "Rigid Constitution"], optionsHi: ["एकल नागरिकता", "लिखित संविधान", "द्विसदनीय विधायिका", "कठोर संविधान"], correct: 0 },
+            { qEn: "What presents the unitary features of Indian Constitution?", qHi: "भारतीय संविधान की एकात्मक विशेषताएँ को प्रस्तुत करता है?", optionsEn: ["Emergency Provisions", "Strong Center", "Single Citizenship", "All of the above"], optionsHi: ["आपातकालीन उपबंध", "सशक्त केंद्र", "एकल नागरिकता", "इनमें से सभी"], correct: 3 },
+            { qEn: "What demonstrates the unitary system of Indian Constitution?", qHi: "भारतीय संविधान की एकात्मक व्यवस्था को निर्देशन करता है?", optionsEn: ["Single Citizenship", "Flexibility of Constitution", "Integrated Judiciary", "All of the above"], optionsHi: ["एकल नागरिकता", "संविधान का लचीलापन", "एकीकृत न्यायपालिका", "उपर्युक्त में सभी"], correct: 3 },
+            { qEn: "Which features confirm the unitary nature of Indian Constitution?", qHi: "निम्नलिखित में से कौन-सी विशेषताएँ भारतीय संविधान की एकात्मक लक्षण को पुष्टि करता है?", optionsEn: ["Parliament's authority over State List", "Appointment of Governor", "Integrated Election Machinery", "All of the above"], optionsHi: ["राज्य सूची पर संसद का प्राधिकार", "राज्यपाल की नियुक्ति", "एकीकृत निर्वाचन मशीनरी", "उपर्युक्त में सभी"], correct: 3 },
+            { qEn: "Who called the Indian Constitution 'Quasi-federal'?", qHi: "किस व्यक्ति ने भारतीय संविधान को अर्द्ध संघीय करार दिया है?", optionsEn: ["Austin", "Granville", "K. Santhanam", "K.C. Wheare"], optionsHi: ["ऑस्टिन", "ग्रैनविले", "के. संथानम", "के.सी. व्हीयर"], correct: 3 },
+            { qEn: "According to K. Santhanam, why is the Indian Constitution unitary?", qHi: "के. संथानम के अनुसार भारतीय संविधान का एकात्मक होने के कारण है?", optionsEn: ["Center's influence in financial matters", "State dependence on central grants", "Both a and b", "None of these"], optionsHi: ["वित्तीय मामले में केंद्र का प्रभाव", "राज्यों की केंद्रीय अनुदान पर निर्भरत", "a और b दोनों", "इनमें से कोई नहीं"], correct: 2 },
+            { qEn: "According to which scholar is Indian governance fully federal?", qHi: "किस विद्वान के मतानुसार भारतीय शासन पूरी तरह से संघीय है?", optionsEn: ["Morris Jones", "Appleby", "Austin", "Ivor Jennings"], optionsHi: ["मौरिस जॉन्स", "एप्पलबी", "ऑस्टिन", "आइवर जेनिंग्स"], correct: 1 },
+            { qEn: "Who said Indian governance is 'Cooperative Federalism'?", qHi: "भारतीय शासन के बारे में किसने कहा है कि- 'यह सहकारी संघ व्यवस्था है'?", optionsEn: ["Austin", "Appleby", "Ivor Jennings", "Morris Jones"], optionsHi: ["ऑस्टिन", "एप्पलबी", "आइवर जेनिंग्स", "मौरिस जॉन्स"], correct: 0 },
+            { qEn: "Who said 'Indian Constitution is as much federal as dual polity'?", qHi: "यह किसका कथन है कि- 'भारतीय संविधान उतना ही संघीय संविधान है जितना दोहरा राजपद्धति'?", optionsEn: ["Mahatma Gandhi", "Babasaheb (Ambedkar)", "Austin", "Morris Jones"], optionsHi: ["महात्मा गांधी", "बाबा साहेब", "ऑस्टिन", "मौरिस जॉन्स"], correct: 1 },
+            { qEn: "In which case did the Supreme Court say the Constitution is federal and it is a basic feature?", qHi: "निम्नलिखित में से किस वाद में उच्चतम न्यायालय ने यह कहा कि संविधान संघीय है और संघीय इसकी मूल विशेषता है?", optionsEn: ["Minerva Mills", "Kesavananda Bharati", "Bommai Case", "Kihoto Hollohan"], optionsHi: ["मिनर्वा मिल्स वाद", "केशवानंद भारती वाद", "बोम्मई मामले", "किहोतो होलोहान मामले"], correct: 2 },
+            { qEn: "What indicates the federal system of Indian Constitution?", qHi: "भारतीय संविधान की संघीय व्यवस्था का द्योतक है?", optionsEn: ["Disputes between states", "River water disputes", "Emergence of regional parties", "All of the above"], optionsHi: ["राज्यों के बीच विवाद", "नदी जल विवाद", "क्षेत्रीय दलों का उद्भव", "उपर्युक्त में सभी"], correct: 3 }
+        ];
+
+        let currentQuestions = [];
+        let currentIdx = 0;
+        let score = 0;
+        let timerInterval;
+        let timePerQuestion = 0;
+
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playSound(freq, type, duration) {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + duration);
+        }
+
+        function startQuiz() {
+            timePerQuestion = parseInt(document.getElementById('timer-input').value) || 0;
+            const shuffle = document.getElementById('shuffle-input').checked;
+            
+            currentQuestions = [...quizData];
+            if(shuffle) currentQuestions.sort(() => Math.random() - 0.5);
+            
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('quiz-screen').classList.remove('hidden');
+            
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            if(currentIdx >= currentQuestions.length) return showResults();
+            
+            clearInterval(timerInterval);
+            const q = currentQuestions[currentIdx];
+            
+            document.getElementById('q-counter').innerText = `Question: ${currentIdx + 1}/${currentQuestions.length}`;
+            document.getElementById('score-display').innerText = `Score: ${score}`;
+            document.getElementById('q-text-en').innerText = q.qEn;
+            document.getElementById('q-text-hi').innerText = q.qHi;
+            document.getElementById('progress-bar').style.width = `${((currentIdx) / currentQuestions.length) * 100}%`;
+
+            const container = document.getElementById('options-container');
+            container.innerHTML = '';
+            
+            q.optionsEn.forEach((opt, i) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerHTML = `<b>${opt}</b><span class="hi">${q.optionsHi[i]}</span>`;
+                btn.onclick = () => handleAnswer(i);
+                container.appendChild(btn);
+            });
+
+            if(timePerQuestion > 0) startTimer();
+            else document.getElementById('timer-display').innerText = '';
+        }
+
+        function startTimer() {
+            let timeLeft = timePerQuestion;
+            const display = document.getElementById('timer-display');
+            display.classList.remove('pulse-red');
+            display.innerText = `⏱ ${timeLeft}s`;
+
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                display.innerText = `⏱ ${timeLeft}s`;
+                if(timeLeft < 5) display.classList.add('pulse-red');
+                if(timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    handleAnswer(-1); // Timeout
+                }
+            }, 1000);
+        }
+
+        function handleAnswer(choice) {
+            clearInterval(timerInterval);
+            const btns = document.querySelectorAll('.option-btn');
+            btns.forEach(b => b.disabled = true);
+
+            const correctIdx = currentQuestions[currentIdx].correct;
+
+            if(choice === correctIdx) {
+                btns[choice].classList.add('correct');
+                score++;
+                playSound(800, 'sine', 0.2);
+                triggerConfetti();
+            } else {
+                if(choice !== -1) btns[choice].classList.add('wrong');
+                btns[correctIdx].classList.add('correct');
+                playSound(200, 'sawtooth', 0.3);
+                triggerSadEmoji();
+            }
+
+            setTimeout(() => {
+                currentIdx++;
+                loadQuestion();
+            }, 1500);
+        }
+
+        function triggerConfetti() {
+            for(let i=0; i<50; i++) {
+                const c = document.createElement('div');
+                c.className = 'confetti';
+                c.style.left = Math.random() * 100 + 'vw';
+                c.style.backgroundColor = `hsl(${Math.random()*360}, 70%, 50%)`;
+                c.style.animationDuration = (Math.random() * 2 + 1) + 's';
+                document.body.appendChild(c);
+                setTimeout(() => c.remove(), 3000);
+            }
+        }
+
+        function triggerSadEmoji() {
+            const emoji = document.getElementById('sad-emoji');
+            emoji.classList.remove('hidden');
+            emoji.classList.add('shake');
+            setTimeout(() => {
+                emoji.classList.add('hidden');
+                emoji.classList.remove('shake');
+            }, 1000);
+        }
+
+        function showResults() {
+            clearInterval(timerInterval);
+            document.getElementById('quiz-screen').classList.add('hidden');
+            document.getElementById('result-screen').classList.remove('hidden');
+            document.getElementById('progress-bar').style.width = '100%';
+
+            const percent = (score / currentQuestions.length) * 100;
+            const msg = document.getElementById('result-message');
+            document.getElementById('final-score').innerText = `${score} / ${currentQuestions.length}`;
+
+            if(percent >= 80) msg.innerText = "🏆 Outstanding Performance!";
+            else if(percent >= 50) msg.innerText = "👏 Well Done! Keep it up.";
+            else msg.innerText = "📚 Practice makes perfect! Try again.";
+        }
+    </script>
+</body>
+</html>

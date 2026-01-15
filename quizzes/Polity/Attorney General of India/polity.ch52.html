@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attorney General Quiz (Ch-52)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: 1px solid rgba(255, 255, 255, 0.2);
+            --primary-text: #ffffff;
+            --secondary-text: #e0e0e0;
+            --accent-green: #00e676;
+            --accent-red: #ff1744;
+            --font-main: 'Poppins', sans-serif;
+            --bg-gradient: radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
+                           radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%), 
+                           radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 50%);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: var(--font-main);
+            background-color: #1a1a2e;
+            background-image: 
+                radial-gradient(circle at top right, #ff00cc, transparent 40%),
+                radial-gradient(circle at bottom left, #33ccff, transparent 40%),
+                radial-gradient(circle at center, #7000ff, transparent 50%);
+            background-attachment: fixed;
+            background-size: cover;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--primary-text);
+            overflow: hidden; 
+        }
+
+        /* --- Glassmorphism Card --- */
+        .app-container {
+            width: 100%;
+            max-width: 600px;
+            height: 95vh; /* Max height for mobile */
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: var(--glass-border);
+            border-radius: 25px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        /* --- Screens --- */
+        .screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s ease;
+            z-index: 1;
+        }
+
+        .screen.active {
+            opacity: 1;
+            pointer-events: all;
+            z-index: 10;
+        }
+
+        /* --- Typography --- */
+        h1 { font-size: 1.8rem; margin-bottom: 5px; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+        h2 { font-size: 1.1rem; color: var(--secondary-text); margin-bottom: 20px; font-weight: 400; }
+        
+        /* --- Start Screen Controls --- */
+        .start-content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            width: 100%;
+        }
+
+        .input-group { margin-bottom: 20px; width: 100%; }
+        label { display: block; margin-bottom: 8px; font-size: 0.9rem; color: var(--secondary-text); }
+        
+        input[type="number"] {
+            width: 100%;
+            padding: 15px;
+            border-radius: 15px;
+            border: 1px solid rgba(255,255,255,0.2);
+            background: rgba(0,0,0,0.2);
+            color: white;
+            font-size: 1.1rem;
+            text-align: center;
+            outline: none;
+        }
+
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            background: rgba(255,255,255,0.05);
+            padding: 12px 20px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+        }
+
+        /* Toggle Switch */
+        .switch { position: relative; display: inline-block; width: 50px; height: 26px; }
+        .switch input { display: none; }
+        .slider {
+            position: absolute; cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(0,0,0,0.4);
+            transition: .4s; border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute; content: "";
+            height: 18px; width: 18px;
+            left: 4px; bottom: 4px;
+            background-color: white;
+            transition: .4s; border-radius: 50%;
+        }
+        input:checked + .slider { background-color: var(--accent-green); }
+        input:checked + .slider:before { transform: translateX(24px); }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            border: none;
+            padding: 16px;
+            width: 100%;
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 700;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            transition: transform 0.2s;
+        }
+        .btn-primary:active { transform: scale(0.98); }
+
+        /* --- Quiz Interface --- */
+        .quiz-header {
+            width: 100%;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 0;
+            flex-shrink: 0;
+        }
+
+        .progress-track {
+            width: 100%; height: 4px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 2px;
+            margin-bottom: 15px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%; background: #00c6ff;
+            width: 0%; transition: width 0.3s ease;
+            box-shadow: 0 0 10px #00c6ff;
+        }
+
+        .stats-bar {
+            display: flex; justify-content: space-between; align-items: center;
+            font-size: 0.9rem; font-weight: 600;
+        }
+        
+        .timer-badge {
+            background: rgba(0,0,0,0.3); padding: 5px 12px;
+            border-radius: 12px; font-family: monospace; font-size: 1.1rem;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .timer-badge.danger { color: var(--accent-red); border-color: var(--accent-red); animation: pulse 1s infinite; }
+
+        /* Scrollable Question Area */
+        .quiz-content {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding-top: 20px;
+            padding-bottom: 20px;
+            /* Scrollbar styling */
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255,255,255,0.3) transparent;
+        }
+        .quiz-content::-webkit-scrollbar { width: 4px; }
+        .quiz-content::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.3); border-radius: 2px; }
+
+        .question-box {
+            background: rgba(255,255,255,0.05);
+            padding: 20px;
+            border-radius: 20px;
+            margin-bottom: 25px;
+            border-left: 5px solid #00c6ff;
+        }
+        
+        .q-text-en { font-size: 1.15rem; font-weight: 700; margin-bottom: 10px; line-height: 1.4; }
+        .q-text-hi { font-size: 1rem; color: #ddd; font-weight: 400; line-height: 1.5; }
+
+        .options-list { display: flex; flex-direction: column; gap: 12px; }
+
+        .option-btn {
+            background: rgba(255,255,255,0.07);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 15px;
+            padding: 16px;
+            text-align: left;
+            cursor: pointer;
+            transition: background 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+        .option-btn:hover { background: rgba(255,255,255,0.15); }
+        
+        .opt-en { display: block; font-weight: 600; font-size: 1rem; margin-bottom: 4px; }
+        .opt-hi { display: block; font-size: 0.85rem; color: #bbb; }
+
+        .option-btn.correct { background: rgba(0, 230, 118, 0.25); border-color: var(--accent-green); }
+        .option-btn.wrong { background: rgba(255, 23, 68, 0.25); border-color: var(--accent-red); }
+
+        .quiz-footer {
+            margin-top: auto;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            flex-shrink: 0;
+        }
+        .btn-finish {
+            background: transparent; border: 1px solid rgba(255,255,255,0.4);
+            color: white; width: 100%; padding: 12px; border-radius: 12px;
+            font-weight: 600; transition: 0.2s;
+        }
+        .btn-finish:hover { background: white; color: #1a1a2e; }
+
+        /* --- Results --- */
+        #result-screen {
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+        
+        .score-circle {
+            width: 160px; height: 160px;
+            border-radius: 50%;
+            background: conic-gradient(var(--accent-green) calc(var(--score-pct) * 1%), rgba(255,255,255,0.1) 0);
+            display: flex; justify-content: center; align-items: center;
+            margin-bottom: 30px;
+            box-shadow: 0 0 30px rgba(0,230,118,0.2);
+        }
+        .score-inner {
+            width: 140px; height: 140px;
+            background: #1e1e30; border-radius: 50%;
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+        }
+        .score-big { font-size: 3rem; font-weight: 700; line-height: 1; }
+        .score-total { font-size: 1.2rem; color: #888; }
+        
+        .result-title { font-size: 1.5rem; margin-bottom: 10px; font-weight: 700; }
+        .result-desc { color: #ccc; margin-bottom: 30px; }
+
+        /* --- Animations --- */
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); color: #ff5252; } 100% { transform: scale(1); } }
+        
+        #feedback-emoji {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 6rem; z-index: 100; pointer-events: none; opacity: 0;
+        }
+        .animate-shake { animation: shake 0.6s cubic-bezier(.36,.07,.19,.97) both; opacity: 1 !important; }
+        @keyframes shake { 10%, 90% { transform: translate(-52%, -50%); } 20%, 80% { transform: translate(-48%, -50%); } 30%, 50%, 70% { transform: translate(-54%, -50%); } 40%, 60% { transform: translate(-46%, -50%); } }
+
+        canvas { position: fixed; top: 0; left: 0; pointer-events: none; z-index: 99; }
+    </style>
+</head>
+<body>
+
+    <canvas id="confetti-canvas"></canvas>
+    <div id="feedback-emoji">😢</div>
+
+    <div class="app-container">
+        
+        <div id="start-screen" class="screen active">
+            <div class="start-content">
+                <h1>Attorney General</h1>
+                <h2>(Chapter 52 - Gyan Bindu G.S.)</h2>
+                
+                <div class="input-group">
+                    <label>Timer (Seconds per Q)</label>
+                    <input type="number" id="time-input" placeholder="e.g. 15 (Optional)">
+                </div>
+
+                <div class="toggle-container">
+                    <span>Shuffle Questions</span>
+                    <label class="switch">
+                        <input type="checkbox" id="shuffle-toggle">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                
+                <button class="btn-primary" onclick="quizApp.start()">Start Quiz 🚀</button>
+            </div>
+        </div>
+
+        <div id="quiz-screen" class="screen">
+            <div class="quiz-header">
+                <div class="progress-track">
+                    <div class="progress-fill" id="progress-bar"></div>
+                </div>
+                <div class="stats-bar">
+                    <span id="q-counter">Q: 1/9</span>
+                    <span id="timer-display" class="timer-badge">--</span>
+                    <span id="score-display">Score: 0</span>
+                </div>
+            </div>
+
+            <div class="quiz-content" id="scroll-area">
+                <div class="question-box">
+                    <div class="q-text-en" id="q-en"></div>
+                    <div class="q-text-hi" id="q-hi"></div>
+                </div>
+                <div class="options-list" id="options-container">
+                    </div>
+            </div>
+
+            <div class="quiz-footer">
+                <button class="btn-finish" onclick="quizApp.finishEarly()">Finish & Show Results 🏁</button>
+            </div>
+        </div>
+
+        <div id="result-screen" class="screen">
+            <div class="score-circle" id="result-circle">
+                <div class="score-inner">
+                    <span class="score-big" id="final-score">0</span>
+                    <span class="score-total" id="final-total">/ 9</span>
+                </div>
+            </div>
+            <div class="result-title" id="result-msg-title">Result</div>
+            <div class="result-desc" id="result-msg-desc">Description</div>
+            <button class="btn-primary" onclick="quizApp.restart()">Restart Quiz 🔄</button>
+        </div>
+
+    </div>
+
+<script>
+    // --- Data Source ---
+    const questionData = [
+        {
+            en: "In which article of the Constitution is the provision for the independent office of the Attorney General of India made?",
+            hi: "संविधान के किस अनुच्छेद में भारत की महान्यायवादी पद की व्यवस्था की गई है?",
+            options: [
+                {en: "76", hi: "76"},
+                {en: "74", hi: "74"},
+                {en: "75", hi: "75"},
+                {en: "78", hi: "78"}
+            ],
+            correct: 0 // (a)
+        },
+        {
+            en: "The highest law officer of the country is-",
+            hi: "देश का सर्वोच्च विधि अधिकारी होता है-",
+            options: [
+                {en: "Attorney General", hi: "महान्यायवादी"},
+                {en: "Advocate General", hi: "महाधिवक्ता"},
+                {en: "Law and Justice Minister", hi: "विधि एवं कानून मंत्री"},
+                {en: "None of these", hi: "इनमें से कोई नहीं"}
+            ],
+            correct: 0 // (a)
+        },
+        {
+            en: "By whom is the Attorney General appointed?",
+            hi: "महान्यायवादी (अटॉर्नी जनरल) की नियुक्ति किसके द्वारा की जाती है?",
+            options: [
+                {en: "Parliament", hi: "संसद"},
+                {en: "Prime Minister", hi: "प्रधानमंत्री"},
+                {en: "President", hi: "राष्ट्रपति"},
+                {en: "Law Minister", hi: "विधि मंत्री"}
+            ],
+            correct: 2 // (c)
+        },
+        {
+            en: "To be appointed as Attorney General, a person must have which qualification?",
+            hi: "महान्यायवादी नियुक्त होने के लिये किसी व्यक्ति की योग्यता होनी चाहिये?",
+            options: [
+                {en: "He must be a citizen of India", hi: "वह भारत का नागरिक हो"},
+                {en: "He must have 10 years experience as advocate in High Court", hi: "उसे किसी उच्च न्यायालय में वकालत करने का 10 वर्ष का अनुभव हो।"},
+                {en: "In the opinion of the President, he should be a distinguished jurist", hi: "राष्ट्रपति के मतानुसार वह नागरिक मामलों का योग्य व्यक्ति हो।"},
+                {en: "All of the above", hi: "उपर्युक्त में सभी।"}
+            ],
+            correct: 3 // (d)
+        },
+        {
+            en: "How many years has the tenure of the Attorney General been fixed by the Constitution?",
+            hi: "संविधान द्वारा महान्यायवादी का कार्यकाल कितने वर्ष निर्धारित किया गया है?",
+            options: [
+                {en: "5 years", hi: "5 वर्ष"},
+                {en: "6 years", hi: "6 वर्ष"},
+                {en: "7 years", hi: "7 वर्ष"},
+                {en: "Not fixed", hi: "निश्चित नहीं है।"}
+            ],
+            correct: 3 // (d)
+        },
+        {
+            en: "By whom is the remuneration of the Attorney General decided?",
+            hi: "महान्यायवादी की पारिश्रमिक किसके द्वारा तय किया जाता है?",
+            options: [
+                {en: "Parliament", hi: "संसद"},
+                {en: "President", hi: "राष्ट्रपति"},
+                {en: "Prime Minister", hi: "प्रधानमंत्री"},
+                {en: "Law Minister", hi: "कानून मंत्री"}
+            ],
+            correct: 1 // (b)
+        },
+        {
+            en: "The Attorney General holds office during the pleasure of whom?",
+            hi: "महान्यायवादी किसके प्रसादपर्यंत कार्य करता है?",
+            options: [
+                {en: "President", hi: "राष्ट्रपति"},
+                {en: "Law Minister", hi: "विधि मंत्री"},
+                {en: "Parliament", hi: "संसद"},
+                {en: "Prime Minister", hi: "प्रधानमंत्री"}
+            ],
+            correct: 0 // (a)
+        },
+        {
+            en: "Which article of the Constitution gives the Attorney General the right to participate in the proceedings of both Houses of Parliament and its committees?",
+            hi: "संविधान का कौन-सा अनुच्छेद महान्यायवादी को यह अधिकार देता है कि वह संसद के दोनों सदनों तथा उसके समितियों की कार्यवाही में भाग ले सकता है?",
+            options: [
+                {en: "105", hi: "105"},
+                {en: "88", hi: "88"},
+                {en: "83", hi: "83"},
+                {en: "76", hi: "76"}
+            ],
+            correct: 1 // (b)
+        },
+        {
+            en: "Identify the correct statement regarding the rights of the Attorney General:\n1. He can participate in proceedings of both Houses.\n2. He also has the right to vote in Parliament.",
+            hi: "महान्यायवादी के अधिकार के संबंध में सत्य कथन की पहचान कीजिये।\n1. महान्यायवादी संसद के दोनों सदनों की कार्यवाही में भाग ले सकता है।\n2. उसे संसद में मताधिकार भी है",
+            options: [
+                {en: "Only 1", hi: "केवल 1"},
+                {en: "Only 2", hi: "केवल 2"},
+                {en: "1 and 2", hi: "1 और 2"},
+                {en: "Neither 1 nor 2", hi: "न तो 1 न ही 2"}
+            ],
+            correct: 0 // (a)
+        }
+    ];
+
+    // --- Logic ---
+    const quizApp = {
+        questions: [],
+        currentIdx: 0,
+        score: 0,
+        timerSec: 0,
+        timerRef: null,
+        audioCtx: null,
+
+        // Initialize Audio Context on user interaction
+        initAudio: function() {
+            if (!this.audioCtx) this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        },
+
+        // Play Sound Generator
+        playTone: function(type) {
+            if (!this.audioCtx) return;
+            const osc = this.audioCtx.createOscillator();
+            const gain = this.audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(this.audioCtx.destination);
+
+            if (type === 'correct') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(600, this.audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(1200, this.audioCtx.currentTime + 0.1);
+                gain.gain.setValueAtTime(0.2, this.audioCtx.currentTime);
+                gain.gain.linearRampToValueAtTime(0, this.audioCtx.currentTime + 0.3);
+            } else {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(150, this.audioCtx.currentTime);
+                osc.frequency.linearRampToValueAtTime(100, this.audioCtx.currentTime + 0.2);
+                gain.gain.setValueAtTime(0.2, this.audioCtx.currentTime);
+                gain.gain.linearRampToValueAtTime(0, this.audioCtx.currentTime + 0.3);
+            }
+            osc.start();
+            osc.stop(this.audioCtx.currentTime + 0.3);
+        },
+
+        start: function() {
+            this.initAudio();
+            const shuffle = document.getElementById('shuffle-toggle').checked;
+            const timeIn = document.getElementById('time-input').value;
+            this.timerLimit = timeIn ? parseInt(timeIn) : 0;
+
+            // Clone and Shuffle Data
+            this.questions = [...questionData];
+            if (shuffle) this.questions.sort(() => Math.random() - 0.5);
+
+            this.currentIdx = 0;
+            this.score = 0;
+
+            // UI Transitions
+            document.getElementById('start-screen').classList.remove('active');
+            document.getElementById('quiz-screen').classList.add('active');
+
+            this.loadQuestion();
+        },
+
+        loadQuestion: function() {
+            if (this.currentIdx >= this.questions.length) {
+                this.finish();
+                return;
+            }
+
+            // Scroll Top
+            document.getElementById('scroll-area').scrollTop = 0;
+
+            // Reset UI
+            const q = this.questions[this.currentIdx];
+            const total = this.questions.length;
+            
+            document.getElementById('q-counter').innerText = `Q: ${this.currentIdx + 1}/${total}`;
+            document.getElementById('score-display').innerText = `Score: ${this.score}`;
+            document.getElementById('progress-bar').style.width = `${((this.currentIdx) / total) * 100}%`;
+            
+            document.getElementById('q-en').innerText = q.en;
+            document.getElementById('q-hi').innerText = q.hi;
+
+            // Render Options
+            const cont = document.getElementById('options-container');
+            cont.innerHTML = '';
+            
+            q.options.forEach((opt, idx) => {
+                const btn = document.createElement('div');
+                btn.className = 'option-btn';
+                btn.innerHTML = `<span class="opt-en">${String.fromCharCode(97+idx)}) ${opt.en}</span>
+                                 <span class="opt-hi">${opt.hi}</span>`;
+                btn.onclick = () => this.selectOption(idx, btn);
+                cont.appendChild(btn);
+            });
+
+            // Timer Setup
+            clearInterval(this.timerRef);
+            const tDisplay = document.getElementById('timer-display');
+            tDisplay.classList.remove('danger');
+            
+            if (this.timerLimit > 0) {
+                this.timerSec = this.timerLimit;
+                tDisplay.style.display = 'block';
+                tDisplay.innerText = this.timerSec;
+
+                this.timerRef = setInterval(() => {
+                    this.timerSec--;
+                    tDisplay.innerText = this.timerSec;
+                    if (this.timerSec <= 5) tDisplay.classList.add('danger');
+                    if (this.timerSec <= 0) {
+                        clearInterval(this.timerRef);
+                        this.timeUp();
+                    }
+                }, 1000);
+            } else {
+                tDisplay.style.display = 'none';
+            }
+        },
+
+        selectOption: function(idx, btn) {
+            clearInterval(this.timerRef);
+            
+            // Disable Clicks
+            const all = document.querySelectorAll('.option-btn');
+            all.forEach(b => b.style.pointerEvents = 'none');
+
+            const correctIdx = this.questions[this.currentIdx].correct;
+
+            if (idx === correctIdx) {
+                btn.classList.add('correct');
+                this.score++;
+                this.playTone('correct');
+                this.triggerConfetti();
+            } else {
+                btn.classList.add('wrong');
+                all[correctIdx].classList.add('correct');
+                this.playTone('wrong');
+                this.triggerSad();
+            }
+
+            setTimeout(() => {
+                this.currentIdx++;
+                this.loadQuestion();
+            }, 1500);
+        },
+
+        timeUp: function() {
+            const all = document.querySelectorAll('.option-btn');
+            all.forEach(b => b.style.pointerEvents = 'none');
+            const correctIdx = this.questions[this.currentIdx].correct;
+            all[correctIdx].classList.add('correct');
+            this.playTone('wrong');
+            setTimeout(() => {
+                this.currentIdx++;
+                this.loadQuestion();
+            }, 1500);
+        },
+
+        finishEarly: function() {
+            clearInterval(this.timerRef);
+            this.finish();
+        },
+
+        finish: function() {
+            document.getElementById('quiz-screen').classList.remove('active');
+            document.getElementById('result-screen').classList.add('active');
+
+            document.getElementById('final-score').innerText = this.score;
+            document.getElementById('final-total').innerText = `/ ${this.questions.length}`;
+
+            // Score Circle CSS
+            const pct = (this.score / this.questions.length) * 100;
+            document.getElementById('result-circle').style.setProperty('--score-pct', pct);
+
+            // Message
+            const title = document.getElementById('result-msg-title');
+            const desc = document.getElementById('result-msg-desc');
+            
+            if (pct >= 80) {
+                title.innerText = "🏆 Outstanding!";
+                desc.innerText = "You have mastered this topic.";
+            } else if (pct >= 50) {
+                title.innerText = "👏 Well Done!";
+                desc.innerText = "Good effort, keep practicing.";
+            } else {
+                title.innerText = "📚 Keep Learning";
+                desc.innerText = "Review the chapter and try again.";
+            }
+        },
+
+        restart: function() {
+            document.getElementById('result-screen').classList.remove('active');
+            document.getElementById('start-screen').classList.add('active');
+        },
+
+        triggerConfetti: function() {
+            const canvas = document.getElementById('confetti-canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            
+            const particles = [];
+            for(let i=0; i<80; i++) {
+                particles.push({
+                    x: Math.random() * canvas.width,
+                    y: -10,
+                    size: Math.random() * 8 + 4,
+                    speedY: Math.random() * 3 + 2,
+                    speedX: Math.random() * 2 - 1,
+                    color: `hsl(${Math.random()*360}, 100%, 50%)`
+                });
+            }
+
+            function animate() {
+                ctx.clearRect(0,0,canvas.width, canvas.height);
+                let active = false;
+                particles.forEach(p => {
+                    p.y += p.speedY;
+                    p.x += p.speedX;
+                    if(p.y < canvas.height) {
+                        active = true;
+                        ctx.fillStyle = p.color;
+                        ctx.fillRect(p.x, p.y, p.size, p.size);
+                    }
+                });
+                if(active) requestAnimationFrame(animate);
+            }
+            animate();
+        },
+
+        triggerSad: function() {
+            const el = document.getElementById('feedback-emoji');
+            el.classList.add('animate-shake');
+            setTimeout(() => {
+                el.classList.remove('animate-shake');
+            }, 1000);
+        }
+    };
+</script>
+</body>
+</html>

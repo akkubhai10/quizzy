@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chapter 42: Election Commission Quiz</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --primary-text: #ffffff;
+            --secondary-text: #dddddd;
+            --accent-green: #00e676;
+            --accent-red: #ff5252;
+            --mesh-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: #0f0c29;
+            background: -webkit-linear-gradient(to right, #24243e, #302b63, #0f0c29);
+            background: linear-gradient(to right, #24243e, #302b63, #0f0c29);
+            /* Mesh gradient overlay */
+            background-image: 
+                radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
+                radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%), 
+                radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 50%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--primary-text);
+            overflow-x: hidden;
+        }
+
+        /* Glassmorphism Card */
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 25px;
+            padding: 2rem;
+            width: 90%;
+            max-width: 600px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        /* Screens */
+        .screen {
+            display: none;
+            flex-direction: column;
+            gap: 1.5rem;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        /* Typography */
+        h1 {
+            font-size: 1.8rem;
+            text-align: center;
+            font-weight: 700;
+            background: linear-gradient(to right, #fff, #a5b4fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        h2 { font-size: 1.2rem; font-weight: 600; }
+        p { font-size: 0.9rem; color: var(--secondary-text); }
+
+        /* Inputs & Controls */
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        label { font-size: 0.9rem; font-weight: 600; }
+
+        input[type="number"] {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--glass-border);
+            padding: 10px;
+            border-radius: 10px;
+            color: white;
+            font-family: 'Poppins', sans-serif;
+            outline: none;
+        }
+
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(0,0,0,0.2);
+            padding: 10px;
+            border-radius: 10px;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+
+        .switch input { opacity: 0; width: 0; height: 0; }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider { background-color: #667eea; }
+        input:checked + .slider:before { transform: translateX(26px); }
+
+        /* Buttons */
+        .btn {
+            padding: 15px;
+            border: none;
+            border-radius: 15px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            text-align: center;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            box-shadow: 0 4px 15px rgba(118, 75, 162, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: scale(1.02);
+            box-shadow: 0 6px 20px rgba(118, 75, 162, 0.6);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: white;
+            margin-top: 10px;
+        }
+        
+        .btn-secondary:hover { background: rgba(255, 255, 255, 0.2); }
+
+        /* Quiz UI */
+        .progress-bar {
+            position: absolute;
+            top: 0; left: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #00c6ff, #0072ff);
+            width: 0%;
+            transition: width 0.5s ease;
+            box-shadow: 0 0 10px #00c6ff;
+        }
+
+        .quiz-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+        }
+
+        .timer {
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .timer.pulse {
+            color: var(--accent-red);
+            animation: pulse 1s infinite;
+        }
+
+        .question-box {
+            background: rgba(0,0,0,0.2);
+            padding: 15px;
+            border-radius: 15px;
+            border-left: 4px solid #667eea;
+        }
+
+        .q-text-en { font-size: 1.1rem; font-weight: 600; margin-bottom: 5px; color: #fff; }
+        .q-text-hi { font-size: 0.95rem; color: #ddd; font-weight: 400; }
+
+        .options-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .option-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 12px 15px;
+            color: white;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateX(5px);
+        }
+
+        .option-btn:disabled { cursor: default; }
+
+        .opt-en { font-weight: 600; font-size: 0.95rem; }
+        .opt-hi { font-size: 0.85rem; color: #ccc; }
+
+        /* Feedback States */
+        .correct { background: rgba(0, 230, 118, 0.3) !important; border-color: var(--accent-green) !important; }
+        .wrong { background: rgba(255, 82, 82, 0.3) !important; border-color: var(--accent-red) !important; }
+
+        /* Feedback Emoji */
+        .feedback-overlay {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 4rem;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+            z-index: 10;
+        }
+
+        .shake { animation: shake 0.5s; }
+
+        /* Results */
+        .score-circle {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            border: 5px solid #667eea;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin: 0 auto;
+            background: rgba(0,0,0,0.2);
+            box-shadow: 0 0 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .result-msg { text-align: center; font-size: 1.2rem; color: #a5b4fc; }
+
+        /* Animations */
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+        @keyframes shake { 0% { transform: translate(-50%, -50%) translateX(0); } 25% { transform: translate(-50%, -50%) translateX(-10px); } 75% { transform: translate(-50%, -50%) translateX(10px); } 100% { transform: translate(-50%, -50%) translateX(0); } }
+        
+        /* Confetti */
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            background-color: #f0f;
+            z-index: 9999;
+            top: -10px;
+            border-radius: 2px;
+            pointer-events: none;
+        }
+
+        /* Mobile Optimization */
+        @media (max-width: 480px) {
+            .glass-card { width: 95%; padding: 1.5rem; border-radius: 20px; }
+            h1 { font-size: 1.5rem; }
+            .btn { padding: 12px; }
+            .question-box { padding: 12px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="confetti-container"></div>
+
+    <div class="glass-card">
+        <div class="progress-bar" id="progressBar"></div>
+
+        <div id="startScreen" class="screen active">
+            <h1>Chapter 42 Quiz</h1>
+            <p style="text-align: center;">Election Commission (निर्वाचन आयोग)</p>
+            
+            <div class="input-group">
+                <label>⏱ Timer (Seconds per Question)</label>
+                <input type="number" id="timerInput" placeholder="e.g. 15 (Leave empty for no timer)" min="5">
+                <p style="font-size: 0.75rem; color: #aaa;">0 or empty = No Timer</p>
+            </div>
+
+            <div class="toggle-container">
+                <label>🔀 Shuffle Questions</label>
+                <label class="switch">
+                    <input type="checkbox" id="shuffleToggle" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
+
+            <button class="btn btn-primary" onclick="startQuiz()">Start Quiz / प्रश्नोत्तरी शुरू करें</button>
+        </div>
+
+        <div id="quizScreen" class="screen">
+            <div class="quiz-header">
+                <span id="qCounter">Q: 1/9</span>
+                <div class="timer" id="timerDisplay">⏳ <span>--</span></div>
+                <span id="scoreDisplay">Score: 0</span>
+            </div>
+
+            <div class="question-box">
+                <div class="q-text-en" id="qEn">Question English</div>
+                <div class="q-text-hi" id="qHi">Question Hindi</div>
+            </div>
+
+            <div class="options-grid" id="optionsContainer">
+                </div>
+
+            <div id="feedbackEmoji" class="feedback-overlay">😢</div>
+
+            <button class="btn btn-secondary" onclick="finishQuizEarly()">🏁 Finish & Show Results</button>
+        </div>
+
+        <div id="resultScreen" class="screen">
+            <h1>Quiz Completed!</h1>
+            
+            <div class="score-circle" id="finalScore">0</div>
+            
+            <div class="result-msg" id="resultMsg">Message</div>
+            
+            <div style="display: flex; flex-direction: column; gap: 10px; text-align: center;">
+                <p>Total Questions: <span id="totalQ">0</span></p>
+                <p>Attempted: <span id="attemptedQ">0</span></p>
+                <p>Correct: <span id="correctQ">0</span></p>
+            </div>
+
+            <button class="btn btn-primary" onclick="location.reload()">🔄 Restart Quiz</button>
+        </div>
+    </div>
+
+    <script>
+        // --- DATA: Questions from Chapter 42 (Election Commission) ---
+        const rawQuestions = [
+            {
+                qEn: "What type of institution is the Election Commission?",
+                qHi: "निर्वाचन आयोग किस प्रकार की संस्था है ?",
+                optsEn: ["Statutory", "Non-Constitutional", "Constitutional", "Executive"],
+                optsHi: ["सांविधिक", "गैर-संवैधानिक", "संवैधानिक", "कार्यकारी"],
+                correct: 2
+            },
+            {
+                qEn: "Which Article of the Constitution relates to the Election Commission?",
+                qHi: "चुनाव आयोग का संबंध संविधान के किस अनुच्छेद से है ?",
+                optsEn: ["Article 324", "Article 216", "Article 315", "Article 328"],
+                optsHi: ["अनुच्छेद- 324", "अनुच्छेद- 216", "अनुच्छेद- 315", "अनुच्छेद- 328"],
+                correct: 0
+            },
+            {
+                qEn: "Who appoints the Chief Election Commissioner and other Election Commissioners?",
+                qHi: "मुख्य निर्वाचन आयुक्त एवं अन्य निर्वाचन आयुक्त की नियुक्ति किसके द्वारा की जाती है ?",
+                optsEn: ["Governor", "Prime Minister", "Chief Minister", "President"],
+                optsHi: ["राज्यपाल", "प्रधानमंत्री", "मुख्यमंत्री", "राष्ट्रपति"],
+                correct: 3
+            },
+            {
+                qEn: "The salary and allowances of the Chief Election Commissioner are equivalent to?",
+                qHi: "मुख्य निर्वाचन आयुक्त का वेतन भत्ते किसके समान होता है ?",
+                optsEn: ["Chief Justice of Supreme Court", "Judge of Supreme Court", "Chief Justice of High Court", "None of these"],
+                optsHi: ["सर्वोच्च न्यायालय का मुख्य न्यायाधीश", "सर्वोच्च न्यायालय का न्यायाधीश", "उच्च न्यायालय के मुख्य न्यायाधीश", "इनमें से कोई नहीं"],
+                correct: 1
+            },
+            {
+                qEn: "What is the tenure of the Chief Election Commissioner and two other Election Commissioners?",
+                qHi: "मुख्य निर्वाचन आयुक्त एवं दो अन्य निर्वाचन आयुक्त का कार्यकाल होता है-",
+                optsEn: ["6 years", "5 years", "4 years", "3 years"],
+                optsHi: ["छह वर्ष", "पांच वर्ष", "चार वर्ष", "तीन वर्ष"],
+                correct: 0
+            },
+            {
+                qEn: "What is the retirement age of the Chief Election Commissioner and other two Election Commissioners?",
+                qHi: "मुख्य निर्वाचन आयुक्त एवं अन्य दो निर्वाचन आयुक्त की सेवा निवृत्त की आयु होती है ?",
+                optsEn: ["62 years", "65 years", "60 years", "70 years"],
+                optsHi: ["62 वर्ष", "65 वर्ष", "60 वर्ष", "70 वर्ष"],
+                correct: 1
+            },
+            {
+                qEn: "The Chief Election Commissioner can be removed from his office by?",
+                qHi: "मुख्य निर्वाचन आयुक्त को उसके पद से हटाया जा सकता है ?",
+                optsEn: ["By special majority of both Houses of Parliament", "By President at his discretion", "By Prime Minister", "None of these"],
+                optsHi: ["संसद के दोनों सदनों द्वारा विशेष बहुमत से", "राष्ट्रपति द्वारा अपने विवेक से", "प्रधानमंत्री द्वारा", "इनमें से कोई नहीं"],
+                correct: 0
+            },
+            {
+                qEn: "On whose recommendation can other Election Commissioners be removed by the President?",
+                qHi: "अन्य निर्वाचन आयुक्त को किसके सिफारिश पर राष्ट्रपति द्वारा हटाया जा सकता है ?",
+                optsEn: ["Supreme Court", "Parliament", "Chief Election Commissioner", "All of the above"],
+                optsHi: ["सर्वोच्च न्यायालय", "संसद", "मुख्य निर्वाचन आयुक्त", "उपर्युक्त में सभी"],
+                correct: 2
+            },
+            {
+                qEn: "Consider the following statements:\n1. The Constitution has fixed the tenure of Election Commissioners.\n2. The Constitution has fixed the qualifications of the members of Election Commission.\nWhich of the above is/are correct?",
+                qHi: "निम्नलिखित कथनों पर विचार कीजिए।\n1. संविधान द्वारा निर्वाचन आयुक्तों की पदावधि तय की गई है।\n2. संविधान द्वारा निर्वाचन आयोग की सदस्यों की अर्हता तय की गई है।\nउपर्युक्त कथनों में से कौन-सा/से सही है/हैं ?",
+                optsEn: ["Only 1", "Only 2", "1 and 2", "Neither 1 nor 2"],
+                optsHi: ["केवल 1", "केवल 2", "1 और 2", "न तो 1 न ही 2"],
+                correct: 3
+            }
+        ];
+
+        // --- STATE & LOGIC ---
+        let questions = [];
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let timerInterval;
+        let timeLeft;
+        let isAnswered = false;
+        
+        // Web Audio Context
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        // --- FUNCTIONS ---
+
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            
+            if (type === 'correct') {
+                // High pitched "Ting" - Sine wave
+                oscillator.type = 'sine';
+                oscillator.frequency.setValueAtTime(600, audioCtx.currentTime);
+                oscillator.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.1);
+                gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+                oscillator.start();
+                oscillator.stop(audioCtx.currentTime + 0.5);
+            } else {
+                // Low pitched "Buzz" - Sawtooth
+                oscillator.type = 'sawtooth';
+                oscillator.frequency.setValueAtTime(150, audioCtx.currentTime);
+                oscillator.frequency.linearRampToValueAtTime(100, audioCtx.currentTime + 0.3);
+                gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                gainNode.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+                oscillator.start();
+                oscillator.stop(audioCtx.currentTime + 0.3);
+            }
+        }
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        function startQuiz() {
+            // Get Settings
+            const timerVal = document.getElementById('timerInput').value;
+            const useShuffle = document.getElementById('shuffleToggle').checked;
+            
+            // Prepare Data
+            questions = [...rawQuestions];
+            if (useShuffle) shuffleArray(questions);
+            
+            // Setup Timer
+            timeLeft = (timerVal && timerVal > 0) ? parseInt(timerVal) : null;
+            
+            // Reset State
+            currentQuestionIndex = 0;
+            score = 0;
+            
+            // Switch Screens
+            document.getElementById('startScreen').classList.remove('active');
+            document.getElementById('quizScreen').classList.add('active');
+            
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            if (currentQuestionIndex >= questions.length) {
+                showResults();
+                return;
+            }
+
+            const qData = questions[currentQuestionIndex];
+            isAnswered = false;
+
+            // Update UI Counters
+            document.getElementById('qCounter').innerText = `Question ${currentQuestionIndex + 1}/${questions.length}`;
+            document.getElementById('scoreDisplay').innerText = `Score: ${score}`;
+            
+            // Update Progress Bar
+            const progress = ((currentQuestionIndex) / questions.length) * 100;
+            document.getElementById('progressBar').style.width = `${progress}%`;
+
+            // Render Text
+            document.getElementById('qEn').innerText = qData.qEn;
+            document.getElementById('qHi').innerText = qData.qHi;
+
+            // Render Options
+            const optsContainer = document.getElementById('optionsContainer');
+            optsContainer.innerHTML = '';
+            
+            qData.optsEn.forEach((optEn, idx) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.onclick = () => handleAnswer(idx);
+                
+                const spanEn = document.createElement('span');
+                spanEn.className = 'opt-en';
+                spanEn.innerText = optEn; // English first
+                
+                const spanHi = document.createElement('span');
+                spanHi.className = 'opt-hi';
+                spanHi.innerText = qData.optsHi[idx]; // Hindi below
+                
+                btn.appendChild(spanEn);
+                btn.appendChild(spanHi);
+                optsContainer.appendChild(btn);
+            });
+
+            // Start Timer if enabled
+            const timerDisplay = document.getElementById('timerDisplay');
+            timerDisplay.classList.remove('pulse');
+            
+            clearInterval(timerInterval);
+            
+            if (timeLeft !== null) {
+                let currentTimer = timeLeft;
+                timerDisplay.style.visibility = 'visible';
+                timerDisplay.innerHTML = `⏳ <span>${currentTimer}s</span>`;
+                
+                timerInterval = setInterval(() => {
+                    currentTimer--;
+                    timerDisplay.innerHTML = `⏳ <span>${currentTimer}s</span>`;
+                    
+                    if (currentTimer <= 5) timerDisplay.classList.add('pulse');
+                    
+                    if (currentTimer <= 0) {
+                        clearInterval(timerInterval);
+                        handleAnswer(-1); // Time out treated as wrong/skip
+                    }
+                }, 1000);
+            } else {
+                timerDisplay.style.visibility = 'hidden';
+            }
+        }
+
+        function handleAnswer(selectedIndex) {
+            if (isAnswered) return;
+            isAnswered = true;
+            clearInterval(timerInterval);
+
+            const qData = questions[currentQuestionIndex];
+            const buttons = document.querySelectorAll('.option-btn');
+            const feedbackEmoji = document.getElementById('feedbackEmoji');
+
+            // Disable all buttons
+            buttons.forEach(btn => btn.disabled = true);
+
+            if (selectedIndex === qData.correct) {
+                // Correct
+                buttons[selectedIndex].classList.add('correct');
+                playSound('correct');
+                triggerConfetti();
+                score++;
+            } else {
+                // Wrong or Timeout
+                if (selectedIndex !== -1) {
+                    buttons[selectedIndex].classList.add('wrong');
+                }
+                // Show correct one
+                buttons[qData.correct].classList.add('correct');
+                playSound('wrong');
+                
+                // Show Sad Emoji
+                feedbackEmoji.style.opacity = '1';
+                feedbackEmoji.classList.add('shake');
+                setTimeout(() => {
+                    feedbackEmoji.style.opacity = '0';
+                    feedbackEmoji.classList.remove('shake');
+                }, 1000);
+            }
+
+            // Auto transition
+            setTimeout(() => {
+                currentQuestionIndex++;
+                loadQuestion();
+            }, 1500);
+        }
+
+        function finishQuizEarly() {
+            clearInterval(timerInterval);
+            showResults();
+        }
+
+        function showResults() {
+            document.getElementById('quizScreen').classList.remove('active');
+            document.getElementById('resultScreen').classList.add('active');
+            
+            const total = questions.length;
+            const percentage = Math.round((score / total) * 100);
+            
+            document.getElementById('finalScore').innerText = `${percentage}%`;
+            document.getElementById('totalQ').innerText = total;
+            document.getElementById('attemptedQ').innerText = currentQuestionIndex; 
+            document.getElementById('correctQ').innerText = score;
+
+            const msgDiv = document.getElementById('resultMsg');
+            if (percentage >= 80) {
+                msgDiv.innerText = "🏆 Outstanding Performance! (असाधारण प्रदर्शन!)";
+                msgDiv.style.color = "#00e676";
+                triggerConfetti();
+            } else if (percentage >= 50) {
+                msgDiv.innerText = "👏 Well Done! Keep it up. (बहुत बढ़िया!)";
+                msgDiv.style.color = "#ffeb3b";
+            } else {
+                msgDiv.innerText = "📚 Practice makes perfect! Try again. (अभ्यास की आवश्यकता है)";
+                msgDiv.style.color = "#ff5252";
+            }
+        }
+
+        // --- EFFECTS: Confetti ---
+        function triggerConfetti() {
+            const colors = ['#ff0', '#f00', '#0f0', '#00f', '#f0f', '#0ff'];
+            const container = document.getElementById('confetti-container');
+            
+            for (let i = 0; i < 50; i++) {
+                const conf = document.createElement('div');
+                conf.classList.add('confetti');
+                conf.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                conf.style.left = Math.random() * 100 + 'vw';
+                conf.style.animation = `fall ${Math.random() * 3 + 2}s linear`;
+                
+                container.appendChild(conf);
+                
+                // Cleanup
+                setTimeout(() => {
+                    conf.remove();
+                }, 5000);
+            }
+        }
+        
+        // Add dynamic styles for confetti fall
+        const styleSheet = document.createElement("style");
+        styleSheet.innerText = `
+            @keyframes fall {
+                0% { top: -10px; transform: rotate(0deg); opacity: 1; }
+                100% { top: 100vh; transform: rotate(720deg); opacity: 0; }
+            }
+        `;
+        document.head.appendChild(styleSheet);
+
+    </script>
+</body>
+</html>

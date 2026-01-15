@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chapter 18: Vice-President Quiz</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-gradient: linear-gradient(45deg, #667eea, #764ba2, #ffafbd);
+            --glass: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --correct: #4caf50;
+            --wrong: #f44336;
+            --hindi-dim: #ddd;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; }
+
+        body {
+            background: var(--bg-gradient);
+            background-size: 400% 400%;
+            animation: gradientAnim 15s ease infinite;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 15px;
+            color: white;
+            overflow-x: hidden;
+        }
+
+        @keyframes gradientAnim {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        #progress-bar-container {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%;
+            height: 6px;
+            background: rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+
+        #progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(to right, #00f2fe, #4facfe);
+            box-shadow: 0 0 10px #4facfe;
+            transition: width 0.4s ease;
+        }
+
+        .card {
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 25px;
+            width: 100%;
+            max-width: 600px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        /* Mobile Scroll Customization */
+        .card::-webkit-scrollbar { width: 5px; }
+        .card::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
+
+        .screen { display: none; text-align: center; }
+        .active { display: block; }
+
+        .header-meta {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        h2 { font-size: 1.25rem; font-weight: 700; line-height: 1.4; margin-bottom: 10px; text-align: left; }
+        .hindi-sub { font-size: 1rem; color: var(--hindi-dim); font-weight: 400; display: block; margin-top: 5px; }
+
+        .options-container { display: flex; flex-direction: column; gap: 12px; margin-top: 20px; }
+
+        .option-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            padding: 15px;
+            border-radius: 15px;
+            color: white;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            outline: none;
+            width: 100%;
+        }
+
+        .option-btn:hover:not(:disabled) { background: rgba(255,255,255,0.15); transform: translateX(5px); }
+        .option-btn:disabled { cursor: default; }
+
+        .correct { background: var(--correct) !important; border-color: transparent; }
+        .wrong { background: var(--wrong) !important; border-color: transparent; animation: shake 0.4s; }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-8px); }
+            75% { transform: translateX(8px); }
+        }
+
+        .timer-icon { font-size: 1.1rem; }
+        .pulse-red { color: #ff4d4d; animation: pulse 1s infinite; font-weight: bold; }
+
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+
+        .finish-btn {
+            margin-top: 25px;
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.3);
+            color: rgba(255,255,255,0.6);
+            padding: 10px;
+            border-radius: 10px;
+            font-size: 0.8rem;
+            width: 100%;
+            cursor: pointer;
+        }
+
+        #sad-emoji {
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 100px;
+            z-index: 9999;
+            display: none;
+        }
+
+        input[type="number"] {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid white;
+            color: white;
+            padding: 10px;
+            border-radius: 10px;
+            width: 70px;
+            text-align: center;
+            margin: 10px;
+        }
+
+        .primary-btn {
+            background: white;
+            color: #764ba2;
+            padding: 14px 35px;
+            border-radius: 30px;
+            border: none;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: 0.3s;
+            text-transform: uppercase;
+        }
+
+        .primary-btn:hover { transform: scale(1.08); box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
+
+        .confetti { position: fixed; width: 8px; height: 8px; z-index: 9999; pointer-events: none; }
+
+        .code-block { font-family: monospace; font-size: 0.8rem; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px; text-align: left; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+<div id="progress-bar-container"><div id="progress-bar"></div></div>
+<div id="sad-emoji">😢</div>
+
+<div class="card">
+    <div id="start-screen" class="screen active">
+        <h1 style="margin-bottom: 10px;">Polity Quiz</h1>
+        <p style="font-size: 0.9rem; opacity: 0.8;">Chapter 18: Vice-President (उप-राष्ट्रपति)</p>
+        
+        <div style="margin: 30px 0;">
+            <label>Timer per Question (seconds):</label><br>
+            <input type="number" id="timer-input" placeholder="0" min="0">
+            <p style="font-size: 0.7rem; opacity: 0.6;">(0 = No Timer)</p>
+        </div>
+
+        <div style="margin-bottom: 30px;">
+            <label style="cursor: pointer;">
+                <input type="checkbox" id="shuffle-input"> Shuffle Questions
+            </label>
+        </div>
+
+        <button class="primary-btn" onclick="initQuiz()">Start Quiz</button>
+    </div>
+
+    <div id="quiz-screen" class="screen">
+        <div class="header-meta">
+            <div id="counter">Question 01/18</div>
+            <div id="timer-display" style="display:none;">⏱️ <span id="time-left">0</span>s</div>
+            <div id="score">Score: 00</div>
+        </div>
+        
+        <div id="q-area">
+            <h2 id="q-text-en">Question text here?</h2>
+            <span id="q-text-hi" class="hindi-sub">यहाँ प्रश्न पाठ?</span>
+            
+            <div class="options-container" id="options-grid"></div>
+        </div>
+
+        <button class="finish-btn" onclick="showResults()">Finish & Show Results</button>
+    </div>
+
+    <div id="result-screen" class="screen">
+        <h1 id="res-title">Results</h1>
+        <div style="font-size: 3.5rem; font-weight: 700; margin: 20px 0;" id="res-score">0/18</div>
+        <p id="res-msg" style="margin-bottom: 30px; font-weight: 600;"></p>
+        <button class="primary-btn" onclick="location.reload()">Restart Quiz</button>
+    </div>
+</div>
+
+<script>
+/**
+ * DATA EXTRACTION FROM IMAGES (CHAPTER 18)
+ * Exact questions and options as per Screenshots.
+ */
+const rawData = [
+    {
+        en: "Which is the second highest office in India?",
+        hi: "भारत का दूसरा सर्वोच्च पद है-",
+        opts: [
+            {en: "Prime Minister", hi: "प्रधानमंत्री", correct: false},
+            {en: "Speaker of Lok Sabha", hi: "लोकसभा स्पीकर", correct: false},
+            {en: "Vice-President", hi: "उप-राष्ट्रपति", correct: true},
+            {en: "Governor", hi: "राज्यपाल", correct: false}
+        ]
+    },
+    {
+        en: "The post of Vice-President in India is modeled on the lines of which country?",
+        hi: "भारत में उप-राष्ट्रपति का पद किस देश के तर्ज पर बनाया गया है ?",
+        opts: [
+            {en: "Canada", hi: "कनाडा", correct: false},
+            {en: "USA", hi: "अमेरिका", correct: true},
+            {en: "Britain", hi: "ब्रिटेन", correct: false},
+            {en: "France", hi: "फ्रांस", correct: false}
+        ]
+    },
+    {
+        en: "Who elects the Vice-President?",
+        hi: "उपराष्ट्रपति का चुनाव होता है-",
+        opts: [
+            {en: "By members of Lok Sabha only", hi: "केवल लोकसभा के सदस्य द्वारा", correct: false},
+            {en: "By nominated members of Parliament only", hi: "केवल संसद के मनोनीत सदस्य द्वारा", correct: false},
+            {en: "By members of Rajya Sabha only", hi: "केवल राज्यसभा के सदस्यों द्वारा", correct: false},
+            {en: "By elected and nominated members of Parliament", hi: "संसद के निर्वाचित एवं मनोनीत दोनों सदस्यों द्वारा", correct: true}
+        ]
+    },
+    {
+        en: "Who has the authority to hear disputes related to the election of Vice-President?",
+        hi: "उप-राष्ट्रपति के चुनाव से जुड़े मामले का सुनवाई करने का अधिकार है ?",
+        opts: [
+            {en: "Election Commission", hi: "निर्वाचन आयोग", correct: false},
+            {en: "Supreme Court", hi: "उच्चतम न्यायालय", correct: true},
+            {en: "Delhi High Court", hi: "दिल्ली उच्च न्यायालय", correct: false},
+            {en: "By members of both houses of Parliament", hi: "संसद के दोनों सदन के सदस्य द्वारा", correct: false}
+        ]
+    },
+    {
+        en: "What is the age prescribed to contest for the election of Vice-President?",
+        hi: "उप-राष्ट्रपति चुनाव लड़ने के लिए निर्धारित आयु है-",
+        opts: [
+            {en: "34 years", hi: "34 वर्ष", correct: false},
+            {en: "30 years", hi: "30 वर्ष", correct: false},
+            {en: "35 years", hi: "35 वर्ष", correct: true},
+            {en: "25 years", hi: "25 वर्ष", correct: false}
+        ]
+    },
+    {
+        en: "What qualifications are required to become Vice-President?",
+        hi: "उप-राष्ट्रपति बनने के लिए योग्यता होनी चाहिए-",
+        opts: [
+            {en: "He should be a citizen of India", hi: "वह भारत का नागरिक हो", correct: false},
+            {en: "He should have completed 35 years of age", hi: "वह 35 वर्ष की आयु पूर्ण कर चुका हो", correct: false},
+            {en: "Should be qualified for election as a member of Rajya Sabha", hi: "वह राज्यसभा सदस्य बनने के लिए अर्हित हो", correct: false},
+            {en: "All of the above", hi: "उपर्युक्त में सभी", correct: true}
+        ]
+    },
+    {
+        en: "How many proposers and seconders are required for the nomination of Vice-President?",
+        hi: "उप-राष्ट्रपति चुनाव के लिए प्रस्तावक तथा अनुमोदक की संख्या कितनी होनी चाहिए ?",
+        opts: [
+            {en: "20 Proposers and 25 Seconders", hi: "20 प्रस्तावक तथा 25 अनुमोदक", correct: false},
+            {en: "25 Proposers and 25 Seconders", hi: "25 प्रस्तावक तथा 25 अनुमोदक", correct: false},
+            {en: "20 Proposers and 20 Seconders", hi: "20 प्रस्तावक तथा 20 अनुमोदक", correct: true},
+            {en: "None of these", hi: "उपर्युक्त में से कोई नहीं", correct: false}
+        ]
+    },
+    {
+        en: "By what process can the Vice-President be removed?",
+        hi: "उप-राष्ट्रपति को किस प्रक्रिया द्वारा हटाया जा सकता है ?",
+        opts: [
+            {en: "Process of Impeachment", hi: "महाभियोग की प्रक्रिया", correct: false},
+            {en: "By a resolution passed by Rajya Sabha", hi: "राज्यसभा के बहुमत से पारित संकल्प द्वारा", correct: true},
+            {en: "By special majority in Rajya Sabha and simple majority in Lok Sabha", hi: "राज्यसभा से विशेष बहुमत द्वारा पारित प्रस्ताव एवं लोकसभा से सामान्य बहुमत से", correct: false},
+            {en: "None of the above", hi: "उपर्युक्त में से कोई नहीं", correct: false}
+        ]
+    },
+    {
+        en: "What is the term of office of the Vice-President?",
+        hi: "उप-राष्ट्रपति की पदावधि होती है ?",
+        opts: [
+            {en: "5 years", hi: "5 वर्ष", correct: true},
+            {en: "6 years", hi: "6 वर्ष", correct: false},
+            {en: "7 years", hi: "7 वर्ष", correct: false},
+            {en: "10 years", hi: "10 वर्ष", correct: false}
+        ]
+    },
+    {
+        en: "How many times can a person be elected to the office of Vice-President?",
+        hi: "उप-राष्ट्रपति के पद पर कोई व्यक्ति कितनी बार निर्वाचित हो सकता है ?",
+        opts: [
+            {en: "Two times", hi: "दो बार", correct: false},
+            {en: "Four times", hi: "चार बार", correct: false},
+            {en: "One time", hi: "एक बार", correct: false},
+            {en: "No fixed limit", hi: "निश्चित सीमा नहीं है", correct: true}
+        ]
+    },
+    {
+        en: "Consider the following statements:\n1. There is no provision in Constitution for emoluments etc. for Vice-President.\n2. Vice-President receives salary as ex-officio Chairman of Rajya Sabha.",
+        hi: "निम्नलिखित कथनों पर विचार कीजिए:\n1. संविधान में उप-राष्ट्रपति के लिये परिलब्धियों आदि की व्यवस्था नहीं है।\n2. उप-राष्ट्रपति को वेतन राज्यसभा के पदेन सभापति के रूप में मिलता है।",
+        opts: [
+            {en: "Only 1", hi: "केवल 1", correct: false},
+            {en: "Only 2", hi: "केवल 2", correct: false},
+            {en: "Both 1 and 2", hi: "1 और 2 दोनों", correct: true},
+            {en: "Neither 1 nor 2", hi: "न तो 1 और न ही 2", correct: false}
+        ]
+    },
+    {
+        en: "What is the current salary of the Vice-President?",
+        hi: "वर्तमान में उप-राष्ट्रपति का वेतन है-",
+        opts: [
+            {en: "4 Lakh per month", hi: "4 लाख प्रतिमाह", correct: true},
+            {en: "5 Lakh per month", hi: "5 लाख प्रतिमाह", correct: false},
+            {en: "6 Lakh per month", hi: "6 लाख प्रतिमाह", correct: false},
+            {en: "7 Lakh per month", hi: "7 लाख प्रतिमाह", correct: false}
+        ]
+    },
+    {
+        en: "Who was the first Vice-President of India?",
+        hi: "भारत का प्रथम उप-राष्ट्रपति कौन बने थे ?",
+        opts: [
+            {en: "Dr. S. Radhakrishnan", hi: "डॉ. एस. राधाकृष्णन", correct: true},
+            {en: "Dr. Zakir Hussain", hi: "डॉ. जाकिर हुसैन", correct: false},
+            {en: "V.V. Giri", hi: "वी. वी. गिरि", correct: false},
+            {en: "B.D. Jatti", hi: "बी. डी. जत्ती", correct: false}
+        ]
+    },
+    {
+        en: "Arrange the following Vice-Presidents in chronological order:\n1. G.S. Pathak, 2. Dr. Zakir Hussain, 3. B.D. Jatti, 4. M. Hidayatullah, 5. R. Venkataraman",
+        hi: "भारत के उप-राष्ट्रपति को उनके कार्यकाल के क्रमानुसार व्यवस्थित करें।\n1. जी. एस. पाठक, 2. डॉ. जाकिर हुसैन, 3. बी. डी. जत्ती, 4. एम. हिदायतुल्ला, 5. आर. वेंकटरमण",
+        opts: [
+            {en: "1, 2, 3, 4, 5", hi: "1, 2, 3, 4, 5", correct: false},
+            {en: "5, 4, 3, 2, 1", hi: "5, 4, 3, 2, 1", correct: false},
+            {en: "2, 1, 3, 4, 5", hi: "2, 1, 3, 4, 5", correct: true},
+            {en: "2, 5, 3, 4, 1", hi: "2, 5, 3, 4, 1", correct: false}
+        ]
+    },
+    {
+        en: "Consider following statements:\n1. Original Constitution provided that VP election would be in joint sitting of Parliament.\n2. Krishan Kant was first VP to die in office.",
+        hi: "निम्नलिखित कथनों पर विचार कीजिए:\n1. मूल संविधान में यह व्यवस्था थी कि उप-राष्ट्रपति का निर्वाचन संसद के दोनों सदनों की संयुक्त बैठक में होगी।\n2. कृष्णकांत पहले उप-राष्ट्रपति थे जिनका निधन पद पर रहते हुए हुआ।",
+        opts: [
+            {en: "Only 1", hi: "केवल 1", correct: false},
+            {en: "Only 2", hi: "केवल 2", correct: false},
+            {en: "Both 1 and 2", hi: "1 और 2 दोनों", correct: true},
+            {en: "Neither 1 nor 2", hi: "न तो 1 और न ही 2", correct: false}
+        ]
+    },
+    {
+        en: "In which Article it is mentioned that VP shall be ex-officio Chairman of Rajya Sabha?",
+        hi: "संविधान के किस अनुच्छेद में यह उल्लिखित है कि उप-राष्ट्रपति, राज्यसभा का पदेन सभापति होगा ?",
+        opts: [
+            {en: "Article 64", hi: "अनुच्छेद- 64", correct: true},
+            {en: "Article 61", hi: "अनुच्छेद- 61", correct: false},
+            {en: "Article 62", hi: "अनुच्छेद- 62", correct: false},
+            {en: "Article 63", hi: "अनुच्छेद- 63", correct: false}
+        ]
+    },
+    {
+        en: "Article 67 of Indian Constitution is related to:",
+        hi: "भारतीय संविधान का अनुच्छेद 67 संबंधित है-",
+        opts: [
+            {en: "VP Election", hi: "उप-राष्ट्रपति चुनाव", correct: false},
+            {en: "Oath of President", hi: "राष्ट्रपति का शपथ ग्रहण", correct: false},
+            {en: "VP Term/Tenure", hi: "उप-राष्ट्रपति कार्यकाल", correct: true},
+            {en: "Oath by VP", hi: "उप-राष्ट्रपति द्वारा शपथ ग्रहण", correct: false}
+        ]
+    },
+    {
+        en: "Match the following:\n(A) VP Election - (1) Art 66\n(B) VP Term - (2) Art 67\n(C) VP Oath - (3) Art 69\n(D) VP as Chairman - (4) Art 64",
+        hi: "निम्नलिखित को सुमेलित कीजिये:\n(A) उप-राष्ट्रपति का चुनाव - (1) अनुच्छेद- 66\n(B) उप-राष्ट्रपति का कार्यकाल - (2) अनुच्छेद- 67\n(C) उप-राष्ट्रपति का शपथ ग्रहण - (3) अनुच्छेद- 69\n(D) उप-राष्ट्रपति का राज्यसभा का पदेन सभापति - (4) अनुच्छेद- 64",
+        opts: [
+            {en: "A-2, B-3, C-4, D-1", hi: "A-2, B-3, C-4, D-1", correct: false},
+            {en: "A-1, B-2, C-3, D-4", hi: "A-1, B-2, C-3, D-4", correct: true},
+            {en: "A-2, B-3, C-1, D-4", hi: "A-2, B-3, C-1, D-4", correct: false},
+            {en: "A-4, B-1, C-2, D-3", hi: "A-4, B-1, C-2, D-3", correct: false}
+        ]
+    }
+];
+
+let quiz = [];
+let currentIdx = 0;
+let scoreVal = 0;
+let timerRef = null;
+let timerDuration = 0;
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+// Sound Synthesis
+function playTone(freq, type) {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start();
+    gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 1);
+    osc.stop(audioCtx.currentTime + 1);
+}
+
+function initQuiz() {
+    const isShuffle = document.getElementById('shuffle-input').checked;
+    timerDuration = parseInt(document.getElementById('timer-input').value) || 0;
+    
+    quiz = isShuffle ? [...rawData].sort(() => Math.random() - 0.5) : [...rawData];
+    
+    document.getElementById('start-screen').classList.remove('active');
+    document.getElementById('quiz-screen').classList.add('active');
+    
+    loadQuestion();
+}
+
+function loadQuestion() {
+    if (currentIdx >= quiz.length) return showResults();
+    
+    clearInterval(timerRef);
+    const q = quiz[currentIdx];
+    
+    document.getElementById('counter').innerText = `Question ${String(currentIdx + 1).padStart(2, '0')}/${quiz.length}`;
+    document.getElementById('score').innerText = `Score: ${String(scoreVal).padStart(2, '0')}`;
+    document.getElementById('q-text-en').innerText = q.en;
+    document.getElementById('q-text-hi').innerText = q.hi;
+    document.getElementById('progress-bar').style.width = `${(currentIdx / quiz.length) * 100}%`;
+
+    const grid = document.getElementById('options-grid');
+    grid.innerHTML = '';
+    
+    q.opts.forEach((opt, i) => {
+        const btn = document.createElement('button');
+        btn.className = 'option-btn';
+        btn.innerHTML = `<div>${opt.en}</div><div class="hindi-sub" style="font-size:0.85rem">${opt.hi}</div>`;
+        btn.onclick = () => handleSelect(btn, opt.correct);
+        grid.appendChild(btn);
+    });
+
+    if (timerDuration > 0) {
+        startTimer();
+    } else {
+        document.getElementById('timer-display').style.display = 'none';
+    }
+}
+
+function startTimer() {
+    let time = timerDuration;
+    const display = document.getElementById('timer-display');
+    const text = document.getElementById('time-left');
+    display.style.display = 'block';
+    text.innerText = time;
+    text.classList.remove('pulse-red');
+
+    timerRef = setInterval(() => {
+        time--;
+        text.innerText = time;
+        if (time <= 5) text.classList.add('pulse-red');
+        if (time <= 0) {
+            clearInterval(timerRef);
+            autoFail();
+        }
+    }, 1000);
+}
+
+function handleSelect(btn, isCorrect) {
+    clearInterval(timerRef);
+    const btns = document.querySelectorAll('.option-btn');
+    btns.forEach(b => b.disabled = true);
+
+    if (isCorrect) {
+        btn.classList.add('correct');
+        scoreVal++;
+        playTone(880, 'sine'); // Ting
+        spawnConfetti();
+    } else {
+        btn.classList.add('wrong');
+        playTone(150, 'sawtooth'); // Buzz
+        document.getElementById('sad-emoji').style.display = 'block';
+        setTimeout(() => document.getElementById('sad-emoji').style.display = 'none', 1000);
+        
+        // Highlight correct one
+        btns.forEach((b, idx) => {
+            if (quiz[currentIdx].opts[idx].correct) b.classList.add('correct');
+        });
+    }
+
+    setTimeout(() => {
+        currentIdx++;
+        loadQuestion();
+    }, 1500);
+}
+
+function autoFail() {
+    const btns = document.querySelectorAll('.option-btn');
+    btns.forEach((b, idx) => {
+        b.disabled = true;
+        if (quiz[currentIdx].opts[idx].correct) b.classList.add('correct');
+    });
+    playTone(150, 'sawtooth');
+    setTimeout(() => {
+        currentIdx++;
+        loadQuestion();
+    }, 1500);
+}
+
+function showResults() {
+    clearInterval(timerRef);
+    document.getElementById('quiz-screen').classList.remove('active');
+    document.getElementById('result-screen').classList.add('active');
+    document.getElementById('progress-bar').style.width = '100%';
+
+    const scoreElem = document.getElementById('res-score');
+    const msgElem = document.getElementById('res-msg');
+    const percent = (scoreVal / quiz.length) * 100;
+
+    scoreElem.innerText = `${scoreVal} / ${quiz.length}`;
+    
+    if (percent >= 80) {
+        msgElem.innerText = "🏆 Outstanding Performance!";
+    } else if (percent >= 50) {
+        msgElem.innerText = "👏 Well Done! Keep it up.";
+    } else {
+        msgElem.innerText = "📚 Practice makes perfect! Try again.";
+    }
+}
+
+function spawnConfetti() {
+    for (let i = 0; i < 40; i++) {
+        const div = document.createElement('div');
+        div.className = 'confetti';
+        div.style.left = Math.random() * 100 + 'vw';
+        div.style.top = '-10px';
+        div.style.backgroundColor = `hsl(${Math.random() * 360}, 100%, 50%)`;
+        document.body.appendChild(div);
+        
+        const anim = div.animate([
+            { transform: 'translateY(0) rotate(0)', opacity: 1 },
+            { transform: `translateY(100vh) rotate(${Math.random() * 360}deg)`, opacity: 0 }
+        ], { duration: 2000 + Math.random() * 2000 });
+        
+        anim.onfinish = () => div.remove();
+    }
+}
+</script>
+</body>
+</html>

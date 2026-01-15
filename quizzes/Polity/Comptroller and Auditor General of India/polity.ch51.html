@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CAG India Quiz | Bilingual</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: 1px solid rgba(255, 255, 255, 0.2);
+            --primary-text: #ffffff;
+            --secondary-text: #dddddd;
+            --accent-green: #00e676;
+            --accent-red: #ff1744;
+            --font-main: 'Poppins', sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: var(--font-main);
+            background: radial-gradient(circle at top left, #4f29f0, transparent 40%),
+                        radial-gradient(circle at bottom right, #ff00cc, transparent 40%),
+                        radial-gradient(circle at center, #00c6ff, transparent 50%),
+                        #1a1a2e; /* Deep fallback base */
+            background-size: cover;
+            background-attachment: fixed;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--primary-text);
+            overflow: hidden; /* Prevent body scroll, handle inside card */
+        }
+
+        /* Glassmorphism Container */
+        .app-container {
+            width: 100%;
+            max-width: 600px;
+            height: 90vh; /* Fixed height for mobile scrolling */
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: var(--glass-border);
+            border-radius: 25px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        /* --- Start Screen --- */
+        .screen {
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            text-align: center;
+            opacity: 0;
+            pointer-events: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            transition: opacity 0.5s ease;
+        }
+
+        .screen.active {
+            opacity: 1;
+            pointer-events: all;
+            z-index: 10;
+        }
+
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        h2 {
+            font-size: 1.2rem;
+            color: var(--secondary-text);
+            margin-bottom: 30px;
+            font-weight: 400;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+            width: 100%;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            color: var(--secondary-text);
+        }
+
+        input[type="number"] {
+            width: 100%;
+            padding: 12px;
+            border-radius: 12px;
+            border: none;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            font-family: var(--font-main);
+            font-size: 1.1rem;
+            text-align: center;
+            outline: none;
+        }
+        
+        input[type="number"]::placeholder {
+            color: rgba(255,255,255,0.6);
+        }
+
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            background: rgba(255,255,255,0.1);
+            padding: 10px 15px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+
+        .switch input { display: none; }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(0,0,0,0.3);
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider { background-color: var(--accent-green); }
+        input:checked + .slider:before { transform: translateX(26px); }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            padding: 15px 40px;
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            transition: transform 0.2s, box-shadow 0.2s;
+            width: 100%;
+        }
+
+        .btn-primary:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+        }
+
+        /* --- Quiz UI --- */
+        #quiz-screen {
+            justify-content: flex-start;
+            padding: 0;
+            display: flex;
+        }
+
+        .quiz-header {
+            width: 100%;
+            padding: 20px;
+            background: rgba(0,0,0,0.2);
+            backdrop-filter: blur(10px);
+            z-index: 5;
+            flex-shrink: 0;
+        }
+
+        .progress-container {
+            width: 100%;
+            height: 4px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 2px;
+            margin-bottom: 15px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: #00c6ff;
+            width: 0%;
+            transition: width 0.3s ease;
+            box-shadow: 0 0 10px #00c6ff;
+        }
+
+        .stats-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .timer-badge {
+            display: flex;
+            align-items: center;
+            background: rgba(0,0,0,0.3);
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-family: monospace;
+            font-size: 1.1rem;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .timer-badge.danger {
+            color: var(--accent-red);
+            border-color: var(--accent-red);
+            animation: pulse 1s infinite;
+        }
+
+        /* Scrollable Content Area */
+        .quiz-content {
+            flex-grow: 1;
+            width: 100%;
+            overflow-y: auto;
+            padding: 20px;
+            /* Scrollbar Styling */
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255,255,255,0.3) transparent;
+        }
+        
+        .quiz-content::-webkit-scrollbar { width: 6px; }
+        .quiz-content::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.3); border-radius: 3px; }
+
+        .question-text {
+            background: rgba(255,255,255,0.05);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            border-left: 4px solid #00c6ff;
+        }
+
+        .q-en {
+            display: block;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--primary-text);
+            margin-bottom: 8px;
+            line-height: 1.4;
+        }
+
+        .q-hi {
+            display: block;
+            font-size: 0.95rem;
+            color: var(--secondary-text);
+            line-height: 1.5;
+        }
+
+        .options-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 30px; /* Space for scroll */
+        }
+
+        .option-btn {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 15px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .option-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .option-btn.correct {
+            background: rgba(0, 230, 118, 0.2);
+            border-color: var(--accent-green);
+        }
+
+        .option-btn.wrong {
+            background: rgba(255, 23, 68, 0.2);
+            border-color: var(--accent-red);
+        }
+
+        .opt-en {
+            font-weight: 600;
+            font-size: 1rem;
+            color: white;
+            margin-bottom: 4px;
+        }
+
+        .opt-hi {
+            font-size: 0.85rem;
+            color: #ccc;
+        }
+
+        .quiz-footer {
+            width: 100%;
+            padding: 15px 20px;
+            background: rgba(0,0,0,0.2);
+            backdrop-filter: blur(10px);
+            flex-shrink: 0;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .btn-finish {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid white;
+            width: 100%;
+            padding: 12px;
+            color: white;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .btn-finish:hover {
+            background: white;
+            color: #333;
+        }
+
+        /* --- Result Screen --- */
+        .score-circle {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background: conic-gradient(var(--accent-green) calc(var(--score-pct) * 1%), rgba(255,255,255,0.1) 0);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 25px;
+            position: relative;
+            box-shadow: 0 0 20px rgba(0,230,118,0.3);
+        }
+
+        .score-inner {
+            width: 130px;
+            height: 130px;
+            background: #2a2a40; /* Darker center */
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .score-big { font-size: 2.5rem; font-weight: 700; }
+        .score-total { font-size: 1rem; color: #aaa; }
+        
+        .result-msg { font-size: 1.4rem; margin-bottom: 30px; font-weight: 600; }
+
+        /* --- Animations & Overlays --- */
+        @keyframes pulse {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 23, 68, 0.7); }
+            70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(255, 23, 68, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 23, 68, 0); }
+        }
+
+        @keyframes shake {
+            0% { transform: translate(1px, 1px) rotate(0deg); }
+            10% { transform: translate(-1px, -2px) rotate(-1deg); }
+            20% { transform: translate(-3px, 0px) rotate(1deg); }
+            30% { transform: translate(3px, 2px) rotate(0deg); }
+            40% { transform: translate(1px, -1px) rotate(1deg); }
+            50% { transform: translate(-1px, 2px) rotate(-1deg); }
+            60% { transform: translate(-3px, 1px) rotate(0deg); }
+            100% { transform: translate(1px, -2px) rotate(-1deg); }
+        }
+
+        #feedback-overlay {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 5rem;
+            z-index: 9999;
+            pointer-events: none;
+            display: none;
+        }
+
+        .shake-emoji {
+            animation: shake 0.5s;
+            display: block;
+        }
+
+        canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 9998;
+        }
+
+        /* Mobile Adjustments */
+        @media (max-height: 700px) {
+            .app-container { height: 100vh; border-radius: 0; border: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="confetti-canvas"></canvas>
+
+    <div id="feedback-overlay"></div>
+
+    <div class="app-container">
+        <div id="start-screen" class="screen active">
+            <h1>CAG India Quiz</h1>
+            <h2>भारत का नियंत्रक एवं महालेखा परीक्षक</h2>
+            <p style="margin-bottom: 20px; font-size:0.9rem; opacity:0.8">Bilingual Test Series (Chapter 51)</p>
+            
+            <div class="input-group">
+                <label>Timer per Question (Seconds) <br><small>(Leave empty for no timer)</small></label>
+                <input type="number" id="time-input" placeholder="e.g., 20" min="5">
+            </div>
+
+            <div class="toggle-container">
+                <span>Shuffle Questions?</span>
+                <label class="switch">
+                    <input type="checkbox" id="shuffle-toggle">
+                    <span class="slider"></span>
+                </label>
+            </div>
+
+            <button class="btn-primary" onclick="app.startQuiz()">Start Quiz 🚀</button>
+        </div>
+
+        <div id="quiz-screen" class="screen">
+            <div class="quiz-header">
+                <div class="progress-container">
+                    <div class="progress-bar" id="progress-bar"></div>
+                </div>
+                <div class="stats-row">
+                    <span id="q-counter">Q: 01/13</span>
+                    <span id="timer-display" class="timer-badge">--</span>
+                    <span id="score-display">Score: 0</span>
+                </div>
+            </div>
+
+            <div class="quiz-content" id="scroll-area">
+                <div class="question-text">
+                    <span class="q-en" id="q-en">Question English</span>
+                    <span class="q-hi" id="q-hi">Question Hindi</span>
+                </div>
+                <div class="options-grid" id="options-container">
+                    </div>
+            </div>
+
+            <div class="quiz-footer">
+                <button class="btn-finish" onclick="app.finishEarly()">Finish & Show Results 🏁</button>
+            </div>
+        </div>
+
+        <div id="result-screen" class="screen">
+            <div class="score-circle" id="score-circle">
+                <div class="score-inner">
+                    <span class="score-big" id="final-score">0</span>
+                    <span class="score-total" id="total-qs">/ 13</span>
+                </div>
+            </div>
+            <div class="result-msg" id="result-msg">Well Done!</div>
+            <button class="btn-primary" onclick="app.resetApp()">Restart Quiz 🔄</button>
+        </div>
+    </div>
+
+<script>
+    // --- DATA ---
+    // Extracted directly from the provided images
+    const rawData = [
+        {
+            qEn: "In which article of the Constitution is the provision for the independent office of the Comptroller and Auditor General made?",
+            qHi: "संविधान के किस अनुच्छेद में नियंत्रक एवं महालेखा परीक्षक के स्वतंत्र पद की व्यवस्था की गई है?",
+            options: [
+                { en: "149", hi: "149" },
+                { en: "148", hi: "148" },
+                { en: "146", hi: "146" },
+                { en: "151", hi: "151" }
+            ],
+            correct: 1 // (b) 148
+        },
+        {
+            qEn: "What kind of institution is the CAG?",
+            qHi: "कैग किस प्रकार की संस्था है?",
+            options: [
+                { en: "Constitutional", hi: "संवैधानिक" },
+                { en: "Statutory", hi: "सांविधिक" },
+                { en: "Non-Constitutional", hi: "गैर-संवैधानिक" },
+                { en: "None of these", hi: "इनमें से कोई नहीं" }
+            ],
+            correct: 0 // (a) Constitutional
+        },
+        {
+            qEn: "Who among the following commented on the post of CAG saying that 'He will be the most important officer under the Indian Constitution'?",
+            qHi: "निम्नलिखित में से किसने नियंत्रक एवं महालेखा परीक्षक के पद पर टिप्पणी करते हुये कहा था कि भारतीय संविधान के तहत सबसे महत्वपूर्ण अधिकारी होगा?",
+            options: [
+                { en: "Dr. Ambedkar", hi: "डॉ अंबेडकर" },
+                { en: "K.M. Munshi", hi: "के.एम मुंशी" },
+                { en: "Pandit Nehru", hi: "पंडित नेहरू" },
+                { en: "T.T. Krishnamachari", hi: "टी टी कृष्णमाचारी" }
+            ],
+            correct: 0 // (a) Dr. Ambedkar
+        },
+        {
+            qEn: "By whom is the Comptroller and Auditor General appointed?",
+            qHi: "नियंत्रक एवं महालेखा परीक्षक की नियुक्ति किसके द्वारा की जाती है?",
+            options: [
+                { en: "President", hi: "राष्ट्रपति" },
+                { en: "Finance Minister", hi: "वित्त मंत्री" },
+                { en: "Commerce Minister", hi: "वाणिज्य मंत्री" },
+                { en: "Parliament", hi: "संसद" }
+            ],
+            correct: 0 // (a) President
+        },
+        {
+            qEn: "The tenure of the Comptroller and Auditor General of India is:",
+            qHi: "भारत का नियंत्रक एवं महालेखा परीक्षक का कार्यकाल होता है-",
+            options: [
+                { en: "6 years", hi: "6 वर्ष" },
+                { en: "5 years", hi: "5 वर्ष" },
+                { en: "4 years", hi: "4 वर्ष" },
+                { en: "3 years", hi: "3 वर्ष" }
+            ],
+            correct: 0 // (a) 6 years
+        },
+        {
+            qEn: "The retirement age of the Comptroller and Auditor General is:",
+            qHi: "नियंत्रक एवं महालेखा परीक्षक का सेवानिवृत्त की आयु होता है-",
+            options: [
+                { en: "65 years", hi: "65 वर्ष" },
+                { en: "62 years", hi: "62 वर्ष" },
+                { en: "60 years", hi: "60 वर्ष" },
+                { en: "55 years", hi: "55 वर्ष" }
+            ],
+            correct: 0 // (a) 65 years
+        },
+        {
+            qEn: "The Comptroller and Auditor General can be removed from his post:",
+            qHi: "नियंत्रक एवं महालेखा परीक्षक को उसके पद से हटाया जा सकता है?",
+            options: [
+                { en: "By the President at his own discretion", hi: "राष्ट्रपति द्वारा अपने विवे से।" },
+                { en: "By the President after special majority of both houses of Parliament", hi: "राष्ट्रपति द्वारा संसद के दोनों सदनों के विशेष बहुमत से।" },
+                { en: "By the President on the recommendation of the Supreme Court", hi: "राष्ट्रपति द्वारा उच्चतम न्यायालय के सिफारिश पर" },
+                { en: "None of these", hi: "इनमें से कोई नहीं" }
+            ],
+            correct: 1 // (b)
+        },
+        {
+            qEn: "Consider the following statements regarding the Comptroller and Auditor General:\n1. He cannot hold any other office, whether under the Government of India or the State Government, after leaving his office.\n2. His salary is equal to that of a High Court Judge.\nWhich of the above statements is/are correct?",
+            qHi: "नियंत्रक एवं महालेखा परीक्षक के संबंध में निम्नलिखित कथनों पर विचार कीजिए।\n1. यह अपना पद छोड़ने के बाद किसी अन्य पद चाहे वह भारत सरकार हो या राज्य सरकार का ग्रहण नहीं कर सकता है।\n2. इसका वेतन उच्च न्यायालय के न्यायाधीश के बराबर होता है।\nउपर्युक्त कथनों में से कौन-सा/से सही है/हैं?",
+            options: [
+                { en: "Only 1", hi: "केवल 1" },
+                { en: "Only 2", hi: "केवल 2" },
+                { en: "1 and 2", hi: "1 और 2" },
+                { en: "Neither 1 nor 2", hi: "न तो 1 न ही 2" }
+            ],
+            correct: 0 // (a) Only 1
+        },
+        {
+            qEn: "Which of the following is the function of CAG?",
+            qHi: "कैग का कार्य निम्नलिखित में से है-",
+            options: [
+                { en: "He audits all accounts from the Consolidated Fund of India and each State.", hi: "वह भारत की संचित एवं प्रत्येक राज्य की संचित निधि से सभी व्यय संबंधी लेखाओं का परीक्षण करता है" },
+                { en: "He audits all transactions from the Contingency Fund etc.", hi: "वह ऋण निक्षेप निधि आदि से सभी लेन-देन का परीक्षण करता है।" },
+                { en: "He advises the President on how the accounts of the Center and States should be kept.", hi: "वह राष्ट्रपति को इस संबंध में सलाह देता है कि केंद्र और राज्यों के लेखा को किस प्रकार रखे जाना चाहिये।" },
+                { en: "All of the above", hi: "उपर्युक्त में सभी।" }
+            ],
+            correct: 3 // (d) All
+        },
+        {
+            qEn: "In which of the following years was the CAG relieved from the compilation and maintenance of accounts of the Central Government?",
+            qHi: "निम्नलिखित में से किस वर्ष कैग को केंद्रीय सरकार के लेखाओं के संकलन और अनुरक्षण से मुक्त कर दिया?",
+            options: [
+                { en: "1976", hi: "1976" },
+                { en: "1977", hi: "1977" },
+                { en: "1978", hi: "1978" },
+                { en: "1974", hi: "1974" }
+            ],
+            correct: 1 // (b) 1977 - Note: Based on the provided Answer Key Image (10-b), though 1976 is common in texts.
+        },
+        {
+            qEn: "Which of the following audit reports does the CAG submit to the President?",
+            qHi: "कैग राष्ट्रपति को निम्नलिखित में से कौन-से लेखा परीक्षा प्रस्तुत करता है?",
+            options: [
+                { en: "Audit report on appropriation accounts", hi: "विनियोग लेखाओं पर परीक्षा रिपोर्ट" },
+                { en: "Audit report on finance accounts", hi: "वित्त लेखाओं पर परीक्षा रिपोर्ट" },
+                { en: "Audit report on public undertakings", hi: "सरकारी उपक्रमों पर परीक्षा रिपोर्ट" },
+                { en: "All of the above", hi: "उपर्युक्त में सभी।" }
+            ],
+            correct: 3 // (d) All
+        },
+        {
+            qEn: "In which year was the Audit Board established as part of the CAG office?",
+            qHi: "किस वर्ष CAG कार्यालय के अंग के रूप में लेखा परीक्षा बोर्ड की स्थापना किया गया?",
+            options: [
+                { en: "1968", hi: "1968" },
+                { en: "1967", hi: "1967" },
+                { en: "1964", hi: "1964" },
+                { en: "1965", hi: "1965" }
+            ],
+            correct: 0 // (a) 1968
+        },
+        {
+            qEn: "In which article of the Constitution are the duties and powers of the Comptroller and Auditor General mentioned?",
+            qHi: "संविधान के किस अनुच्छेद में नियंत्रक एवं महालेखा परीक्षक की कार्य एवं शक्तियां का उल्लेख है?",
+            options: [
+                { en: "149", hi: "149" },
+                { en: "148", hi: "148" },
+                { en: "146", hi: "146" },
+                { en: "147", hi: "147" }
+            ],
+            correct: 0 // (a) 149
+        }
+    ];
+
+    // --- APP LOGIC ---
+    const app = {
+        questions: [],
+        currentIdx: 0,
+        score: 0,
+        timerVal: 0,
+        timerInterval: null,
+        initialTime: 0,
+        audioContext: null,
+
+        // Audio System
+        initAudio: function() {
+            if (!this.audioContext) {
+                this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        },
+
+        playSound: function(type) {
+            if (!this.audioContext) return;
+            const osc = this.audioContext.createOscillator();
+            const gain = this.audioContext.createGain();
+            osc.connect(gain);
+            gain.connect(this.audioContext.destination);
+
+            if (type === 'correct') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(600, this.audioContext.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(1000, this.audioContext.currentTime + 0.1);
+                gain.gain.setValueAtTime(0.1, this.audioContext.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.3);
+                osc.start();
+                osc.stop(this.audioContext.currentTime + 0.3);
+            } else {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(150, this.audioContext.currentTime);
+                osc.frequency.linearRampToValueAtTime(100, this.audioContext.currentTime + 0.3);
+                gain.gain.setValueAtTime(0.1, this.audioContext.currentTime);
+                gain.gain.linearRampToValueAtTime(0.01, this.audioContext.currentTime + 0.3);
+                osc.start();
+                osc.stop(this.audioContext.currentTime + 0.3);
+            }
+        },
+
+        // Confetti System
+        triggerConfetti: function() {
+            const canvas = document.getElementById('confetti-canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            
+            let particles = [];
+            const colors = ['#00e676', '#2979ff', '#ff1744', '#ffea00'];
+
+            for (let i = 0; i < 100; i++) {
+                particles.push({
+                    x: window.innerWidth / 2,
+                    y: window.innerHeight / 2,
+                    w: Math.random() * 10 + 5,
+                    h: Math.random() * 10 + 5,
+                    bg: colors[Math.floor(Math.random() * colors.length)],
+                    vx: (Math.random() - 0.5) * 20,
+                    vy: (Math.random() - 0.5) * 20,
+                    grav: 0.5
+                });
+            }
+
+            function draw() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                particles.forEach((p, index) => {
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.vy += p.grav;
+                    ctx.fillStyle = p.bg;
+                    ctx.fillRect(p.x, p.y, p.w, p.h);
+                });
+                particles = particles.filter(p => p.y < canvas.height);
+                if (particles.length > 0) requestAnimationFrame(draw);
+            }
+            draw();
+        },
+
+        triggerSadEmoji: function() {
+            const el = document.getElementById('feedback-overlay');
+            el.innerHTML = "😢";
+            el.className = "shake-emoji";
+            el.style.display = "block";
+            setTimeout(() => { el.style.display = "none"; }, 1000);
+        },
+
+        // Core App Functions
+        startQuiz: function() {
+            this.initAudio();
+            
+            // Settings
+            const timeInput = document.getElementById('time-input').value;
+            this.initialTime = timeInput ? parseInt(timeInput) : 0;
+            const shuffle = document.getElementById('shuffle-toggle').checked;
+
+            // Prepare Questions
+            this.questions = [...rawData];
+            if (shuffle) {
+                this.questions.sort(() => Math.random() - 0.5);
+            }
+
+            this.currentIdx = 0;
+            this.score = 0;
+
+            document.getElementById('start-screen').classList.remove('active');
+            document.getElementById('quiz-screen').classList.add('active');
+            
+            this.loadQuestion();
+        },
+
+        loadQuestion: function() {
+            // Check boundaries
+            if (this.currentIdx >= this.questions.length) {
+                this.showResults();
+                return;
+            }
+
+            // Scroll to top
+            document.getElementById('scroll-area').scrollTop = 0;
+
+            const q = this.questions[this.currentIdx];
+            
+            // UI Updates
+            document.getElementById('q-counter').textContent = `Q: ${this.currentIdx + 1}/${this.questions.length}`;
+            document.getElementById('score-display').textContent = `Score: ${this.score}`;
+            document.getElementById('progress-bar').style.width = `${((this.currentIdx) / this.questions.length) * 100}%`;
+            
+            // Text
+            document.getElementById('q-en').innerText = q.qEn;
+            document.getElementById('q-hi').innerText = q.qHi;
+
+            // Options
+            const optContainer = document.getElementById('options-container');
+            optContainer.innerHTML = '';
+
+            q.options.forEach((opt, idx) => {
+                const btn = document.createElement('div');
+                btn.className = 'option-btn';
+                btn.innerHTML = `
+                    <span class="opt-en">${String.fromCharCode(97 + idx)}) ${opt.en}</span>
+                    <span class="opt-hi">${opt.hi}</span>
+                `;
+                btn.onclick = () => this.handleAnswer(idx, btn);
+                optContainer.appendChild(btn);
+            });
+
+            // Timer Setup
+            clearInterval(this.timerInterval);
+            const timerDisplay = document.getElementById('timer-display');
+            timerDisplay.classList.remove('danger');
+            
+            if (this.initialTime > 0) {
+                this.timerVal = this.initialTime;
+                timerDisplay.style.display = 'flex';
+                timerDisplay.innerText = this.timerVal;
+                
+                this.timerInterval = setInterval(() => {
+                    this.timerVal--;
+                    timerDisplay.innerText = this.timerVal;
+                    
+                    if (this.timerVal <= 5) timerDisplay.classList.add('danger');
+                    
+                    if (this.timerVal <= 0) {
+                        clearInterval(this.timerInterval);
+                        this.handleTimeUp();
+                    }
+                }, 1000);
+            } else {
+                timerDisplay.style.display = 'none';
+            }
+        },
+
+        handleAnswer: function(selectedIndex, btn) {
+            clearInterval(this.timerInterval);
+            
+            // Disable all buttons
+            const allBtns = document.querySelectorAll('.option-btn');
+            allBtns.forEach(b => b.style.pointerEvents = 'none');
+
+            const correctIndex = this.questions[this.currentIdx].correct;
+
+            if (selectedIndex === correctIndex) {
+                // Correct
+                btn.classList.add('correct');
+                this.score++;
+                this.playSound('correct');
+                this.triggerConfetti();
+            } else {
+                // Wrong
+                btn.classList.add('wrong');
+                allBtns[correctIndex].classList.add('correct'); // Show correct one
+                this.playSound('wrong');
+                this.triggerSadEmoji();
+            }
+
+            // Next Question Delay
+            setTimeout(() => {
+                this.currentIdx++;
+                this.loadQuestion();
+            }, 1500);
+        },
+
+        handleTimeUp: function() {
+            // Time up treated as skipped/wrong. Show correct answer then move on.
+            const allBtns = document.querySelectorAll('.option-btn');
+            allBtns.forEach(b => b.style.pointerEvents = 'none');
+            
+            const correctIndex = this.questions[this.currentIdx].correct;
+            allBtns[correctIndex].classList.add('correct');
+            
+            this.playSound('wrong');
+            
+            setTimeout(() => {
+                this.currentIdx++;
+                this.loadQuestion();
+            }, 1500);
+        },
+
+        finishEarly: function() {
+            clearInterval(this.timerInterval);
+            this.showResults();
+        },
+
+        showResults: function() {
+            document.getElementById('quiz-screen').classList.remove('active');
+            document.getElementById('result-screen').classList.add('active');
+
+            const totalQs = this.currentIdx === 0 ? 1 : this.currentIdx; // Prevent div by 0 if finished immediately
+            // Note: Use total questions answered (or total quiz length if completed)
+            const denominator = this.questions.length;
+            
+            document.getElementById('final-score').innerText = this.score;
+            document.getElementById('total-qs').innerText = `/ ${denominator}`;
+            
+            const pct = (this.score / denominator) * 100;
+            const circle = document.getElementById('score-circle');
+            circle.style.setProperty('--score-pct', pct);
+
+            let msg = "";
+            if (pct >= 80) msg = "🏆 Outstanding Performance!";
+            else if (pct >= 50) msg = "👏 Well Done! Keep it up.";
+            else msg = "📚 Practice makes perfect! Try again.";
+            
+            document.getElementById('result-msg').innerText = msg;
+        },
+
+        resetApp: function() {
+            document.getElementById('result-screen').classList.remove('active');
+            document.getElementById('start-screen').classList.add('active');
+        }
+    };
+</script>
+</body>
+</html>

@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chapter 35: Tribunals Quiz</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --correct: #4caf50;
+            --wrong: #f44336;
+            --text-en: #ffffff;
+            --text-hi: #dddddd;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+
+        body {
+            background: var(--primary-bg);
+            background-attachment: fixed;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 15px;
+            overflow-x: hidden;
+        }
+
+        #progress-bar {
+            position: fixed;
+            top: 0; left: 0; height: 6px;
+            background: linear-gradient(90deg, #00f2fe 0%, #4facfe 100%);
+            box-shadow: 0 0 10px #4facfe;
+            width: 0%; transition: width 0.4s ease;
+            z-index: 1000;
+        }
+
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 25px;
+            padding: 30px;
+            width: 100%;
+            max-width: 650px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            color: white;
+            position: relative;
+        }
+
+        h1 { text-align: center; margin-bottom: 20px; font-weight: 700; font-size: 1.5rem; }
+
+        .settings-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-size: 0.9rem; }
+        input[type="number"] {
+            width: 100%; padding: 12px; border-radius: 12px; border: none;
+            background: rgba(255, 255, 255, 0.2); color: white; outline: none;
+        }
+
+        .toggle-container {
+            display: flex; align-items: center; justify-content: space-between; margin: 15px 0;
+        }
+
+        .btn-start, .btn-finish, .btn-restart {
+            width: 100%; padding: 15px; border-radius: 15px; border: none;
+            background: #fff; color: #764ba2; font-weight: 700; cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .btn-start:hover { transform: scale(1.02); box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+
+        .quiz-header { display: flex; justify-content: space-between; margin-bottom: 20px; font-size: 0.85rem; }
+
+        #timer.pulse-red { color: #ff4d4d; animation: pulse 0.5s infinite; font-weight: bold; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+
+        .question-text { margin-bottom: 20px; }
+        .en-q { font-size: 1.1rem; font-weight: 600; display: block; margin-bottom: 5px; }
+        .hi-q { font-size: 0.95rem; color: var(--text-hi); display: block; line-height: 1.4; }
+
+        .options-grid { display: grid; gap: 12px; }
+        .option-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--glass-border);
+            padding: 15px; border-radius: 12px; text-align: left; color: white;
+            cursor: pointer; transition: 0.3s; width: 100%;
+        }
+        .option-btn:hover:not(:disabled) { background: rgba(255, 255, 255, 0.2); }
+        .option-btn.correct { background: var(--correct) !important; border-color: transparent; }
+        .option-btn.wrong { background: var(--wrong) !important; border-color: transparent; }
+
+        .en-o { display: block; font-weight: 500; font-size: 0.95rem; }
+        .hi-o { display: block; font-size: 0.85rem; color: #ccc; }
+
+        #sad-emoji {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 80px; display: none; z-index: 10;
+        }
+        .shake { animation: shake 0.5s; }
+        @keyframes shake {
+            0%, 100% { transform: translate(-50%, -50%); }
+            25% { transform: translate(-55%, -50%); }
+            75% { transform: translate(-45%, -50%); }
+        }
+
+        .hidden { display: none; }
+
+        #finish-early { margin-top: 20px; background: rgba(255, 77, 77, 0.2); color: white; border: 1px solid #ff4d4d; }
+
+        .result-screen { text-align: center; }
+        .score-circle {
+            width: 120px; height: 120px; border-radius: 50%; border: 5px solid #fff;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 2rem; font-weight: 700; margin: 20px auto;
+        }
+
+        canvas#confetti {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 9999;
+        }
+    </style>
+</head>
+<body>
+
+<div id="progress-bar"></div>
+<canvas id="confetti"></canvas>
+
+<div class="glass-card" id="start-screen">
+    <h1>Chapter 35: Tribunals<br><span style="font-size: 0.8em;">अधिकरण</span></h1>
+    <div class="settings-group">
+        <label>Timer per Question (seconds, 0 for no timer):</label>
+        <input type="number" id="timer-input" value="30" min="0">
+    </div>
+    <div class="toggle-container">
+        <span>Shuffle Questions</span>
+        <input type="checkbox" id="shuffle-toggle" checked>
+    </div>
+    <button class="btn-start" onclick="startQuiz()">Start Quiz</button>
+</div>
+
+<div class="glass-card hidden" id="quiz-screen">
+    <div class="quiz-header">
+        <span id="q-counter">Question: 1/14</span>
+        <span id="timer">Time: --</span>
+        <span id="score-display">Score: 0</span>
+    </div>
+
+    <div class="question-container">
+        <div class="question-text">
+            <span class="en-q" id="en-q"></span>
+            <span class="hi-q" id="hi-q"></span>
+        </div>
+        <div class="options-grid" id="options-grid"></div>
+    </div>
+
+    <div id="sad-emoji">😢</div>
+    
+    <button id="finish-early" class="btn-finish" onclick="showResults()">Finish & Show Results</button>
+</div>
+
+<div class="glass-card hidden" id="result-screen">
+    <div class="result-screen">
+        <h2>Quiz Completed!</h2>
+        <div class="score-circle" id="final-score">0/14</div>
+        <h3 id="result-msg"></h3>
+        <p id="final-stats" style="margin: 15px 0;"></p>
+        <button class="btn-restart" onclick="location.reload()">Restart Quiz</button>
+    </div>
+</div>
+
+<script>
+    const questions = [
+        {
+            en_q: "By which Constitutional Amendment was the provision for 'Tribunals' added?",
+            hi_q: "किस संविधान संशोधन द्वारा 'अधिकरण' (Tribunals) का प्रावधान किया गया?",
+            options: [
+                { en: "44th", hi: "44वें", isCorrect: false },
+                { en: "42nd", hi: "42वें", isCorrect: true },
+                { en: "24th", hi: "24वें", isCorrect: false },
+                { en: "91st", hi: "91वें", isCorrect: false }
+            ]
+        },
+        {
+            en_q: "In which part of the Constitution is 'Tribunals' placed?",
+            hi_q: "'अधिकरण' को संविधान के किस भाग में रखा गया है?",
+            options: [
+                { en: "Part 12", hi: "भाग-12", isCorrect: false },
+                { en: "Part 14(A)", hi: "भाग-14(क)", isCorrect: true },
+                { en: "Part 13(A)", hi: "भाग-13(क)", isCorrect: false },
+                { en: "Part 15(A)", hi: "भाग-15(क)", isCorrect: false }
+            ]
+        },
+        {
+            en_q: "Which Article is related to Administrative Tribunals?",
+            hi_q: "प्रशासनिक अधिकरण से संबंधित अनुच्छेद हैं-",
+            options: [
+                { en: "323", hi: "323", isCorrect: false },
+                { en: "323(A)", hi: "323(क)", isCorrect: true },
+                { en: "323(B)", hi: "323(ख)", isCorrect: false },
+                { en: "248(A)", hi: "248(क)", isCorrect: false }
+            ]
+        },
+        {
+            en_q: "In which Article are Tribunals for other matters contained?",
+            hi_q: "अन्य मामलों से संबंधित अधिकरण संविधान के किस अनुच्छेद में अंतर्निहित है?",
+            options: [
+                { en: "323", hi: "323", isCorrect: false },
+                { en: "323(A)", hi: "323(क)", isCorrect: false },
+                { en: "323(B)", hi: "323(ख)", isCorrect: true },
+                { en: "248(A)", hi: "248(क)", isCorrect: false }
+            ]
+        },
+        {
+            en_q: "Who has the power to establish Administrative Tribunals?",
+            hi_q: "प्रशासनिक अधिकरण की स्थापना का अधिकार किसके पास है?",
+            options: [
+                { en: "High Court", hi: "उच्च न्यायालय", isCorrect: false },
+                { en: "Parliament", hi: "संसद", isCorrect: true },
+                { en: "President", hi: "राष्ट्रपति", isCorrect: false },
+                { en: "Supreme Court", hi: "उच्चतम न्यायालय", isCorrect: false }
+            ]
+        },
+        {
+            en_q: "The members of the Central Administrative Tribunal (CAT) are equivalent to:",
+            hi_q: "केंद्रीय प्रशासनिक अधिकरण के सदस्य किसके समकक्ष होते हैं?",
+            options: [
+                { en: "Supreme Court Judges", hi: "उच्चतम न्यायालय के न्यायाधीश", isCorrect: false },
+                { en: "High Court Judges", hi: "उच्च न्यायालय के न्यायाधीश", isCorrect: true },
+                { en: "Subordinate Court Judges", hi: "अधीनस्थ न्यायालय के न्यायाधीश", isCorrect: false },
+                { en: "Secretaries to Govt of India", hi: "भारत सरकार में सचिव", isCorrect: false }
+            ]
+        },
+        {
+            en_q: "What is the fixed number of members in the Central Administrative Tribunal (CAT)?",
+            hi_q: "केंद्रीय प्रशासनिक अधिकरण (CAT) में सदस्यों की निर्धारित संख्या है-",
+            options: [
+                { en: "65", hi: "65", isCorrect: true },
+                { en: "66", hi: "66", isCorrect: false },
+                { en: "67", hi: "67", isCorrect: false },
+                { en: "62", hi: "62", isCorrect: false }
+            ]
+        },
+        {
+            en_q: "The members in the Central Administrative Tribunal are from:",
+            hi_q: "केंद्रीय प्रशासनिक न्यायाधिकरण में सदस्य होते हैं-",
+            options: [
+                { en: "Only judicial field", hi: "केवल न्यायिक क्षेत्र से", isCorrect: false },
+                { en: "Only administrative field", hi: "केवल प्रशासनिक क्षेत्र से", isCorrect: false },
+                { en: "Both judicial and administrative", hi: "न्यायिक और प्रशासनिक दोनों", isCorrect: true },
+                { en: "None of these", hi: "इनमें से कोई नहीं", isCorrect: false }
+            ]
+        },
+        {
+            en_q: "What is the term of office for the Chairman and members of the CAT?",
+            hi_q: "केंद्रीय प्रशासनिक अधिकरण के अध्यक्ष तथा सदस्यों का कार्यकाल कितने वर्षों तक होता है?",
+            options: [
+                { en: "6 Years", hi: "6 वर्ष", isCorrect: false },
+                { en: "5 Years", hi: "5 वर्ष", isCorrect: true },
+                { en: "3 Years", hi: "3 वर्ष", isCorrect: false },
+                { en: "9 Years", hi: "9 वर्ष", isCorrect: false }
+            ]
+        },
+        {
+            en_q: "What is the retirement age of the Chairman of the CAT?",
+            hi_q: "केंद्रीय प्रशासनिक अधिकरण के अध्यक्ष की सेवानिवृत्ति की आयु होती है?",
+            options: [
+                { en: "65 Years", hi: "65 वर्ष", isCorrect: true },
+                { en: "62 Years", hi: "62 वर्ष", isCorrect: false },
+                { en: "60 Years", hi: "60 वर्ष", isCorrect: false },
+                { en: "70 Years", hi: "70 वर्ष", isCorrect: false }
+            ]
+        },
+        {
+            en_q: "What is the retirement age for members of the CAT?",
+            hi_q: "केंद्रीय प्रशासनिक अधिकरण के सदस्यों की सेवानिवृत्ति की आयु होती है?",
+            options: [
+                { en: "70 Years", hi: "70 वर्ष", isCorrect: false },
+                { en: "62 Years", hi: "62 वर्ष", isCorrect: true },
+                { en: "65 Years", hi: "65 वर्ष", isCorrect: false },
+                { en: "60 Years", hi: "60 वर्ष", isCorrect: false }
+            ]
+        },
+        {
+            en_q: "Who appoints the Chairman and members of the CAT?",
+            hi_q: "केंद्रीय प्रशासनिक अधिकरण के अध्यक्ष और सदस्यों की नियुक्ति की जाती है?",
+            options: [
+                { en: "President", hi: "राष्ट्रपति", isCorrect: true },
+                { en: "Chief Justice of HC", hi: "उच्च न्यायालय के न्यायाधीश", isCorrect: false },
+                { en: "Prime Minister", hi: "प्रधानमंत्री", isCorrect: false },
+                { en: "Law Minister of India", hi: "कानून मंत्री भारत सरकार", isCorrect: false }
+            ]
+        },
+        {
+            en_q: "Who appoints the members of the State Administrative Tribunal (SAT)?",
+            hi_q: "राज्य प्रशासनिक अधिकरण व सदस्यों की नियुक्ति करता है?",
+            options: [
+                { en: "President on advice of Governor", hi: "राष्ट्रपति द्वारा राज्यपाल के सलाह पर", isCorrect: true },
+                { en: "President on advice of HC of state", hi: "राष्ट्रपति द्वारा संबंधित राज्य के उच्च न्यायालय के सलाह पर", isCorrect: false },
+                { en: "President on recommendation of State Legislature", hi: "राष्ट्रपति द्वारा संबंधित राज्य के विधानमंडल के सिफारिश पर", isCorrect: false },
+                { en: "President on advice of Advocate General", hi: "राष्ट्रपति द्वारा संबंधित राज्य के महाधिवक्ता के सलाह पर", isCorrect: false }
+            ]
+        },
+        {
+            en_q: "Consider: 1. Under Art 323A only Parliament forms Tribunals. 2. Under Art 323B both Parliament & State Legislature can form Tribunals. Which is true?",
+            hi_q: "कथनों पर विचार कीजिए: 1. अनुच्छेद-323क के अनुसार केवल संसद ही अधिकरण का गठन करती है। 2. अनुच्छेद-323ख के अंतर्गत संसद व राज्य विधायिका अपने अधिकार क्षेत्र से संबंधित अधिकरण का गठन कर सकते हैं। सही है?",
+            options: [
+                { en: "Only 1", hi: "केवल 1", isCorrect: false },
+                { en: "Only 2", hi: "केवल 2", isCorrect: false },
+                { en: "Both 1 and 2", hi: "1 और 2 दोनों", isCorrect: true },
+                { en: "Neither 1 nor 2", hi: "न तो 1 न ही 2", isCorrect: false }
+            ]
+        }
+    ];
+
+    let currentQ = 0, score = 0, timerVal = 0, timerRef = null, quizData = [], audioCtx = null;
+
+    function playSound(type) {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        if (type === 'correct') {
+            osc.frequency.setValueAtTime(880, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.3);
+        } else {
+            osc.type = 'sawtooth'; osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+            gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.4);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.4);
+        }
+    }
+
+    function startConfetti() {
+        const canvas = document.getElementById('confetti');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+        let particles = [];
+        for(let i=0; i<100; i++) particles.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height - canvas.height, r: Math.random()*6 + 2, d: Math.random()*10, color: `hsl(${Math.random()*360}, 100%, 50%)`, tilt: Math.random()*10 - 10 });
+        function draw() {
+            ctx.clearRect(0,0,canvas.width, canvas.height);
+            particles.forEach(p => { ctx.beginPath(); ctx.lineWidth = p.r; ctx.strokeStyle = p.color; ctx.moveTo(p.x + p.tilt + p.r/2, p.y); ctx.lineTo(p.x + p.tilt, p.y + p.tilt + p.r/2); ctx.stroke(); p.y += Math.cos(p.d) + 1 + p.r/2; p.x += Math.sin(p.d); if(p.y > canvas.height) p.y = -20; });
+            requestAnimationFrame(draw);
+        }
+        draw(); setTimeout(() => { canvas.width = 0; }, 2000);
+    }
+
+    function startQuiz() {
+        const shuffle = document.getElementById('shuffle-toggle').checked;
+        timerVal = parseInt(document.getElementById('timer-input').value) || 0;
+        quizData = shuffle ? [...questions].sort(() => Math.random() - 0.5) : [...questions];
+        document.getElementById('start-screen').classList.add('hidden');
+        document.getElementById('quiz-screen').classList.remove('hidden');
+        showQuestion();
+    }
+
+    function showQuestion() {
+        if (currentQ >= quizData.length) return showResults();
+        const q = quizData[currentQ];
+        document.getElementById('en-q').innerText = q.en_q;
+        document.getElementById('hi-q').innerText = q.hi_q;
+        document.getElementById('q-counter').innerText = `Question: ${currentQ + 1}/${quizData.length}`;
+        document.getElementById('progress-bar').style.width = `${((currentQ) / quizData.length) * 100}%`;
+        const grid = document.getElementById('options-grid');
+        grid.innerHTML = '';
+        q.options.forEach((opt, idx) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerHTML = `<span class="en-o">${opt.en}</span><span class="hi-o">${opt.hi}</span>`;
+            btn.onclick = () => handleAnswer(idx, btn);
+            grid.appendChild(btn);
+        });
+        startTimer();
+    }
+
+    function startTimer() {
+        clearInterval(timerRef);
+        const timerEl = document.getElementById('timer');
+        if (timerVal <= 0) { timerEl.innerText = "Time: ∞"; return; }
+        let timeLeft = timerVal; timerEl.classList.remove('pulse-red');
+        timerRef = setInterval(() => {
+            timerEl.innerText = `Time: ${timeLeft}s`;
+            if (timeLeft < 5) timerEl.classList.add('pulse-red');
+            if (timeLeft <= 0) { clearInterval(timerRef); handleAnswer(-1, null); }
+            timeLeft--;
+        }, 1000);
+    }
+
+    function handleAnswer(index, btn) {
+        clearInterval(timerRef);
+        const q = quizData[currentQ];
+        const buttons = document.querySelectorAll('.option-btn');
+        buttons.forEach(b => b.disabled = true);
+        let isCorrect = index !== -1 && q.options[index].isCorrect;
+        if (isCorrect) {
+            btn.classList.add('correct'); score++;
+            document.getElementById('score-display').innerText = `Score: ${score}`;
+            playSound('correct'); startConfetti();
+        } else {
+            if (btn) btn.classList.add('wrong');
+            buttons.forEach((b, i) => { if (q.options[i].isCorrect) b.classList.add('correct'); });
+            const sad = document.getElementById('sad-emoji');
+            sad.style.display = 'block'; sad.classList.add('shake');
+            playSound('wrong'); setTimeout(() => { sad.style.display = 'none'; sad.classList.remove('shake'); }, 1000);
+        }
+        setTimeout(() => { currentQ++; if (currentQ < quizData.length) showQuestion(); else showResults(); }, 1500);
+    }
+
+    function showResults() {
+        clearInterval(timerRef);
+        document.getElementById('quiz-screen').classList.add('hidden');
+        document.getElementById('result-screen').classList.remove('hidden');
+        document.getElementById('progress-bar').style.width = '100%';
+        document.getElementById('final-score').innerText = `${score}/${quizData.length}`;
+        const perc = (score / quizData.length) * 100;
+        const msg = document.getElementById('result-msg');
+        if (perc >= 80) msg.innerText = "🏆 Outstanding Performance!";
+        else if (perc >= 50) msg.innerText = "👏 Well Done! Keep it up.";
+        else msg.innerText = "📚 Practice makes perfect! Try again.";
+        document.getElementById('final-stats').innerText = `Accuracy: ${perc.toFixed(1)}% | Questions Answered: ${currentQ}`;
+    }
+</script>
+</body>
+</html>

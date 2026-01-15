@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chapter 44: State PSC Quiz</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --primary-text: #ffffff;
+            --secondary-text: #dddddd;
+            --accent-green: #00e676;
+            --accent-red: #ff5252;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: #0f0c29;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--primary-text);
+            overflow-x: hidden;
+        }
+
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 25px;
+            padding: 2rem;
+            width: 90%;
+            max-width: 600px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            position: relative;
+        }
+
+        .screen { display: none; flex-direction: column; gap: 1.5rem; animation: fadeIn 0.5s ease; }
+        .screen.active { display: flex; }
+
+        h1 { font-size: 1.8rem; text-align: center; font-weight: 700; background: linear-gradient(to right, #fff, #a5b4fc); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+        .progress-bar { position: absolute; top: 0; left: 0; height: 4px; background: #00c6ff; width: 0%; transition: width 0.5s ease; }
+
+        .quiz-header { display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 10px; }
+        .timer.pulse { color: var(--accent-red); animation: pulse 1s infinite; font-weight: bold; }
+
+        .question-box { background: rgba(0,0,0,0.2); padding: 15px; border-radius: 15px; border-left: 4px solid #667eea; }
+        .q-text-en { font-size: 1.1rem; font-weight: 600; margin-bottom: 5px; color: #fff; }
+        .q-text-hi { font-size: 0.95rem; color: #ddd; }
+
+        .options-grid { display: flex; flex-direction: column; gap: 10px; }
+        .option-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 12px 15px;
+            color: white;
+            text-align: left;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            flex-direction: column;
+        }
+        .option-btn:hover:not(:disabled) { background: rgba(255, 255, 255, 0.15); transform: translateX(5px); }
+        .opt-en { font-weight: 600; font-size: 0.95rem; }
+        .opt-hi { font-size: 0.85rem; color: #ccc; }
+
+        .correct { background: rgba(0, 230, 118, 0.4) !important; border-color: var(--accent-green) !important; }
+        .wrong { background: rgba(255, 82, 82, 0.4) !important; border-color: var(--accent-red) !important; }
+
+        .btn { padding: 15px; border: none; border-radius: 15px; font-weight: 600; cursor: pointer; transition: 0.2s; text-align: center; }
+        .btn-primary { background: linear-gradient(45deg, #667eea, #764ba2); color: white; }
+        .btn-primary:hover { transform: scale(1.02); }
+
+        .score-circle { width: 100px; height: 100px; border-radius: 50%; border: 5px solid #667eea; display: flex; justify-content: center; align-items: center; font-size: 2rem; font-weight: 700; margin: 0 auto; }
+        
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-10px); } 75% { transform: translateX(10px); } }
+        .shake { animation: shake 0.3s; }
+    </style>
+</head>
+<body>
+
+    <div class="glass-card">
+        <div class="progress-bar" id="progressBar"></div>
+
+        <div id="startScreen" class="screen active">
+            <h1>Chapter 44 Quiz</h1>
+            <p style="text-align: center;">State Public Service Commission<br>(राज्य लोक सेवा आयोग)</p>
+            <div style="display:flex; flex-direction:column; gap:10px;">
+                <label>Timer (Sec/Q): <input type="number" id="timerInput" value="15" style="width:50px; background:none; border:1px solid #fff; color:#fff; border-radius:5px;"></label>
+                <label>Shuffle: <input type="checkbox" id="shuffleToggle" checked></label>
+            </div>
+            <button class="btn btn-primary" onclick="startQuiz()">Start Quiz</button>
+        </div>
+
+        <div id="quizScreen" class="screen">
+            <div class="quiz-header">
+                <span id="qCounter"></span>
+                <span id="timerDisplay" class="timer"></span>
+                <span id="scoreDisplay"></span>
+            </div>
+            <div class="question-box">
+                <div id="qEn" class="q-text-en"></div>
+                <div id="qHi" class="q-text-hi"></div>
+            </div>
+            <div id="optionsContainer" class="options-grid"></div>
+            <button class="btn btn-primary" style="background:rgba(255,255,255,0.1)" onclick="showResults()">Finish Early</button>
+        </div>
+
+        <div id="resultScreen" class="screen">
+            <h1>Quiz Result</h1>
+            <div class="score-circle" id="finalScore"></div>
+            <div id="resultMsg" style="text-align:center; font-weight:bold;"></div>
+            <button class="btn btn-primary" onclick="location.reload()">Restart</button>
+        </div>
+    </div>
+
+    <script>
+        const rawQuestions = [
+            {
+                qEn: "What type of institution is the State Public Service Commission?",
+                qHi: "राज्य लोक सेवा आयोग किस प्रकार की संस्था है?",
+                optsEn: ["Constitutional", "Statutory", "Non-Constitutional", "Executive"],
+                optsHi: ["संवैधानिक", "सांविधिक", "गैर-संवैधानिक", "कार्यकारी"],
+                correct: 0
+            },
+            {
+                qEn: "In which part of the Constitution is the provision for State Public Service?",
+                qHi: "संविधान के किस भाग में राज्य लोक सेवा का उपबंध है?",
+                optsEn: ["Part 12", "Part 13", "Part 14", "Part 10"],
+                optsHi: ["भाग- 12", "भाग- 13", "भाग- 14", "भाग- 10"],
+                correct: 2
+            },
+            {
+                qEn: "Who appoints the Chairman and members of the State Public Service Commission?",
+                qHi: "राज्य लोक सेवा आयोग के अध्यक्ष एवं सदस्यों की नियुक्ति किसके द्वारा की जाती है?",
+                optsEn: ["Governor", "Chief Minister", "President", "None of these"],
+                optsHi: ["राज्यपाल", "मुख्यमंत्री", "राष्ट्रपति", "उपर्युक्त में से कोई नहीं"],
+                correct: 0
+            },
+            {
+                qEn: "What is the number of members of the State Public Service Commission determined by the Constitution?",
+                qHi: "संविधान द्वारा राज्य लोक सेवा आयोग के सदस्यों की संख्या कितना निर्धारित किया गया है?",
+                optsEn: ["15", "10", "12", "Not determined"],
+                optsHi: ["15", "10", "12", "निर्धारित नहीं है"],
+                correct: 3
+            },
+            {
+                qEn: "What is the retirement age for members of the State Public Service Commission?",
+                qHi: "राज्य लोक सेवा आयोग के सदस्यों की सेवानिवृत्त की आयु है?",
+                optsEn: ["62 years", "65 years", "60 years", "70 years"],
+                optsHi: ["62 वर्ष", "65 वर्ष", "60 वर्ष", "70 वर्ष"],
+                correct: 0
+            },
+            {
+                qEn: "What is the maximum tenure fixed for the Chairman and members of the State Public Service Commission?",
+                qHi: "राज्य लोक सेवा आयोग के अध्यक्ष एवं सदस्यों की अधिकतम कार्यकाल निर्धारित है-",
+                optsEn: ["6 years", "7 years", "5 years", "3 years"],
+                optsHi: ["6 वर्ष", "7 वर्ष", "5 वर्ष", "3 वर्ष"],
+                correct: 0
+            },
+            {
+                qEn: "Who can remove the Chairman and members of the State Public Service Commission from their post?",
+                qHi: "राज्य लोक सेवा आयोग के अध्यक्ष व सदस्यों को उसके पद से कौन विमुक्त कर सकता है?",
+                optsEn: ["Governor", "Cabinet Secretary", "Chief Secretary", "President"],
+                optsHi: ["राज्यपाल", "केबिनेट सचिव", "मुख्य सचिव", "राष्ट्रपति"],
+                correct: 3
+            },
+            {
+                qEn: "On whose recommendation can the Chairman and members of the State Public Service Commission be removed in case of misbehavior?",
+                qHi: "निम्नलिखित में से राज्य लोक सेवा आयोग के अध्यक्ष एवं सदस्यों को कदाचार की स्थिति में किसके सिफारिश पर पद से विमुक्त किया जा सकता है?",
+                optsEn: ["Supreme Court", "High Court", "Governor", "State Legislature"],
+                optsHi: ["उच्चतम न्यायालय", "उच्च न्यायालय", "राज्यपाल", "राज्य विधानमंडल"],
+                correct: 0
+            },
+            {
+                qEn: "The Chairman and members of the Joint State Public Service Commission are appointed by?",
+                qHi: "संयुक्त राज्य लोक सेवा आयोग की अध्यक्ष एवं सदस्यों की नियुक्ति की जाती है-",
+                optsEn: ["Governor", "State Legislature", "President", "Prime Minister"],
+                optsHi: ["राज्यपाल", "राज्य विधानमंडल", "राष्ट्रपति", "प्रधानमंत्री"],
+                correct: 2
+            },
+            {
+                qEn: "What is the tenure of the Chairman and members of the Joint State Public Service Commission?",
+                qHi: "संयुक्त राज्य लोक सेवा आयोग की अध्यक्ष एवं सदस्यों का कार्यकाल होता है-",
+                optsEn: ["5 years", "6 years", "7 years", "3 years"],
+                optsHi: ["5 वर्ष", "6 वर्ष", "7 वर्ष", "3 वर्ष"],
+                correct: 1
+            }
+        ];
+
+        let questions = [], currentIdx = 0, score = 0, timer, timeLeft;
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playSound(freq) {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.frequency.value = freq; osc.start();
+            gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.5);
+            osc.stop(audioCtx.currentTime + 0.5);
+        }
+
+        function startQuiz() {
+            questions = [...rawQuestions];
+            if(document.getElementById('shuffleToggle').checked) questions.sort(() => Math.random() - 0.5);
+            document.getElementById('startScreen').classList.remove('active');
+            document.getElementById('quizScreen').classList.add('active');
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            if(currentIdx >= questions.length) return showResults();
+            const q = questions[currentIdx];
+            document.getElementById('qCounter').innerText = `Q: ${currentIdx + 1}/${questions.length}`;
+            document.getElementById('scoreDisplay').innerText = `Score: ${score}`;
+            document.getElementById('progressBar').style.width = `${((currentIdx)/questions.length)*100}%`;
+            document.getElementById('qEn').innerText = q.qEn;
+            document.getElementById('qHi').innerText = q.qHi;
+            
+            const container = document.getElementById('optionsContainer');
+            container.innerHTML = '';
+            q.optsEn.forEach((opt, i) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerHTML = `<span class="opt-en">${opt}</span><span class="opt-hi">${q.optsHi[i]}</span>`;
+                btn.onclick = () => checkAnswer(i);
+                container.appendChild(btn);
+            });
+
+            timeLeft = parseInt(document.getElementById('timerInput').value) || 0;
+            if(timeLeft > 0) startTimer();
+        }
+
+        function startTimer() {
+            clearInterval(timer);
+            const display = document.getElementById('timerDisplay');
+            display.innerText = `⏱ ${timeLeft}s`;
+            timer = setInterval(() => {
+                timeLeft--;
+                display.innerText = `⏱ ${timeLeft}s`;
+                if(timeLeft < 5) display.classList.add('pulse');
+                if(timeLeft <= 0) { clearInterval(timer); checkAnswer(-1); }
+            }, 1000);
+        }
+
+        function checkAnswer(idx) {
+            clearInterval(timer);
+            const q = questions[currentIdx];
+            const btns = document.querySelectorAll('.option-btn');
+            btns.forEach(b => b.disabled = true);
+
+            if(idx === q.correct) {
+                btns[idx].classList.add('correct');
+                score++; playSound(800);
+            } else {
+                if(idx !== -1) btns[idx].classList.add('wrong');
+                btns[q.correct].classList.add('correct');
+                playSound(200);
+                document.querySelector('.glass-card').classList.add('shake');
+                setTimeout(() => document.querySelector('.glass-card').classList.remove('shake'), 300);
+            }
+
+            setTimeout(() => { currentIdx++; loadQuestion(); }, 1500);
+        }
+
+        function showResults() {
+            document.getElementById('quizScreen').classList.remove('active');
+            document.getElementById('resultScreen').classList.add('active');
+            document.getElementById('finalScore').innerText = score;
+            const per = (score/questions.length)*100;
+            document.getElementById('resultMsg').innerText = per >= 80 ? "🏆 Outstanding Performance!" : per >= 50 ? "👏 Well Done!" : "📚 Keep Practicing!";
+        }
+    </script>
+</body>
+</html>

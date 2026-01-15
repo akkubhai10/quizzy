@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chapter 17: The President of India Quiz</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-bg: linear-gradient(135deg, #2b5876, #4e4376, #000000);
+            --glass: rgba(255, 255, 255, 0.12);
+            --border: rgba(255, 255, 255, 0.25);
+            --correct: #2ecc71;
+            --wrong: #e74c3c;
+            --hindi: #bdc3c7;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+
+        body {
+            background: var(--primary-bg);
+            background-attachment: fixed;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 10px;
+            color: white;
+        }
+
+        .quiz-card {
+            background: var(--glass);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid var(--border);
+            border-radius: 30px;
+            width: 100%;
+            max-width: 680px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+            position: relative;
+            overflow-y: auto;
+            max-height: 96vh;
+        }
+
+        #progress-line {
+            position: fixed; top: 0; left: 0; height: 6px;
+            background: linear-gradient(to right, #00f2fe, #4facfe);
+            width: 0%; transition: 0.3s; z-index: 1000;
+        }
+
+        .meta-data { display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 20px; font-weight: 600; }
+        
+        .timer-ui { text-align: center; font-size: 1.8rem; margin-bottom: 20px; font-weight: bold; font-variant-numeric: tabular-nums; }
+        .pulse-critical { color: #ff5252; animation: blink 0.5s infinite; }
+        @keyframes blink { 50% { opacity: 0.2; } }
+
+        .question-area { margin-bottom: 30px; }
+        .q-en { font-size: 1.25rem; font-weight: 600; display: block; margin-bottom: 12px; line-height: 1.4; color: #ffffff; }
+        .q-hi { font-size: 1.05rem; color: var(--hindi); display: block; border-left: 4px solid #4facfe; padding-left: 15px; }
+
+        .options-box { display: grid; gap: 14px; }
+        .option-item {
+            background: rgba(255,255,255,0.06);
+            border: 1px solid var(--border);
+            padding: 18px;
+            border-radius: 18px;
+            color: white;
+            text-align: left;
+            cursor: pointer;
+            transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+        }
+        .option-item:hover:not([disabled]) { background: rgba(255,255,255,0.18); transform: scale(1.02); }
+        .opt-en { font-size: 1rem; font-weight: 500; }
+        .opt-hi { font-size: 0.9rem; color: var(--hindi); margin-top: 6px; }
+
+        .state-correct { background: var(--correct) !important; border-color: transparent; box-shadow: 0 0 15px var(--correct); }
+        .state-wrong { background: var(--wrong) !important; border-color: transparent; }
+
+        .action-btn {
+            width: 100%; padding: 18px; border-radius: 18px; border: none;
+            background: white; color: #4e4376; font-weight: 800; cursor: pointer;
+            margin-top: 25px; transition: 0.3s; font-size: 1.1rem; text-transform: uppercase;
+        }
+        .exit-trigger { background: #f39c12; color: white; margin-top: 35px; }
+
+        #visual-feedback { position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%); font-size: 110px; display: none; z-index: 20; }
+        .shake-effect { animation: shake-ani 0.4s ease-in-out; }
+        @keyframes shake-ani { 0%, 100% { transform: translate(-50%, -50%); } 20% { transform: translate(-58%, -50%); } 80% { transform: translate(-42%, -50%); } }
+
+        .ui-hidden { display: none !important; }
+        input[type="number"] { width: 100%; padding: 15px; border-radius: 12px; border: 1px solid var(--border); background: rgba(0,0,0,0.3); color: white; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+<div id="progress-line"></div>
+
+<div id="screen-intro" class="quiz-card">
+    <h1 style="text-align:center; color: #4facfe; margin-bottom: 5px;">Chapter 17: The President</h1>
+    <h3 style="text-align:center; font-weight:300; margin-bottom:30px; color: #bdc3c7;">Bilingual Master Quiz (UP/Bihar Special)</h3>
+    
+    <div style="margin-bottom: 25px;">
+        <label>Set Timer (Seconds/Question):</label>
+        <input type="number" id="cfg-timer" value="45">
+    </div>
+
+    <label style="display:flex; align-items:center; gap:12px; cursor:pointer; margin-bottom: 20px;">
+        <input type="checkbox" id="cfg-shuffle" style="width:22px; height:22px;"> Shuffle All Questions
+    </label>
+
+    <button class="action-btn" onclick="beginQuiz()">Initialize Exam</button>
+</div>
+
+<div id="screen-main" class="quiz-card ui-hidden">
+    <div id="visual-feedback">😢</div>
+    <div class="meta-data">
+        <span id="ui-qcount">Question: 0/0</span>
+        <span id="ui-score">Score: 0</span>
+    </div>
+    
+    <div class="timer-ui" id="ui-timer-box">⏱️ <span id="ui-timer-val">45</span>s</div>
+
+    <div class="question-area">
+        <span class="q-en" id="q-text-en"></span>
+        <span class="q-hi" id="q-text-hi"></span>
+    </div>
+
+    <div class="options-box" id="q-options"></div>
+
+    <button class="action-btn exit-trigger" onclick="forceEnd()">Finish & View Scores</button>
+</div>
+
+<div id="screen-end" class="quiz-card ui-hidden" style="text-align:center;">
+    <h2 style="color: #4facfe;">Final Performance Report</h2>
+    <div style="font-size: 4.5rem; margin: 30px 0; font-weight: bold; text-shadow: 0 0 20px rgba(79, 172, 254, 0.4);" id="end-score"></div>
+    <p id="end-msg" style="margin-bottom: 40px; font-size: 1.3rem;"></p>
+    <button class="action-btn" onclick="location.reload()">Re-attempt Quiz</button>
+</div>
+
+<script>
+    const presidentData = [
+        { en: "In which part of the Constitution is the Union Executive described?", hi: "संविधान के किस भाग में संघ की कार्यपालिका का वर्णन है ?", opts: [{e:"Part - I", h:"भाग- 1"}, {e:"Part - 5", h:"भाग- 5"}, {e:"Part - 2", h:"भाग- 2"}, {e:"Part - 7", h:"भाग- 7"}], ans: 1 },
+        { en: "Who is included in the Union Executive?", hi: "संघ की कार्यपालिका में सम्मिलित होते हैं ?", opts: [{e:"President & Vice President", h:"राष्ट्रपति और उपराष्ट्रपति"}, {e:"Prime Minister & Cabinet", h:"प्रधानमंत्री और मंत्रिमंडल"}, {e:"Attorney General", h:"महान्यायवादी"}, {e:"All of the above", h:"उपर्युक्त में सभी"}], ans: 3 },
+        { en: "Who is the head of the Indian State?", hi: "भारत राज्य का प्रमुख होता है-", opts: [{e:"President", h:"राष्ट्रपति"}, {e:"Prime Minister", h:"प्रधानमंत्री"}, {e:"Vice President", h:"उपराष्ट्रपति"}, {e:"Governor", h:"राज्यपाल"}], ans: 0 },
+        { en: "The minimum age limit for taking part in Presidential election is:", hi: "राष्ट्रपति चुनाव में भाग लेने के लिये आयु की न्यूनतम सीमा है-", opts: [{e:"35 years complete", h:"35 वर्ष पूर्ण होना चाहिये।"}, {e:"30 years complete", h:"30 वर्ष पूर्ण होना चाहिये।"}, {e:"25 years complete", h:"25 वर्ष पूर्ण होना चाहिये।"}, {e:"40 years complete", h:"40 वर्ष पूर्ण होना चाहिये।"}], ans: 0 },
+        { en: "How many proposers and seconders are required for the nomination of the President?", hi: "राष्ट्रपति चुनाव के लिये आवश्यक अनुमोदक व प्रस्ताव की संख्या निर्धारित है ?", opts: [{e:"50 and 50", h:"50 और 50"}, {e:"100 and 60", h:"100 और 60"}, {e:"100 and 100", h:"100 और 100"}, {e:"50 and 100", h:"50 और 100"}], ans: 0 },
+        { en: "What is the security deposit amount for the Presidential election?", hi: "राष्ट्रपति चुनाव के लिये निर्धारित जमानत राशि है-", opts: [{e:"15000", h:"15000"}, {e:"14000", h:"14000"}, {e:"16000", h:"16000"}, {e:"17000", h:"17000"}], ans: 0 },
+        { en: "Who administers the oath to the President?", hi: "भारत के राष्ट्रपति को शपथ निम्नलिखित में से कौन दिलवाते हैं ?", opts: [{e:"Vice President", h:"उपराष्ट्रपति"}, {e:"Chief Justice of India", h:"उच्चतम न्यायालय के मुख्य न्यायाधीश"}, {e:"Speaker of Lok Sabha", h:"लोकसभा अध्यक्ष"}, {e:"Prime Minister", h:"प्रधानमंत्री"}], ans: 1 },
+        { en: "Under which Article can the President be impeached for violation of Constitution?", hi: "राष्ट्रपति पर महाभियोग का उल्लेख संविधान के किस अनुच्छेद में है ?", opts: [{e:"Article 62", h:"अनुच्छेद- 62"}, {e:"Article 58", h:"अनुच्छेद- 58"}, {e:"Article 64", h:"अनुच्छेद- 64"}, {e:"Article 61", h:"अनुच्छेद- 61"}], ans: 3 },
+        { en: "Within how many months must the election be held if the post of President falls vacant?", hi: "राष्ट्रपति के चुनाव में पद रिक्त होने के कितने महीने के भीतर चुनाव करवाना आवश्यक होगा ?", opts: [{e:"Six months", h:"छह माह"}, {e:"Seven months", h:"सात माह"}, {e:"One month", h:"एक माह"}, {e:"Three months", h:"तीन माह"}], ans: 0 },
+        { en: "Under which Article can the President issue an Ordinance?", hi: "निम्नलिखित में किस अनुच्छेद का प्रयोग कर राष्ट्रपति अध्यादेश जारी कर सकती है ?", opts: [{e:"Article 123", h:"अनुच्छेद- 123"}, {e:"Article 122", h:"अनुच्छेद- 122"}, {e:"Article 212", h:"अनुच्छेद- 212"}, {e:"Article 111", h:"अनुच्छेद- 111"}], ans: 0 },
+        { en: "What is the meaning of 'Remission' (परिहार)?", hi: "परिहार का अर्थ है-", opts: [{e:"Reducing sentence without changing nature", h:"दंड के प्रकृति में परिवर्तन किये बिना सजा कम करना"}, {e:"Changing nature of punishment", h:"दंड के स्वरूप बदलकर कम करना"}, {e:"Stay on punishment", h:"दंड पर अस्थायी रोक लगाना"}, {e:"Reducing sentence in special cases", h:"सजा को किन्हीं विशेष परिस्थितियों में कम करना"}], ans: 0 },
+        { en: "Article 72 of the Constitution is related to:", hi: "राष्ट्रपति की क्षमादान शक्ति संबंधित है-", opts: [{e:"Article 82", h:"अनुच्छेद- 82"}, {e:"Article 72", h:"अनुच्छेद- 72"}, {e:"Article 74", h:"अनुच्छेद- 74"}, {e:"Article 76", h:"अनुच्छेद- 76"}], ans: 1 },
+        { en: "Who said the power of President is 'only nominal'?", hi: "संविधान निर्माताओं ने राष्ट्रपति का चुनाव अप्रत्यक्ष विधि से ही क्यों चुना ?", opts: [{e:"Because it aligns with Parliamentary system", h:"राष्ट्रपति का अप्रत्यक्ष चुनाव संविधान में परिकल्पित संसदीय व्यवस्था के साथ रखता है।"}, {e:"Direct election is too costly", h:"राष्ट्रपति का प्रत्यक्ष चुनाव अत्यधिक खर्चीला तथा समय व ऊर्जा का अपव्यय होता।"}, {e:"President is only a nominal head", h:"राष्ट्रपति केवल नाममात्र का कार्यकारी होता है।"}, {e:"All of the above", h:"उपर्युक्त में सभी"}], ans: 3 },
+        { en: "Article 52 of the Constitution states:", hi: "संविधान के किस अनुच्छेद में यह उल्लेखित है कि भारत का एक राष्ट्रपति होगा ?", opts: [{e:"Article 54", h:"अनुच्छेद- 54"}, {e:"Article 56", h:"अनुच्छेद- 56"}, {e:"Article 53", h:"अनुच्छेद- 53"}, {e:"Article 52", h:"अनुच्छेद- 52"}], ans: 3 },
+        { en: "What is the current monthly salary of the President?", hi: "वर्तमान में राष्ट्रपति का वेतन कितने रुपया प्रतिमाह प्राप्त होता है ?", opts: [{e:"6 Lakh", h:"6 लाख"}, {e:"5 Lakh", h:"5 लाख"}, {e:"7 Lakh", h:"7 लाख"}, {e:"9 Lakh", h:"9 लाख"}], ans: 1 }
+    ];
+
+    let pool = [], idx = 0, score = 0, tVal = 45, tRem = 0, clock;
+    const aCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    function beep(f1, f2) {
+        const o = aCtx.createOscillator();
+        const g = aCtx.createGain();
+        o.connect(g); g.connect(aCtx.destination);
+        o.frequency.setValueAtTime(f1, aCtx.currentTime);
+        if(f2) o.frequency.exponentialRampToValueAtTime(f2, aCtx.currentTime + 0.1);
+        g.gain.setValueAtTime(0.1, aCtx.currentTime); g.gain.linearRampToValueAtTime(0, aCtx.currentTime + 0.4);
+        o.start(); o.stop(aCtx.currentTime + 0.4);
+    }
+
+    function beginQuiz() {
+        tVal = parseInt(document.getElementById('cfg-timer').value) || 0;
+        pool = [...presidentData];
+        if(document.getElementById('cfg-shuffle').checked) pool.sort(() => Math.random() - 0.5);
+        document.getElementById('screen-intro').classList.add('ui-hidden');
+        document.getElementById('screen-main').classList.remove('ui-hidden');
+        renderQ();
+    }
+
+    function renderQ() {
+        if(idx >= pool.length) return forceEnd();
+        const d = pool[idx];
+        document.getElementById('q-text-en').innerText = d.en;
+        document.getElementById('q-text-hi').innerText = d.hi;
+        document.getElementById('ui-qcount').innerText = `Question: ${idx + 1}/${pool.length}`;
+        document.getElementById('progress-line').style.width = `${((idx + 1) / pool.length) * 100}%`;
+        
+        const b = document.getElementById('q-options');
+        b.innerHTML = '';
+        d.opts.forEach((o, i) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-item';
+            btn.innerHTML = `<span class="opt-en">${o.e}</span><span class="opt-hi">${o.h}</span>`;
+            btn.onclick = () => evalAns(i);
+            b.appendChild(btn);
+        });
+
+        if(tVal > 0) {
+            tRem = tVal;
+            clearInterval(clock);
+            const disp = document.getElementById('ui-timer-val');
+            const box = document.getElementById('ui-timer-box');
+            disp.innerText = tRem;
+            box.classList.remove('pulse-critical');
+            clock = setInterval(() => {
+                tRem--; disp.innerText = tRem;
+                if(tRem < 6) box.classList.add('pulse-critical');
+                if(tRem <= 0) evalAns(-1);
+            }, 1000);
+        } else document.getElementById('ui-timer-box').classList.add('ui-hidden');
+    }
+
+    function evalAns(choice) {
+        clearInterval(clock);
+        const d = pool[idx];
+        const buttons = document.querySelectorAll('.option-item');
+        buttons.forEach(bt => bt.disabled = true);
+
+        if(choice === d.ans) {
+            buttons[choice].classList.add('state-correct');
+            score++; beep(700, 1200);
+            triggerConfetti();
+        } else {
+            if(choice !== -1) buttons[choice].classList.add('state-wrong');
+            buttons[d.ans].classList.add('state-correct');
+            beep(250, 100);
+            const fb = document.getElementById('visual-feedback');
+            fb.style.display = 'block'; fb.classList.add('shake-effect');
+            setTimeout(() => { fb.style.display = 'none'; fb.classList.remove('shake-effect'); }, 1000);
+        }
+        document.getElementById('ui-score').innerText = `Score: ${score}`;
+        setTimeout(() => { idx++; renderQ(); }, 1600);
+    }
+
+    function triggerConfetti() {
+        for(let i=0; i<30; i++) {
+            const c = document.createElement('div');
+            c.style.position = 'fixed';
+            c.style.width = '8px'; c.style.height = '8px';
+            c.style.backgroundColor = `hsl(${Math.random()*360}, 70%, 50%)`;
+            c.style.left = Math.random()*100 + 'vw';
+            c.style.top = '-10px';
+            c.style.zIndex = '9999';
+            c.style.borderRadius = '50%';
+            c.style.transition = 'transform 2.5s linear, opacity 2.5s';
+            document.body.appendChild(c);
+            setTimeout(() => { 
+                c.style.transform = `translateY(100vh) rotate(${Math.random()*360}deg)`; 
+                c.style.opacity = '0';
+            }, 10);
+            setTimeout(() => c.remove(), 2600);
+        }
+    }
+
+    function forceEnd() {
+        clearInterval(clock);
+        document.getElementById('screen-main').classList.add('ui-hidden');
+        document.getElementById('screen-end').classList.remove('ui-hidden');
+        document.getElementById('end-score').innerText = `${score}/${pool.length}`;
+        const pct = score / pool.length;
+        document.getElementById('end-msg').innerText = pct >= 0.85 ? "🏆 Outstanding! You are ready for the UPSC/PCS." : pct >= 0.6 ? "👏 Good job! Keep revising the Articles." : "📚 Practice makes perfect! Review Part V of the Constitution.";
+    }
+</script>
+</body>
+</html>

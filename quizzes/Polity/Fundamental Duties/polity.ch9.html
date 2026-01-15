@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fundamental Duties Quiz | मूल कर्तव्य</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --glass: rgba(255, 255, 255, 0.1);
+            --border: rgba(255, 255, 255, 0.2);
+            --correct: #4caf50;
+            --wrong: #f44336;
+            --primary: #fff;
+            --secondary: #ddd;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(45deg, #6a11cb, #2575fc, #e91e63);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            padding: 15px;
+            overflow-x: hidden;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        #progress-bar {
+            position: fixed;
+            top: 0; left: 0;
+            height: 6px;
+            background: #00ff88;
+            box-shadow: 0 0 10px #00ff88;
+            width: 0%;
+            z-index: 1000;
+            transition: width 0.3s ease;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            border-radius: 25px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            position: relative;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        /* Custom Scrollbar for Container */
+        .container::-webkit-scrollbar { width: 5px; }
+        .container::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
+
+        .header-info { display: flex; justify-content: space-between; font-weight: 600; margin-bottom: 20px; font-size: 0.9rem; }
+
+        #timer { font-variant-numeric: tabular-nums; }
+        .pulse-red { color: #ff4d4d; animation: pulse 0.5s infinite; font-weight: bold; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+
+        .start-screen, .result-screen { text-align: center; }
+        .input-group { margin: 20px 0; }
+        input[type="number"] {
+            background: rgba(255,255,255,0.2);
+            border: 1px solid var(--border);
+            padding: 10px;
+            border-radius: 10px;
+            color: white;
+            width: 100px;
+            text-align: center;
+            outline: none;
+        }
+
+        button {
+            background: white;
+            color: #333;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.2s, background 0.3s;
+            margin-top: 10px;
+        }
+
+        button:hover { transform: scale(1.05); }
+
+        .option-btn {
+            width: 100%;
+            background: rgba(255,255,255,0.1);
+            color: white;
+            text-align: left;
+            margin-bottom: 12px;
+            padding: 15px;
+            border: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .option-eng { font-size: 1rem; font-weight: 500; }
+        .option-hin { font-size: 0.85rem; color: var(--secondary); margin-top: 4px; }
+
+        .question-text { font-size: 1.2rem; font-weight: 700; margin-bottom: 20px; }
+        .question-hin { font-size: 1rem; color: var(--secondary); display: block; margin-top: 8px; font-weight: 400; }
+
+        .correct { background: var(--correct) !important; border-color: transparent; }
+        .wrong { background: var(--wrong) !important; border-color: transparent; animation: shake 0.4s; }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        #emoji-overlay {
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 100px;
+            z-index: 9999;
+            display: none;
+            pointer-events: none;
+        }
+
+        .confetti {
+            position: fixed;
+            width: 10px; height: 10px;
+            top: -10px;
+            z-index: 9999;
+            animation: fall linear forwards;
+        }
+
+        @keyframes fall {
+            to { transform: translateY(100vh) rotate(720deg); }
+        }
+
+        #finish-early {
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            font-size: 0.8rem;
+            margin-top: 30px;
+            padding: 8px 15px;
+        }
+    </style>
+</head>
+<body>
+
+<div id="progress-bar"></div>
+<div id="emoji-overlay">😢</div>
+
+<div class="container">
+    <div id="start-screen" class="start-screen">
+        <h1 style="margin-bottom:10px;">Indian Constitution Quiz</h1>
+        <h3 style="color:var(--secondary); margin-bottom:30px;">अध्याय: 09 - मूल कर्तव्य</h3>
+        
+        <div class="input-group">
+            <label>Timer (Seconds per Q):</label><br>
+            <input type="number" id="timer-input" placeholder="0 = No timer" min="0">
+        </div>
+        
+        <div class="input-group">
+            <label>Shuffle Questions?</label>
+            <input type="checkbox" id="shuffle-input">
+        </div>
+
+        <button onclick="quizApp.init()">Start Quiz / क्विज शुरू करें</button>
+    </div>
+
+    <div id="quiz-area" style="display: none;">
+        <div class="header-info">
+            <div id="q-counter">Question: 0/0</div>
+            <div id="timer-display"></div>
+            <div id="score-display">Score: 0</div>
+        </div>
+
+        <div id="question-container">
+            <div class="question-text" id="q-text-eng"></div>
+            <div id="options-grid"></div>
+        </div>
+
+        <button id="finish-early" onclick="quizApp.showResults()">Finish & Show Results</button>
+    </div>
+
+    <div id="result-screen" class="result-screen" style="display: none;">
+        <h1 id="result-msg"></h1>
+        <p id="final-score" style="font-size: 1.5rem; margin: 20px 0;"></p>
+        <button onclick="location.reload()">Restart Quiz / फिर से शुरू करें</button>
+    </div>
+</div>
+
+<script>
+    const questions = [
+        { qe: "When were Fundamental Duties added to the Constitution?", qh: "मूल कर्तव्य को संविधान में कब जोड़ा गया?", o: ["1976", "1986", "1978", "1972"], oh: ["1976", "1986", "1978", "1972"], a: 0 },
+        { qe: "By which Constitutional Amendment were Fundamental Duties added?", qh: "किस संविधान संशोधन द्वारा मूल कर्तव्यों को संविधान में जोड़ा गया?", o: ["42nd", "44th", "47th", "24th"], oh: ["42वें", "44वें", "47वें", "24वें"], a: 0 },
+        { qe: "Fundamental Duties were influenced by the constitution of which country?", qh: "भारतीय संविधान में किस देश के संविधान से प्रभावित होकर मूल कर्तव्यों को सम्मिलित किया गया?", o: ["Canada", "Japan", "Ireland", "Russia"], oh: ["कनाडा", "जापान", "आयरलैंड", "रूस"], a: 3 },
+        { qe: "On whose committee's recommendation was the new part related to Fundamental Duties added in 1976?", qh: "किस समिति के सिफारिश पर 1976 में संविधान में मूल कर्तव्यों से संबंधित नया भाग जोड़ा गया?", o: ["Raja Chelliah Committee", "Swaran Singh Committee", "Santhanam Committee", "Jagdish Sharan Committee"], oh: ["राजा चेल्लैया समिति", "स्वर्ण सिंह समिति", "संथानम समिति", "जगदीश्वरन् समिति"], a: 1 },
+        { qe: "In which Part of the Constitution are Fundamental Duties mentioned?", qh: "संविधान के किस भाग में मूल कर्तव्यों का उल्लेख है?", o: ["Part-V", "Part-VI", "Part-IV", "Part-IV(A)"], oh: ["भाग-V", "भाग-VI", "भाग-IV", "भाग-IVक"], a: 3 },
+        { qe: "How many types of Fundamental Duties are mentioned in the Constitution?", qh: "संविधान में कितने प्रकार के मूल कर्तव्यों का उल्लेख है?", o: ["11", "10", "12", "14"], oh: ["11", "10", "12", "14"], a: 0 },
+        { qe: "How many Fundamental Duties were added on the recommendation of the Swaran Singh Committee?", qh: "स्वर्ण सिंह समिति के सिफारिश पर भारतीय संविधान में कितने मूल कर्तव्य जोड़ा गया था?", o: ["11", "12", "10", "14"], oh: ["11", "12", "10", "14"], a: 2 },
+        { qe: "In which Article of the Constitution are Fundamental Duties mentioned?", qh: "संविधान के किस अनुच्छेद में मूल कर्तव्यों का जिक्र किया गया है?", o: ["51", "51(A)", "50", "43(A)"], oh: ["51", "51(क)", "50", "43(क)"], a: 1 },
+        { qe: "By which Constitutional Amendment was the 11th Fundamental Duty added?", qh: "किस संविधान संशोधन द्वारा संविधान में 11वाँ मूल कर्तव्य को समाहित किया गया है?", o: ["84th", "87th", "86th", "85th"], oh: ["84वें", "87वें", "86वें", "85वें"], a: 2 },
+        { qe: "When was providing education opportunities to children aged 6 to 14 years added as a Fundamental Duty?", qh: "संविधान में 6 से 14 वर्ष तक की उम्र के अपने बच्चों को शिक्षा के अवसर उपलब्ध कराने को मूल कर्तव्य के रूप में कब समाहित किया गया?", o: ["Year 2002", "Year 2004", "Year 1976", "Year 1975"], oh: ["वर्ष 2002", "वर्ष 2004", "वर्ष 1976", "वर्ष 1975"], a: 0 },
+        { qe: "Which of the following statement is false regarding Fundamental Duties?", qh: "निम्नलिखित में से मूल कर्तव्य के संदर्भ में कौन-सा कथन असत्य है?", o: ["It is a moral duty.", "It is a civic duty.", "It is a mandatory duty.", "All of these"], oh: ["यह नैतिक कर्तव्य है।", "यह नागरिक कर्तव्य है।", "यह बाध्यकारी कर्तव्य है।", "इनमें से सभी"], a: 2 },
+        { qe: "Which of the following is NOT a Fundamental Duty?", qh: "निम्न में से कौन-सा मूल कर्तव्य नहीं है?", o: ["Abide by the Constitution", "Paying taxes", "Respect the National Anthem", "Respect the National Flag"], oh: ["संविधान का पालन करना", "कर अदायगी", "राष्ट्रगान का आदर", "राष्ट्र ध्वज का सम्मान"], a: 1 },
+        { qe: "Which of the following comes under Fundamental Duties?", qh: "निम्न में से कौन-सा मूल कर्तव्य के अंतर्गत है?", o: ["Respecting national movement ideals", "Protect sovereignty, unity & integrity", "Protect and serve the nation", "All of these"], oh: ["स्वतंत्रता के लिए हमारे राष्ट्रीय आंदोलन को प्रेरित करने वाले को सम्मान", "भारत की संप्रभुता, एकता और अखंडता का रक्षा।", "देश की रक्षा एवं सेवा करना", "इनमें से सभी"], a: 3 },
+        { qe: "Which of the following is NOT included in Fundamental Duties?", qh: "निम्न में से कौन-सा मूल कर्तव्य के अंतर्गत समाहित नहीं है?", o: ["Compulsory Voting", "Harmony and common brotherhood", "Value the rich heritage of culture", "All of these"], oh: ["अनिवार्य मतदान", "समरसता एवं समान भ्रातृत्व निर्माण", "संस्कृति की गौरवशाली परंपरा का महत्व", "उपर्युक्त में सभी।"], a: 0 },
+        { qe: "Which of the following comes under Fundamental Duties?", qh: "निम्न में से कौन-सा मूल कर्तव्य के अंतर्गत है?", o: ["Environmental protection", "Scientific temper", "Protect public property", "All of these"], oh: ["पर्यावरण संरक्षण", "वैज्ञानिक दृष्टिकोण", "सार्वजनिक संपत्ति की सुरक्षा", "इनमें से सभी।"], a: 3 },
+        { qe: "Consider statements: 1. Rights are for both, Duties only for citizens. 2. Duties are justiciable.", qh: "कथनों पर विचार कीजिए: 1. कुछ अधिकार नागरिकों और विदेशियों दोनों के लिए हैं जबकि मूल कर्तव्य केवल नागरिकों के लिए है। 2. मूल कर्तव्य न्यायोचित है।", o: ["Only 1", "Only 2", "Both 1 & 2", "Neither 1 nor 2"], oh: ["केवल 1", "केवल 2", "1 और 2 दोनों", "न तो 1 और न ही 2"], a: 0 },
+        { qe: "On what basis are Fundamental Duties criticized?", qh: "किस आधार पर मूल कर्तव्यों की आलोचना की जाती है?", o: ["List is not exhaustive", "Non-justiciable", "Inclusion in Part IV", "All of these"], oh: ["कर्तव्यों की सूची पूर्ण नहीं है।", "गैर न्यायोचित है।", "संविधान के भाग में शामिल करना", "उपर्युक्त में सभी।"], a: 3 },
+        { qe: "What is the significance of Fundamental Duties?", qh: "मूल कर्तव्यों का महत्व है?", o: ["Reminder of duties to nation", "Warning against anti-social activities", "Helps courts in constitutional examination", "All of these"], oh: ["नागरिकों अपने देश के प्रति कर्तव्यों को याद दिलाता है", "राष्ट्र विरोधी एवं समाज विरोधी गतिविधियों के खिलाफ चेतावनी के रूप में कार्य करता है।", "अदालतों को किसी विधि की संवैधानिक परीक्षण में सहायता करता है।", "इनमें से सभी।"], a: 3 }
+    ];
+
+    const quizApp = {
+        currentQ: 0,
+        score: 0,
+        timer: 0,
+        interval: null,
+        userQuestions: [],
+        audioCtx: new (window.AudioContext || window.webkitAudioContext)(),
+
+        playSound(type) {
+            const osc = this.audioCtx.createOscillator();
+            const gain = this.audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(this.audioCtx.destination);
+            
+            if(type === 'correct') {
+                osc.frequency.setValueAtTime(880, this.audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(1320, this.audioCtx.currentTime + 0.1);
+            } else {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(220, this.audioCtx.currentTime);
+                osc.frequency.linearRampToValueAtTime(110, this.audioCtx.currentTime + 0.2);
+            }
+            gain.gain.setValueAtTime(0.1, this.audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, this.audioCtx.currentTime + 0.3);
+            osc.start();
+            osc.stop(this.audioCtx.currentTime + 0.3);
+        },
+
+        createConfetti() {
+            for(let i=0; i<50; i++) {
+                const c = document.createElement('div');
+                c.className = 'confetti';
+                c.style.left = Math.random() * 100 + 'vw';
+                c.style.backgroundColor = `hsl(${Math.random() * 360}, 100%, 50%)`;
+                c.style.animationDuration = (Math.random() * 3 + 2) + 's';
+                document.body.appendChild(c);
+                setTimeout(() => c.remove(), 5000);
+            }
+        },
+
+        init() {
+            const timerVal = parseInt(document.getElementById('timer-input').value) || 0;
+            const shuffle = document.getElementById('shuffle-input').checked;
+            
+            this.timer = timerVal;
+            this.userQuestions = shuffle ? [...questions].sort(() => Math.random() - 0.5) : [...questions];
+            
+            document.getElementById('start-screen').style.display = 'none';
+            document.getElementById('quiz-area').style.display = 'block';
+            this.loadQuestion();
+        },
+
+        loadQuestion() {
+            if(this.currentQ >= this.userQuestions.length) return this.showResults();
+
+            const q = this.userQuestions[this.currentQ];
+            document.getElementById('q-counter').innerText = `Question: ${this.currentQ + 1}/${this.userQuestions.length}`;
+            document.getElementById('progress-bar').style.width = ((this.currentQ) / this.userQuestions.length * 100) + '%';
+            
+            const qBox = document.getElementById('q-text-eng');
+            qBox.innerHTML = `${q.qe} <span class="question-hin">${q.qh}</span>`;
+
+            const grid = document.getElementById('options-grid');
+            grid.innerHTML = '';
+            
+            q.o.forEach((opt, i) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerHTML = `<span class="option-eng">${opt}</span><span class="option-hin">${q.oh[i]}</span>`;
+                btn.onclick = () => this.checkAnswer(i, btn);
+                grid.appendChild(btn);
+            });
+
+            this.startTimer();
+        },
+
+        startTimer() {
+            clearInterval(this.interval);
+            if(this.timer <= 0) return;
+            
+            let timeLeft = this.timer;
+            const display = document.getElementById('timer-display');
+            display.innerText = `⏱ ${timeLeft}s`;
+            display.classList.remove('pulse-red');
+
+            this.interval = setInterval(() => {
+                timeLeft--;
+                display.innerText = `⏱ ${timeLeft}s`;
+                if(timeLeft < 5) display.classList.add('pulse-red');
+                if(timeLeft <= 0) {
+                    clearInterval(this.interval);
+                    this.checkAnswer(-1); // Timeout
+                }
+            }, 1000);
+        },
+
+        checkAnswer(idx, clickedBtn) {
+            clearInterval(this.interval);
+            const q = this.userQuestions[this.currentQ];
+            const btns = document.querySelectorAll('.option-btn');
+            btns.forEach(b => b.disabled = true);
+
+            if(idx === q.a) {
+                this.score++;
+                clickedBtn.classList.add('correct');
+                this.playSound('correct');
+                this.createConfetti();
+            } else {
+                if(clickedBtn) clickedBtn.classList.add('wrong');
+                btns[q.a].classList.add('correct');
+                this.playSound('wrong');
+                const emoji = document.getElementById('emoji-overlay');
+                emoji.style.display = 'block';
+                setTimeout(() => emoji.style.display = 'none', 1000);
+            }
+
+            document.getElementById('score-display').innerText = `Score: ${this.score}`;
+            
+            setTimeout(() => {
+                this.currentQ++;
+                this.loadQuestion();
+            }, 1500);
+        },
+
+        showResults() {
+            clearInterval(this.interval);
+            document.getElementById('quiz-area').style.display = 'none';
+            document.getElementById('result-screen').style.display = 'block';
+            document.getElementById('progress-bar').style.width = '100%';
+
+            const percent = (this.score / this.userQuestions.length) * 100;
+            let msg = "";
+            if(percent >= 80) msg = "🏆 Outstanding Performance!";
+            else if(percent >= 50) msg = "👏 Well Done! Keep it up.";
+            else msg = "📚 Practice makes perfect! Try again.";
+
+            document.getElementById('result-msg').innerText = msg;
+            document.getElementById('final-score').innerText = `You scored ${this.score} out of ${this.userQuestions.length}`;
+        }
+    };
+</script>
+
+</body>
+</html>

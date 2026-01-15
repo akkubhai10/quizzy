@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Judicial Review & PIL Quiz</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --correct: #4dfd63;
+            --wrong: #ff4d4d;
+            --primary-text: #ffffff;
+            --secondary-text: #dddddd;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #1e3c72, #2a5298, #ff4b2b);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            color: white;
+            overflow-x: hidden;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .quiz-container {
+            width: 100%;
+            max-width: 600px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 25px;
+            padding: 30px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+            position: relative;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .progress-bar-container {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 6px;
+            background: rgba(255,255,255,0.1);
+            z-index: 1000;
+        }
+
+        #progress-fill {
+            height: 100%; width: 0%;
+            background: linear-gradient(90deg, #ff9966, #ff5e62);
+            box-shadow: 0 0 10px #ff9966;
+            transition: width 0.3s;
+        }
+
+        .header-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        #timer.pulse { color: var(--wrong); animation: pulse 0.5s infinite; }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+
+        .question-box { margin-bottom: 25px; }
+        .eng-txt { display: block; font-size: 1.1rem; font-weight: 600; margin-bottom: 5px; line-height: 1.4; }
+        .hin-txt { display: block; font-size: 0.9rem; color: var(--secondary-text); margin-bottom: 15px; }
+
+        .options-grid { display: grid; gap: 12px; }
+
+        .option-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            padding: 15px;
+            border-radius: 12px;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.2s;
+            color: white;
+            outline: none;
+        }
+
+        .option-btn:hover:not([disabled]) {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .option-btn.correct { background: var(--correct) !important; color: #121212; font-weight: bold; }
+        .option-btn.wrong { background: var(--wrong) !important; }
+
+        .btn-finish {
+            margin-top: 30px;
+            width: 100%;
+            padding: 12px;
+            border-radius: 10px;
+            border: none;
+            background: rgba(255,255,255,0.15);
+            color: white;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .setup-screen, .result-screen { text-align: center; }
+        .start-btn {
+            padding: 15px 40px; font-size: 1.1rem; border-radius: 50px; border: none;
+            background: white; color: #1e3c72; font-weight: bold; cursor: pointer;
+            transition: 0.3s; margin-top: 20px;
+        }
+        .start-btn:hover { transform: scale(1.1); }
+
+        #feedback-emoji {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 100px; z-index: 9999; display: none;
+        }
+        .shake { animation: shake 0.5s; }
+        @keyframes shake {
+            0%, 100% { transform: translate(-50%, -50%) rotate(0deg); }
+            20% { transform: translate(-55%, -50%) rotate(-5deg); }
+            80% { transform: translate(-45%, -50%) rotate(5deg); }
+        }
+
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+<div class="progress-bar-container"><div id="progress-fill"></div></div>
+
+<div class="quiz-container">
+    <div id="setup-screen" class="setup-screen">
+        <h1 style="margin-bottom: 5px;">Judicial Review & PIL</h1>
+        <p style="opacity: 0.8; margin-bottom: 20px;">Chapters 27, 28 & 29</p>
+        <div style="margin-bottom: 15px;">
+            <label>Timer (Seconds): </label>
+            <input type="number" id="timer-input" value="30" style="width: 60px; padding: 5px; border-radius: 5px; border:none;">
+        </div>
+        <div style="margin-bottom: 25px;">
+            <label><input type="checkbox" id="shuffle-input"> Shuffle Questions</label>
+        </div>
+        <button class="start-btn" onclick="startQuiz()">START QUIZ</button>
+    </div>
+
+    <div id="quiz-screen" class="hidden">
+        <div class="header-info">
+            <span id="question-count">Question 01/08</span>
+            <span id="timer">⏱ 30s</span>
+            <span id="score-count">Score: 0</span>
+        </div>
+        
+        <div class="question-box">
+            <span class="eng-txt" id="q-eng"></span>
+            <span class="hin-txt" id="q-hin"></span>
+        </div>
+
+        <div class="options-grid" id="options-container"></div>
+
+        <button class="btn-finish" onclick="showResults()">Finish & Show Results</button>
+    </div>
+
+    <div id="result-screen" class="result-screen hidden">
+        <h2 id="result-msg" style="font-size: 1.8rem; margin-bottom: 10px;"></h2>
+        <p id="final-score" style="font-size: 1.4rem; margin-bottom: 30px;"></p>
+        <button class="start-btn" onclick="location.reload()">RESTART QUIZ</button>
+    </div>
+</div>
+
+<div id="feedback-emoji">😢</div>
+
+<script>
+    const questions = [
+        {
+            qEng: "Where did the origin and residence of the doctrine of Judicial Review happen?",
+            qHin: "न्यायिक समीक्षा एवं सिद्धांत की उत्पत्ति एवं निवास कहाँ हुआ?",
+            optionsEng: ["India", "America", "Canada", "Ireland"],
+            optionsHin: ["भारत", "अमेरिका", "कनाडा", "आयरलैंड"],
+            correct: 1
+        },
+        {
+            qEng: "What is the meaning of Judicial Review?",
+            qHin: "न्यायिक समीक्षा का अर्थ है-",
+            optionsEng: ["Examination of legislative enactments by judiciary", "Examination of executive orders by judiciary", "Both a and b", "None of these"],
+            optionsHin: ["न्यायपालिका द्वारा विधायी अधिनियमों की जांच करना", "न्यायपालिका द्वारा कार्यपालिका आदेशों की संवैधानिकता की जाँच करना", "a और b दोनों", "इनमें से कोई नहीं"],
+            correct: 2
+        },
+        {
+            qEng: "For which reasons is Judicial Review necessary?",
+            qHin: "न्यायिक समीक्षा किन कारणों से आवश्यक है?",
+            optionsEng: ["To maintain supremacy of Constitution", "To maintain federal balance", "To protect fundamental rights of citizens", "All of the above"],
+            optionsHin: ["संविधान की सर्वोच्चता कि सिद्धांत को बनाये रखने के लिए", "संघीय संतुलन बनाये रखने के लिए", "नागरिकों के मूल अधिकारों के रक्षा के लिए", "उपर्युक्त में सभी"],
+            correct: 3
+        },
+        {
+            qEng: "In which country did the concept of Judicial Activism develop?",
+            qHin: "न्यायिक सक्रियता की अवधारणा का विकास किस देश में हुआ?",
+            optionsEng: ["India", "America", "Canada", "Japan"],
+            optionsHin: ["भारत", "अमेरिका", "कनाडा", "जापान"],
+            correct: 1
+        },
+        {
+            qEng: "Who first used the term 'Judicial Activism'?",
+            qHin: "न्यायिक सक्रियता शब्द को सर्वप्रथम किसने प्रयुक्त किया?",
+            optionsEng: ["Arthur Wellesley", "David Irwin", "Arthur Schlesinger Jr.", "J.C. Daniel"],
+            optionsHin: ["आर्थर वेलेजली", "डेविड इरविन", "आर्थर शलेसिंगर जूनियर", "जे.सी. डेनियल"],
+            correct: 2
+        },
+        {
+            qEng: "What is the meaning of Judicial Activism?",
+            qHin: "न्यायिक सक्रियता का अर्थ है?",
+            optionsEng: ["Judiciary interfering in Legislative functions", "Judiciary interfering in Executive functions", "Interference in Executive functions by Judiciary", "All of the above"],
+            optionsHin: ["न्यायपालिका के कार्यों में विधायिका द्वारा हस्तक्षेप", "न्यायपालिका के कार्यों में कार्यपालिका द्वारा हस्तक्षेप", "न्यायपालिका के द्वारा कार्यपालिका के कार्यों में हस्तक्षेप", "उपर्युक्त में सभी"],
+            correct: 2
+        },
+        {
+            qEng: "Where did the concept of Public Interest Litigation (PIL) originate?",
+            qHin: "जनहित याचिका के अवधारणा की उत्पत्ति कहाँ हुई?",
+            optionsEng: ["America", "Canada", "India", "Britain"],
+            optionsHin: ["अमेरिका", "कनाडा", "भारत", "ब्रिटेन"],
+            correct: 0
+        },
+        {
+            qEng: "Who have been the proponents of PIL in India?",
+            qHin: "भारत में जनहित याचिका के प्रतिपादक रहे हैं?",
+            optionsEng: ["Justice Y.V. Reddy", "Justice V.R. Krishna Iyer", "Justice P.N. Bhagwati", "Both b and c"],
+            optionsHin: ["न्यायमूर्ति वाई. वी. रेड्डी", "न्यायमूर्ति वी. आर. कृष्ण अय्यर", "न्यायमूर्ति पी. एन. भगवती", "b और c दोनों"],
+            correct: 3
+        }
+    ];
+
+    let currentQ = 0, score = 0, timerInterval, quizData = [], timeLimit = 30;
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    function playTone(freq, type) {
+        const osc = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        osc.type = type; osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        g.gain.setValueAtTime(0.1, audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+        osc.connect(g); g.connect(audioCtx.destination);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.3);
+    }
+
+    function startQuiz() {
+        timeLimit = parseInt(document.getElementById('timer-input').value) || 0;
+        quizData = document.getElementById('shuffle-input').checked ? [...questions].sort(() => Math.random() - 0.5) : [...questions];
+        document.getElementById('setup-screen').classList.add('hidden');
+        document.getElementById('quiz-screen').classList.remove('hidden');
+        loadQuestion();
+    }
+
+    function loadQuestion() {
+        if(currentQ >= quizData.length) return showResults();
+        const q = quizData[currentQ];
+        document.getElementById('q-eng').innerText = q.qEng;
+        document.getElementById('q-hin').innerText = q.qHin;
+        document.getElementById('question-count').innerText = `Question ${currentQ + 1}/${quizData.length}`;
+        document.getElementById('progress-fill').style.width = `${(currentQ / quizData.length) * 100}%`;
+        const container = document.getElementById('options-container');
+        container.innerHTML = '';
+        q.optionsEng.forEach((opt, i) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerHTML = `<strong>${opt}</strong><br><span style="font-size:0.8rem; opacity:0.8;">${q.optionsHin[i]}</span>`;
+            btn.onclick = () => check(i);
+            container.appendChild(btn);
+        });
+        if(timeLimit > 0) runTimer();
+    }
+
+    function runTimer() {
+        let left = timeLimit;
+        const disp = document.getElementById('timer');
+        clearInterval(timerInterval);
+        disp.innerText = `⏱ ${left}s`; disp.classList.remove('pulse');
+        timerInterval = setInterval(() => {
+            left--; disp.innerText = `⏱ ${left}s`;
+            if(left < 5) disp.classList.add('pulse');
+            if(left <= 0) { clearInterval(timerInterval); check(-1); }
+        }, 1000);
+    }
+
+    function check(idx) {
+        clearInterval(timerInterval);
+        const btns = document.querySelectorAll('.option-btn'), correct = quizData[currentQ].correct;
+        btns.forEach(b => b.disabled = true);
+        if(idx === correct) { score++; btns[idx].classList.add('correct'); playTone(880, 'sine'); }
+        else {
+            if(idx !== -1) btns[idx].classList.add('wrong');
+            btns[correct].classList.add('correct');
+            playTone(200, 'sawtooth');
+            const e = document.getElementById('feedback-emoji'); e.style.display = 'block'; e.classList.add('shake');
+            setTimeout(() => { e.style.display = 'none'; e.classList.remove('shake'); }, 800);
+        }
+        document.getElementById('score-count').innerText = `Score: ${score}`;
+        setTimeout(() => { currentQ++; loadQuestion(); }, 1500);
+    }
+
+    function showResults() {
+        document.getElementById('quiz-screen').classList.add('hidden');
+        document.getElementById('result-screen').classList.remove('hidden');
+        document.getElementById('progress-fill').style.width = '100%';
+        const p = (score / quizData.length) * 100;
+        document.getElementById('result-msg').innerText = p >= 80 ? "🏆 Outstanding Performance!" : p >= 50 ? "👏 Well Done!" : "📚 Keep Practicing!";
+        document.getElementById('final-score').innerText = `Final Score: ${score} / ${quizData.length}`;
+    }
+</script>
+</body>
+</html>

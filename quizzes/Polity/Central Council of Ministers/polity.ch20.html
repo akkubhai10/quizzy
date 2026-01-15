@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chapter 20: Council of Ministers Quiz</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-gradient: linear-gradient(45deg, #0f2027, #203a43, #2c5364);
+            --glass: rgba(255, 255, 255, 0.08);
+            --glass-border: rgba(255, 255, 255, 0.15);
+            --correct: #00b894;
+            --wrong: #d63031;
+            --hindi-dim: #dfe6e9;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; }
+
+        body {
+            background: var(--bg-gradient);
+            background-size: 400% 400%;
+            animation: gradientAnim 15s ease infinite;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 15px;
+            color: white;
+            overflow-x: hidden;
+        }
+
+        @keyframes gradientAnim {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        #progress-bar-container {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%;
+            height: 6px;
+            background: rgba(0,0,0,0.2);
+            z-index: 1000;
+        }
+
+        #progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(to right, #a1c4fd, #c2e9fb);
+            box-shadow: 0 0 10px #c2e9fb;
+            transition: width 0.4s ease;
+        }
+
+        .card {
+            background: var(--glass);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid var(--glass-border);
+            border-radius: 25px;
+            width: 100%;
+            max-width: 600px;
+            padding: 25px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .card::-webkit-scrollbar { width: 4px; }
+        .card::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
+
+        .screen { display: none; text-align: center; }
+        .active { display: block; }
+
+        .header-meta {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+
+        h2 { font-size: 1.15rem; font-weight: 700; line-height: 1.5; margin-bottom: 10px; text-align: left; }
+        .hindi-sub { font-size: 0.95rem; color: var(--hindi-dim); font-weight: 400; display: block; margin-top: 5px; opacity: 0.85; line-height: 1.4; }
+
+        .options-container { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; }
+
+        .option-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            padding: 14px;
+            border-radius: 12px;
+            color: white;
+            text-align: left;
+            cursor: pointer;
+            transition: 0.2s;
+            width: 100%;
+            outline: none;
+        }
+
+        .option-btn:hover:not(:disabled) { background: rgba(255,255,255,0.12); transform: scale(1.01); }
+        .option-btn:disabled { cursor: default; }
+
+        .correct { background: var(--correct) !important; border-color: transparent; }
+        .wrong { background: var(--wrong) !important; border-color: transparent; animation: shake 0.4s; }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-6px); }
+            75% { transform: translateX(6px); }
+        }
+
+        .pulse-red { color: #ff7675; animation: pulse 1s infinite; font-weight: bold; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+
+        .finish-btn {
+            margin-top: 20px;
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.2);
+            color: rgba(255,255,255,0.5);
+            padding: 12px;
+            border-radius: 10px;
+            font-size: 0.75rem;
+            width: 100%;
+            cursor: pointer;
+            text-transform: uppercase;
+        }
+
+        #sad-emoji {
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 120px;
+            z-index: 9999;
+            display: none;
+        }
+
+        input[type="number"] {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.4);
+            color: white;
+            padding: 8px;
+            border-radius: 8px;
+            width: 60px;
+            text-align: center;
+        }
+
+        .primary-btn {
+            background: #fff;
+            color: #203a43;
+            padding: 15px 40px;
+            border-radius: 40px;
+            border: none;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 25px;
+            transition: 0.3s;
+        }
+
+        .primary-btn:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0,0,0,0.3); }
+
+        .confetti { position: fixed; width: 6px; height: 6px; z-index: 9999; pointer-events: none; }
+    </style>
+</head>
+<body>
+
+<div id="progress-bar-container"><div id="progress-bar"></div></div>
+<div id="sad-emoji">😢</div>
+
+<div class="card">
+    <div id="start-screen" class="screen active">
+        <h1 style="margin-bottom: 10px;">Polity Master</h1>
+        <p style="font-size: 0.9rem; opacity: 0.8;">Chapter 20: Central Council of Ministers</p>
+        
+        <div style="margin: 30px 0; display: flex; flex-direction: column; align-items: center; gap: 10px;">
+            <label>Set Timer (Seconds):</label>
+            <input type="number" id="timer-input" value="0">
+            <span style="font-size: 0.7rem; opacity: 0.5;">(0 to disable)</span>
+        </div>
+
+        <div style="margin-bottom: 30px;">
+            <label style="cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                <input type="checkbox" id="shuffle-input"> Shuffle Questions
+            </label>
+        </div>
+
+        <button class="primary-btn" onclick="initQuiz()">Begin Quiz</button>
+    </div>
+
+    <div id="quiz-screen" class="screen">
+        <div class="header-meta">
+            <div id="counter">01 / 17</div>
+            <div id="timer-display" style="display:none;">⏱️ <span id="time-left">0</span></div>
+            <div id="score">SCORE: 00</div>
+        </div>
+        
+        <div id="q-area">
+            <h2 id="q-text-en">Question?</h2>
+            <span id="q-text-hi" class="hindi-sub">प्रश्न?</span>
+            <div class="options-container" id="options-grid"></div>
+        </div>
+
+        <button class="finish-btn" onclick="showResults()">Finish Early & View Results</button>
+    </div>
+
+    <div id="result-screen" class="screen">
+        <h1 id="res-title">Quiz Finished</h1>
+        <div style="font-size: 3.5rem; font-weight: 700; margin: 15px 0;" id="res-score">0 / 17</div>
+        <p id="res-msg" style="margin-bottom: 30px; font-weight: 600; font-size: 1.1rem;"></p>
+        <button class="primary-btn" onclick="location.reload()">Take Again</button>
+    </div>
+</div>
+
+<script>
+const rawData = [
+    {
+        en: "On which country's model is the parliamentary system of government in the Constitution of India based?",
+        hi: "भारत के संविधान में सरकार की संसदीय व्यवस्था किस देश के मॉडल पर आधारित है ?",
+        opts: [
+            {en: "Canada", hi: "कनाडा", correct: false},
+            {en: "British", hi: "ब्रिटिश", correct: true},
+            {en: "German", hi: "जर्मन", correct: false},
+            {en: "America", hi: "अमेरिका", correct: false}
+        ]
+    },
+    {
+        en: "Which Article of the Constitution mentions that there shall be a Council of Ministers to aid and advise the President?",
+        hi: "संविधान के किस अनुच्छेद में यह उल्लेख है कि राष्ट्रपति के सहायता और सलाह देने हेतु एक मंत्रिपरिषद होगी ?",
+        opts: [
+            {en: "Article 74", hi: "अनुच्छेद- 74", correct: true},
+            {en: "Article 75", hi: "अनुच्छेद- 75", correct: false},
+            {en: "Article 76", hi: "अनुच्छेद- 76", correct: false},
+            {en: "Article 77", hi: "अनुच्छेद- 77", correct: false}
+        ]
+    },
+    {
+        en: "The President appoints ministers:",
+        hi: "राष्ट्रपति मंत्रियों की नियुक्ति करता है-",
+        opts: [
+            {en: "At his discretion", hi: "अपने स्वेच्छा से", correct: false},
+            {en: "On the advice of the Prime Minister", hi: "प्रधानमंत्री के सलाह पर", correct: true},
+            {en: "On the advice of the Attorney General", hi: "महान्यायवादी के सलाह पर", correct: false},
+            {en: "On the advice of the Cabinet Secretary", hi: "कैबिनेट सचिव के सलाह पर", correct: false}
+        ]
+    },
+    {
+        en: "The total number of ministers including the PM shall not exceed what percentage of the total number of members of the Lok Sabha?",
+        hi: "प्रधानमंत्री सहित मंत्रिपरिषद की कुल संख्या लोकसभा सदस्यों की कुल संख्या से कितना अधिक नहीं होगा ?",
+        opts: [
+            {en: "15 percent", hi: "15 प्रतिशत से", correct: true},
+            {en: "14 percent", hi: "14 प्रतिशत से", correct: false},
+            {en: "20 percent", hi: "20 प्रतिशत से", correct: false},
+            {en: "25 percent", hi: "25 प्रतिशत से", correct: false}
+        ]
+    },
+    {
+        en: "Ministers shall hold office during the pleasure of:",
+        hi: "मंत्री किसके प्रसादपर्यंत पद धारण करेंगे ?",
+        opts: [
+            {en: "Prime Minister", hi: "प्रधानमंत्री", correct: false},
+            {en: "Attorney General", hi: "महान्यायवादी", correct: false},
+            {en: "Speaker of Lok Sabha", hi: "लोकसभा स्पीकर", correct: false},
+            {en: "President", hi: "राष्ट्रपति", correct: true}
+        ]
+    },
+    {
+        en: "The Council of Ministers is collectively responsible to:",
+        hi: "मंत्रिपरिषद सामूहिक रूप से उत्तरदायी होगी ?",
+        opts: [
+            {en: "Rajya Sabha", hi: "राज्यसभा के प्रति", correct: false},
+            {en: "Lok Sabha", hi: "लोकसभा के प्रति", correct: true},
+            {en: "Parliament", hi: "संसद के प्रति", correct: false},
+            {en: "None of the above", hi: "उपर्युक्त में से कोई नहीं", correct: false}
+        ]
+    },
+    {
+        en: "The salaries and allowances of ministers shall be determined by:",
+        hi: "मंत्रियों के वेतन भत्ते निर्धारित किये जायेंगे-",
+        opts: [
+            {en: "President", hi: "राष्ट्रपति द्वारा", correct: false},
+            {en: "Prime Minister", hi: "प्रधानमंत्री द्वारा", correct: false},
+            {en: "Parliament", hi: "संसद द्वारा", correct: true},
+            {en: "None of these", hi: "इनमें से कोई नहीं", correct: false}
+        ]
+    },
+    {
+        en: "Consider the following statements:\n1. Every minister shall have the right to speak in either house.\n2. Every minister can vote in either house.",
+        hi: "निम्नलिखित कथनों पर विचार कीजिए:\n1. प्रत्येक मंत्री को किसी भी सदन में बोलने का अधिकार होगा।\n2. प्रत्येक मंत्री किसी भी सदन में मतदान कर सकता है।",
+        opts: [
+            {en: "Only 1 is correct", hi: "केवल 1", correct: true},
+            {en: "Only 2 is correct", hi: "केवल 2", correct: false},
+            {en: "Both 1 and 2 are correct", hi: "1 और 2 दोनों", correct: false},
+            {en: "Neither 1 nor 2", hi: "न तो 1 और न ही 2", correct: false}
+        ]
+    },
+    {
+        en: "Article 88 is related to:",
+        hi: "अनुच्छेद 88 का संबंध है-",
+        opts: [
+            {en: "Rights of President in the House", hi: "सदन में राष्ट्रपति के अधिकार से", correct: false},
+            {en: "Rights of Prime Minister in the House", hi: "सदन में प्रधानमंत्री के अधिकार से", correct: false},
+            {en: "Rights of Ministers in the House", hi: "सदन में मंत्रियों के अधिकार से", correct: true},
+            {en: "Rights of Attorney General in the House", hi: "सदन में महान्यायवादी के अधिकार से", correct: false}
+        ]
+    },
+    {
+        en: "How many categories of ministers are there in the Council of Ministers?",
+        hi: "मंत्रिपरिषद में मंत्रियों की कितनी श्रेणियां होती है ?",
+        opts: [
+            {en: "Cabinet Ministers", hi: "कैबिनेट मंत्री", correct: false},
+            {en: "Ministers of State (Independent Charge)", hi: "राज्यमंत्री (स्वतंत्र प्रभार)", correct: false},
+            {en: "Ministers of State", hi: "राज्यमंत्री", correct: false},
+            {en: "All of the above", hi: "उपर्युक्त में सभी", correct: true}
+        ]
+    },
+    {
+        en: "Which type of minister holds the important ministries of the Central Government?",
+        hi: "केंद्र सरकार के महत्वपूर्ण मंत्रालय किस प्रकार के मंत्री के पास होता है ?",
+        opts: [
+            {en: "Cabinet Minister", hi: "कैबिनेट मंत्री", correct: true},
+            {en: "Minister of State (Independent Charge)", hi: "राज्यमंत्री (स्वतंत्र प्रभार)", correct: false},
+            {en: "Minister of State", hi: "राज्यमंत्री", correct: false},
+            {en: "All of the above", hi: "उपर्युक्त में सभी", correct: false}
+        ]
+    },
+    {
+        en: "Consider the following statements regarding Cabinet and Council of Ministers:\n1. Council of Ministers is a large body while Cabinet is a small body.\n2. Cabinet consists of only Cabinet ministers while Council of Ministers includes Cabinet, State and Deputy ministers.",
+        hi: "मंत्रिमंडल और मंत्रिपरिषद के संबंध में निम्नलिखित कथनों पर विचार कीजिए:\n1. मंत्रिपरिषद एक बड़ा निकाय है जबकि मंत्रिमंडल एक लघु निकाय है।\n2. मंत्रिमंडल में केवल कैबिनेट मंत्री शामिल होता है जबकि मंत्रिपरिषद में कैबिनेट मंत्री, राज्यमंत्री व उपमंत्री होते हैं।",
+        opts: [
+            {en: "Only 1", hi: "केवल 1", correct: false},
+            {en: "Only 2", hi: "केवल 2", correct: false},
+            {en: "Both 1 and 2", hi: "1 और 2 दोनों", correct: true},
+            {en: "Neither 1 nor 2", hi: "न तो 1 और न ही 2", correct: false}
+        ]
+    },
+    {
+        en: "In which Article of the Constitution is the word 'Cabinet' mentioned?",
+        hi: "मंत्रिमंडल शब्द का उल्लेख संविधान के किस अनुच्छेद में है ?",
+        opts: [
+            {en: "Article 74", hi: "अनुच्छेद- 74", correct: false},
+            {en: "Article 352", hi: "अनुच्छेद- 352", correct: true},
+            {en: "Article 75", hi: "अनुच्छेद- 75", correct: false},
+            {en: "Article 356", hi: "अनुच्छेद- 356", correct: false}
+        ]
+    },
+    {
+        en: "By which Constitutional Amendment was the word 'Cabinet' included in the Constitution?",
+        hi: "मंत्रिमंडल शब्द को संविधान में किस संविधान संशोधन द्वारा सम्मिलित किया गया ?",
+        opts: [
+            {en: "44th", hi: "44वें", correct: true},
+            {en: "45th", hi: "45वें", correct: false},
+            {en: "46th", hi: "46वें", correct: false},
+            {en: "48th", hi: "48वें", correct: false}
+        ]
+    },
+    {
+        en: "Who is the head of the Kitchen Cabinet?",
+        hi: "किचन कैबिनेट का प्रमुख कौन होता है ?",
+        opts: [
+            {en: "Home Minister", hi: "गृहमंत्री", correct: false},
+            {en: "Finance Minister", hi: "वित्त मंत्री", correct: false},
+            {en: "Prime Minister", hi: "प्रधानमंत्री", correct: true},
+            {en: "President", hi: "राष्ट्रपति", correct: false}
+        ]
+    },
+    {
+        en: "In which country is the practice of Kitchen Cabinet prevalent?",
+        hi: "किचन कैबिनेट का प्रचलन किस देश में है ?",
+        opts: [
+            {en: "Britain", hi: "ब्रिटेन", correct: false},
+            {en: "India", hi: "भारत", correct: false},
+            {en: "USA", hi: "अमेरिका", correct: false},
+            {en: "Both a and b", hi: "a और b दोनों", correct: true}
+        ]
+    },
+    {
+        en: "What type of body is the Council of Ministers?",
+        hi: "मंत्रिपरिषद किस प्रकार की संस्था है ?",
+        opts: [
+            {en: "Statutory", hi: "विधिक", correct: false},
+            {en: "Constitutional", hi: "संवैधानिक", correct: true},
+            {en: "Extra-Constitutional", hi: "संविधानेत्तर", correct: false},
+            {en: "None of these", hi: "इनमें से कोई नहीं", correct: false}
+        ]
+    }
+];
+
+let quiz = [];
+let currentIdx = 0;
+let scoreVal = 0;
+let timerRef = null;
+let timerDuration = 0;
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+function playTone(freq, type) {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start();
+    gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.8);
+    osc.stop(audioCtx.currentTime + 0.8);
+}
+
+function initQuiz() {
+    const isShuffle = document.getElementById('shuffle-input').checked;
+    timerDuration = parseInt(document.getElementById('timer-input').value) || 0;
+    quiz = isShuffle ? [...rawData].sort(() => Math.random() - 0.5) : [...rawData];
+    document.getElementById('start-screen').classList.remove('active');
+    document.getElementById('quiz-screen').classList.add('active');
+    loadQuestion();
+}
+
+function loadQuestion() {
+    if (currentIdx >= quiz.length) return showResults();
+    clearInterval(timerRef);
+    const q = quiz[currentIdx];
+    document.getElementById('counter').innerText = `${String(currentIdx + 1).padStart(2, '0')} / ${quiz.length}`;
+    document.getElementById('score').innerText = `SCORE: ${String(scoreVal).padStart(2, '0')}`;
+    document.getElementById('q-text-en').innerText = q.en;
+    document.getElementById('q-text-hi').innerText = q.hi;
+    document.getElementById('progress-bar').style.width = `${(currentIdx / quiz.length) * 100}%`;
+    const grid = document.getElementById('options-grid');
+    grid.innerHTML = '';
+    q.opts.forEach((opt, i) => {
+        const btn = document.createElement('button');
+        btn.className = 'option-btn';
+        btn.innerHTML = `<div>${opt.en}</div><div class="hindi-sub">${opt.hi}</div>`;
+        btn.onclick = () => handleSelect(btn, opt.correct);
+        grid.appendChild(btn);
+    });
+    if (timerDuration > 0) startTimer();
+    else document.getElementById('timer-display').style.display = 'none';
+}
+
+function startTimer() {
+    let time = timerDuration;
+    const display = document.getElementById('timer-display');
+    const text = document.getElementById('time-left');
+    display.style.display = 'block';
+    text.innerText = time;
+    text.classList.remove('pulse-red');
+    timerRef = setInterval(() => {
+        time--;
+        text.innerText = time;
+        if (time <= 5) text.classList.add('pulse-red');
+        if (time <= 0) { clearInterval(timerRef); autoFail(); }
+    }, 1000);
+}
+
+function handleSelect(btn, isCorrect) {
+    clearInterval(timerRef);
+    const btns = document.querySelectorAll('.option-btn');
+    btns.forEach(b => b.disabled = true);
+    if (isCorrect) {
+        btn.classList.add('correct');
+        scoreVal++;
+        playTone(900, 'sine');
+        spawnConfetti();
+    } else {
+        btn.classList.add('wrong');
+        playTone(200, 'sawtooth');
+        document.getElementById('sad-emoji').style.display = 'block';
+        setTimeout(() => document.getElementById('sad-emoji').style.display = 'none', 1000);
+        btns.forEach((b, idx) => { if (quiz[currentIdx].opts[idx].correct) b.classList.add('correct'); });
+    }
+    setTimeout(() => { currentIdx++; loadQuestion(); }, 1500);
+}
+
+function autoFail() {
+    const btns = document.querySelectorAll('.option-btn');
+    btns.forEach((b, idx) => {
+        b.disabled = true;
+        if (quiz[currentIdx].opts[idx].correct) b.classList.add('correct');
+    });
+    playTone(200, 'sawtooth');
+    setTimeout(() => { currentIdx++; loadQuestion(); }, 1500);
+}
+
+function showResults() {
+    clearInterval(timerRef);
+    document.getElementById('quiz-screen').classList.remove('active');
+    document.getElementById('result-screen').classList.add('active');
+    document.getElementById('progress-bar').style.width = '100%';
+    const percent = (scoreVal / quiz.length) * 100;
+    document.getElementById('res-score').innerText = `${scoreVal} / ${quiz.length}`;
+    if (percent >= 80) document.getElementById('res-msg').innerText = "🏆 Outstanding Performance!";
+    else if (percent >= 50) document.getElementById('res-msg').innerText = "👏 Well Done! Keep it up.";
+    else document.getElementById('res-msg').innerText = "📚 Practice makes perfect! Try again.";
+}
+
+function spawnConfetti() {
+    for (let i = 0; i < 40; i++) {
+        const div = document.createElement('div');
+        div.className = 'confetti';
+        div.style.left = Math.random() * 100 + 'vw';
+        div.style.top = '-10px';
+        div.style.backgroundColor = `hsl(${Math.random() * 360}, 70%, 50%)`;
+        document.body.appendChild(div);
+        const anim = div.animate([
+            { transform: 'translateY(0) rotate(0)', opacity: 1 },
+            { transform: `translateY(100vh) rotate(${Math.random() * 360}deg)`, opacity: 0 }
+        ], { duration: 2500 });
+        anim.onfinish = () => div.remove();
+    }
+}
+</script>
+</body>
+</html>

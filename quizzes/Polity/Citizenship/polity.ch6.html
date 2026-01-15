@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Citizenship Quiz - Chapter 06</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: 1px solid rgba(255, 255, 255, 0.2);
+            --primary-text: #ffffff;
+            --hindi-text: #ddd;
+            --correct: #4caf50;
+            --wrong: #f44336;
+            --accent: #bb86fc;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(45deg, #4b0082, #0000ff, #ff1493);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--primary-text);
+            overflow: hidden;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .quiz-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: var(--glass-border);
+            border-radius: 25px;
+            width: 95%;
+            max-width: 500px;
+            height: 90vh;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            height: 6px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 25px 25px 0 0;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #00dbde, #fc00ff);
+            box-shadow: 0 0 10px #fc00ff;
+            transition: width 0.3s ease;
+        }
+
+        .content {
+            padding: 20px;
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Start Screen Styles */
+        #start-screen { text-align: center; justify-content: center; }
+        .setting-item { margin: 20px 0; text-align: left; }
+        .setting-item label { display: block; font-size: 0.9rem; margin-bottom: 8px; }
+        input[type="number"] {
+            width: 100%;
+            padding: 12px;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.3);
+            background: rgba(255,255,255,0.1);
+            color: white;
+            outline: none;
+        }
+
+        .toggle-box {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255,255,255,0.05);
+            padding: 12px;
+            border-radius: 12px;
+        }
+
+        /* Quiz UI Styles */
+        .stats-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .timer-icon {
+            font-size: 1.1rem;
+            display: inline-block;
+            margin-right: 5px;
+        }
+        .pulse-red { color: #ff1744; animation: pulse 0.8s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+
+        .question-text { font-weight: 700; font-size: 1.1rem; margin-bottom: 20px; line-height: 1.4; }
+        .hindi-subtext { 
+            display: block; 
+            font-size: 0.95rem; 
+            color: var(--hindi-text); 
+            font-weight: 400; 
+            margin-top: 5px; 
+            line-height: 1.4;
+        }
+
+        .options-list { display: grid; gap: 12px; }
+        .option-btn {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 15px;
+            color: white;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.95rem;
+        }
+
+        .option-btn:disabled { cursor: default; }
+        .option-btn.correct { background: var(--correct) !important; border-color: #fff; }
+        .option-btn.wrong { background: var(--wrong) !important; border-color: #fff; }
+
+        .btn-main {
+            background: white;
+            color: #4b0082;
+            border: none;
+            padding: 15px;
+            border-radius: 15px;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: transform 0.2s;
+            margin-top: 20px;
+        }
+        .btn-main:hover { transform: scale(1.03); }
+
+        #finish-early {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            font-size: 0.8rem;
+            padding: 8px;
+            margin-top: auto;
+        }
+
+        /* Feedback Emoji */
+        #feedback-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 80px;
+            pointer-events: none;
+            display: none;
+            z-index: 100;
+        }
+        .shake { animation: shake 0.5s; }
+        @keyframes shake {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            25% { transform: translate(-55%, -50%) rotate(-5deg); }
+            50% { transform: translate(-45%, -50%) rotate(5deg); }
+            100% { transform: translate(-50%, -50%) rotate(0deg); }
+        }
+
+        #confetti-canvas {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 9999;
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="confetti-canvas"></canvas>
+
+    <div class="quiz-card">
+        <div class="progress-bar-container">
+            <div id="progress" class="progress-bar"></div>
+        </div>
+
+        <div id="feedback-overlay">😢</div>
+
+        <div class="content" id="app-content">
+            <div id="start-screen">
+                <h1 style="margin-bottom: 10px;">Citizenship Quiz</h1>
+                <p style="margin-bottom: 30px; opacity: 0.8;">Chapter - 06 | नागरिकता</p>
+                
+                <div class="setting-item">
+                    <label>Timer per question (0 = No Timer)</label>
+                    <input type="number" id="timer-val" value="15" min="0">
+                </div>
+
+                <div class="setting-item">
+                    <div class="toggle-box">
+                        <span>Shuffle Questions</span>
+                        <input type="checkbox" id="shuffle-opt" checked>
+                    </div>
+                </div>
+
+                <button class="btn-main" onclick="initQuiz()">Start Quiz</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const quizData = [
+            { q: "In which part of the Indian Constitution is citizenship discussed?", h: "नागरिकता की चर्चा भारतीय संविधान के किस भाग में किया गया है?", a: "Part - 2", ha: "भाग - 2", o: ["Part - 3 / भाग- 3", "Part - 2 / भाग- 2", "Part - 5 / भाग- 5", "Part - 6 / भाग- 6"], c: 1 },
+            { q: "Articles 6 to 11 of the Constitution are related to:", h: "संविधान का अनुच्छेद 6 से 11 संबंधित है-", a: "Citizenship", ha: "नागरिकता", o: ["Fundamental Rights / मूल अधिकार", "Fundamental Duties / मूल कर्तव्य", "Citizenship / नागरिकता", "Directive Principles / नीति-निर्देशक"], c: 2 },
+            { q: "Through which law does the Government of India regulate citizenship?", h: "भारत सरकार किस कानून के माध्यम से नागरिकता को अधिनियमित करती है?", a: "Citizenship Act, 1955", ha: "नागरिकता अधिनियम, 1955", o: ["Citizenship Act, 1956 / नागरिकता अधिनियम, 1956", "Citizenship Act, 1952 / नागरिकता अधिनियम, 1952", "Citizenship Act, 1957 / नागरिकता अधिनियम, 1957", "Citizenship Act, 1955 / नागरिकता अधिनियम, 1955"], c: 3 },
+            { q: "According to the Constitution, which categories of people became citizens of India?", h: "संविधान के अनुसार निम्नलिखित में से किन श्रेणियों के लोग भारत के नागरिक बनें?", a: "All of the above", ha: "उपर्युक्त में सभी", o: ["A person who was a resident of India / एक व्यक्ति जो भारत का मूल निवासी हो", "A person who came to India from Pakistan / एक व्यक्ति पाकिस्तान से भारत आया हो", "A person who migrated to Pakistan after March 1, 1947 but returned / एक व्यक्ति जो 1 मार्च 1947 के बाद भारत से पाकिस्तान स्थानांतरित हो गया हो लेकिन पुनः भारत लौट गया हो", "A person whose parents or grandparents were born in undivided India but stayed outside / एक व्यक्ति जिसके माता-पिता या दादा-दादी अविभाजित भारत में पैदा हुए हों लेकिन वह भारत के बाहर रह रहा हो", "All of the above / उपर्युक्त में सभी"], c: 4 },
+            { q: "Who among the following will NOT be considered a citizen of India?", h: "निम्नलिखित में से कौन-सा व्यक्ति भारत का नागरिक नहीं माना जायेगा?", a: "All of these", ha: "इनमें से सभी", o: ["Voluntarily acquiring citizenship of another country / जो स्वेच्छा से किसी अन्य देश का नागरिकता ग्रहण कर लेगा", "Termination by Central Govt / केंद्र सरकार द्वारा बर्खास्तगी", "Voluntary renunciation / स्वैच्छिक त्याग द्वारा", "All of these / इनमें से सभी"], c: 3 },
+            { q: "What are the three conditions for acquiring citizenship mentioned in Article 5?", h: "भारतीय संविधान के अनुच्छेद 5 में उल्लिखित किसी व्यक्ति की नागरिकता प्राप्त करने की तीन शर्तें हैं?", a: "All of the above", ha: "उपर्युक्त में सभी", o: ["If born in India / यदि उसका जन्म भारत में हुआ हो", "Either parent born in India / उसके माता-पिता में से किसी एक का जन्म भारत में हुआ हो", "Resident in India for 5 years before Constitution / संविधान लागू होने के पाँच वर्ष पूर्व से भारत में रह रहा हो", "All of the above / उपर्युक्त में सभी"], c: 3 },
+            { q: "A person who migrated from India to Pakistan after March 1, 1947 but returned for resettlement can become a citizen. For how many months must they stay in India after application?", h: "एक व्यक्ति जो 1 मार्च 1947 के बाद भारत से पाकिस्तान स्थानांतरित हो गया हो लेकिन बाद में फिर भारत में पुनर्वास के लिए लौटा भारत का नागरिक बन सकता है। उसे पंजीकरण प्रार्थना-पत्र के बाद कितने माह तक भारत में बना रहना होगा?", a: "Six Months", ha: "छः माह", o: ["Three Months / तीन माह", "Six Months / छः माह", "Seven Months / सात माह", "Eight Months / आठ माह"], c: 1 },
+            { q: "On which of these grounds does the Citizenship Act 1955 NOT talk about citizenship?", h: "नागरिकता अधिनियम 1955 के किन आधारों पर नागरिकता की बात नहीं करता है?", a: "Acquisition of Property", ha: "संपत्ति अधिग्रहण द्वारा", o: ["By Birth / जन्म से", "Acquisition of Property / संपत्ति अधिग्रहण द्वारा", "By Descent / वंश के आधार पर", "Incorporation of Territory / क्षेत्र समाविष्ट द्वारा"], c: 1 },
+            { q: "On what grounds can citizenship be acquired in India?", h: "भारत में किन आधारों पर नागरिकता प्राप्त की जा सकती है?", a: "All of the above", ha: "उपर्युक्त सभी", o: ["By Birth / जन्म से", "By Descent / वंश के आधार पर", "By Registration / पंजीकरण द्वारा", "All of the above / उपर्युक्त सभी"], c: 3 },
+            { q: "What should be the eligibility to obtain citizenship by registration?", h: "पंजीकरण द्वारा नागरिकता प्राप्त करने के लिये योग्यता होनी चाहिए?", a: "All of the above", ha: "उपर्युक्त सभी", o: ["Person of Indian origin resident for 7 years / भारतीय मूल का व्यक्ति जो नागरिकता प्राप्ति आवेदन से ठीक पूर्व सात वर्ष भारत में रह चुका हो", "Married to an Indian citizen / वह व्यक्ति जिसने भारतीय नागरिक से विवाह किया हो", "Minor children of Indian citizens / भारत के नागरिक के नाबालिक बच्चे", "All of the above / उपर्युक्त सभी"], c: 3 },
+            { q: "If a person wants to get Indian citizenship, how many years should they be registered as an overseas citizen?", h: "यदि कोई व्यक्ति भारत का नागरिकता प्राप्त करना चाहता हो तो उसे समुद्र पार किसी देश के नागरिक के रूप में कितने वर्षों तक पंजीकृत होना चाहिए?", a: "Five years", ha: "पाँच वर्ष", o: ["Six years / छः वर्ष", "Five years / पाँच वर्ष", "Seven years / सात वर्ष", "Eight years / आठ वर्ष"], c: 1 },
+            { q: "What are the qualifications to obtain Indian citizenship through naturalization?", h: "प्राकृतिक रूप से भारतीय नागरिकता प्राप्त करने के लिए योग्यताएँ होनी चाहिए?", a: "All of the above", ha: "उपर्युक्त में सभी", o: ["Good knowledge of languages in 8th Schedule / वह संविधान की आठवीं अनुसूची में उल्लिखित भाषाओं का अच्छा ज्ञाता हो", "Not belonging to a country where Indians can't be citizens / ऐसे देश से संबंधित नहीं हो जहाँ भारतीय नागरिक नहीं बन सकते", "Good character / उसका चरित्र अच्छा होना चाहिए", "All of the above / उपर्युक्त में सभी"], c: 3 },
+            { q: "If a person lives in India or is in service of the Govt, how many months prior to application must they reside in India?", h: "यदि कोई व्यक्ति भारत में रह रहा हो या भारत सरकार की सेवा में हो तो वह यदि भारत की नागरिकता चाहता है तो उसे नागरिक संबंधी आवेदन देने के कम से कम कितने माह पूर्व तक भारत में रहना चाहिए?", a: "12 Months", ha: "12 माह", o: ["12 Months / 12 माह", "14 Months / 14 माह", "15 Months / 15 माह", "16 Months / 16 माह"], c: 0 },
+            { q: "What type of citizenship system exists in India?", h: "भारत में किस प्रकार की नागरिकता की व्यवस्था है?", a: "Single", ha: "एकल", o: ["Dual / दोहरी", "Single / एकल", "Triple / तिहरी", "All of these / इनमें से सभी"], c: 1 },
+            { q: "Which of the following countries provides dual citizenship?", h: "निम्नलिखित में से कौन-सा देश दोहरी नागरिकता प्रदान करता है?", a: "America", ha: "अमेरिका", o: ["America / अमेरिका", "India / भारत", "Britain / ब्रिटेन", "Pakistan / पाकिस्तान"], c: 0 },
+            { q: "Essential qualification for Overseas Citizen of India (OCI) card holder is:", h: "विदेशी भारतीय नागरिक कार्ड होल्डर के लिए आवश्यक योग्यता है-", a: "Who was a citizen of another country but citizen of India at commencement of Constitution", ha: "जो कि किसी अन्य देश का नागरिक है लेकिन संविधान लागू होने के समय भारत का नागरिक था", o: ["Citizen of another country but Indian at commencement / जो कि किसी अन्य देश का नागरिक है लेकिन संविधान लागू होने के समय भारत का नागरिक था", "Minor child of Indian parents / कोई व्यक्ति जो कि नाबालिक बच्चा हो जिसके माता-पिता भारत के नागरिक हो", "Belongs to territory that became part of India after Aug 15 1947 / जो कि किसी अन्य देश का नागरिक है लेकिन उस भू-भाग से संबंध रखता है जो 15 अगस्त 1947 के भारत का भाग हो", "None of these / इनमें से कोई नहीं"], c: 0 }
+        ];
+
+        let currentQ = 0;
+        let score = 0;
+        let timer;
+        let timePerQ = 15;
+        let quizQuestions = [];
+        let audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playSound(freq, type) {
+            let osc = audioCtx.createOscillator();
+            let gain = audioCtx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.2);
+        }
+
+        function initQuiz() {
+            timePerQ = parseInt(document.getElementById('timer-val').value) || 0;
+            quizQuestions = document.getElementById('shuffle-opt').checked ? 
+                [...quizData].sort(() => Math.random() - 0.5) : [...quizData];
+            
+            showQuestion();
+        }
+
+        function showQuestion() {
+            if (currentQ >= quizQuestions.length) return showResults();
+            
+            const q = quizQuestions[currentQ];
+            const progress = ((currentQ) / quizQuestions.length) * 100;
+            document.getElementById('progress').style.width = progress + "%";
+
+            let html = `
+                <div class="stats-row">
+                    <span>Question ${currentQ + 1}/${quizQuestions.length}</span>
+                    <span id="timer-box" style="${timePerQ === 0 ? 'display:none' : ''}">
+                        <span class="timer-icon">⏳</span><span id="timer-display">${timePerQ}</span>s
+                    </span>
+                    <span>Score: ${score}</span>
+                </div>
+                <div class="question-box">
+                    <p class="question-text">${q.q}<span class="hindi-subtext">${q.h}</span></p>
+                </div>
+                <div class="options-list">
+                    ${q.o.map((opt, i) => `
+                        <button class="option-btn" onclick="checkAnswer(${i}, this)">
+                            ${opt}
+                        </button>
+                    `).join('')}
+                </div>
+                <button class="btn-main" id="finish-early" onclick="showResults()">Finish & Show Results</button>
+            `;
+            
+            document.getElementById('app-content').innerHTML = html;
+            if (timePerQ > 0) startTimer();
+        }
+
+        function startTimer() {
+            let timeLeft = timePerQ;
+            clearInterval(timer);
+            timer = setInterval(() => {
+                timeLeft--;
+                const display = document.getElementById('timer-display');
+                if(!display) return clearInterval(timer);
+                display.innerText = timeLeft;
+                if (timeLeft < 5) display.parentElement.classList.add('pulse-red');
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    checkAnswer(-1);
+                }
+            }, 1000);
+        }
+
+        function checkAnswer(idx, btn) {
+            clearInterval(timer);
+            const q = quizQuestions[currentQ];
+            const btns = document.querySelectorAll('.option-btn');
+            btns.forEach(b => b.disabled = true);
+
+            if (idx === q.c) {
+                score++;
+                btn.classList.add('correct');
+                playSound(800, 'sine'); // Ting
+                startConfetti();
+            } else {
+                if(btn) btn.classList.add('wrong');
+                btns[q.c].classList.add('correct');
+                playSound(200, 'sawtooth'); // Buzz
+                triggerEmoji();
+            }
+
+            setTimeout(() => {
+                currentQ++;
+                showQuestion();
+            }, 1500);
+        }
+
+        function triggerEmoji() {
+            const overlay = document.getElementById('feedback-overlay');
+            overlay.style.display = 'block';
+            overlay.classList.add('shake');
+            setTimeout(() => {
+                overlay.style.display = 'none';
+                overlay.classList.remove('shake');
+            }, 1000);
+        }
+
+        function showResults() {
+            clearInterval(timer);
+            const percent = (score / quizQuestions.length) * 100;
+            let msg = "";
+            if (percent >= 80) msg = "🏆 Outstanding Performance!";
+            else if (percent >= 50) msg = "👏 Well Done! Keep it up.";
+            else msg = "📚 Practice makes perfect! Try again.";
+
+            document.getElementById('progress').style.width = "100%";
+            document.getElementById('app-content').innerHTML = `
+                <div style="text-align:center; padding: 20px;">
+                    <h2 style="font-size: 2rem; margin-bottom: 10px;">Quiz Finished!</h2>
+                    <div style="font-size: 3rem; margin: 20px 0;">${Math.round(percent)}%</div>
+                    <p style="font-size: 1.2rem; margin-bottom: 10px;">${msg}</p>
+                    <p style="opacity: 0.8;">You scored ${score} out of ${quizQuestions.length}</p>
+                    <button class="btn-main" onclick="location.reload()" style="width:100%">Restart Quiz</button>
+                </div>
+            `;
+            if(percent >= 80) startConfetti();
+        }
+
+        // CSS Confetti Implementation
+        function startConfetti() {
+            const canvas = document.getElementById('confetti-canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            let particles = [];
+            for(let i=0; i<100; i++) {
+                particles.push({
+                    x: Math.random()*canvas.width,
+                    y: Math.random()*canvas.height - canvas.height,
+                    r: Math.random()*6+2,
+                    d: Math.random()*10,
+                    color: `hsl(${Math.random()*360}, 100%, 50%)`,
+                    tilt: Math.random()*10 - 10
+                });
+            }
+            function draw() {
+                ctx.clearRect(0,0,canvas.width, canvas.height);
+                particles.forEach((p, i) => {
+                    p.y += Math.cos(p.d) + 1 + p.r/2;
+                    p.x += Math.sin(p.d) * 2;
+                    ctx.beginPath();
+                    ctx.lineWidth = p.r;
+                    ctx.strokeStyle = p.color;
+                    ctx.moveTo(p.x + p.tilt + p.r/2, p.y);
+                    ctx.lineTo(p.x + p.tilt, p.y + p.tilt + p.r/2);
+                    ctx.stroke();
+                });
+                if(particles[0].y < canvas.height) requestAnimationFrame(draw);
+                else ctx.clearRect(0,0,canvas.width, canvas.height);
+            }
+            draw();
+        }
+    </script>
+</body>
+</html>

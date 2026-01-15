@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chapter 24: Parliamentary Forums Quiz</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --correct: #4dfd63;
+            --wrong: #ff4d4d;
+            --primary-text: #ffffff;
+            --secondary-text: #dddddd;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            color: white;
+            overflow-x: hidden;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .quiz-container {
+            width: 100%;
+            max-width: 600px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 25px;
+            padding: 30px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+            position: relative;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .progress-bar-container {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 6px;
+            background: rgba(255,255,255,0.1);
+            z-index: 1000;
+        }
+
+        #progress-fill {
+            height: 100%; width: 0%;
+            background: linear-gradient(90deg, #ff0080, #7928ca);
+            box-shadow: 0 0 15px #ff0080;
+            transition: width 0.3s;
+        }
+
+        .header-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        #timer.pulse { color: var(--wrong); animation: pulse 0.6s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+
+        .question-box { margin-bottom: 25px; }
+        .eng-txt { display: block; font-size: 1.15rem; font-weight: 600; margin-bottom: 8px; line-height: 1.4; }
+        .hin-txt { display: block; font-size: 0.95rem; color: var(--secondary-text); margin-bottom: 20px; line-height: 1.4; }
+
+        .options-grid { display: grid; gap: 12px; }
+
+        .option-btn {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid var(--glass-border);
+            padding: 16px;
+            border-radius: 15px;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.2s ease;
+            color: white;
+            outline: none;
+        }
+
+        .option-btn:hover:not([disabled]) {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.02);
+        }
+
+        .option-btn.correct { background: var(--correct) !important; color: #121212; font-weight: 700; }
+        .option-btn.wrong { background: var(--wrong) !important; }
+
+        .btn-finish {
+            margin-top: 30px;
+            width: 100%;
+            padding: 14px;
+            border-radius: 12px;
+            border: none;
+            background: rgba(255,255,255,0.15);
+            color: white;
+            cursor: pointer;
+            font-weight: 600;
+            transition: 0.3s;
+        }
+
+        .btn-finish:hover { background: rgba(255,255,255,0.25); }
+
+        .setup-screen, .result-screen { text-align: center; }
+        .start-btn {
+            padding: 16px 45px; font-size: 1.2rem; border-radius: 50px; border: none;
+            background: white; color: #302b63; font-weight: bold; cursor: pointer;
+            box-shadow: 0 4px 15px rgba(255,255,255,0.3);
+        }
+        .start-btn:hover { transform: scale(1.05); }
+
+        #feedback-emoji {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 120px; z-index: 9999; display: none;
+        }
+        .shake { animation: shake 0.5s linear; }
+        @keyframes shake {
+            0% { transform: translate(-50%, -50%) translateX(0); }
+            25% { transform: translate(-50%, -50%) translateX(-10px); }
+            50% { transform: translate(-50%, -50%) translateX(10px); }
+            75% { transform: translate(-50%, -50%) translateX(-10px); }
+            100% { transform: translate(-50%, -50%) translateX(0); }
+        }
+
+        .hidden { display: none; }
+        input[type="number"] { padding: 8px; border-radius: 5px; border: none; outline: none; width: 60px; }
+    </style>
+</head>
+<body>
+
+<div class="progress-bar-container"><div id="progress-fill"></div></div>
+
+<div class="quiz-container">
+    <div id="setup-screen" class="setup-screen">
+        <h1 style="margin-bottom: 10px;">Parliamentary Forums</h1>
+        <p style="margin-bottom: 25px; opacity: 0.8;">Chapter - 24</p>
+        <div style="margin-bottom: 20px;">
+            <label>Timer (Seconds): </label>
+            <input type="number" id="timer-input" value="30">
+        </div>
+        <div style="margin-bottom: 25px;">
+            <label><input type="checkbox" id="shuffle-input"> Shuffle Questions</label>
+        </div>
+        <button class="start-btn" onclick="startQuiz()">START QUIZ</button>
+    </div>
+
+    <div id="quiz-screen" class="hidden">
+        <div class="header-info">
+            <span id="question-count">Question 00/04</span>
+            <span id="timer">⏱ 00s</span>
+            <span id="score-count">Score: 0</span>
+        </div>
+        
+        <div class="question-box">
+            <span class="eng-txt" id="q-eng"></span>
+            <span class="hin-txt" id="q-hin"></span>
+        </div>
+
+        <div class="options-grid" id="options-container"></div>
+
+        <button class="btn-finish" onclick="showResults()">Finish & Show Results</button>
+    </div>
+
+    <div id="result-screen" class="result-screen hidden">
+        <h2 id="result-msg" style="margin-bottom: 15px;"></h2>
+        <p id="final-score" style="font-size: 1.4rem; margin-bottom: 30px;"></p>
+        <button class="start-btn" onclick="location.reload()">RESTART</button>
+    </div>
+</div>
+
+<div id="feedback-emoji">😢</div>
+
+<script>
+    const questions = [
+        {
+            qEng: "When was the first Parliamentary Forum constituted?",
+            qHin: "पहला संसदीय मंच का गठन कब किया गया?",
+            optionsEng: ["Year 2005", "Year 2007", "Year 2009", "Year 2012"],
+            optionsHin: ["वर्ष 2005", "वर्ष 2007", "वर्ष 2009", "वर्ष 2012"],
+            correct: 0
+        },
+        {
+            qEng: "On which subject was the first Parliamentary Forum constituted?",
+            qHin: "निम्नलिखित में से किस विषय पर पहला संसदीय मंच गठित हुआ?",
+            optionsEng: ["Water Conservation and Management", "On Children", "On Disaster Management", "On Climate Change"],
+            optionsHin: ["जल संरक्षण एवं प्रबंधन", "बच्चों पर", "आपदा प्रबंधन पर", "जलवायु परिवर्तन पर"],
+            correct: 0
+        },
+        {
+            qEng: "Who is the President (Ex-officio) of the Parliamentary Forums?",
+            qHin: "निम्नलिखित में से संसदीय मंच के अध्यक्ष होते हैं-",
+            optionsEng: ["President", "Chairman of Rajya Sabha", "Speaker of Lok Sabha", "Prime Minister"],
+            optionsHin: ["राष्ट्रपति", "राज्यसभा के सभापति", "लोकसभा अध्यक्ष", "प्रधानमंत्री"],
+            correct: 2
+        },
+        {
+            qEng: "What can be the maximum number of members in each Parliamentary Forum?",
+            qHin: "प्रत्येक संसदीय मंच में अधिकतम सदस्यों की संख्या हो सकती है?",
+            optionsEng: ["32", "31", "34", "36"],
+            optionsHin: ["32", "31", "34", "36"],
+            correct: 1
+        }
+    ];
+
+    let currentQ = 0;
+    let score = 0;
+    let timerInterval;
+    let quizQuestions = [];
+    let timeLimit = 30;
+
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function playTone(freq, type, duration) {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+    }
+
+    function createConfetti() {
+        for(let i=0; i<40; i++) {
+            const c = document.createElement('div');
+            c.style.position = 'fixed';
+            c.style.width = '8px';
+            c.style.height = '8px';
+            c.style.background = `hsl(${Math.random()*360}, 100%, 50%)`;
+            c.style.left = Math.random() * 100 + 'vw';
+            c.style.top = '-10px';
+            c.style.zIndex = '10000';
+            document.body.appendChild(c);
+            c.animate([{ top: '-10px', opacity: 1 }, { top: '100vh', opacity: 0 }], { duration: 2000 + Math.random()*2000 }).onfinish = () => c.remove();
+        }
+    }
+
+    function startQuiz() {
+        timeLimit = parseInt(document.getElementById('timer-input').value) || 0;
+        const shuffle = document.getElementById('shuffle-input').checked;
+        quizQuestions = shuffle ? [...questions].sort(() => Math.random() - 0.5) : [...questions];
+        document.getElementById('setup-screen').classList.add('hidden');
+        document.getElementById('quiz-screen').classList.remove('hidden');
+        loadQuestion();
+    }
+
+    function loadQuestion() {
+        if(currentQ >= quizQuestions.length) return showResults();
+        
+        const q = quizQuestions[currentQ];
+        document.getElementById('q-eng').innerText = q.qEng;
+        document.getElementById('q-hin').innerText = q.qHin;
+        document.getElementById('question-count').innerText = `Question ${currentQ + 1}/${quizQuestions.length}`;
+        document.getElementById('progress-fill').style.width = `${(currentQ / quizQuestions.length) * 100}%`;
+
+        const container = document.getElementById('options-container');
+        container.innerHTML = '';
+        q.optionsEng.forEach((opt, i) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerHTML = `<strong>${opt}</strong><br><span style="font-size:0.85rem; opacity:0.8;">${q.optionsHin[i]}</span>`;
+            btn.onclick = () => handleAnswer(i);
+            container.appendChild(btn);
+        });
+
+        if(timeLimit > 0) startTimer();
+        else document.getElementById('timer').innerText = "⏱ Unlimited";
+    }
+
+    function startTimer() {
+        let timeLeft = timeLimit;
+        const display = document.getElementById('timer');
+        clearInterval(timerInterval);
+        display.innerText = `⏱ ${timeLeft}s`;
+        display.classList.remove('pulse');
+
+        timerInterval = setInterval(() => {
+            timeLeft--;
+            display.innerText = `⏱ ${timeLeft}s`;
+            if(timeLeft < 5) display.classList.add('pulse');
+            if(timeLeft <= 0) { clearInterval(timerInterval); handleAnswer(-1); }
+        }, 1000);
+    }
+
+    function handleAnswer(idx) {
+        clearInterval(timerInterval);
+        const btns = document.querySelectorAll('.option-btn');
+        btns.forEach(b => b.disabled = true);
+        const correct = quizQuestions[currentQ].correct;
+
+        if(idx === correct) {
+            score++;
+            btns[idx].classList.add('correct');
+            playTone(800, 'sine', 0.3);
+            createConfetti();
+        } else {
+            if(idx !== -1) btns[idx].classList.add('wrong');
+            btns[correct].classList.add('correct');
+            playTone(200, 'sawtooth', 0.4);
+            const emoji = document.getElementById('feedback-emoji');
+            emoji.style.display = 'block';
+            emoji.classList.add('shake');
+            setTimeout(() => { emoji.style.display = 'none'; emoji.classList.remove('shake'); }, 1000);
+        }
+
+        document.getElementById('score-count').innerText = `Score: ${score}`;
+        setTimeout(() => { currentQ++; loadQuestion(); }, 1500);
+    }
+
+    function showResults() {
+        document.getElementById('quiz-screen').classList.add('hidden');
+        document.getElementById('result-screen').classList.remove('hidden');
+        document.getElementById('progress-fill').style.width = '100%';
+        const p = (score / quizQuestions.length) * 100;
+        document.getElementById('result-msg').innerText = p >= 80 ? "🏆 Outstanding!" : p >= 50 ? "👏 Well Done!" : "📚 Keep Studying!";
+        document.getElementById('final-score').innerText = `Final Score: ${score} / ${quizQuestions.length}`;
+    }
+</script>
+</body>
+</html>

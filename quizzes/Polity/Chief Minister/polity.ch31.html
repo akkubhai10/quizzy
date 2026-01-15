@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chapter 31 & 32: Chief Minister Quiz</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --correct: #4dfd63;
+            --wrong: #ff4d4d;
+            --primary-text: #ffffff;
+            --secondary-text: #e0e0e0;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #00b09b, #96c93d, #4facfe);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            color: white;
+            overflow-x: hidden;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .quiz-container {
+            width: 100%;
+            max-width: 600px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 25px;
+            padding: 25px;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+            position: relative;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .progress-bar-container {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 6px;
+            background: rgba(255,255,255,0.1);
+            z-index: 1000;
+        }
+
+        #progress-fill {
+            height: 100%; width: 0%;
+            background: linear-gradient(90deg, #11998e, #38ef7d);
+            box-shadow: 0 0 10px #38ef7d;
+            transition: width 0.3s;
+        }
+
+        .header-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        #timer.pulse { color: var(--wrong); animation: pulse 0.5s infinite; }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+
+        .question-box { margin-bottom: 20px; }
+        .eng-txt { display: block; font-size: 1.1rem; font-weight: 600; margin-bottom: 5px; line-height: 1.4; }
+        .hin-txt { display: block; font-size: 0.95rem; color: var(--secondary-text); margin-bottom: 15px; }
+
+        .options-grid { display: grid; gap: 10px; }
+
+        .option-btn {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid var(--glass-border);
+            padding: 14px;
+            border-radius: 12px;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.2s;
+            color: white;
+            outline: none;
+        }
+
+        .option-btn:hover:not([disabled]) {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateX(5px);
+        }
+
+        .option-btn.correct { background: var(--correct) !important; color: #121212; font-weight: bold; }
+        .option-btn.wrong { background: var(--wrong) !important; }
+
+        .btn-finish {
+            margin-top: 25px;
+            width: 100%;
+            padding: 12px;
+            border-radius: 10px;
+            border: none;
+            background: rgba(255,255,255,0.1);
+            color: white;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .setup-screen, .result-screen { text-align: center; }
+        .start-btn {
+            padding: 15px 45px; font-size: 1.1rem; border-radius: 50px; border: none;
+            background: white; color: #00b09b; font-weight: bold; cursor: pointer;
+            transition: 0.3s; margin-top: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        .start-btn:hover { transform: scale(1.1); }
+
+        #feedback-emoji {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 100px; z-index: 9999; display: none;
+        }
+        .shake { animation: shake 0.4s; }
+        @keyframes shake {
+            0%, 100% { transform: translate(-50%, -50%) rotate(0deg); }
+            25% { transform: translate(-55%, -50%) rotate(-5deg); }
+            75% { transform: translate(-45%, -50%) rotate(5deg); }
+        }
+
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+<div class="progress-bar-container"><div id="progress-fill"></div></div>
+
+<div class="quiz-container">
+    <div id="setup-screen" class="setup-screen">
+        <h1 style="margin-bottom: 5px;">Chief Minister & Council</h1>
+        <p style="opacity: 0.8; margin-bottom: 20px;">Chapters - 31 & 32</p>
+        <div style="margin-bottom: 15px;">
+            <label>Timer per Question: </label>
+            <input type="number" id="timer-input" value="30" style="width: 60px; padding: 5px; border-radius: 5px; border:none;">s
+        </div>
+        <div style="margin-bottom: 25px;">
+            <label><input type="checkbox" id="shuffle-input"> Shuffle Questions</label>
+        </div>
+        <button class="start-btn" onclick="startQuiz()">START QUIZ</button>
+    </div>
+
+    <div id="quiz-screen" class="hidden">
+        <div class="header-info">
+            <span id="question-count">Question 01/13</span>
+            <span id="timer">⏱ 30s</span>
+            <span id="score-count">Score: 0</span>
+        </div>
+        <div class="question-box">
+            <span class="eng-txt" id="q-eng"></span>
+            <span class="hin-txt" id="q-hin"></span>
+        </div>
+        <div class="options-grid" id="options-container"></div>
+        <button class="btn-finish" onclick="showResults()">Finish & Results</button>
+    </div>
+
+    <div id="result-screen" class="result-screen hidden">
+        <h2 id="result-msg" style="font-size: 1.8rem;"></h2>
+        <p id="final-score" style="font-size: 1.4rem; margin: 20px 0;"></p>
+        <button class="start-btn" onclick="location.reload()">RESTART</button>
+    </div>
+</div>
+
+<div id="feedback-emoji">😢</div>
+
+<script>
+    const questions = [
+        { qEng: "In whom is the real executive power of the State's executive vested?", qHin: "राज्य की कार्यपालिका की वास्तविक शक्ति किसमें अंतर्निहित होती है ?", optionsEng: ["Chief Minister", "Governor", "Chief Justice of High Court", "Advocate General"], optionsHin: ["मुख्यमंत्री", "राज्यपाल", "उच्च न्यायालय के मुख्य न्यायाधीश", "महाधिवक्ता"], correct: 0 },
+        { qEng: "Who appoints the Chief Minister?", qHin: "मुख्यमंत्री की नियुक्ति करता है-", optionsEng: ["President", "Prime Minister", "Governor", "Advocate General"], optionsHin: ["राष्ट्रपति", "प्रधानमंत्री", "राज्यपाल", "महाधिवक्ता"], correct: 2 },
+        { qEng: "Consider the statements: 1. Governor is free to appoint anyone as CM. 2. In parliamentary system, Governor appoints leader of majority party as CM.", qHin: "1. राज्यपाल किसी भी व्यक्ति को मुख्यमंत्री नियुक्त करने के लिए स्वतंत्र है। 2. संसदीय व्यवस्था में राज्यपाल राज्य विधानसभा में बहुमत प्राप्त दल के नेता को ही मुख्यमंत्री नियुक्त करता है।", optionsEng: ["Only 1", "Only 2", "Both 1 & 2", "Neither 1 nor 2"], optionsHin: ["केवल 1", "केवल 2", "1 और 2 दोनों", "न तो 1 न ही 2"], correct: 1 },
+        { qEng: "Which Article mentions that the Governor shall appoint the Chief Minister?", qHin: "संविधान के किस अनुच्छेद में यह उल्लेखित है कि मुख्यमंत्री राज्यपाल की नियुक्ति करेगा ?", optionsEng: ["Art 164", "Art 165", "Art 166", "Art 167"], optionsHin: ["अनुच्छेद- 164", "अनुच्छेद- 165", "अनुच्छेद- 166", "अनुच्छेद- 167"], correct: 0 },
+        { qEng: "What is the term of office of the Chief Minister?", qHin: "मुख्यमंत्री का कार्यकाल होता है-", optionsEng: ["5 years", "6 years", "4 years", "Not fixed"], optionsHin: ["5 वर्ष", "6 वर्ष", "4 वर्ष", "निश्चित नहीं है"], correct: 3 },
+        { qEng: "By whom are the salary and allowances of the Chief Minister determined?", qHin: "मुख्यमंत्री के वेतन भत्ते का निर्धारण किसके द्वारा किया जाता है ?", optionsEng: ["Parliament", "State Legislature", "Governor", "President"], optionsHin: ["संसद द्वारा", "राज्य विधानमंडल द्वारा", "राज्यपाल द्वारा", "राष्ट्रपति"], correct: 1 },
+        { qEng: "Who is the Chairman of the State Planning Board?", qHin: "राज्य योजना बोर्ड का अध्यक्ष होता है-", optionsEng: ["Governor", "Advocate General", "Chief Secretary", "Chief Minister"], optionsHin: ["राज्यपाल", "महाधिवक्ता", "मुख्य सचिव", "मुख्यमंत्री"], correct: 3 },
+        { qEng: "Which Article mentions the Chief Minister's duties regarding providing information to the Governor?", qHin: "राज्यपाल को सूचना प्रदान करने संबंधित मुख्यमंत्री के दायित्व का संविधान के किस अनुच्छेद में उल्लेख है ?", optionsEng: ["165", "167", "168", "169"], optionsHin: ["165", "167", "168", "169"], correct: 1 },
+        { qEng: "Who appoints the other ministers in the State Council of Ministers?", qHin: "राज्यपाल मंत्रियों नियुक्ति करता है-", optionsEng: ["Discretionary", "On advice of Advocate General", "On advice of Chief Minister", "None of these"], optionsHin: ["स्वेच्छा से", "महाधिवक्ता के सलाह पर", "मुख्यमंत्री के सलाह पर", "इनमें से कोई नहीं।"], correct: 2 },
+        { qEng: "Which Article mentions provisions related to the State Council of Ministers?", qHin: "संविधान के किस अनुच्छेद में राज्य मंत्रिपरिषद से संबंधित प्रावधान का उल्लेख है ?", optionsEng: ["165", "164", "166", "163"], optionsHin: ["165", "164", "166", "163"], correct: 1 },
+        { qEng: "To whom is the State Council of Ministers collectively responsible?", qHin: "राज्य मंत्रिपरिषद सामूहिक रूप से किसके प्रति उत्तरदायी होता है-", optionsEng: ["State Legislative Council", "Governor", "Chief Minister", "Legislative Assembly"], optionsHin: ["राज्य विधान परिषद", "राज्यपाल", "मुख्यमंत्री", "विधानसभा"], correct: 3 },
+        { qEng: "To whom are the State Ministers individually responsible?", qHin: "राज्य के मंत्री व्यक्तिगत रूप से किसके प्रति उत्तरदायी होते हैं ?", optionsEng: ["Governor", "Chief Minister", "Legislative Council", "Legislative Assembly"], optionsHin: ["राज्यपाल", "मुख्यमंत्री", "विधानपरिषद", "विधानसभा"], correct: 0 },
+        { qEng: "Which Article states that all executive actions of the State shall be expressed to be taken in the name of the Governor?", qHin: "संविधान के किस अनुच्छेद में यह उल्लेखित है कि राज्य की समस्त कार्यपालक कार्यवाहियों की अभिव्यक्ति राज्यपाल से की गई कार्यवाही के रूप में अभिव्यक्त होगी ?", optionsEng: ["167", "164", "166", "165"], optionsHin: ["167", "164", "166", "165"], correct: 2 }
+    ];
+
+    let currentQ = 0, score = 0, timerInterval, quizData = [], timeLimit = 30;
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    function playTone(freq, type) {
+        const osc = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        osc.type = type; osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        g.gain.setValueAtTime(0.1, audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+        osc.connect(g); g.connect(audioCtx.destination);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.3);
+    }
+
+    function startQuiz() {
+        timeLimit = parseInt(document.getElementById('timer-input').value) || 0;
+        quizData = document.getElementById('shuffle-input').checked ? [...questions].sort(() => Math.random() - 0.5) : [...questions];
+        document.getElementById('setup-screen').classList.add('hidden');
+        document.getElementById('quiz-screen').classList.remove('hidden');
+        loadQuestion();
+    }
+
+    function loadQuestion() {
+        if(currentQ >= quizData.length) return showResults();
+        const q = quizData[currentQ];
+        document.getElementById('q-eng').innerText = q.qEng;
+        document.getElementById('q-hin').innerText = q.qHin;
+        document.getElementById('question-count').innerText = `Question ${currentQ + 1}/${quizData.length}`;
+        document.getElementById('progress-fill').style.width = `${(currentQ / quizData.length) * 100}%`;
+        const container = document.getElementById('options-container');
+        container.innerHTML = '';
+        q.optionsEng.forEach((opt, i) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerHTML = `<strong>${opt}</strong><br><span style="font-size:0.85rem; opacity:0.8;">${q.optionsHin[i]}</span>`;
+            btn.onclick = () => check(i);
+            container.appendChild(btn);
+        });
+        if(timeLimit > 0) runTimer();
+    }
+
+    function runTimer() {
+        let left = timeLimit;
+        const disp = document.getElementById('timer');
+        clearInterval(timerInterval);
+        disp.innerText = `⏱ ${left}s`; disp.classList.remove('pulse');
+        timerInterval = setInterval(() => {
+            left--; disp.innerText = `⏱ ${left}s`;
+            if(left < 5) disp.classList.add('pulse');
+            if(left <= 0) { clearInterval(timerInterval); check(-1); }
+        }, 1000);
+    }
+
+    function check(idx) {
+        clearInterval(timerInterval);
+        const btns = document.querySelectorAll('.option-btn'), correct = quizData[currentQ].correct;
+        btns.forEach(b => b.disabled = true);
+        if(idx === correct) { score++; btns[idx].classList.add('correct'); playTone(880, 'sine'); }
+        else {
+            if(idx !== -1) btns[idx].classList.add('wrong');
+            btns[correct].classList.add('correct');
+            playTone(200, 'sawtooth');
+            const e = document.getElementById('feedback-emoji'); e.style.display = 'block'; e.classList.add('shake');
+            setTimeout(() => { e.style.display = 'none'; e.classList.remove('shake'); }, 800);
+        }
+        document.getElementById('score-count').innerText = `Score: ${score}`;
+        setTimeout(() => { currentQ++; loadQuestion(); }, 1500);
+    }
+
+    function showResults() {
+        document.getElementById('quiz-screen').classList.add('hidden');
+        document.getElementById('result-screen').classList.remove('hidden');
+        document.getElementById('progress-fill').style.width = '100%';
+        const p = (score / quizData.length) * 100;
+        document.getElementById('result-msg').innerText = p >= 80 ? "🏆 Master of State Polity!" : p >= 50 ? "👏 Great Work!" : "📚 Review State Articles!";
+        document.getElementById('final-score').innerText = `You scored ${score} out of ${quizData.length}`;
+    }
+</script>
+</body>
+</html>

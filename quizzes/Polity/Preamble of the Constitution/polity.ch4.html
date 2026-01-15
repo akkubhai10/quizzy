@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Constitution Preamble Quiz (Bilingual)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --text-main: #ffffff;
+            --text-secondary: #dddddd;
+            --accent-green: #00e676;
+            --accent-red: #ff5252;
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--text-main);
+            overflow-x: hidden;
+            padding: 10px;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Glassmorphism Container */
+        .container {
+            width: 100%;
+            max-width: 600px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 25px;
+            border: 1px solid var(--glass-border);
+            padding: 25px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            position: relative;
+            overflow: hidden;
+            min-height: 600px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Screens */
+        .screen {
+            display: none;
+            flex-direction: column;
+            height: 100%;
+            flex: 1;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        /* Start Screen */
+        .start-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            gap: 20px;
+        }
+
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .input-group {
+            width: 100%;
+            text-align: left;
+            background: rgba(0,0,0,0.2);
+            padding: 15px;
+            border-radius: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            border-radius: 10px;
+            border: none;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            font-family: inherit;
+            outline: none;
+        }
+
+        /* Toggle Switch */
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 26px;
+        }
+
+        .switch input { opacity: 0; width: 0; height: 0; }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(255,255,255,0.3);
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider { background-color: var(--accent-green); }
+        input:checked + .slider:before { transform: translateX(24px); }
+
+        .btn-primary {
+            background: white;
+            color: #333;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: transform 0.2s;
+            margin-top: 20px;
+            width: 100%;
+        }
+
+        .btn-primary:hover { transform: scale(1.05); }
+
+        /* Quiz Interface */
+        .quiz-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+        }
+
+        .progress-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 5px;
+            background: var(--accent-green);
+            width: 0%;
+            transition: width 0.5s ease;
+            box-shadow: 0 0 10px var(--accent-green);
+        }
+
+        .timer-badge {
+            background: rgba(0,0,0,0.3);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .pulse-red {
+            color: var(--accent-red);
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .question-box {
+            background: rgba(0,0,0,0.15);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            border-left: 4px solid var(--text-main);
+        }
+
+        .q-en {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            line-height: 1.4;
+        }
+
+        .q-hi {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            font-weight: 400;
+        }
+
+        .options-grid {
+            display: grid;
+            gap: 12px;
+            overflow-y: auto;
+            max-height: 350px;
+            padding-right: 5px;
+        }
+
+        /* Custom Scrollbar */
+        .options-grid::-webkit-scrollbar { width: 5px; }
+        .options-grid::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.3); border-radius: 5px; }
+
+        .option-btn {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 12px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .option-btn:hover { background: rgba(255,255,255,0.2); }
+
+        .opt-en { font-weight: 600; font-size: 1rem; margin-bottom: 2px; }
+        .opt-hi { font-size: 0.85rem; color: #ddd; }
+
+        .correct { background: rgba(0, 230, 118, 0.4) !important; border-color: var(--accent-green) !important; }
+        .wrong { background: rgba(255, 82, 82, 0.4) !important; border-color: var(--accent-red) !important; }
+
+        /* Feedback Overlays */
+        #sad-overlay {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 5rem;
+            display: none;
+            z-index: 100;
+            animation: shake 0.5s;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translate(-50%, -50%); }
+            25% { transform: translate(-55%, -50%); }
+            75% { transform: translate(-45%, -50%); }
+        }
+
+        /* Result Screen */
+        .result-card {
+            text-align: center;
+            padding: 20px;
+        }
+        .score-big { font-size: 3rem; font-weight: bold; margin: 20px 0; }
+        .msg { font-size: 1.2rem; margin-bottom: 30px; color: var(--text-secondary); }
+
+        /* Early Exit Button */
+        .early-exit-btn {
+            margin-top: auto;
+            background: rgba(255, 82, 82, 0.2);
+            border: 1px solid var(--accent-red);
+            color: white;
+            padding: 10px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        .early-exit-btn:hover { background: rgba(255, 82, 82, 0.4); }
+
+        /* Confetti Canvas */
+        #confetti {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+    </style>
+</head>
+<body>
+
+    <canvas id="confetti"></canvas>
+
+    <div class="container">
+        <div id="progress" class="progress-bar"></div>
+
+        <div id="start-screen" class="screen active">
+            <div class="start-content">
+                <div style="font-size: 3rem;">🏛️</div>
+                <h1>Constitution Quiz<br><span style="font-size: 1.2rem; color: #ddd;">संविधान प्रस्तावना प्रश्नोत्तरी</span></h1>
+                
+                <div class="input-group">
+                    <label>⏱️ Timer per question (seconds) / समय (0 = Off)</label>
+                    <input type="number" id="timeInput" placeholder="e.g. 30" value="30">
+                </div>
+
+                <div class="input-group toggle-container">
+                    <label>🔀 Shuffle Questions / प्रश्न मिलाएं</label>
+                    <label class="switch">
+                        <input type="checkbox" id="shuffleToggle">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <button class="btn-primary" onclick="startQuiz()">Start Quiz / शुरू करें</button>
+            </div>
+        </div>
+
+        <div id="quiz-screen" class="screen">
+            <div class="quiz-header">
+                <span id="q-counter">Q: 01/20</span>
+                <div class="timer-badge" id="timer-box">
+                    <span>⏳</span> <span id="timer-text">--</span>
+                </div>
+                <span id="score-display">Score: 0</span>
+            </div>
+
+            <div class="question-box">
+                <div class="q-en" id="q-en"></div>
+                <div class="q-hi" id="q-hi"></div>
+            </div>
+
+            <div class="options-grid" id="options-container">
+                </div>
+
+            <div id="sad-overlay">😢</div>
+
+            <button class="early-exit-btn" onclick="finishEarly()">End Quiz & Show Result / समाप्त करें</button>
+        </div>
+
+        <div id="result-screen" class="screen">
+            <div class="start-content result-card">
+                <div id="result-emoji" style="font-size: 4rem;">🏆</div>
+                <h2>Quiz Completed!</h2>
+                <div class="score-big" id="final-score">0 / 0</div>
+                <p class="msg" id="result-msg">Performance Message</p>
+                <button class="btn-primary" onclick="resetQuiz()">Restart Quiz / पुन: प्रयास करें</button>
+            </div>
+        </div>
+    </div>
+
+<script>
+    // --- Data: Questions extracted from images and translated ---
+    const rawQuestions = [
+        {
+            en: "In which country's constitution was the Preamble first included?",
+            hi: "प्रस्तावना को सर्वप्रथम किस देश की संविधान में सम्मिलित किया गया?",
+            options: [
+                { en: "America", hi: "अमेरिका" },
+                { en: "Britain", hi: "ब्रिटेन" },
+                { en: "India", hi: "भारत" },
+                { en: "Ireland", hi: "आयरलैंड" }
+            ],
+            correct: 0 // (a)
+        },
+        {
+            en: "Who among the following called the Preamble the 'Identity Card of the Constitution'?",
+            hi: "निम्नलिखित में से किसने प्रस्तावना को 'संविधान का परिचय पत्र' कहा है?",
+            options: [
+                { en: "K.M. Munshi", hi: "के. एम. मुंशी" },
+                { en: "Granville Austin", hi: "ग्रेनविले ऑस्टिन" },
+                { en: "Justin P.N. Bhagwati", hi: "जस्टिन पी.एन. भगवती" },
+                { en: "N.A. Palkhivala", hi: "एन. ए. पालकीवाला" }
+            ],
+            correct: 3 // (d)
+        },
+        {
+            en: "The Preamble of the Indian Constitution was drafted and presented to the Constituent Assembly by whom?",
+            hi: "भारतीय संविधान की प्रस्तावना निम्नलिखित में से किसके द्वारा बनाए गए एवं संविधान सभा में पेश किये गये?",
+            options: [
+                { en: "Dr. B.R. Ambedkar", hi: "डॉ. बी. आर. अम्बेडकर" },
+                { en: "Mahatma Gandhi", hi: "महात्मा गाँधी" },
+                { en: "Pandit Nehru", hi: "पंडित नेहरु" },
+                { en: "Maulana Abul Kalam Azad", hi: "मौलाना अबुल कलाम आजाद" }
+            ],
+            correct: 2 // (c)
+        },
+        {
+            en: "The Preamble of the Indian Constitution was amended by which Constitutional Amendment?",
+            hi: "भारतीय संविधान के प्रस्तावना को किस संविधान संशोधन द्वारा संशोधित किया गया?",
+            options: [
+                { en: "44th", hi: "44वें" },
+                { en: "42nd", hi: "42वें" },
+                { en: "24th", hi: "24वें" },
+                { en: "61st", hi: "61वें" }
+            ],
+            correct: 1 // (b)
+        },
+        {
+            en: "Which word was NOT added by the 42nd Constitutional Amendment in the Preamble?",
+            hi: "प्रस्तावना में 42वें संविधान संशोधन द्वारा कौन-सा शब्द नहीं जोड़ा गया?",
+            options: [
+                { en: "Socialist", hi: "समाजवादी" },
+                { en: "Fraternity", hi: "बंधुत्व" },
+                { en: "Integrity", hi: "अखंडता" },
+                { en: "Secular", hi: "पंथनिरपेक्षता" }
+            ],
+            correct: 1 // (b) - Fraternity was original
+        },
+        {
+            en: "How many types of Justice are discussed in the Preamble?",
+            hi: "प्रस्तावना में कितने प्रकार की न्याय की चर्चा की गई है?",
+            options: [
+                { en: "Four", hi: "चार" },
+                { en: "Five", hi: "पाँच" },
+                { en: "Three", hi: "तीन" },
+                { en: "Seven", hi: "सात" }
+            ],
+            correct: 2 // (c) - Social, Economic, Political
+        },
+        {
+            en: "How many types of Liberty are mentioned in the Preamble?",
+            hi: "प्रस्तावना में कितने प्रकार की स्वतंत्रता का उल्लेख है?",
+            options: [
+                { en: "Five", hi: "पाँच" },
+                { en: "Four", hi: "चार" },
+                { en: "Three", hi: "तीन" },
+                { en: "Seven", hi: "सात" }
+            ],
+            correct: 0 // (a) - Thought, Expression, Belief, Faith, Worship
+        },
+        {
+            en: "How many types of Equality are mentioned in the Preamble?",
+            hi: "प्रस्तावना में कितने प्रकार की समानता का उल्लेख है?",
+            options: [
+                { en: "Two", hi: "दो" },
+                { en: "Three", hi: "तीन" },
+                { en: "Four", hi: "चार" },
+                { en: "Seven", hi: "सात" }
+            ],
+            correct: 0 // (a) - Status and Opportunity
+        },
+        {
+            en: "Which type of liberty is NOT mentioned in the Preamble?",
+            hi: "प्रस्तावना में निम्नलिखित में से किस प्रकार की स्वतंत्रता का उल्लेख नहीं की गई है?",
+            options: [
+                { en: "Thought", hi: "विचार" },
+                { en: "Expression", hi: "अभिव्यक्ति" },
+                { en: "Belief", hi: "विश्वास" },
+                { en: "Equality", hi: "समता" }
+            ],
+            correct: 3 // (d) - Equality is separate, not a liberty here
+        },
+        {
+            en: "What is the correct order of words given in the Preamble?",
+            hi: "प्रस्तावना में दिये गये शब्दों का सही क्रम क्या है?",
+            options: [
+                { en: "Sov, Sec, Soc, Dem, Rep", hi: "संपूर्ण प्रभुत्व संपन्न, धर्मनिरपेक्ष, समाजवादी, लोकतांत्रिक गणराज्य" },
+                { en: "Dem, Soc, Sec, Sov", hi: "लोकतांत्रिक गणराज्य, समाजवादी, धर्मनिरपेक्ष, हम भारत के लोग" },
+                { en: "Sov, Soc, Sov(sic)", hi: "संपूर्ण प्रभुत्व संपन्न, समाजवादी, संपूर्ण प्रभुत्व संपन्न" },
+                { en: "Sov, Soc, Sec, Dem, Rep", hi: "संपूर्ण प्रभुत्व संपन्न, समाजवादी, पंथनिरपेक्ष, लोकतांत्रिक गणराज्य" }
+            ],
+            correct: 3 // (d)
+        },
+        {
+            en: "Which justice is NOT mentioned in the Preamble?",
+            hi: "प्रस्तावना में किस न्याय की बात नहीं कही गई है?",
+            options: [
+                { en: "Social Justice", hi: "सामाजिक न्याय" },
+                { en: "Economic Justice", hi: "आर्थिक न्याय" },
+                { en: "Political Justice", hi: "राजनीति न्याय" },
+                { en: "Environmental Justice", hi: "पर्यावरणीय न्याय" }
+            ],
+            correct: 3 // (d)
+        },
+        {
+            en: "What is the meaning of the word 'Sovereign' mentioned in the Preamble?",
+            hi: "प्रस्तावना में उल्लिखित संप्रभुता शब्द का आशय है-",
+            options: [
+                { en: "India is not dependent on any other country.", hi: "भारत न तो किसी अन्य देश पर निर्भर है..." },
+                { en: "No power above India, free to conduct affairs.", hi: "भारत के ऊपर और कोई शक्ति नहीं है..." },
+                { en: "India can acquire foreign territory.", hi: "भारत किसी भी विदेशी राज्य का सीमा अधिग्रहण कर सकता है।" },
+                { en: "All of the above", hi: "उपर्युक्त में सभी।" }
+            ],
+            correct: 3 // (d)
+        },
+        {
+            en: "The word 'Socialist' was added to the Preamble by which amendment?",
+            hi: "संविधान की प्रस्तावना में समाजवादी शब्द को किस संविधान संशोधन द्वारा जोड़ा गया?",
+            options: [
+                { en: "44th", hi: "44वें" },
+                { en: "42nd", hi: "42वें" },
+                { en: "24th", hi: "24वें" },
+                { en: "52nd", hi: "52वें" }
+            ],
+            correct: 1 // (b)
+        },
+        {
+            en: "What type of Socialism is in India?",
+            hi: "भारत में किस प्रकार की समाजवाद है?",
+            options: [
+                { en: "Democratic Socialism", hi: "लोकतांत्रिक समाजवाद" },
+                { en: "State Socialism", hi: "राज्याश्रित समाजवाद" },
+                { en: "European Socialism", hi: "यूरोपियन समाजवाद" },
+                { en: "All of these", hi: "इनमें से सभी।" }
+            ],
+            correct: 0 // (a)
+        },
+        {
+            en: "Which socialism believes in mixed economy?",
+            hi: "समाजवाद का वह स्वरूप जो मिश्रित अर्थव्यवस्था में आस्था रखता है, क्या कहलाता है?",
+            options: [
+                { en: "European Socialism", hi: "यूरोपियन समाजवाद" },
+                { en: "Democratic Socialism", hi: "लोकतांत्रिक समाजवाद" },
+                { en: "State Socialism", hi: "राज्याश्रित समाजवाद" },
+                { en: "All of these", hi: "इनमें से सभी।" }
+            ],
+            correct: 1 // (b)
+        },
+        {
+            en: "The word 'Integrity' was added to the Indian Constitution in which year?",
+            hi: "भारतीय संविधान में अखंडता शब्द कब जोड़ा गया?",
+            options: [
+                { en: "1976", hi: "1976" },
+                { en: "1978", hi: "1978" },
+                { en: "1975", hi: "1975" },
+                { en: "1989", hi: "1989" }
+            ],
+            correct: 0 // (a)
+        },
+        {
+            en: "Indian Socialism is a blend of which two socialisms?",
+            hi: "भारतीय समाजवाद किन दो समाजवाद का मिश्रण है?",
+            options: [
+                { en: "Gandhian & Fabian", hi: "गाँधीवादी समाजवाद & फेबियन समाजवाद" },
+                { en: "French & Marxist", hi: "फ्रेंचियन समाजवाद & मार्क्सवादी समाजवाद" },
+                { en: "Marxist & Gandhian", hi: "मार्क्सवादी समाजवाद & गाँधीवादी समाजवाद" },
+                { en: "A and C", hi: "a और c" }
+            ],
+            correct: 2 // (c) - Actually leans towards Gandhian, but mix of Marx & Gandhi
+        },
+        {
+            en: "In which case did the Supreme Court say Preamble IS a part of the Constitution?",
+            hi: "उच्चतम न्यायालय ने किस वाद में कहा है कि प्रस्तावना संविधान का भाग है?",
+            options: [
+                { en: "Kesavananda Bharati (1973)", hi: "केशवानंद भारती मामले (1973)" },
+                { en: "Berubari Union (1960)", hi: "बेरुबाड़ी संघ (1960)" },
+                { en: "Shankari Prasad (1951)", hi: "शंकरी प्रसाद वाद (1951)" },
+                { en: "UC of India (1995)", hi: "UC ऑफ इंडिया वाद (1995)" }
+            ],
+            correct: 0 // (a)
+        }
+    ];
+
+    // --- State Variables ---
+    let questions = [];
+    let currentQIndex = 0;
+    let score = 0;
+    let timer = null;
+    let timeLeft = 0;
+    let timeLimit = 30; // Default
+    let audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    // --- Elements ---
+    const startScreen = document.getElementById('start-screen');
+    const quizScreen = document.getElementById('quiz-screen');
+    const resultScreen = document.getElementById('result-screen');
+    const qCounter = document.getElementById('q-counter');
+    const scoreDisplay = document.getElementById('score-display');
+    const progressBar = document.getElementById('progress');
+    const timerText = document.getElementById('timer-text');
+    const timerBox = document.getElementById('timer-box');
+    const qEn = document.getElementById('q-en');
+    const qHi = document.getElementById('q-hi');
+    const optsContainer = document.getElementById('options-container');
+    const sadOverlay = document.getElementById('sad-overlay');
+
+    // --- Audio System (Web Audio API) ---
+    function playSound(type) {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        if (type === 'ting') {
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.1);
+            gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.5);
+        } else if (type === 'buzz') {
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+            osc.frequency.linearRampToValueAtTime(100, audioCtx.currentTime + 0.3);
+            gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.3);
+        }
+    }
+
+    // --- Core Logic ---
+
+    function startQuiz() {
+        // Get settings
+        const userTime = document.getElementById('timeInput').value;
+        const shuffle = document.getElementById('shuffleToggle').checked;
+
+        timeLimit = userTime && userTime > 0 ? parseInt(userTime) : 0;
+        
+        // Prepare questions
+        questions = [...rawQuestions];
+        if (shuffle) {
+            questions.sort(() => Math.random() - 0.5);
+        }
+
+        // Reset state
+        currentQIndex = 0;
+        score = 0;
+        scoreDisplay.innerText = `Score: 0`;
+
+        // Switch Screens
+        startScreen.classList.remove('active');
+        quizScreen.classList.add('active');
+        
+        loadQuestion();
+    }
+
+    function loadQuestion() {
+        // Check end
+        if (currentQIndex >= questions.length) {
+            showResult();
+            return;
+        }
+
+        // Reset UI
+        clearInterval(timer);
+        timerBox.classList.remove('pulse-red');
+        sadOverlay.style.display = 'none';
+        
+        const qData = questions[currentQIndex];
+
+        // Update Text
+        qEn.innerText = `${currentQIndex + 1}. ${qData.en}`;
+        qHi.innerText = qData.hi;
+        qCounter.innerText = `Q: ${currentQIndex + 1}/${questions.length}`;
+        
+        // Update Progress
+        const percent = ((currentQIndex) / questions.length) * 100;
+        progressBar.style.width = `${percent}%`;
+
+        // Render Options
+        optsContainer.innerHTML = '';
+        qData.options.forEach((opt, idx) => {
+            const btn = document.createElement('div');
+            btn.className = 'option-btn';
+            btn.onclick = () => checkAnswer(btn, idx);
+            btn.innerHTML = `
+                <div class="opt-en">${String.fromCharCode(97 + idx)}) ${opt.en}</div>
+                <div class="opt-hi">${opt.hi}</div>
+            `;
+            optsContainer.appendChild(btn);
+        });
+
+        // Start Timer if enabled
+        if (timeLimit > 0) {
+            timeLeft = timeLimit;
+            timerText.innerText = timeLeft;
+            timerBox.style.display = 'flex';
+            
+            timer = setInterval(() => {
+                timeLeft--;
+                timerText.innerText = timeLeft;
+                if (timeLeft < 5) timerBox.classList.add('pulse-red');
+                
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    // Time's up - treat as wrong or skip? Let's show correct and move on.
+                    handleTimeUp();
+                }
+            }, 1000);
+        } else {
+            timerBox.style.display = 'none';
+        }
+    }
+
+    function checkAnswer(selectedBtn, selectedIdx) {
+        clearInterval(timer);
+        
+        // Disable all clicks
+        const allOpts = document.querySelectorAll('.option-btn');
+        allOpts.forEach(btn => btn.onclick = null);
+
+        const correctIdx = questions[currentQIndex].correct;
+
+        if (selectedIdx === correctIdx) {
+            // Correct
+            selectedBtn.classList.add('correct');
+            playSound('ting');
+            fireConfetti();
+            score++;
+            scoreDisplay.innerText = `Score: ${score}`;
+        } else {
+            // Wrong
+            selectedBtn.classList.add('wrong');
+            allOpts[correctIdx].classList.add('correct'); // Show correct
+            playSound('buzz');
+            sadOverlay.style.display = 'block';
+        }
+
+        setTimeout(() => {
+            currentQIndex++;
+            loadQuestion();
+        }, 1500);
+    }
+
+    function handleTimeUp() {
+        const allOpts = document.querySelectorAll('.option-btn');
+        allOpts.forEach(btn => btn.onclick = null);
+        
+        // Just show correct answer
+        const correctIdx = questions[currentQIndex].correct;
+        allOpts[correctIdx].classList.add('correct');
+        playSound('buzz');
+
+        setTimeout(() => {
+            currentQIndex++;
+            loadQuestion();
+        }, 1500);
+    }
+
+    function finishEarly() {
+        clearInterval(timer);
+        showResult();
+    }
+
+    function showResult() {
+        quizScreen.classList.remove('active');
+        resultScreen.classList.add('active');
+        progressBar.style.width = '100%';
+
+        const finalScoreElem = document.getElementById('final-score');
+        const msgElem = document.getElementById('result-msg');
+        const emojiElem = document.getElementById('result-emoji');
+
+        const percentage = (score / (currentQIndex || 1)) * 100; // Calculate based on questions seen
+
+        finalScoreElem.innerText = `${score} / ${questions.length}`;
+
+        if (percentage >= 80) {
+            emojiElem.innerText = "🏆";
+            msgElem.innerText = "Outstanding Performance! / बेहतरीन प्रदर्शन!";
+            fireConfetti();
+        } else if (percentage >= 50) {
+            emojiElem.innerText = "👏";
+            msgElem.innerText = "Well Done! Keep it up. / बहुत अच्छे! जारी रखें।";
+        } else {
+            emojiElem.innerText = "📚";
+            msgElem.innerText = "Practice makes perfect! Try again. / अभ्यास की आवश्यकता है।";
+        }
+    }
+
+    function resetQuiz() {
+        resultScreen.classList.remove('active');
+        startScreen.classList.add('active');
+        progressBar.style.width = '0%';
+    }
+
+    // --- Confetti Effect (Simple Implementation) ---
+    function fireConfetti() {
+        const canvas = document.getElementById('confetti');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const particles = [];
+        const colors = ['#ff5252', '#00e676', '#2979ff', '#ffeb3b', '#e040fb'];
+
+        for(let i=0; i<100; i++) {
+            particles.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height - canvas.height,
+                color: colors[Math.floor(Math.random() * colors.length)],
+                size: Math.random() * 8 + 4,
+                speed: Math.random() * 5 + 2,
+                angle: Math.random() * 6.2
+            });
+        }
+
+        let animationFrame;
+
+        function update() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            let active = false;
+            particles.forEach(p => {
+                p.y += p.speed;
+                p.x += Math.sin(p.angle);
+                p.angle += 0.1;
+                
+                if(p.y < canvas.height) {
+                    ctx.fillStyle = p.color;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.size, 0, Math.PI*2);
+                    ctx.fill();
+                    active = true;
+                }
+            });
+
+            if(active) animationFrame = requestAnimationFrame(update);
+            else ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+        update();
+    }
+
+    // Resize canvas fix
+    window.addEventListener('resize', () => {
+        const canvas = document.getElementById('confetti');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    });
+
+</script>
+</body>
+</html>

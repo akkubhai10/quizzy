@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Constitution Amendment Quiz</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --text-en: #ffffff;
+            --text-hi: #dddddd;
+            --correct: #4caf50;
+            --wrong: #f44336;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(45deg, #6a11cb, #2575fc, #e91e63);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            color: white;
+            overflow-x: hidden;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Glassmorphism Container */
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 25px;
+            width: 100%;
+            max-width: 600px;
+            padding: 30px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            position: relative;
+            z-index: 10;
+        }
+
+        .hidden { display: none !important; }
+
+        /* Progress Bar */
+        #progress-container {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 6px;
+            background: rgba(255,255,255,0.1);
+            z-index: 1000;
+        }
+        #progress-bar {
+            height: 100%; width: 0%;
+            background: linear-gradient(90deg, #00f2fe, #4facfe);
+            box-shadow: 0 0 10px #00f2fe;
+            transition: width 0.3s;
+        }
+
+        /* Header Info */
+        .quiz-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        #timer.pulse-red {
+            color: #ff4d4d;
+            animation: pulse 0.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        /* Typography */
+        .question-text { font-size: 1.2rem; margin-bottom: 20px; line-height: 1.4; }
+        .hi { display: block; font-size: 0.95rem; color: var(--text-hi); margin-top: 5px; font-weight: 400; }
+
+        /* Options */
+        .options-grid { display: grid; gap: 12px; }
+        .option-btn {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--glass-border);
+            padding: 15px;
+            border-radius: 12px;
+            color: white;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s;
+            outline: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .option-btn:hover:not([disabled]) { background: rgba(255,255,255,0.15); transform: translateY(-2px); }
+        .option-btn.correct { background: var(--correct) !important; border-color: var(--correct); }
+        .option-btn.wrong { background: var(--wrong) !important; border-color: var(--wrong); animation: shake 0.4s; }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        /* Form Controls */
+        input[type="number"] {
+            width: 100%; padding: 12px; border-radius: 10px; border: none;
+            background: rgba(255,255,255,0.1); color: white; margin-bottom: 20px;
+        }
+        .start-btn, .finish-btn {
+            width: 100%; padding: 15px; border-radius: 12px; border: none;
+            background: #ffffff; color: #6a11cb; font-weight: bold;
+            cursor: pointer; transition: 0.3s; margin-top: 20px;
+        }
+        .start-btn:hover { transform: scale(1.03); box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+
+        /* Reactions */
+        #reaction-emoji {
+            position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 5rem; z-index: 100; pointer-events: none;
+            display: none;
+        }
+
+        /* Confetti */
+        .confetti {
+            position: fixed; width: 10px; height: 10px; background-color: #f2d74e;
+            top: -10px; z-index: 9999; animation: fall 3s linear forwards;
+        }
+        @keyframes fall { to { transform: translateY(100vh) rotate(360deg); } }
+
+        @media (max-width: 480px) {
+            .glass-card { padding: 20px; }
+            .question-text { font-size: 1.1rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="progress-container"><div id="progress-bar"></div></div>
+    <div id="reaction-emoji">😢</div>
+
+    <div id="start-screen" class="glass-card">
+        <h2 style="margin-bottom:15px">Constitution Quiz</h2>
+        <p style="font-size: 0.8rem; margin-bottom: 20px;">Chapter 10: Amendment of the Constitution</p>
+        
+        <label>Timer per Question (seconds, 0 = no timer):</label>
+        <input type="number" id="timer-input" placeholder="e.g. 15" min="0">
+        
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:20px">
+            <input type="checkbox" id="shuffle-check" style="width:20px; height:20px">
+            <label for="shuffle-check">Shuffle Questions</label>
+        </div>
+        
+        <button class="start-btn" onclick="startQuiz()">START QUIZ</button>
+    </div>
+
+    <div id="quiz-screen" class="glass-card hidden">
+        <div class="quiz-header">
+            <span id="q-counter">Question 1/46</span>
+            <span id="timer"></span>
+            <span id="score-display">Score: 0</span>
+        </div>
+        
+        <div id="question-box">
+            <div class="question-text" id="q-en"></div>
+            <div class="options-grid" id="options-container"></div>
+        </div>
+
+        <button class="finish-btn" onclick="endQuiz()" style="background: rgba(255,255,255,0.1); color: white; font-size: 0.8rem;">Finish & Show Results</button>
+    </div>
+
+    <div id="result-screen" class="glass-card hidden" style="text-align:center">
+        <h2 id="result-title"></h2>
+        <div style="font-size: 3rem; margin: 20px 0;" id="final-score">0/46</div>
+        <p id="result-msg" style="margin-bottom:25px"></p>
+        <button class="start-btn" onclick="location.reload()">RESTART QUIZ</button>
+    </div>
+
+    <script>
+        const questions = [
+            { qEn: "In which part of the Constitution is the amendment process mentioned?", qHi: "संविधान के किस भाग में संविधान संशोधन प्रक्रिया का जिक्र है?", optionsEn: ["Part-21", "Part-22", "Part-15", "Part-20"], optionsHi: ["भाग- 21", "भाग- 22", "भाग- 15", "भाग- 20"], correct: 3 },
+            { qEn: "Article 368 of the Constitution is related to:", qHi: "संविधान का अनुच्छेद 368 का संबंध है-", optionsEn: ["Constitutional Amendment", "Official Language", "Executive", "Election Commission"], optionsHi: ["संविधान संशोधन से", "राज-भाषा से", "कार्यपालिका से", "निर्वाचन आयोग से"], correct: 0 },
+            { qEn: "In whom is the power to amend the Indian Constitution vested?", qHi: "भारतीय संविधान में संशोधन करने की शक्ति किसमें अंतर्निहित है?", optionsEn: ["State Legislature", "State Legislature and Parliament", "Only Lok Sabha", "Only Parliament"], optionsHi: ["राज्य विधानमंडल", "राज्य विधानमंडल और संसद", "केवल लोकसभा", "केवल संसद"], correct: 3 },
+            { qEn: "Consider the following: 1. Parliament has the power to amend the Constitution. 2. Parliament can amend the basic structure of the Constitution. Which is correct?", qHi: "निम्नलिखित कथनों पर विचार कीजिए: 1. संविधान में संशोधन करने की शक्ति संसद में निहित है। 2. संसद संविधान के मूल ढाँचे में भी संशोधन कर सकती है।", optionsEn: ["Only 1", "Only 2", "Both 1 and 2", "Neither 1 nor 2"], optionsHi: ["केवल 1", "केवल 2", "1 और 2 दोनों", "न तो 1 और न ही 2"], correct: 0 },
+            { qEn: "Consider: 1. Amendment can start only in Lok Sabha. 2. Bill can be introduced by both Govt and Non-Govt members. 3. Prior permission of President is needed. Which is correct?", qHi: "निम्नलिखित कथनों पर विचार कीजिए: 1. संशोधन का आरंभ केवल लोकसभा से ही की जा सकती है। 2. विधेयक को सरकारी सदस्य एवं गैर-सरकारी सदस्य दोनों द्वारा सदन में प्रस्तुत किया जा सकता है। 3. पूर्व स्वीकृति के ही सदन में प्रस्तुत किया जा सकता है।", optionsEn: ["Only 1", "Only 2", "2 and 3", "1 and 3"], optionsHi: ["केवल 1", "केवल 2", "2 और 3", "1 और 3"], correct: 1 },
+            { qEn: "Which statement is False regarding Constitution Amendment Bill?", qHi: "संविधान संशोधन विधेयक के संबंध में कौन-सा कथन असत्य है?", optionsEn: ["Must pass by special majority in both houses", "Must pass separately in each house", "Joint session can be called to pass it", "Half state consent needed for federal issues"], optionsHi: ["विधेयक को दोनों सदनों में विशेष बहुमत से पारित कराना आवश्यक है।", "प्रत्येक सदन में अलग-अलग पारित कराना आवश्यक है।", "विधेयक को संयुक्त अधिवेशन में पारित किया जा सकता है।", "विधेयक संघीय व्यवस्था के मुद्दे पर हो तो आधे राज्य का समर्थन आवश्यक है।"], correct: 2 },
+            { qEn: "How many types of Constitutional amendments are there?", qHi: "संविधान संशोधन कितने प्रकार के होते हैं?", optionsEn: ["By simple majority of Parliament", "By special majority and half state consent", "By special majority of Parliament", "All of the above"], optionsHi: ["संसद के साधारण बहुमत द्वारा संशोधन", "संसद के विशेष बहुमत एवं आधे राज्य की समर्थन द्वारा संशोधन", "संसद के विशेष बहुमत द्वारा संशोधन", "उपर्युक्त में सभी।"], correct: 3 },
+            { qEn: "Consider: 1. President can send the bill back for reconsideration. 2. It must be passed by 2/3rd of members present and voting. Which is correct?", qHi: "विचार कीजिए: 1. राष्ट्रपति पुनर्विचार के लिए संसद के पास भेज सकते हैं। 2. सदन में उपस्थित सदस्यों की दो-तिहाई बहुमत द्वारा मतदान होना चाहिए।", optionsEn: ["Only 1", "Only 2", "Both 1 and 2", "Neither 1 nor 2"], optionsHi: ["केवल 1", "केवल 2", "1 और 2 दोनों", "न तो 1 और न ही 2"], correct: 1 },
+            { qEn: "Which type of amendment cannot be done via Article 368?", qHi: "अनुच्छेद 368 के द्वारा संविधान में किस प्रकार से संशोधन नहीं किये जा सकते हैं?", optionsEn: ["Simple majority", "Special majority", "Special majority + State consent", "None of these"], optionsHi: ["साधारण बहुमत द्वारा", "संसद के विशेष बहुमत द्वारा", "विशेष बहुमत एवं आधे राज्य की संस्तुति द्वारा", "इनमें कोई नहीं।"], correct: 0 },
+            { qEn: "Fundamental Rights can be amended by:", qHi: "संविधान के मूल अधिकार में संशोधन किया जा सकता है-", optionsEn: ["Simple majority of Parliament", "Only Lok Sabha", "Special majority of Parliament", "Special majority + State consent"], optionsHi: ["संसद के साधारण बहुमत द्वारा", "केवल लोकसभा द्वारा", "संसद के विशेष बहुमत द्वारा", "संसद के विशेष बहुमत एवं राज्यों की स्वीकृति द्वारा।"], correct: 2 },
+            { qEn: "President's election process can be amended by:", qHi: "राष्ट्रपति का निर्वाचन एवं इसकी प्रक्रिया में संशोधन किया जा सकता है?", optionsEn: ["Only Lok Sabha", "Executive order", "Special majority of Parliament", "Special majority + State consent"], optionsHi: ["केवल लोकसभा द्वारा", "सरकार के कार्यकारी आदेश द्वारा", "संसद के विशेष बहुमत द्वारा", "संसद के विशेष बहुमत एवं राज्यों की स्वीकृति द्वारा।"], correct: 3 },
+            { qEn: "Provisions for acquisition and termination of citizenship can be amended by:", qHi: "नागरिकता की प्राप्ति एवं समाप्ति से संबंधित प्रावधान में संशोधन किया जा सकता है-", optionsEn: ["Simple majority", "Special majority", "Special majority + State consent", "None of these"], optionsHi: ["साधारण बहुमत द्वारा", "संसद के विशेष बहुमत द्वारा", "संसद के विशेष बहुमत एवं राज्यों की स्वीकृति द्वारा", "उपर्युक्त में से कोई नहीं।"], correct: 0 },
+            { qEn: "Which can be amended by Special Majority + Consent of States?", qHi: "निम्नलिखित में से कौन-से उपबंधों में संसद के विशेष बहुमत एवं राज्यों की स्वीकृति द्वारा संशोधन किया जा सकता है?", optionsEn: ["Extending executive powers of Union/States", "Supreme Court and High Courts", "Any subject in 7th Schedule", "All of these"], optionsHi: ["केंद्र एवं राज्य की कार्यकारिणी शक्तियों का विस्तार", "उच्चतम एवं उच्च न्यायालय", "सातवीं अनुसूची से संबंध कोई विषय", "इनमें से सभी।"], correct: 3 },
+            { qEn: "Provisions related to GST Council can be amended by:", qHi: "वस्तु और सेवा कर परिषद से संबंधित उपबंध में संशोधन किया जा सकता है-", optionsEn: ["Special majority + State consent", "Special majority", "Simple majority", "None of these"], optionsHi: ["संसद के विशेष बहुमत एवं राज्यों की स्वीकृति द्वारा", "संसद के विशेष बहुमत द्वारा", "संसद के साधारण बहुमत द्वारा", "इनमें से कोई नहीं।"], correct: 0 },
+            { qEn: "Which can be amended by Special Majority + State consent?", qHi: "निम्नलिखित में से किस विषय से संबंधित उपबंध का संशोधन संसद के विशेष बहुमत एवं राज्यों की स्वीकृति द्वारा किया जा सकता है?", optionsEn: ["Official language use", "Salaries and allowances", "Representation of states in Parliament", "5th and 6th Schedule"], optionsHi: ["राजभाषा के प्रयोग से संबंधित उपबंध", "संसद के वेतन एवं भत्ते से संबंधित उपबंध", "संसद में राज्यों का प्रतिनिधित्व से संबंधित उपबंध", "पाँचवीं एवं छठी अनुसूची में संशोधन"], correct: 2 },
+            { qEn: "Who said 'It is a good balance between flexibility and rigidity' about the Constitution?", qHi: "भारत संविधान के बारे में निम्नलिखित में से किसने यह कहा कि 'लचीलापन एवं जटिलता के बीच बेहतर संतुलन है'?", optionsEn: ["K.C. Wheare", "Pandit Nehru", "Ambedkar Sahab", "Granville Austin"], optionsHi: ["के.सी. व्हेयर", "पंडित नेहरू", "अंबेडकर साहब", "ग्रैनविल ऑस्टिन"], correct: 0 },
+            { qEn: "Who commented that the amendment process is the most acceptable part of the Constitution?", qHi: "किसने संशोधन प्रक्रिया पर टिप्पणी करते हुये कहा कि 'संशोधन प्रक्रिया अपने आप में सिद्ध करती है कि यह संविधान का सर्वाधिक स्वीकार्य भाग है'?", optionsEn: ["K.C. Wheare", "Pandit Nehru", "Bhimrao Ambedkar", "Granville Austin"], optionsHi: ["के.सी. व्हेयर", "पंडित नेहरू", "भीमराव अंबेडकर", "ग्रैनविल ऑस्टिन"], correct: 3 },
+            { qEn: "The 1st Constitutional Amendment is related to:", qHi: "प्रथम संविधान संशोधन संबंधित है?", optionsEn: ["Advancement of backward classes", "Protection of laws", "Land reforms and Judicial review", "All of the above"], optionsHi: ["सामाजिक और आर्थिक तथा पिछड़े वर्गों की उन्नति के लिए", "कानून की रक्षा के लिए", "भूमि सुधार एवं न्यायिक समीक्षा से", "उपर्युक्त सभी।"], correct: 3 },
+            { qEn: "Transfer of Berubari Union to Pakistan was done via which amendment?", qHi: "भारत पाक समझौते के अनुसार पाकिस्तान को बेरुबाड़ी संघ के भारतीय क्षेत्र का समर्पण किस संविधान संशोधन द्वारा किया गया?", optionsEn: ["8th", "9th", "10th", "11th"], optionsHi: ["8वाँ", "9वाँ", "10वाँ", "11वाँ"], correct: 1 },
+            { qEn: "When was the 1st Constitutional Amendment re-established?", qHi: "पहला संविधान संशोधन कब पुनः स्थापित किया गया?", optionsEn: ["1952", "1953", "1951", "1950"], optionsHi: ["वर्ष 1952", "वर्ष 1953", "वर्ष 1951", "वर्ष 1950"], correct: 2 },
+            { qEn: "Which amendment provided for Vice President's election by electoral college instead of joint sitting?", qHi: "किस संविधान संशोधन द्वारा उपराष्ट्रपति की निर्वाचन संसद के दोनों सदनों की संयुक्त बैठक की बजाय निर्वाचक मंडल द्वारा किये जाने का प्रावधान किया गया?", optionsEn: ["11th", "12th", "13th", "14th"], optionsHi: ["11वाँ", "12वाँ", "13वाँ", "14वाँ"], correct: 0 },
+            { qEn: "Which amendment abolished election tribunals and gave power to High Courts for election petitions?", qHi: "किस संविधान संशोधन द्वारा निर्वाचन अधिकरणों की व्यवस्था समाप्त कर और उच्च न्यायालयों को निर्वाचन याचिका पर सुनवाई की शक्ति प्रदान किया गया?", optionsEn: ["20th", "22nd", "21st", "19th"], optionsHi: ["20वाँ", "22वाँ", "21वाँ", "19वाँ"], correct: 3 },
+            { qEn: "Which amendment allowed Parliament to amend any part of the Constitution, including Fundamental Rights?", qHi: "किस संविधान संशोधन द्वारा यह प्रावधान किया गया कि संसद को किसी भी हिस्से का, चाहे वह मूल अधिकार हो, संशोधन कर सकती है?", optionsEn: ["23rd", "24th", "19th", "21st"], optionsHi: ["23वाँ", "24वाँ", "19वाँ", "21वाँ"], correct: 1 },
+            { qEn: "The 26th Constitutional Amendment is related to:", qHi: "26वाँ संविधान संशोधन संबंधित है-", optionsEn: ["Abolition of Privy Purses", "Sindhi language in 8th Schedule", "Retirement age of HC judges", "None of these"], optionsHi: ["प्रिवीपर्स और प्रांतीय शासकों के विशेषाधिकार समाप्त करने से", "सिंधी भाषा को आठवीं अनुसूची में शामिल करने से", "उच्च न्यायालय के न्यायाधीशों की सेवानिवृत्ति की उम्र 60 से 62 वर्ष", "इनमें से कोई नहीं।"], correct: 0 },
+            { qEn: "Retirement age of High Court judges was raised from 60 to 62 by which amendment?", qHi: "उच्च न्यायालयों की न्यायाधीशों की सेवानिवृत्ति की आयु किस संविधान संशोधन द्वारा 60 से बढ़ाकर 62 वर्ष कर दिया गया?", optionsEn: ["12th", "15th", "16th", "14th"], optionsHi: ["12वाँ", "15वाँ", "16वाँ", "14वाँ"], correct: 1 },
+            { qEn: "Which amendment made the President's assent to Constitutional Amendment Bills mandatory?", qHi: "किसी भी संवैधानिक संशोधन विधेयक पर राष्ट्रपति की मंजूरी दिये जाना को किस संविधान संशोधन द्वारा आवश्यक बनाया गया?", optionsEn: ["24th", "15th", "16th", "31st"], optionsHi: ["24वाँ", "15वाँ", "16वाँ", "31वाँ"], correct: 0 },
+            { qEn: "Which amendment gave power to President to make different proclamations of National Emergency on different grounds?", qHi: "राष्ट्रपति को विभिन्न आधारों पर राष्ट्रीय आपातकाल की विभिन्न घोषणाएँ करने की शक्ति किस संविधान संशोधन द्वारा प्रदान किया गया?", optionsEn: ["37th", "38th", "33rd", "36th"], optionsHi: ["37वाँ", "38वाँ", "33वाँ", "36वाँ"], correct: 1 },
+            { qEn: "Age of members of State PSC and Joint PSC was raised from 60 to 62 by which amendment?", qHi: "निम्न में से किस संविधान संशोधन द्वारा राज्य लोकसेवा आयोग एवं संयुक्त लोकसेवा आयोग के सदस्यों की आयु 60 से 62 वर्ष कर दी गई?", optionsEn: ["38th", "33rd", "41st", "46th"], optionsHi: ["38वाँ", "33वाँ", "41वाँ", "46वाँ"], correct: 2 },
+            { qEn: "Term of Lok Sabha and Assemblies was raised from 5 to 6 years by which amendment?", qHi: "किस संविधान संशोधन द्वारा लोकसभा एवं विधानसभा के कार्यकाल 5 वर्ष से बढ़ाकर 6 वर्ष कर दिया गया?", optionsEn: ["42nd", "43rd", "44th", "41st"], optionsHi: ["42वाँ", "43वाँ", "44वाँ", "41वाँ"], correct: 0 },
+            { qEn: "52nd Constitutional Amendment is related to:", qHi: "52वाँ संविधान संशोधन का संबंध है-", optionsEn: ["Increase in Lok Sabha term", "Anti-Defection Law", "Judicial Review", "Election Commission"], optionsHi: ["लोकसभा के कार्यकाल में वृद्धि से", "दल-बदल विरोधी कानून से", "न्यायिक समीक्षा से", "निर्वाचन आयोग से"], correct: 1 },
+            { qEn: "Voting age was reduced from 21 to 18 by which amendment?", qHi: "किस संविधान संशोधन द्वारा लोकसभा एवं विधानसभा में मतदान की उम्र 21 वर्ष से घटाकर 18 वर्ष कर दिया गया?", optionsEn: ["61st", "62nd", "64th", "86th"], optionsHi: ["61वाँ", "62वाँ", "64वाँ", "86वाँ"], correct: 0 },
+            { qEn: "Delhi was made National Capital Territory (NCT) by which amendment?", qHi: "किस संविधान संशोधन द्वारा केंद्रशासित राज्य दिल्ली को राष्ट्रीय राजधानी क्षेत्र दिल्ली बनाया गया?", optionsEn: ["60th", "54th", "70th", "69th"], optionsHi: ["60वाँ", "54वाँ", "70वाँ", "69वाँ"], correct: 3 },
+            { qEn: "Which amendment provided a 70-member assembly and 7-member council for Delhi?", qHi: "किस संविधान सभा द्वारा दिल्ली के लिए 70 सदस्यीय विधानसभा एवं 7 सदस्यीय मंत्रिपरिषद की व्यवस्था भी की गई?", optionsEn: ["69th", "64th", "70th", "86th"], optionsHi: ["69वाँ", "64वाँ", "70वाँ", "86वाँ"], correct: 0 },
+            { qEn: "73rd Constitutional Amendment is related to:", qHi: "73वाँ संविधान संशोधन संबंधित है-", optionsEn: ["Panchayati Raj", "Municipality", "Cooperative Societies", "Right to Education"], optionsHi: ["पंचायती राज से", "नगरपालिका से", "सहकारी समिति से", "शिक्षा के अधिकार से"], correct: 0 },
+            { qEn: "Which amendment included Delhi and Puducherry assemblies in the Presidential electoral college?", qHi: "किस संविधान संशोधन द्वारा राष्ट्रपति के निर्वाचन में निर्वाचक मंडल के रूप में दिल्ली विधानसभा एवं केंद्रशासित राज्य पुडुचेरी को शामिल किया गया?", optionsEn: ["71st", "72nd", "70th", "74th"], optionsHi: ["71वाँ", "72वाँ", "70वाँ", "74वाँ"], correct: 2 },
+            { qEn: "74th Constitutional Amendment is related to:", qHi: "74वाँ संविधान संशोधन संबंधित है-", optionsEn: ["Cooperative Societies", "Municipality", "Panchayati Raj", "Right to Education"], optionsHi: ["सहकारी समिति से", "नगरपालिका से", "पंचायती राज से", "शिक्षा के अधिकार से"], correct: 1 },
+            { qEn: "Primary education was made a Fundamental Right by which amendment?", qHi: "किस संविधान संशोधन द्वारा प्रारंभिक शिक्षा को मूल अधिकार बनाया गया?", optionsEn: ["87th", "64th", "86th", "94th"], optionsHi: ["87वाँ", "64वाँ", "86वाँ", "94वाँ"], correct: 2 },
+            { qEn: "89th Constitutional Amendment is related to:", qHi: "89वाँ संविधान संशोधन संबंधित है-", optionsEn: ["National Commission for SC", "National Commission for ST", "Both a and b", "None of these"], optionsHi: ["राष्ट्रीय अनुसूचित जाति आयोग", "राष्ट्रीय अनुसूचित जनजाति आयोग", "a और b दोनों", "इनमें से कोई नहीं।"], correct: 2 },
+            { qEn: "Which amendment limited the council of ministers to 15% of the total strength?", qHi: "किस संविधान संशोधन द्वारा यह निश्चित किया गया कि केंद्र एवं राज्य मंत्रिपरिषद में प्रधानमंत्री एवं मुख्यमंत्री समेत मंत्रियों की संख्या 15% से अधिक नहीं होगी?", optionsEn: ["91st", "92nd", "96th", "52nd"], optionsHi: ["91वाँ", "92वाँ", "96वाँ", "52वाँ"], correct: 0 },
+            { qEn: "Constitutional protection was provided to cooperative societies by which amendment?", qHi: "किस संविधान संशोधन द्वारा सहकारी समितियों को संवैधानिक संरक्षण प्रदान किया गया?", optionsEn: ["97th", "73rd", "74th", "42nd"], optionsHi: ["97वाँ", "73वाँ", "74वाँ", "42वाँ"], correct: 0 },
+            { qEn: "99th Constitutional Amendment is related to:", qHi: "99वाँ संविधान संशोधन संबंधित है-", optionsEn: ["National Judicial Appointments Commission (NJAC)", "Anti-Defection Law", "GST", "India-Bangladesh Land Agreement"], optionsHi: ["राष्ट्रीय न्यायिक नियुक्ति आयोग से", "दल-बदल विरोधी कानून से", "G.S.T से", "भारत-बांग्लादेश भूमि समझौता से"], correct: 0 },
+            { qEn: "101st Constitutional Amendment is related to:", qHi: "101वाँ संविधान संशोधन संबंधित है-", optionsEn: ["India-Bangladesh Land Agreement", "Anti-Defection Law", "GST", "NJAC"], optionsHi: ["भारत-बांग्लादेश भूमि समझौता से", "दल-बदल विरोधी कानून से", "G.S.T से", "राष्ट्रीय न्यायिक नियुक्ति आयोग से"], correct: 2 },
+            { qEn: "100th Constitutional Amendment is related to:", qHi: "100वाँ संविधान संशोधन संबंधित है-", optionsEn: ["India-Bangladesh Land Agreement", "NJAC", "GST", "EWS Reservation"], optionsHi: ["भारत-बांग्लादेश भूमि समझौता से", "राष्ट्रीय न्यायिक नियुक्ति आयोग से", "G.S.T से", "EWS आरक्षण से"], correct: 0 },
+            { qEn: "Constitutional status was given to the National Commission for Backward Classes by which amendment?", qHi: "राष्ट्रीय पिछड़ा वर्ग आयोग को संवैधानिक दर्जा किस संविधान संशोधन द्वारा दिया गया?", optionsEn: ["101st", "102nd", "103rd", "104th"], optionsHi: ["101वाँ", "102वाँ", "103वाँ", "104वाँ"], correct: 1 },
+            { qEn: "Constitutional protection for cooperative societies (repeated in source):", qHi: "किस संविधान संशोधन द्वारा सहकारी समितियों को संवैधानिक संरक्षण प्रदान किया गया?", optionsEn: ["97th", "73rd", "74th", "42nd"], optionsHi: ["97वाँ", "73वाँ", "74वाँ", "42वाँ"], correct: 0 },
+            { qEn: "103rd Constitutional Amendment is related to:", qHi: "103वाँ संविधान संशोधन संबंधित है-", optionsEn: ["EWS Reservation", "GST", "Anti-Defection Law", "NJAC"], optionsHi: ["EWS आरक्षण से", "G.S.T से", "दल-बदल विरोधी कानून से", "राष्ट्रीय न्यायिक नियुक्ति आयोग से"], correct: 0 }
+        ];
+
+        let currentQ = 0;
+        let score = 0;
+        let quizQuestions = [];
+        let timerVal = 0;
+        let timerInterval;
+        let audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function startQuiz() {
+            const timeInput = document.getElementById('timer-input').value;
+            timerVal = timeInput ? parseInt(timeInput) : 0;
+            
+            quizQuestions = document.getElementById('shuffle-check').checked 
+                ? [...questions].sort(() => Math.random() - 0.5) 
+                : [...questions];
+
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('quiz-screen').classList.remove('hidden');
+            showQuestion();
+        }
+
+        function showQuestion() {
+            if (currentQ >= quizQuestions.length) return endQuiz();
+            
+            clearInterval(timerInterval);
+            const q = quizQuestions[currentQ];
+            document.getElementById('q-counter').innerText = `Question ${currentQ + 1}/${quizQuestions.length}`;
+            document.getElementById('score-display').innerText = `Score: ${score}`;
+            document.getElementById('q-en').innerHTML = `${q.qEn} <span class="hi">${q.qHi}</span>`;
+            
+            const container = document.getElementById('options-container');
+            container.innerHTML = '';
+            
+            q.optionsEn.forEach((opt, i) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerHTML = `${opt} <span class="hi">${q.optionsHi[i]}</span>`;
+                btn.onclick = () => handleAnswer(i);
+                container.appendChild(btn);
+            });
+
+            updateProgress();
+            if (timerVal > 0) startTimer();
+        }
+
+        function startTimer() {
+            let timeLeft = timerVal;
+            const timerEl = document.getElementById('timer');
+            timerEl.innerText = `⏳ ${timeLeft}s`;
+            timerEl.classList.remove('pulse-red');
+
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                timerEl.innerText = `⏳ ${timeLeft}s`;
+                if (timeLeft < 5) timerEl.classList.add('pulse-red');
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    handleAnswer(-1); // Timeout
+                }
+            }, 1000);
+        }
+
+        function handleAnswer(index) {
+            clearInterval(timerInterval);
+            const q = quizQuestions[currentQ];
+            const buttons = document.querySelectorAll('.option-btn');
+            buttons.forEach(b => b.disabled = true);
+
+            if (index === q.correct) {
+                score++;
+                buttons[index].classList.add('correct');
+                playSound(600, 0.1, 'sine'); // "Ting"
+                spawnConfetti();
+            } else {
+                if(index !== -1) buttons[index].classList.add('wrong');
+                buttons[q.correct].classList.add('correct');
+                showReaction('😢');
+                playSound(150, 0.3, 'sawtooth'); // "Buzz"
+            }
+
+            setTimeout(() => {
+                currentQ++;
+                showQuestion();
+            }, 1500);
+        }
+
+        function updateProgress() {
+            const perc = (currentQ / quizQuestions.length) * 100;
+            document.getElementById('progress-bar').style.width = perc + "%";
+        }
+
+        function endQuiz() {
+            clearInterval(timerInterval);
+            document.getElementById('quiz-screen').classList.add('hidden');
+            document.getElementById('result-screen').classList.remove('hidden');
+            document.getElementById('progress-bar').style.width = "100%";
+            
+            const finalScoreEl = document.getElementById('final-score');
+            finalScoreEl.innerText = `${score}/${quizQuestions.length}`;
+            
+            const perc = (score / quizQuestions.length) * 100;
+            const msg = document.getElementById('result-msg');
+            const title = document.getElementById('result-title');
+            
+            if (perc >= 80) { title.innerText = "🏆 Outstanding!"; msg.innerText = "Outstanding Performance!"; }
+            else if (perc >= 50) { title.innerText = "👏 Well Done!"; msg.innerText = "Keep it up."; }
+            else { title.innerText = "📚 Keep Learning"; msg.innerText = "Practice makes perfect! Try again."; }
+        }
+
+        // --- Effects & Audio ---
+        function playSound(freq, duration, type) {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + duration);
+        }
+
+        function showReaction(emoji) {
+            const el = document.getElementById('reaction-emoji');
+            el.innerText = emoji;
+            el.style.display = 'block';
+            setTimeout(() => el.style.display = 'none', 1000);
+        }
+
+        function spawnConfetti() {
+            for(let i=0; i<30; i++) {
+                const c = document.createElement('div');
+                c.className = 'confetti';
+                c.style.left = Math.random() * 100 + 'vw';
+                c.style.backgroundColor = `hsl(${Math.random()*360}, 70%, 60%)`;
+                c.style.animationDelay = Math.random() + 's';
+                document.body.appendChild(c);
+                setTimeout(() => c.remove(), 3000);
+            }
+        }
+    </script>
+</body>
+</html>

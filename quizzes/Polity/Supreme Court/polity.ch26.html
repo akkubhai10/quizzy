@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chapter 26: Supreme Court Quiz</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.15);
+            --correct: #4dfd63;
+            --wrong: #ff4d4d;
+            --primary-text: #ffffff;
+            --secondary-text: #cccccc;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(45deg, #090979, #00d4ff, #4e00c2);
+            background-size: 400% 400%;
+            animation: gradientBG 12s ease infinite;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 15px;
+            color: white;
+            overflow-x: hidden;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .quiz-container {
+            width: 100%;
+            max-width: 650px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid var(--glass-border);
+            border-radius: 30px;
+            padding: 25px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+            position: relative;
+            max-height: 95vh;
+            overflow-y: auto;
+        }
+
+        /* Scrollbar styling */
+        .quiz-container::-webkit-scrollbar { width: 6px; }
+        .quiz-container::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
+
+        .progress-bar-container {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 6px;
+            background: rgba(255,255,255,0.05);
+            z-index: 1000;
+        }
+
+        #progress-fill {
+            height: 100%; width: 0%;
+            background: linear-gradient(90deg, #00f2fe, #4facfe);
+            box-shadow: 0 0 12px #00f2fe;
+            transition: width 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .header-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            background: rgba(0,0,0,0.2);
+            padding: 10px 15px;
+            border-radius: 15px;
+        }
+
+        #timer.pulse { color: #ff3333; animation: pulseRed 0.6s infinite alternate; }
+        @keyframes pulseRed { from { opacity: 1; transform: scale(1); } to { opacity: 0.7; transform: scale(1.1); } }
+
+        .question-box { margin-bottom: 25px; }
+        .eng-txt { display: block; font-size: 1.1rem; font-weight: 600; margin-bottom: 6px; line-height: 1.4; }
+        .hin-txt { display: block; font-size: 0.95rem; color: var(--secondary-text); margin-bottom: 20px; font-weight: 400; }
+
+        .options-grid { display: grid; gap: 10px; }
+
+        .option-btn {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid var(--glass-border);
+            padding: 15px;
+            border-radius: 15px;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.2s ease;
+            color: white;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .option-btn:hover:not([disabled]) {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateX(5px);
+        }
+
+        .option-btn.correct { background: var(--correct) !important; color: #000; font-weight: bold; border-color: transparent; }
+        .option-btn.wrong { background: var(--wrong) !important; border-color: transparent; }
+
+        .btn-finish {
+            margin-top: 25px;
+            width: 100%;
+            padding: 12px;
+            border-radius: 12px;
+            border: none;
+            background: rgba(255,255,255,0.1);
+            color: white;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .setup-screen, .result-screen { text-align: center; }
+        .start-btn {
+            padding: 15px 40px; font-size: 1.1rem; border-radius: 50px; border: none;
+            background: #ffffff; color: #090979; font-weight: bold; cursor: pointer;
+            transition: 0.3s; margin-top: 20px;
+        }
+        .start-btn:hover { transform: scale(1.1); box-shadow: 0 0 20px rgba(255,255,255,0.4); }
+
+        #feedback-emoji {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 100px; z-index: 9999; display: none;
+        }
+        .shake { animation: shakeAnim 0.4s ease-in-out; }
+        @keyframes shakeAnim {
+            0%, 100% { transform: translate(-50%, -50%) rotate(0deg); }
+            20% { transform: translate(-55%, -50%) rotate(-5deg); }
+            60% { transform: translate(-45%, -50%) rotate(5deg); }
+        }
+
+        .hidden { display: none; }
+        
+        @media (max-width: 480px) {
+            .quiz-container { padding: 15px; }
+            .eng-txt { font-size: 1rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="progress-bar-container"><div id="progress-fill"></div></div>
+
+<div class="quiz-container">
+    <div id="setup-screen" class="setup-screen">
+        <h1 style="font-size: 2rem;">Supreme Court</h1>
+        <p style="opacity: 0.7;">Chapter - 26 | 34 Questions</p>
+        <div style="margin: 25px 0;">
+            <label>Timer per Question: </label>
+            <input type="number" id="timer-input" value="30" style="width: 50px; padding: 5px; border-radius: 5px; border:none;">s
+            <br><br>
+            <label><input type="checkbox" id="shuffle-input"> Randomize Questions</label>
+        </div>
+        <button class="start-btn" onclick="startQuiz()">Start Quiz</button>
+    </div>
+
+    <div id="quiz-screen" class="hidden">
+        <div class="header-info">
+            <span id="question-count">01 / 34</span>
+            <span id="timer">⏱ 30s</span>
+            <span id="score-count">Score: 0</span>
+        </div>
+        <div class="question-box">
+            <span class="eng-txt" id="q-eng"></span>
+            <span class="hin-txt" id="q-hin"></span>
+        </div>
+        <div class="options-grid" id="options-container"></div>
+        <button class="btn-finish" onclick="showResults()">Finish & Results</button>
+    </div>
+
+    <div id="result-screen" class="result-screen hidden">
+        <h2 id="result-msg" style="font-size: 1.8rem;"></h2>
+        <p id="final-score" style="font-size: 1.3rem; margin: 20px 0;"></p>
+        <button class="start-btn" onclick="location.reload()">Try Again</button>
+    </div>
+</div>
+
+<div id="feedback-emoji">😢</div>
+
+<script>
+    const allQuestions = [
+        { qEng: "What type of judicial system exists in India?", qHin: "भारत में किस प्रकार की न्याय व्यवस्था है?", optionsEng: ["Dual", "Triple", "Integrated", "None"], optionsHin: ["दोहरी", "तिहरी", "एकीकृत", "इनमें से कोई नहीं"], correct: 2 },
+        { qEng: "When was the Supreme Court of India inaugurated?", qHin: "भारत के उच्चतम न्यायालय का उद्घाटन कब हुआ?", optionsEng: ["26 Jan 1950", "28 Jan 1950", "25 Jan 1950", "24 Jan 1950"], optionsHin: ["26 जनवरी, 1950", "28 जनवरी, 1950", "25 जनवरी, 1950", "24 जनवरी, 1950"], correct: 1 },
+        { qEng: "In which Part of the Constitution are Supreme Court organization, independence, and powers mentioned?", qHin: "उच्चतम न्यायालय के गठन, स्वतंत्रता, न्याय क्षेत्र, शक्तियां प्रक्रिया का उल्लेख संविधान के किस भाग में है?", optionsEng: ["Part-5", "Part-6", "Part-7", "Part-4"], optionsHin: ["भाग-5", "भाग-6", "भाग-7", "भाग-4"], correct: 0 },
+        { qEng: "What is the current number of judges in the Supreme Court including the Chief Justice?", qHin: "वर्तमान में भारत में उच्चतम न्यायालय में मुख्य न्यायाधीशों सहित न्यायाधीशों की संख्या कितनी है?", optionsEng: ["35", "33", "31", "34"], optionsHin: ["35", "33", "31", "34"], correct: 3 },
+        { qEng: "What was the number of judges at the time of the establishment of the Supreme Court?", qHin: "उच्चतम न्यायालय के स्थापना के समय न्यायाधीशों की संख्या उच्चतम न्यायालय में थी?", optionsEng: ["9", "8", "6", "12"], optionsHin: ["9", "8", "6", "12"], correct: 1 },
+        { qEng: "Who appoints the judges of the Supreme Court?", qHin: "उच्चतम न्यायालय के न्यायाधीशों की नियुक्ति कौन करता है?", optionsEng: ["President", "Home Minister", "Prime Minister", "Parliament"], optionsHin: ["राष्ट्रपति", "गृहमंत्री", "प्रधानमंत्री", "संसद"], correct: 0 },
+        { qEng: "Which Constitutional Amendment established the National Judicial Appointments Commission (NJAC)?", qHin: "न्यायिक नियुक्ति आयोग की स्थापना कौन से संविधान संशोधन द्वारा किया गया?", optionsEng: ["100th", "99th", "98th", "96th"], optionsHin: ["100वां", "99वां", "98वां", "96वां"], correct: 1 },
+        { qEng: "The President appoints judges in consultation with which institution?", qHin: "राष्ट्रपति निम्न में से किस संस्था के परामर्श पर न्यायाधीशों की नियुक्ति करता है?", optionsEng: ["Parliament", "NJAC", "Collegium", "None"], optionsHin: ["संसद", "राष्ट्रीय न्यायिक नियुक्ति आयोग", "कॉलेजियम", "इनमें से कोई नहीं"], correct: 2 },
+        { qEng: "Consider: 1. Supreme Court judges are appointed by Collegium. 2. Collegium has CJI and 4 senior judges.", qHin: "1. न्यायाधीशों की नियुक्ति कॉलेजियम प्रणाली द्वारा होती है। 2. इसमें मुख्य न्यायाधीश एवं चार वरिष्ठतम न्यायाधीश होते हैं।", optionsEng: ["Only 1", "Only 2", "Both 1 & 2", "None"], optionsHin: ["केवल 1", "केवल 2", "1 और 2", "न तो 1 न ही 2"], correct: 2 },
+        { qEng: "Qualifications for SC Judge: 5 years as HC judge, 10 years as advocate, or distinguished jurist.", qHin: "अर्हताएं: HC में 5 साल न्यायाधीश, 10 वर्ष वकील, या राष्ट्रपति के मत में सम्मानित न्यायविद।", optionsEng: ["Only A", "Only B", "Only C", "All of above"], optionsHin: ["HC में 5 साल", "10 वर्ष वकील", "सम्मानित न्यायविद", "उपर्युक्त में सभी"], correct: 3 },
+        { qEng: "What is the current salary of the Chief Justice of India?", qHin: "वर्तमान में उच्चतम न्यायालय के मुख्य न्यायाधीश के वेतन है?", optionsEng: ["2.80 Lakh", "2.50 Lakh", "2.76 Lakh", "3 Lakh"], optionsHin: ["2.80 लाख", "2.50 लाख", "2.76 लाख", "3 लाख"], correct: 0 },
+        { qEng: "What is the salary of other Supreme Court judges?", qHin: "वर्तमान में सर्वोच्च न्यायालय के न्यायाधीशों का वेतन है-", optionsEng: ["2.80 Lakh", "2.60 Lakh", "2.50 Lakh", "2.70 Lakh"], optionsHin: ["2.80 लाख", "2.60 लाख", "2.50 लाख", "2.70 लाख"], correct: 2 },
+        { qEng: "What is the minimum age limit to become a Supreme Court judge?", qHin: "सर्वोच्च न्यायालय के न्यायाधीश बनने के लिये न्यूनतम आयु सीमा है?", optionsEng: ["35 yrs", "25 yrs", "30 yrs", "No limit"], optionsHin: ["35 वर्ष", "25 वर्ष", "30 वर्ष", "इनमें से कोई नहीं"], correct: 3 },
+        { qEng: "Retirement age of Supreme Court judge is:", qHin: "सर्वोच्च न्यायालय का न्यायाधीश सेवानिवृत्त होने की आयु है-", optionsEng: ["65 years", "62 years", "70 years", "60 years"], optionsHin: ["65 वर्ष", "62 वर्ष", "70 वर्ष", "60 वर्ष"], correct: 0 },
+        { qEng: "Removal of SC judge for misbehavior is done by:", qHin: "दुर्व्यवहार या कदाचार के आधार पर पदमुक्त किया जा सकता है?", optionsEng: ["President alone", "Law Minister", "President with Special Majority of Parliament", "PM"], optionsHin: ["राष्ट्रपति स्वेच्छा से", "कानून मंत्री द्वारा", "विशेष बहुमत समर्थन से राष्ट्रपति द्वारा", "प्रधानमंत्री द्वारा"], correct: 2 },
+        { qEng: "Signature of how many Lok Sabha members required for removal motion?", qHin: "हटाने वाले प्रस्ताव को लोकसभा अध्यक्ष को देने के लिये कितने सदस्यों की हस्ताक्षर आवश्यक है?", optionsEng: ["100", "50", "25", "125"], optionsHin: ["100", "50", "25", "125"], correct: 0 },
+        { qEng: "Signature of how many Rajya Sabha members required for removal motion?", qHin: "हटाने वाले प्रस्ताव को राज्यसभा सभापति को देने के लिये कम से कम कितने सदस्यों की हस्ताक्षर आवश्यक है?", optionsEng: ["100", "40", "50", "65"], optionsHin: ["100", "40", "50", "65"], correct: 2 },
+        { qEng: "On how many judges has impeachment been applied so far?", qHin: "उच्चतम न्यायालय के कितने न्यायाधीशों पर अब तक महाभियोग लगाया गया है?", optionsEng: ["Two", "Three", "Four", "None"], optionsHin: ["दो", "तीन", "चार", "एक भी नहीं"], correct: 3 },
+        { qEng: "First impeachment process was against which judge?", qHin: "पहला महाभियोग की प्रक्रिया उच्चतम न्यायालय के किस न्यायाधीश पर लगाया गया था?", optionsEng: ["V. Ramaswami", "P.N. Bhagwati", "Y.V. Chandrachud", "S.A. Anand"], optionsHin: ["वी. रामास्वामी", "पी. एन. भगवती", "वाई. वी. चंद्रचूड़", "एस. ए. आनंद"], correct: 0 },
+        { qEng: "When can the President appoint an Acting Chief Justice?", qHin: "राष्ट्रपति किन परिस्थितियों में उच्चतम न्यायालय का कार्यकारी न्यायाधीश नियुक्त कर सकता है?", optionsEng: ["CJI post vacant", "CJI absent", "CJI unable to perform", "All of above"], optionsHin: ["पद रिक्त हो", "अनुपस्थित हो", "असमर्थ हो", "उपर्युक्त में सभी"], correct: 3 },
+        { qEng: "Who appoints Ad-hoc judges in Supreme Court?", qHin: "उच्चतम न्यायालय में तदर्थ न्यायाधीश की नियुक्ति कौन करता है?", optionsEng: ["CJI", "President", "Law Minister", "RS Chairman"], optionsHin: ["मुख्य न्यायाधीश", "राष्ट्रपति", "कानून मंत्री", "राज्यसभा के सभापति"], correct: 0 },
+        { qEng: "CJI can appoint ad-hoc judges with whose prior consent?", qHin: "मुख्य न्यायाधीश तदर्थ न्यायाधीशों की नियुक्ति कर सकता है-", optionsEng: ["Discretion", "Consulting senior judges", "Concerned HC CJ and President prior consent", "None"], optionsHin: ["विवेक से", "वरिष्ठ न्यायाधीश परामर्श पर", "HC के परामर्श एवं राष्ट्रपति के पूर्व मंजूरी पर", "कोई नहीं"], correct: 2 },
+        { qEng: "Where is the seat of the Supreme Court established by Constitution?", qHin: "संविधान के द्वारा उच्चतम न्यायालय का स्थान निर्धारित किया गया है?", optionsEng: ["Kolkata", "Madras", "Mumbai", "Delhi"], optionsHin: ["कोलकाता", "मद्रास", "मुंबई", "दिल्ली"], correct: 3 },
+        { qEng: "Who has power to appoint seat of SC other than Delhi?", qHin: "उच्चतम न्यायालय का स्थान दिल्ली के अलावा कहीं और निर्धारित करने का अधिकार है?", optionsEng: ["CJI of India", "Parliament", "PM", "President"], optionsHin: ["भारत के मुख्य न्यायाधीश", "संसद", "प्रधानमंत्री", "राष्ट्रपति"], correct: 0 },
+        { qEng: "Which Article mentions President's power to consult SC?", qHin: "राष्ट्रपति को उच्चतम न्यायालय से सलाह करने की शक्ति का उल्लेख किस अनुच्छेद में है?", optionsEng: ["Art 143", "Art 142", "Art 141", "Art 121"], optionsHin: ["अनुच्छेद- 143", "अनुच्छेद- 142", "अनुच्छेद- 141", "अनुच्छेद- 121"], correct: 0 },
+        { qEng: "Provisions to ensure independence of SC include:", qHin: "स्वतंत्रता और निष्पक्ष कार्यकरण सुनिश्चित करने के लिये उपबंध:", optionsEng: ["Security of Tenure", "Fixed Service conditions", "Exp. on Consolidated Fund", "All of above"], optionsHin: ["कार्यकाल की सुरक्षा", "निश्चित सेवा शर्तें", "संचित निधि से व्यय", "उपर्युक्त में सभी"], correct: 3 },
+        { qEng: "Original Jurisdiction includes:", qHin: "मूल क्षेत्राधिकार के अंतर्गत सम्मिलित है-", optionsEng: ["Centre-State disputes", "Inter-state disputes", "Centre + State vs State", "All of above"], optionsHin: ["केंद्र व राज्यों में विवाद", "दो या अधिक राज्यों के बीच", "एक तरफ केंद्र व राज्य vs राज्य", "उपर्युक्त में सभी"], correct: 3 },
+        { qEng: "Under which jurisdiction does SC protect fundamental rights?", qHin: "नागरिक के मूल अधिकार का रक्षा उच्चतम न्यायालय किस क्षेत्राधिकार के अंतर्गत करता है?", optionsEng: ["Original", "Writ", "Appellate", "Advisory"], optionsHin: ["मूल क्षेत्राधिकार", "न्यायदेश क्षेत्राधिकार", "अपीलीय क्षेत्राधिकार", "सलाहकार क्षेत्राधिकार"], correct: 1 },
+        { qEng: "1. SC can issue writs only for FR. 2. HC can issue writs for FR and others.", qHin: "1. SC केवल मूल अधिकारों के संबंध में न्यायदेश जारी कर सकता है। 2. HC मूल अधिकार और अन्य उद्देश्यों के लिये।", optionsEng: ["Only 1", "Only 2", "Both 1 & 2", "None"], optionsHin: ["केवल 1", "केवल 2", "1 और 2", "न तो 1 न ही 2"], correct: 2 },
+        { qEng: "Appellate jurisdiction includes:", qHin: "अपीलीय क्षेत्राधिकार के अंतर्गत सम्मिलित है?", optionsEng: ["Constitutional", "Civil/Criminal", "Special Leave", "All of above"], optionsHin: ["संवैधानिक", "दीवानी एवं अपराधिक", "विशेष अनुमति", "उपर्युक्त में सभी"], correct: 3 },
+        { qEng: "1. President can seek advice on legal matter. 2. SC is bound to give advice.", qHin: "1. अनुच्छेद 143 के द्वारा राष्ट्रपति सलाह मांग सकता है। 2. उच्चतम न्यायालय सलाह देने को बाध्य है।", optionsEng: ["Only 1", "Only 2", "Both 1 & 2", "None"], optionsHin: ["केवल 1", "केवल 2", "1 और 2", "न तो 1 न ही 2"], correct: 0 },
+        { qEng: "Final interpreter and guardian of Constitution is:", qHin: "संविधान का अंतिम व्याख्याकर्ता, विवेचनकर्ता और संरक्षक है-", optionsEng: ["President", "Parliament", "Supreme Court", "All"], optionsHin: ["राष्ट्रपति", "संसद", "सर्वोच्च न्यायालय", "इनमें से सभी"], correct: 2 },
+        { qEng: "Which Article deals with establishment of SC?", qHin: "संविधान के किस अनुच्छेद में उच्चतम न्यायालय के गठन का उल्लेख है?", optionsEng: ["124", "125", "126", "127"], optionsHin: ["124", "125", "126", "127"], correct: 0 },
+        { qEng: "Match: A-Salary, B-Original Jur, C-Review, D-Acting CJ.", qHin: "मिलान करें: A-वेतन(125), B-मूल क्षेत्राधिकार(131), C-समीक्षा(137), D-कार्यकारी CJ(126)", optionsEng: ["A3,B1,C2,D4", "A2,B1,C3,D4", "A1,B2,C3,D4", "A4,B3,C2,D1"], optionsHin: ["A3,B1,C2,D4", "A2,B1,C3,D4", "A1,B2,C3,D4", "A4,B3,C2,D1"], correct: 0 }
+    ];
+
+    let currentQ = 0, score = 0, timerInterval, timeLimit = 30, quizData = [];
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    function playSfx(type) {
+        const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        if(type === 'win') { osc.frequency.setValueAtTime(800, audioCtx.currentTime); osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.1); }
+        else { osc.type = 'sawtooth'; osc.frequency.setValueAtTime(150, audioCtx.currentTime); }
+        gain.gain.setValueAtTime(0.1, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.3);
+    }
+
+    function startQuiz() {
+        timeLimit = parseInt(document.getElementById('timer-input').value) || 0;
+        quizData = document.getElementById('shuffle-input').checked ? [...allQuestions].sort(() => Math.random() - 0.5) : [...allQuestions];
+        document.getElementById('setup-screen').classList.add('hidden');
+        document.getElementById('quiz-screen').classList.remove('hidden');
+        loadQuestion();
+    }
+
+    function loadQuestion() {
+        if(currentQ >= quizData.length) return showResults();
+        const q = quizData[currentQ];
+        document.getElementById('q-eng').innerText = q.qEng;
+        document.getElementById('q-hin').innerText = q.qHin;
+        document.getElementById('question-count').innerText = `${String(currentQ + 1).padStart(2, '0')} / ${quizData.length}`;
+        document.getElementById('progress-fill').style.width = `${(currentQ / quizData.length) * 100}%`;
+        const container = document.getElementById('options-container');
+        container.innerHTML = '';
+        q.optionsEng.forEach((opt, i) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerHTML = `<span>${opt}</span><span style="font-size:0.8rem; opacity:0.7;">${q.optionsHin[i]}</span>`;
+            btn.onclick = () => checkAns(i);
+            container.appendChild(btn);
+        });
+        if(timeLimit > 0) runTimer();
+    }
+
+    function runTimer() {
+        let left = timeLimit;
+        const disp = document.getElementById('timer');
+        clearInterval(timerInterval);
+        disp.innerText = `⏱ ${left}s`; disp.classList.remove('pulse');
+        timerInterval = setInterval(() => {
+            left--; disp.innerText = `⏱ ${left}s`;
+            if(left < 5) disp.classList.add('pulse');
+            if(left <= 0) { clearInterval(timerInterval); checkAns(-1); }
+        }, 1000);
+    }
+
+    function checkAns(idx) {
+        clearInterval(timerInterval);
+        const btns = document.querySelectorAll('.option-btn'), correct = quizData[currentQ].correct;
+        btns.forEach(b => b.disabled = true);
+        if(idx === correct) { score++; btns[idx].classList.add('correct'); playSfx('win'); }
+        else {
+            if(idx !== -1) btns[idx].classList.add('wrong');
+            btns[correct].classList.add('correct');
+            playSfx('lose');
+            const e = document.getElementById('feedback-emoji'); e.style.display = 'block'; e.classList.add('shake');
+            setTimeout(() => { e.style.display = 'none'; e.classList.remove('shake'); }, 800);
+        }
+        document.getElementById('score-count').innerText = `Score: ${score}`;
+        setTimeout(() => { currentQ++; loadQuestion(); }, 1200);
+    }
+
+    function showResults() {
+        document.getElementById('quiz-screen').classList.add('hidden');
+        document.getElementById('result-screen').classList.remove('hidden');
+        document.getElementById('progress-fill').style.width = '100%';
+        const p = (score / quizData.length) * 100;
+        document.getElementById('result-msg').innerText = p >= 80 ? "🏆 Outstanding Performance!" : p >= 50 ? "👏 Well Done!" : "📚 Keep Practicing!";
+        document.getElementById('final-score').innerText = `Final Score: ${score} / ${quizData.length}`;
+    }
+</script>
+</body>
+</html>

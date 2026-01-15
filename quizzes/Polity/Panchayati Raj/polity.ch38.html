@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chapter 38: Panchayati Raj Quiz</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --glass: rgba(255, 255, 255, 0.1);
+            --border: rgba(255, 255, 255, 0.2);
+            --correct: #4CAF50;
+            --wrong: #f44336;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(45deg, #0f0c29, #302b63, #24243e);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            padding: 10px;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            background: var(--glass);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid var(--border);
+            border-radius: 25px;
+            padding: 25px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+            position: relative;
+            overflow: hidden;
+        }
+
+        #progress-bar {
+            position: absolute;
+            top: 0; left: 0;
+            height: 6px;
+            background: linear-gradient(to right, #00dbde, #fc00ff);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .header-info { display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 15px; }
+        
+        h1 { font-size: 1.4rem; text-align: center; margin-bottom: 5px; }
+        .sub-header { text-align: center; font-size: 0.9rem; margin-bottom: 20px; color: #ccc; }
+
+        .input-group { margin-bottom: 15px; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 15px; }
+        .input-group label { display: block; margin-bottom: 8px; font-size: 0.8rem; }
+        input[type="number"] {
+            width: 100%; padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.3); background: transparent; color: white;
+        }
+
+        .btn {
+            width: 100%; padding: 14px; border: none; border-radius: 12px;
+            background: #fff; color: #222; font-weight: 600; cursor: pointer;
+            transition: all 0.3s ease; margin-top: 10px;
+        }
+        .btn:hover { transform: scale(1.02); background: #eee; }
+
+        .option-btn {
+            background: rgba(255,255,255,0.08);
+            color: white; text-align: left; margin-bottom: 10px;
+            display: flex; flex-direction: column; padding: 12px 18px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .option-btn .hi { font-size: 0.8rem; color: #bbb; margin-top: 3px; font-weight: 400; }
+
+        .question-text { font-weight: 600; margin-bottom: 20px; line-height: 1.5; font-size: 1.05rem; }
+        .question-text .hi { display: block; font-size: 0.95rem; color: #ddd; font-weight: 400; margin-top: 8px;}
+
+        #timer.pulse { color: #ff3e3e; animation: pulse 1s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+
+        #emoji-overlay {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 100px; display: none; z-index: 1000;
+        }
+        .shake { animation: shake 0.4s ease-in-out; }
+        @keyframes shake { 0%, 100% { transform: translate(-50%, -50%); } 20% { transform: translate(-60%, -50%); } 40% { transform: translate(-40%, -50%); } 60% { transform: translate(-55%, -50%); } 80% { transform: translate(-45%, -50%); } }
+
+        .hidden { display: none; }
+        .options-container { max-height: 50vh; overflow-y: auto; padding-right: 5px; }
+        .options-container::-webkit-scrollbar { width: 4px; }
+        .options-container::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
+    </style>
+</head>
+<body>
+
+    <div id="emoji-overlay">😢</div>
+
+    <div class="container">
+        <div id="progress-bar"></div>
+
+        <div id="start-screen">
+            <h1>Chapter - 38</h1>
+            <p class="sub-header">Panchayati Raj | पंचायती राज</p>
+            
+            <div class="input-group">
+                <label>Timer per Question (Seconds, 0 = Off):</label>
+                <input type="number" id="manual-timer" value="30" min="0">
+            </div>
+            
+            <div class="input-group" style="display: flex; align-items: center; gap: 10px;">
+                <input type="checkbox" id="shuffle-toggle" style="width: 20px; height: 20px;">
+                <label style="margin: 0;">Shuffle Questions / प्रश्नों को यादृच्छिक करें</label>
+            </div>
+
+            <button class="btn" onclick="startQuiz()">Start Quiz / प्रश्नोत्तरी शुरू करें</button>
+        </div>
+
+        <div id="quiz-screen" class="hidden">
+            <div class="header-info">
+                <span id="q-counter">Q 1/43</span>
+                <span id="timer">⏱ --s</span>
+                <span id="score-display">Score: 0</span>
+            </div>
+            <div id="question-box">
+                <p class="question-text" id="q-text"></p>
+                <div class="options-container" id="options-box"></div>
+            </div>
+            <button class="btn" style="background:transparent; color:white; border:1px solid #fff;" onclick="endQuiz()">Finish & Show Results</button>
+        </div>
+
+        <div id="result-screen" class="hidden">
+            <h1 id="result-msg"></h1>
+            <p style="text-align:center; font-size: 2.5rem; margin: 15px 0; font-weight: bold;" id="final-score"></p>
+            <div id="score-details" style="text-align: center; margin-bottom: 20px; font-size: 0.9rem;"></div>
+            <button class="btn" onclick="location.reload()">Restart Quiz / फिर से शुरू करें</button>
+        </div>
+    </div>
+
+<script>
+    const questions = [
+        {
+            en: "What is the meaning of the word 'Panchayati Raj' in India?",
+            hi: "भारत में 'पंचायती राज' शब्द का अभिप्राय है-",
+            options: [
+                { en: "Urban Local Government", hi: "नगरीय स्वशासन", correct: false },
+                { en: "Rural Local Self-Government", hi: "ग्रामीण स्थानीय स्वशासन", correct: true },
+                { en: "Parliamentary Governance", hi: "संसदीय शासन", correct: false },
+                { en: "Presidential Governance", hi: "अध्याक्षात्मक शासन", correct: false }
+            ]
+        },
+        {
+            en: "By which Constitutional Amendment was constitutional status granted to the Panchayati Raj system in India?",
+            hi: "भारत में पंचायती व्यवस्था को किस संविधान संशोधन द्वारा संवैधानिक दर्जा प्रदान किया गया ?",
+            options: [
+                { en: "74th Amendment", hi: "74वें", correct: false },
+                { en: "75th Amendment", hi: "75वें", correct: false },
+                { en: "73rd Amendment", hi: "73वें", correct: true },
+                { en: "42nd Amendment", hi: "42वें", correct: false }
+            ]
+        },
+        {
+            en: "When was the National Service Extension Program started?",
+            hi: "राष्ट्रीय सेवा विस्तार कार्यक्रम की शुरुआत कब किया गया ?",
+            options: [
+                { en: "1952", hi: "1952", correct: false },
+                { en: "1953", hi: "1953", correct: true },
+                { en: "1954", hi: "1954", correct: false },
+                { en: "1955", hi: "1955", correct: false }
+            ]
+        },
+        {
+            en: "When was the Community Development Program started in India?",
+            hi: "भारत में सामुदायिक विकास कार्यक्रम कब प्रारंभ किया गया ?",
+            options: [
+                { en: "1952", hi: "1952", correct: true },
+                { en: "1953", hi: "1953", correct: false },
+                { en: "1957", hi: "1957", correct: false },
+                { en: "1959", hi: "1959", correct: false }
+            ]
+        },
+        {
+            en: "In 1957, under whose chairmanship was a committee formed by the Government of India to analyze the work of the Community Development Program and National Service Extension?",
+            hi: "निम्नलिखित में से किसके अध्यक्षता में वर्ष 1957 में भारत सरकार ने सामुदायिक विकास कार्यक्रम तथा राष्ट्रीय सेवा विस्तार द्वारा किये कार्यों के विश्लेषण के लिये एक आयोग का गठन किया गया ?",
+            options: [
+                { en: "Ashok Mehta", hi: "अशोक मेहता", correct: false },
+                { en: "Balwant Rai Mehta", hi: "बलवंत राय मेहता", correct: true },
+                { en: "G.V.K. Rao", hi: "जी. वी. के. राव", correct: false },
+                { en: "L.M. Singhvi", hi: "एल. एम. सिंघवी", correct: false }
+            ]
+        },
+        {
+            en: "On the recommendation of which committee was the Panchayati Raj system established in India?",
+            hi: "निम्नलिखित में से भारत में किस समिति के सिफारिश पर भारत में पंचायती राज व्यवस्था की स्थापना हुई ?",
+            options: [
+                { en: "Balwant Rai Mehta", hi: "बलवंत राय मेहता", correct: true },
+                { en: "G.V.K. Rao", hi: "जी. वी. के. राव", correct: false },
+                { en: "Ashok Mehta", hi: "अशोक मेहता", correct: false },
+                { en: "L.M. Singhvi", hi: "एल. एम. सिंघवी", correct: false }
+            ]
+        },
+        {
+            en: "In which state of India was Panchayati Raj first established?",
+            hi: "भारत के किस राज्य में सर्वप्रथम पंचायती राज की स्थापना हुई ?",
+            options: [
+                { en: "Andhra Pradesh", hi: "आंध्रप्रदेश", correct: false },
+                { en: "Rajasthan", hi: "राजस्थान", correct: true },
+                { en: "Bihar", hi: "बिहार", correct: false },
+                { en: "Gujarat", hi: "गुजरात", correct: false }
+            ]
+        },
+        {
+            en: "Which was the second state in India to adopt the Panchayati Raj system?",
+            hi: "भारत का द्वितीय राज्य जिसने पंचायती राज व्यवस्था को अपनाया ?",
+            options: [
+                { en: "Andhra Pradesh", hi: "आंध्रप्रदेश", correct: true },
+                { en: "Rajasthan", hi: "राजस्थान", correct: false },
+                { en: "Bihar", hi: "बिहार", correct: false },
+                { en: "Gujarat", hi: "गुजरात", correct: false }
+            ]
+        },
+        {
+            en: "Who inaugurated the first Panchayati Raj institution in India?",
+            hi: "भारत में पहली बार पंचायती राज संस्था का उद्घाटन किया गया ?",
+            options: [
+                { en: "Morarji Desai", hi: "मोरारजी देसाई", correct: false },
+                { en: "Sardar Vallabhbhai Patel", hi: "सरदार बल्लभ भाई पटेल", correct: false },
+                { en: "Pandit Nehru", hi: "पंडित नेहरू", correct: true },
+                { en: "Lal Bahadur Shastri", hi: "लाल बहादुर शास्त्री", correct: false }
+            ]
+        },
+        {
+            en: "The Ashok Mehta Committee is related to:",
+            hi: "अशोक मेहता समिति संबंधित है-",
+            options: [
+                { en: "Four-tier Panchayati Raj system", hi: "चार स्तरीय पंचायती राज व्यवस्था", correct: false },
+                { en: "Nyaya Panchayat", hi: "न्याय पंचायत", correct: false },
+                { en: "Two-tier Panchayati Raj system", hi: "द्विस्तरीय पंचायती राज", correct: true },
+                { en: "Three-tier Panchayati Raj system", hi: "त्रिस्तरीय पंचायती राज", correct: false }
+            ]
+        },
+        {
+            en: "Match the following (Committees and Chairmen):",
+            hi: "मिलान करें: (समिति और अध्यक्ष)",
+            options: [
+                { en: "A-4, B-3, C-2, D-1", hi: "A-4, B-3, C-2, D-1", correct: false },
+                { en: "A-3, B-4, C-2, D-1", hi: "A-3, B-4, C-2, D-1", correct: false },
+                { en: "A-1, B-2, C-3, D-4", hi: "A-1, B-2, C-3, D-4", correct: false },
+                { en: "A-4, B-1, C-2, D-3", hi: "A-4, B-1, C-2, D-3", correct: true }
+            ]
+        },
+        {
+            en: "Which committee first recommended that 'Nyaya Panchayat' should be kept as a separate body from development?",
+            hi: "निम्नलिखित में से सर्वप्रथम किस समिति ने यह सिफारिश की 'न्याय पंचायत' को विकास से अलग निकाय के रूप में रखा जाना चाहिये ?",
+            options: [
+                { en: "K. Santhanam", hi: "के. संथानम", correct: false },
+                { en: "Ashok Mehta", hi: "अशोक मेहता", correct: true },
+                { en: "G. Ramachandran", hi: "जी. रामचंद्रन", correct: false },
+                { en: "S.B. Mishra", hi: "एस. बी. मिश्रा", correct: false }
+            ]
+        },
+        {
+            en: "Which committee recommended that the Panchayati Raj system should be given constitutional recognition?",
+            hi: "निम्नलिखित में से किस समिति ने यह सिफारिश की कि पंचायती राज व्यवस्था को संवैधानिक मान्यता दिया जाना चाहिये ?",
+            options: [
+                { en: "Ashok Mehta", hi: "अशोक मेहता", correct: false },
+                { en: "L.M. Singhvi", hi: "एल. एम. सिंघवी", correct: true },
+                { en: "B. Ishwaran", hi: "बी. ईश्वरन्", correct: false },
+                { en: "V. Ramnathan", hi: "वी. रामनाथन्", correct: false }
+            ]
+        },
+        {
+            en: "The 'Dantwala Committee' formed in 1978 is related to:",
+            hi: "1978 में गठित 'दांतेवाला समिति' संबंधित है-",
+            options: [
+                { en: "Block Level Planning", hi: "प्रखंड आयोजन से", correct: true },
+                { en: "Panchayat Level Planning", hi: "पंचायत आयोजन से", correct: false },
+                { en: "District Level Planning", hi: "जिला आयोजन से", correct: false },
+                { en: "All of the above", hi: "उपर्युक्त में सभी", correct: false }
+            ]
+        },
+        {
+            en: "The G.V.K. Rao Committee 1985 (as per image text 1986 context) is related to:",
+            hi: "जी.वी.के. राव समिति 1986 संबंधित है-",
+            options: [
+                { en: "Panchayat Planning", hi: "पंचायत आयोजन से", correct: false },
+                { en: "Block Planning", hi: "प्रखंड आयोजन से", correct: false },
+                { en: "District Planning", hi: "जिला आयोजन से", correct: true },
+                { en: "State Planning", hi: "राज्य आयोजन से", correct: false }
+            ]
+        },
+        {
+            en: "Match the following (Committee and Formation Year):",
+            hi: "मिलान करें: (समिति और गठन)",
+            options: [
+                { en: "A-2, B-3, C-1, D-4", hi: "A-2, B-3, C-1, D-4", correct: false },
+                { en: "A-1, B-2, C-3, D-4", hi: "A-1, B-2, C-3, D-4", correct: false },
+                { en: "A-4, B-1, C-3, D-2", hi: "A-4, B-1, C-3, D-2", correct: false },
+                { en: "A-3, B-1, C-4, D-2", hi: "A-3, B-1, C-4, D-2", correct: true }
+            ]
+        },
+        {
+            en: "By which Constitutional Amendment Bill was the first attempt made to give constitutional status to the Panchayati Raj system?",
+            hi: "निम्नलिखित में से किस संविधान संशोधन विधेयक द्वारा सर्वप्रथम पंचायती राज व्यवस्था को संवैधानिक दर्जा देने का प्रयास किया गया ?",
+            options: [
+                { en: "65th Bill", hi: "65वें", correct: false },
+                { en: "64th Bill", hi: "64वें", correct: true },
+                { en: "66th Bill", hi: "66वें", correct: false },
+                { en: "67th Bill", hi: "67वें", correct: false }
+            ]
+        },
+        {
+            en: "When was the 64th Constitutional Amendment Bill introduced in Parliament?",
+            hi: "64वाँ संविधान संशोधन विधेयक को संसद में कब पेश किया गया ?",
+            options: [
+                { en: "1988", hi: "1988", correct: false },
+                { en: "1973", hi: "1973", correct: false },
+                { en: "1993", hi: "1993", correct: false },
+                { en: "1989", hi: "1989", correct: true }
+            ]
+        },
+        {
+            en: "When did the Panchayati Raj Amendment Act come into effect?",
+            hi: "पंचायती राज संशोधन अधिनियम कब लागू हुआ ?",
+            options: [
+                { en: "24 April 1992", hi: "24 अप्रैल 1992", correct: false },
+                { en: "24 April 1994", hi: "24 अप्रैल 1994", correct: false },
+                { en: "24 April 1995", hi: "24 अप्रैल 1995", correct: false },
+                { en: "24 April 1993", hi: "24 अप्रैल 1993", correct: true }
+            ]
+        },
+        {
+            en: "Part 9 of the Constitution is related to:",
+            hi: "संविधान का भाग - 9 का संबंध है-",
+            options: [
+                { en: "Panchayati Raj", hi: "पंचायती राज से", correct: true },
+                { en: "Scheduled Tribes", hi: "अनुसूचित जनजाति से", correct: false },
+                { en: "Municipality", hi: "नगरपालिका से", correct: false },
+                { en: "Various Languages", hi: "विभिन्न भाषाओं से", correct: false }
+            ]
+        },
+        {
+            en: "What is the 11th Schedule of the Constitution related to?",
+            hi: "संविधान की 11वीं अनुसूची किससे संबंधित है ?",
+            options: [
+                { en: "Allocation of seats in Rajya Sabha", hi: "राज्य सीटों के आवंटन से", correct: false },
+                { en: "Anti-Defection Law", hi: "दल-बदल कानून से", correct: false },
+                { en: "Panchayati Raj", hi: "पंचायती राज से", correct: true },
+                { en: "Municipality", hi: "नगरपालिका से", correct: false }
+            ]
+        },
+        {
+            en: "How many subjects are there in the 11th Schedule of the Constitution?",
+            hi: "संविधान की 11वीं अनुसूची में कितने विषय है ?",
+            options: [
+                { en: "39", hi: "39", correct: false },
+                { en: "29", hi: "29", correct: true },
+                { en: "18", hi: "18", correct: false },
+                { en: "97", hi: "97", correct: false }
+            ]
+        },
+        {
+            en: "By the 73rd Constitutional Amendment Act, which Article of the Constitution was given practical form?",
+            hi: "73वां संविधान संशोधन अधिनियम द्वारा निम्नलिखित में से संविधान के किस अनुच्छेद को व्यवहारिक रूप प्रदान किया गया ?",
+            options: [
+                { en: "Article 40", hi: "40", correct: true },
+                { en: "Article 44", hi: "44", correct: false },
+                { en: "Article 17", hi: "17", correct: false },
+                { en: "Article 24", hi: "24", correct: false }
+            ]
+        },
+        {
+            en: "Gram Sabha means:",
+            hi: "ग्राम सभा अभिप्राय है-",
+            options: [
+                { en: "All people of the village", hi: "गाँव के सभी लोगों से", correct: false },
+                { en: "Persons aged 18 or above in the village panchayat area", hi: "गाँव स्तर पर गठित पंचायत क्षेत्र में 18 वर्ष के आयु से या उससे अधिक सभी व्यक्तियों से", correct: false },
+                { en: "Persons registered in the electoral rolls of the village level panchayat area", hi: "गाँव स्तर पर गठित पंचायत क्षेत्र में निर्वाचक सूची में पंजीकृत व्यक्ति से", correct: true },
+                { en: "None of these", hi: "इनमें से सभी", correct: false }
+            ]
+        },
+        {
+            en: "The Panchayati Raj Act 1992 exempts states with a population below how many lakhs from forming middle-level panchayats?",
+            hi: "पंचायती राज अधिनियम 1992 कितने से कम जनसंख्या वाले राज्यों में माध्यमिक स्तर पर पंचायतें न गठन करने की छूट देता है ?",
+            options: [
+                { en: "20 Lakh or less", hi: "20 लाख या उससे कम", correct: true },
+                { en: "21 Lakh or less", hi: "21 लाख या उससे कम", correct: false },
+                { en: "25 Lakh or less", hi: "25 लाख या उससे कम", correct: false },
+                { en: "10 Lakh or less", hi: "10 लाख या उससे कम", correct: false }
+            ]
+        },
+        {
+            en: "The structure of the Panchayati Raj system is:",
+            hi: "पंचायती राज व्यवस्था की संरचना है-",
+            options: [
+                { en: "Gram Panchayat", hi: "ग्राम पंचायत", correct: false },
+                { en: "Panchayat Samiti", hi: "पंचायत समिति", correct: false },
+                { en: "Zila Parishad", hi: "जिला परिषद", correct: false },
+                { en: "All of the above", hi: "उपर्युक्त में सभी।", correct: true }
+            ]
+        },
+        {
+            en: "Under the Panchayati Raj system, at which level is there a provision for direct election of all members by the public?",
+            hi: "निम्नलिखित में से पंचायती राज व्यवस्था के अंतर्गत किस स्तर पर सभी सदस्यों का निर्वाचन सीधे जनता द्वारा चुने जाने का प्रावधान है-",
+            options: [
+                { en: "Gram Level", hi: "ग्राम स्तर पर", correct: true },
+                { en: "Intermediate Level", hi: "माध्यमिक स्तर पर", correct: false },
+                { en: "District Level", hi: "जिला स्तर पर", correct: false },
+                { en: "All of the above", hi: "उपर्युक्त में सभी।", correct: false }
+            ]
+        },
+        {
+            en: "Panchayati Raj is a subject of which list?",
+            hi: "पंचायती राज किस सूची का विषय है ?",
+            options: [
+                { en: "Concurrent List", hi: "समवर्ती", correct: false },
+                { en: "Union List", hi: "संघ", correct: false },
+                { en: "State List", hi: "राज्य", correct: true },
+                { en: "Residuary List", hi: "अवशिष्ट शक्तियों में सभी", correct: false }
+            ]
+        },
+        {
+            en: "For which category of people has the Constitution provided reservation in the Panchayati Raj system?",
+            hi: "संविधान द्वारा निम्नलिखित में से किस वर्ग के लोगों के लिये पंचायती राज व्यवस्था में आरक्षण का प्रावधान किया गया है ?",
+            options: [
+                { en: "Scheduled Castes and Tribes", hi: "अनुसूचित जाति एवं जनजाति", correct: false },
+                { en: "Women", hi: "महिलाओं", correct: false },
+                { en: "Other Backward Classes", hi: "अन्य पिछड़ा वर्ग", correct: false },
+                { en: "All of the above", hi: "उपर्युक्त में सभी।", correct: true }
+            ]
+        },
+        {
+            en: "In which of the following states is the provision for reservation of Scheduled Tribes in Panchayati Raj not applicable?",
+            hi: "निम्नलिखित में से किस राज्य में पंचायती राज स्तर पर अनुसूचित जातियों के आरक्षण का प्रावधान लागू नहीं होता है ?",
+            options: [
+                { en: "Arunachal Pradesh", hi: "अरुणाचल प्रदेश", correct: true },
+                { en: "Mizoram", hi: "मिजोरम", correct: false },
+                { en: "Tripura", hi: "त्रिपुरा", correct: false },
+                { en: "Meghalaya", hi: "मेघालय", correct: false }
+            ]
+        },
+        {
+            en: "The tenure of all levels of Panchayati Raj is determined by the Constitution as:",
+            hi: "पंचायत राज के सभी स्तरों का कार्यकाल संविधान द्वारा निर्धारित है ?",
+            options: [
+                { en: "6 years", hi: "6 वर्ष", correct: false },
+                { en: "5 years", hi: "5 वर्ष", correct: true },
+                { en: "7 years", hi: "7 वर्ष", correct: false },
+                { en: "4 years", hi: "4 वर्ष", correct: false }
+            ]
+        },
+        {
+            en: "Within how much time must elections be held after the dissolution of Panchayats?",
+            hi: "पंचायतों के विघटन होने के कितने समय के अंदर चुनाव कराना आवश्यक है ?",
+            options: [
+                { en: "6 months", hi: "6 माह", correct: true },
+                { en: "12 months", hi: "12 माह", correct: false },
+                { en: "42 days", hi: "42 दिन", correct: false },
+                { en: "8 months", hi: "8 माह", correct: false }
+            ]
+        },
+        {
+            en: "What should be the minimum age of a person who wants to contest election for any post under the Panchayati Raj system?",
+            hi: "कोई व्यक्ति जो पंचायती राज व्यवस्था के अंतर्गत किसी पद के लिये चुनाव लड़ना चाहता है उसकी न्यूनतम आयु होनी चाहिये ?",
+            options: [
+                { en: "22 years", hi: "22 वर्ष", correct: false },
+                { en: "21 years", hi: "21 वर्ष", correct: true },
+                { en: "25 years", hi: "25 वर्ष", correct: false },
+                { en: "18 years", hi: "18 वर्ष", correct: false }
+            ]
+        },
+        {
+            en: "Who conducts the elections for the Panchayati Raj system?",
+            hi: "पंचायती राज व्यवस्था का चुनाव आयोजन करता है ?",
+            options: [
+                { en: "State Election Commission", hi: "राज्य निर्वाचन आयोग", correct: true },
+                { en: "Central Election Commission", hi: "संघीय निर्वाचन आयोग", correct: false },
+                { en: "Committee appointed by Legislature", hi: "विधानमंडल द्वारा नियुक्त समिति", correct: false },
+                { en: "Committee appointed by Governor", hi: "राज्यपाल द्वारा नियुक्त समिति", correct: false }
+            ]
+        },
+        {
+            en: "What percentage of seats are reserved for women at all levels of the Panchayati Raj system?",
+            hi: "पंचायती राज व्यवस्था के अंतर्गत सभी स्तरों पर महिलाओं के लिये कितना प्रतिशत सीट आरक्षित किया गया है ?",
+            options: [
+                { en: "33 percent", hi: "33 प्रतिशत", correct: true },
+                { en: "32 percent", hi: "32 प्रतिशत", correct: false },
+                { en: "31 percent", hi: "31 प्रतिशत", correct: false },
+                { en: "35 percent", hi: "35 प्रतिशत", correct: false }
+            ]
+        },
+        {
+            en: "Which Article of the Constitution provides for the establishment of a Finance Commission for Panchayats?",
+            hi: "पंचायतों के लिये वित्त आयोग के स्थापना का प्रावधान संविधान का कौन-सा अनुच्छेद करता है ?",
+            options: [
+                { en: "Article 243 (H)", hi: "243 (H)", correct: false },
+                { en: "Article 243 (C)", hi: "243 (C)", correct: false },
+                { en: "Article 243 (I)", hi: "243 (I)", correct: true },
+                { en: "Article 243 (B)", hi: "243 (B)", correct: false }
+            ]
+        },
+        {
+            en: "Article 243 (E) of the Constitution is related to:",
+            hi: "संविधान का अनुच्छेद 243 (E) संबंधित है-",
+            options: [
+                { en: "Formation of Panchayats", hi: "पंचायतों के गठन से", correct: false },
+                { en: "Tenure of Panchayats", hi: "पंचायतों का कार्यकाल", correct: true },
+                { en: "Election of Panchayats", hi: "पंचायतों का चुनाव", correct: false },
+                { en: "Taxation powers of Panchayats", hi: "पंचायतों की करारोपण की शक्तियां", correct: false }
+            ]
+        },
+        {
+            en: "Which Article is related to the election of Panchayats?",
+            hi: "पंचायतों के चुनाव से संबंधित अनुच्छेद है-",
+            options: [
+                { en: "Article 243 (K)", hi: "243 (K)", correct: true },
+                { en: "Article 243 (J)", hi: "243 (J)", correct: false },
+                { en: "Article 243 (H)", hi: "243 (H)", correct: false },
+                { en: "Article 243 (G)", hi: "243 (G)", correct: false }
+            ]
+        },
+        {
+            en: "In which Article is the taxation power of Panchayats provided?",
+            hi: "निम्नलिखित में से किस अनुच्छेद में पंचायतों की करारोपण की शक्ति उपबंध है ?",
+            options: [
+                { en: "Article 243 (J)", hi: "243 (J)", correct: false },
+                { en: "Article 243 (H)", hi: "243 (H)", correct: true },
+                { en: "Article 243 (I)", hi: "243 (I)", correct: false },
+                { en: "Article 243 (G)", hi: "243 (G)", correct: false }
+            ]
+        },
+        {
+            en: "In which Article is 'Gram Sabha' defined?",
+            hi: "निम्नलिखित में से किस अनुच्छेद में ग्राम सभा को परिभाषित किया गया है ?",
+            options: [
+                { en: "Article 243 (A)", hi: "243 (A)", correct: true },
+                { en: "Article 243 (B)", hi: "243 (B)", correct: false },
+                { en: "Article 243 (J)", hi: "243 (J)", correct: false },
+                { en: "Article 243 (C)", hi: "243 (C)", correct: false }
+            ]
+        },
+        {
+            en: "Which Article prohibits the intervention of courts in electoral matters of Panchayats?",
+            hi: "निम्नलिखित में से कौन-सा अनुच्छेद पंचायतों के चुनाव में न्यायालयों के हस्तक्षेप को प्रतिबंधित करता है ?",
+            options: [
+                { en: "Article 243 (N)", hi: "243 (N)", correct: false },
+                { en: "Article 243 (J)", hi: "243 (J)", correct: false },
+                { en: "Article 243 (L)", hi: "243 (L)", correct: false },
+                { en: "Article 243 (O)", hi: "243 (O)", correct: true }
+            ]
+        },
+        {
+            en: "Article 243 (G) of the Indian Constitution is related to:",
+            hi: "भारतीय संविधान का अनुच्छेद 243 (G) संबंधित है-",
+            options: [
+                { en: "Reservation of seats in elections", hi: "पंचायतों के चुनाव में सीटों के आरक्षण", correct: false },
+                { en: "Constitution of Panchayats", hi: "पंचायतों के गठन से", correct: false },
+                { en: "Powers and responsibilities of Panchayats", hi: "पंचायतों की शक्तियां एवं उत्तरदायित्व", correct: true },
+                { en: "Audit of accounts of Panchayats", hi: "पंचायतों के लेखा अंकेक्षण से।", correct: false }
+            ]
+        },
+        {
+            en: "Article 243 (C) of the Constitution is related to:",
+            hi: "संविधान का अनुच्छेद 243 (C) संबंधित है-",
+            options: [
+                { en: "Composition of Panchayats", hi: "पंचायतों के गठन से", correct: true },
+                { en: "Election of Panchayats", hi: "पंचायतों के चुनाव से", correct: false },
+                { en: "Financial powers of Panchayats", hi: "पंचायतों के वित्तीय शक्तियों से", correct: false },
+                { en: "All of the above", hi: "इनमें से सभी", correct: false }
+            ]
+        }
+    ];
+
+    let currentQuestions = [];
+    let qIndex = 0;
+    let score = 0;
+    let timerInterval;
+    let timeLeft;
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    function playSound(type) {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        if(type === 'correct') {
+            osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+            osc.type = 'sine';
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.4);
+        } else {
+            osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+            osc.type = 'square';
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.2);
+        }
+    }
+
+    function startQuiz() {
+        const shuffle = document.getElementById('shuffle-toggle').checked;
+        currentQuestions = shuffle ? [...questions].sort(() => Math.random() - 0.5) : [...questions];
+        document.getElementById('start-screen').classList.add('hidden');
+        document.getElementById('quiz-screen').classList.remove('hidden');
+        showQuestion();
+    }
+
+    function showQuestion() {
+        if(qIndex >= currentQuestions.length) return endQuiz();
+        
+        const q = currentQuestions[qIndex];
+        document.getElementById('q-counter').innerText = `Q ${qIndex + 1}/${currentQuestions.length}`;
+        document.getElementById('q-text').innerHTML = `${q.en}<br><span class="hi">${q.hi}</span>`;
+        
+        const optionsBox = document.getElementById('options-box');
+        optionsBox.innerHTML = '';
+        
+        q.options.forEach(opt => {
+            const btn = document.createElement('button');
+            btn.className = 'btn option-btn';
+            btn.innerHTML = `<span>${opt.en}</span><span class="hi">${opt.hi}</span>`;
+            btn.onclick = () => handleAnswer(opt, btn);
+            optionsBox.appendChild(btn);
+        });
+
+        updateProgress();
+        startTimer();
+    }
+
+    function startTimer() {
+        clearInterval(timerInterval);
+        const manual = parseInt(document.getElementById('manual-timer').value);
+        if(manual <= 0 || isNaN(manual)) {
+            document.getElementById('timer').innerText = 'Timer Off';
+            return;
+        }
+        timeLeft = manual;
+        const timerEl = document.getElementById('timer');
+        timerEl.innerText = `⏱ ${timeLeft}s`;
+        timerEl.classList.remove('pulse');
+        
+        timerInterval = setInterval(() => {
+            timeLeft--;
+            timerEl.innerText = `⏱ ${timeLeft}s`;
+            if(timeLeft < 5) timerEl.classList.add('pulse');
+            if(timeLeft <= 0) {
+                clearInterval(timerInterval);
+                handleAnswer({correct: false}, null);
+            }
+        }, 1000);
+    }
+
+    function handleAnswer(opt, btn) {
+        clearInterval(timerInterval);
+        const buttons = document.querySelectorAll('.option-btn');
+        buttons.forEach(b => b.disabled = true);
+
+        if(opt.correct) {
+            score++;
+            if(btn) btn.style.background = 'var(--correct)';
+            playSound('correct');
+        } else {
+            if(btn) btn.style.background = 'var(--wrong)';
+            playSound('wrong');
+            showSadEmoji();
+            buttons.forEach((b, idx) => {
+                if(currentQuestions[qIndex].options[idx].correct) b.style.background = 'var(--correct)';
+            });
+        }
+        document.getElementById('score-display').innerText = `Score: ${score}`;
+
+        setTimeout(() => {
+            qIndex++;
+            showQuestion();
+        }, 1200);
+    }
+
+    function updateProgress() {
+        const percent = (qIndex / currentQuestions.length) * 100;
+        document.getElementById('progress-bar').style.width = percent + '%';
+    }
+
+    function showSadEmoji() {
+        const overlay = document.getElementById('emoji-overlay');
+        overlay.style.display = 'block';
+        overlay.classList.add('shake');
+        setTimeout(() => {
+            overlay.style.display = 'none';
+            overlay.classList.remove('shake');
+        }, 800);
+    }
+
+    function endQuiz() {
+        clearInterval(timerInterval);
+        document.getElementById('quiz-screen').classList.add('hidden');
+        document.getElementById('result-screen').classList.remove('hidden');
+        document.getElementById('progress-bar').style.width = '100%';
+        
+        const percent = (score / currentQuestions.length) * 100;
+        let msg = "";
+        if(percent >= 80) msg = "🏆 Outstanding Performance!";
+        else if(percent >= 50) msg = "👏 Well Done! Keep it up.";
+        else msg = "📚 Practice makes perfect! Try again.";
+        
+        document.getElementById('result-msg').innerText = msg;
+        document.getElementById('final-score').innerText = `${score} / ${currentQuestions.length}`;
+        document.getElementById('score-details').innerText = `You answered ${score} questions correctly out of ${currentQuestions.length}.`;
+    }
+</script>
+</body>
+</html>

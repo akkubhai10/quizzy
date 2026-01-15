@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chapter 33: State Legislature Quiz</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --correct: #4caf50;
+            --wrong: #f44336;
+            --text-en: #ffffff;
+            --text-hi: #dddddd;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+
+        body {
+            background: var(--primary-bg);
+            background-attachment: fixed;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 15px;
+            overflow-x: hidden;
+        }
+
+        #progress-bar {
+            position: fixed;
+            top: 0; left: 0; height: 6px;
+            background: linear-gradient(90deg, #00f2fe 0%, #4facfe 100%);
+            box-shadow: 0 0 10px #4facfe;
+            width: 0%; transition: width 0.4s ease;
+            z-index: 1000;
+        }
+
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 25px;
+            padding: 30px;
+            width: 100%;
+            max-width: 650px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            color: white;
+            position: relative;
+        }
+
+        h1 { text-align: center; margin-bottom: 20px; font-weight: 700; font-size: 1.5rem; }
+
+        .settings-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-size: 0.9rem; }
+        input[type="number"] {
+            width: 100%; padding: 12px; border-radius: 12px; border: none;
+            background: rgba(255, 255, 255, 0.2); color: white; outline: none;
+        }
+
+        .toggle-container {
+            display: flex; align-items: center; justify-content: space-between; margin: 15px 0;
+        }
+
+        .btn-start, .btn-finish, .btn-restart {
+            width: 100%; padding: 15px; border-radius: 15px; border: none;
+            background: #fff; color: #764ba2; font-weight: 700; cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .btn-start:hover { transform: scale(1.02); box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+
+        .quiz-header { display: flex; justify-content: space-between; margin-bottom: 20px; font-size: 0.85rem; }
+
+        #timer.pulse-red { color: #ff4d4d; animation: pulse 0.5s infinite; font-weight: bold; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+
+        .question-text { margin-bottom: 20px; }
+        .en-q { font-size: 1.1rem; font-weight: 600; display: block; margin-bottom: 5px; }
+        .hi-q { font-size: 0.95rem; color: var(--text-hi); display: block; line-height: 1.4; }
+
+        .options-grid { display: grid; gap: 12px; }
+        .option-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--glass-border);
+            padding: 15px; border-radius: 12px; text-align: left; color: white;
+            cursor: pointer; transition: 0.3s; width: 100%;
+        }
+        .option-btn:hover:not(:disabled) { background: rgba(255, 255, 255, 0.2); }
+        .option-btn.correct { background: var(--correct) !important; border-color: transparent; }
+        .option-btn.wrong { background: var(--wrong) !important; border-color: transparent; }
+
+        .en-o { display: block; font-weight: 500; font-size: 0.95rem; }
+        .hi-o { display: block; font-size: 0.85rem; color: #ccc; }
+
+        #sad-emoji {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 80px; display: none; z-index: 10;
+        }
+        .shake { animation: shake 0.5s; }
+        @keyframes shake {
+            0%, 100% { transform: translate(-50%, -50%); }
+            25% { transform: translate(-55%, -50%); }
+            75% { transform: translate(-45%, -50%); }
+        }
+
+        .hidden { display: none; }
+
+        #finish-early { margin-top: 20px; background: rgba(255, 77, 77, 0.2); color: white; border: 1px solid #ff4d4d; }
+
+        .result-screen { text-align: center; }
+        .score-circle {
+            width: 120px; height: 120px; border-radius: 50%; border: 5px solid #fff;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 2rem; font-weight: 700; margin: 20px auto;
+        }
+
+        /* Mobile Adjustments */
+        @media (max-width: 480px) {
+            .glass-card { padding: 20px; }
+            .en-q { font-size: 1rem; }
+            .hi-q { font-size: 0.85rem; }
+            h1 { font-size: 1.2rem; }
+        }
+
+        canvas#confetti {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 9999;
+        }
+    </style>
+</head>
+<body>
+
+<div id="progress-bar"></div>
+<canvas id="confetti"></canvas>
+
+<div class="glass-card" id="start-screen">
+    <h1>Chapter 33: State Legislature<br><span style="font-size: 0.8em;">राज्य विधानमंडल</span></h1>
+    <div class="settings-group">
+        <label>Timer per Question (seconds, 0 for no timer):</label>
+        <input type="number" id="timer-input" value="30" min="0">
+    </div>
+    <div class="toggle-container">
+        <span>Shuffle Questions</span>
+        <input type="checkbox" id="shuffle-toggle" checked>
+    </div>
+    <button class="btn-start" onclick="startQuiz()">Start Quiz</button>
+</div>
+
+<div class="glass-card hidden" id="quiz-screen">
+    <div class="quiz-header">
+        <span id="q-counter">Question: 1/60</span>
+        <span id="timer">Time: --</span>
+        <span id="score-display">Score: 0</span>
+    </div>
+
+    <div class="question-container">
+        <div class="question-text">
+            <span class="en-q" id="en-q"></span>
+            <span class="hi-q" id="hi-q"></span>
+        </div>
+        <div class="options-grid" id="options-grid"></div>
+    </div>
+
+    <div id="sad-emoji">😢</div>
+    
+    <button id="finish-early" class="btn-finish" onclick="showResults()">Finish & Show Results</button>
+</div>
+
+<div class="glass-card hidden" id="result-screen">
+    <div class="result-screen">
+        <h2>Quiz Completed!</h2>
+        <div class="score-circle" id="final-score">0/60</div>
+        <h3 id="result-msg"></h3>
+        <p id="final-stats" style="margin: 15px 0;"></p>
+        <button class="btn-restart" onclick="location.reload()">Restart Quiz</button>
+    </div>
+</div>
+
+<script>
+    // --- Questions Database ---
+    const questions = [
+        {
+            en_q: "Which part of the Constitution mentions the organization, composition, term, and officers of the State Legislature?",
+            hi_q: "संविधान के किस भाग में राज्य विधानमंडल की संगठन, गठन, कार्यकाल, अधिकारियों, प्रक्रियाओं, विशेषाधिकार तथा शक्तियों आदि का उल्लेख है?",
+            options: [
+                { en: "Part 5", hi: "पांचवा", isCorrect: false },
+                { en: "Part 6", hi: "छठे", isCorrect: true },
+                { en: "Part 7", hi: "सातव", isCorrect: false },
+                { en: "Part 8", hi: "आठवां", isCorrect: false }
+            ]
+        },
+        {
+            en_q: "How many houses are there in the State Legislature?",
+            hi_q: "राज्य विधानमंडल के कितने सदन हैं?",
+            options: [
+                { en: "Two", hi: "दो", isCorrect: true },
+                { en: "Four", hi: "चार", isCorrect: false },
+                { en: "Five", hi: "पांच", isCorrect: false },
+                { en: "Six", hi: "छह", isCorrect: false }
+            ]
+        },
+        {
+            en_q: "The Upper House of the State Legislature is called:",
+            hi_q: "राज्य विधानमंडल का उच्च सदन कहलाता है-",
+            options: [
+                { en: "Legislative Council", hi: "विधानपरिषद", isCorrect: true },
+                { en: "Legislative Assembly", hi: "विधानसभा", isCorrect: false },
+                { en: "Rajya Sabha", hi: "राज्यसभा", isCorrect: false },
+                { en: "Lok Sabha", hi: "लोकसभा", isCorrect: false }
+            ]
+        },
+        {
+            en_q: "The Lower House of the State Legislature is called:",
+            hi_q: "राज्य विधानमंडल का निम्न सदन कहलाता है-",
+            options: [
+                { en: "Legislative Council", hi: "विधानपरिषद", isCorrect: false },
+                { en: "Rajya Sabha", hi: "राज्यसभा", isCorrect: false },
+                { en: "Lok Sabha", hi: "लोकसभा", isCorrect: false },
+                { en: "Legislative Assembly", hi: "विधानसभा", isCorrect: true }
+            ]
+        },
+        {
+            en_q: "The organs of the State Legislature are:",
+            hi_q: "राज्य विधानमंडल के अंग हैं-",
+            options: [
+                { en: "Legislative Assembly", hi: "विधानसभा", isCorrect: false },
+                { en: "Legislative Council", hi: "विधानपरिषद", isCorrect: false },
+                { en: "Governor", hi: "राज्यपाल", isCorrect: false },
+                { en: "All of the above", hi: "उपर्युक्त में सभी", isCorrect: true }
+            ]
+        },
+        {
+            en_q: "Currently, how many states in India have a bicameral legislature?",
+            hi_q: "वर्तमान में भारत के कितने राज्यों में द्विसदनीय विधायिका है?",
+            options: [
+                { en: "Four", hi: "चार", isCorrect: false },
+                { en: "Five", hi: "पांच", isCorrect: false },
+                { en: "Six", hi: "छह", isCorrect: true },
+                { en: "Seven", hi: "सात", isCorrect: false }
+            ]
+        },
+        {
+            en_q: "In which of the following states is there NO bicameral legislature?",
+            hi_q: "निम्नलिखित में से किन राज्यों में द्विसदनीय विधायिका नहीं है?",
+            options: [
+                { en: "Uttar Pradesh", hi: "उत्तरप्रदेश", isCorrect: false },
+                { en: "Bihar", hi: "बिहार", isCorrect: false },
+                { en: "Karnataka", hi: "कर्नाटक", isCorrect: false },
+                { en: "West Bengal", hi: "पश्चिम बंगाल", isCorrect: true }
+            ]
+        },
+        {
+            en_q: "In which of the following states is there NO bicameral legislature?",
+            hi_q: "निम्नलिखित में से किन राज्यों में द्विसदनीय विधायिका नहीं है?",
+            options: [
+                { en: "Andhra Pradesh", hi: "आंध्रप्रदेश", isCorrect: false },
+                { en: "Maharashtra", hi: "महाराष्ट्र", isCorrect: false },
+                { en: "Rajasthan", hi: "राजस्थान", isCorrect: true },
+                { en: "Telangana", hi: "तेलंगाना", isCorrect: false }
+            ]
+        },
+        {
+            en_q: "Which house can the Parliament abolish through its law?",
+            hi_q: "निम्नलिखित में से किस एक सदन को संसद अपने विधि द्वारा उसके अस्तित्व को पूर्णतः समाप्त कर सकती है?",
+            options: [
+                { en: "Legislative Council", hi: "विधानपरिषद", isCorrect: true },
+                { en: "Legislative Assembly", hi: "विधानसभा", isCorrect: false },
+                { en: "Rajya Sabha", hi: "राज्यसभा", isCorrect: false },
+                { en: "Lok Sabha", hi: "लोकसभा", isCorrect: false }
+            ]
+        },
+        {
+            en_q: "Who has the power to establish the Legislative Council?",
+            hi_q: "विधानपरिषद का स्थापना का अधिकार किसके पास है?",
+            options: [
+                { en: "Rajya Sabha", hi: "राज्यसभा", isCorrect: false },
+                { en: "Lok Sabha", hi: "लोकसभा", isCorrect: false },
+                { en: "Parliament", hi: "संसद", isCorrect: true },
+                { en: "Legislative Assembly", hi: "विधानसभा", isCorrect: false }
+            ]
+        },
+        {
+            en_q: "What can be the maximum number of members in the Legislative Council?",
+            hi_q: "विधानपरिषद में अधिकतम सदस्यों की संख्या हो सकती है-",
+            options: [
+                { en: "Two-thirds of Assembly", hi: "विधानसभा का दो तिहाई", isCorrect: false },
+                { en: "One-third of Assembly", hi: "विधानसभा की एक तिहाई", isCorrect: true },
+                { en: "Equal to Assembly", hi: "विधानसभा के सदस्यों के बराबर", isCorrect: false },
+                { en: "60", hi: "60", isCorrect: false }
+            ]
+        },
+        {
+            en_q: "What is the minimum number of members in the Legislative Council?",
+            hi_q: "विधानपरिषद में सदस्यों की न्यूनतम संख्या हो सकती है-",
+            options: [
+                { en: "40", hi: "40", isCorrect: true },
+                { en: "60", hi: "60", isCorrect: false },
+                { en: "75", hi: "75", isCorrect: false },
+                { en: "52", hi: "52", isCorrect: false }
+            ]
+        },
+        {
+            en_q: "What is the provision for electing Legislative Council members from local bodies?",
+            hi_q: "विधानपरिषद के कुल सदस्यों में स्थानीय निकायों से चुने जाने का प्रावधान है-",
+            options: [
+                { en: "1/3 members", hi: "1/3 सदस्य", isCorrect: true },
+                { en: "1/4 members", hi: "1/4 सदस्य", isCorrect: false },
+                { en: "1/6 members", hi: "1/6 सदस्य", isCorrect: false },
+                { en: "1/12 members", hi: "1/12 सदस्य", isCorrect: false }
+            ]
+        },
+        {
+            en_q: "What is the number of members elected from Graduate constituencies in the Legislative Council?",
+            hi_q: "विधानपरिषद में स्नातक निर्वाचन क्षेत्रों से निर्वाचित होने वाले सदस्यों की संख्या है-",
+            options: [
+                { en: "1/6", hi: "1/6", isCorrect: false },
+                { en: "1/12", hi: "1/12", isCorrect: true },
+                { en: "1/4", hi: "1/4", isCorrect: false },
+                { en: "1/3", hi: "1/3", isCorrect: false }
+            ]
+        },
+        {
+            en_q: "How many members are elected to the Legislative Council from the Teachers' constituency?",
+            hi_q: "अध्यापक निर्वाचन क्षेत्र से विधानपरिषद में कितने सदस्यों निर्वाचित होते हैं?",
+            options: [
+                { en: "1/12 members", hi: "1/12 सदस्य", isCorrect: true },
+                { en: "1/6 members", hi: "1/6 सदस्य", isCorrect: false },
+                { en: "1/4 members", hi: "1/4 सदस्य", isCorrect: false },
+                { en: "1/3 members", hi: "1/3 सदस्य", isCorrect: false }
+            ]
+        },
+        {
+            en_q: "Who can vote in the Legislative Council Graduate election?",
+            hi_q: "विधानपरिषद स्नातक निर्वाचन में मतदान कर सकता है-",
+            options: [
+                { en: "General Voters", hi: "समान्य मतदाता", isCorrect: false },
+                { en: "Any Graduate person", hi: "वैसा व्यक्ति जो स्नातक है।", isCorrect: false },
+                { en: "Graduate from 3 years ago", hi: "वैसा व्यक्ति जो कम से कम तीन वर्ष पूर्व स्नातक पूरा किया हो।", isCorrect: true },
+                { en: "All of the above", hi: "उपर्युक्त में सभी।", isCorrect: false }
+            ]
+        },
+        {
+            en_q: "How many members of the Legislative Council are elected by the members of the Legislative Assembly?",
+            hi_q: "विधानपरिषद में कितने सदस्यों का चुनाव विधानसभा के सदस्यों द्वारा किया जाता है?",
+            options: [
+                { en: "1/6", hi: "1/6", isCorrect: false },
+                { en: "1/12", hi: "1/12", isCorrect: false },
+                { en: "1/3", hi: "1/3", isCorrect: true },
+                { en: "1/2", hi: "1/2", isCorrect: false }
+            ]
+        },
+        {
+            en_q: "Who CANNOT vote in the Legislative Council Teachers' election?",
+            hi_q: "विधानपरिषद के अध्यापक निर्वाचन में मतदान नहीं कर सकता है?",
+            options: [
+                { en: "Primary School Teacher", hi: "वैसा व्यक्ति जो प्राथमिक स्कूल का शिक्षक है।", isCorrect: true },
+                { en: "Secondary School Teacher", hi: "वैसा व्यक्ति जो कम से कम माध्यमिक स्कूल में शिक्षक है।", isCorrect: false },
+                { en: "Teacher for 3 years", hi: "वैसा व्यक्ति जो 3 वर्ष से कम से कम माध्यमिक स्कूल में अध्यापन कर रहा है।", isCorrect: false },
+                { en: "All of the above", hi: "उपर्युक्त में सभी।", isCorrect: false }
+            ]
+        },
+        {
+            en_q: "How many members of the Legislative Council are nominated by the Governor?",
+            hi_q: "विधानपरिषद के कितने सदस्यों का मनोनयन राज्यपाल द्वारा किया जाता है?",
+            options: [
+                { en: "1/3", hi: "1/3", isCorrect: false },
+                { en: "1/6", hi: "1/6", isCorrect: true },
+                { en: "1/12", hi: "1/12", isCorrect: false },
+                { en: "1/14", hi: "1/14", isCorrect: false }
+            ]
+        },
+        {
+            en_q: "The term of the Legislative Assembly is:",
+            hi_q: "विधानसभा का कार्यकाल होता है-",
+            options: [
+                { en: "4 Years", hi: "4 वर्ष", isCorrect: false },
+                { en: "5 Years", hi: "5 वर्ष", isCorrect: true },
+                { en: "6 Years", hi: "6 वर्ष", isCorrect: false },
+                { en: "7 Years", hi: "7 वर्ष", isCorrect: false }
+            ]
+        },
+        {
+            en_q: "By which authority can the Legislative Assembly be dissolved at any time before its term ends?",
+            hi_q: "विधानसभा को उसके कार्यकाल से पूर्व किसी भी समय विघटित किस प्राधिकारी द्वारा किया जा सकता है?",
+            options: [
+                { en: "President", hi: "राष्ट्रपति", isCorrect: false },
+                { en: "Council Chairman", hi: "विधानपरिषद सभापति", isCorrect: false },
+                { en: "Governor", hi: "राज्यपाल", isCorrect: true },
+                { en: "Chief Minister", hi: "मुख्यमंत्री", isCorrect: false }
+            ]
+        },
+        {
+            en_q: "The term of members of the Legislative Council is:",
+            hi_q: "विधानपरिषद सदस्यों का कार्यकाल होता है-",
+            options: [
+                { en: "6 Years", hi: "6 वर्ष", isCorrect: true },
+                { en: "7 Years", hi: "7 वर्ष", isCorrect: false },
+                { en: "8 Years", hi: "8 वर्ष", isCorrect: false },
+                { en: "5 Years", hi: "5 वर्ष", isCorrect: false }
+            ]
+        },
+        {
+            en_q: "How many members of the Legislative Council retire every second year?",
+            hi_q: "विधानपरिषद के कितने सदस्य प्रत्येक दूसरे वर्ष सेवानिवृत्त होते हैं?",
+            options: [
+                { en: "Two-thirds", hi: "दो-तिहाई", isCorrect: false },
+                { en: "One-third", hi: "एक-तिहाई", isCorrect: true },
+                { en: "Three-fourths", hi: "तीन-चौथाई", isCorrect: false },
+                { en: "One-fourth", hi: "एक-चौथाई", isCorrect: false }
+            ]
+        },
+        {
+            en_q: "What is the minimum age to be elected as a member of the Legislative Council?",
+            hi_q: "विधानपरिषद सदस्य चुने जाने हेतु न्यूनतम आयु है-",
+            options: [
+                { en: "25 Years", hi: "25 वर्ष", isCorrect: false },
+                { en: "35 Years", hi: "35 वर्ष", isCorrect: false },
+                { en: "45 Years", hi: "45 वर्ष", isCorrect: false },
+                { en: "30 Years", hi: "30 वर्ष", isCorrect: true }
+            ]
+        },
+        {
+            en_q: "What is the minimum age prescribed for being elected to the Legislative Assembly?",
+            hi_q: "विधानसभा सदस्य चुने जाने हेतु न्यूनतम आयु निर्धारित है-",
+            options: [
+                { en: "25 Years", hi: "25 वर्ष", isCorrect: true },
+                { en: "35 Years", hi: "35 वर्ष", isCorrect: false },
+                { en: "45 Years", hi: "45 वर्ष", isCorrect: false },
+                { en: "30 Years", hi: "30 वर्ष", isCorrect: false }
+            ]
+        },
+        {
+            en_q: "Consider: 1. A person elected to Council must be eligible as Assembly elector. 2. A person becoming Assembly member MUST be a voter of that state. Which are FALSE?",
+            hi_q: "कथनों पर विचार करें: 1. विधानपरिषद में निर्वाचित होने वाला व्यक्ति विधानसभा का निर्वाचक होने की अर्हता रखता हो। 2. विधानसभा सदस्य बनने वाला व्यक्ति को संबंधित राज्य का मतदाता होना जरूरी नहीं है। असत्य है?",
+            options: [
+                { en: "Only 1", hi: "केवल 1", isCorrect: false },
+                { en: "Only 2", hi: "केवल 2", isCorrect: true },
+                { en: "1 and 2 both", hi: "1 और 2", isCorrect: false },
+                { en: "Neither 1 nor 2", hi: "न तो 1 न ही 2", isCorrect: false }
+            ]
+        },
+        {
+            en_q: "Under the Constitution, a person is disqualified from being chosen for the Council/Assembly if:",
+            hi_q: "संविधान के अनुसार कोई व्यक्ति राज्य विधानपरिषद या विधानसभा के लिये चुने जाने और इसकी सदस्यता से निरर्ह होगा?",
+            options: [
+                { en: "Holds office of profit", hi: "किसी लाभ के पद पर है", isCorrect: false },
+                { en: "Unsound mind/insolvent", hi: "वह विकृतचित्त और दिवालिया हो।", isCorrect: false },
+                { en: "Not a citizen of India", hi: "वह भारत का नागरिक न हो।", isCorrect: false },
+                { en: "All of the above", hi: "उपर्युक्त में सभी।", isCorrect: true }
+            ]
+        },
+        {
+            en_q: "To whom can a member of the Assembly or Council submit their resignation in writing?",
+            hi_q: "विधानसभा का सदस्य या विधानपरिषद का सदस्य अपना त्यागपत्र किसे लिखित रूप से सौंप सकता है?",
+            options: [
+                { en: "Chairman or Speaker", hi: "सभापति या अध्यक्ष", isCorrect: true },
+                { en: "President", hi: "राष्ट्रपति", isCorrect: false },
+                { en: "Governor", hi: "राज्यपाल", isCorrect: false },
+                { en: "Chief Minister", hi: "मुख्यमंत्री", isCorrect: false }
+            ]
+        },
+        {
+            en_q: "How is the Speaker of the Assembly elected?",
+            hi_q: "विधानसभा का अध्यक्षों का निर्वाचन होता है-",
+            options: [
+                { en: "By People", hi: "जनता द्वारा", isCorrect: false },
+                { en: "By Parliament Members", hi: "संसद सदस्यों द्वारा", isCorrect: false },
+                { en: "By Assembly Members", hi: "विधानसभा सदस्यों द्वारा", isCorrect: true },
+                { en: "All of the above", hi: "उपर्युक्त में सभी।", isCorrect: false }
+            ]
+        },
+        {
+            en_q: "To whom does the Speaker of the Assembly address their resignation?",
+            hi_q: "विधानसभा अध्यक्ष अपना इस्तीफा किसे संबोधित कर देता है?",
+            options: [
+                { en: "Deputy Speaker", hi: "विधानसभा उपाध्यक्ष को", isCorrect: true },
+                { en: "Governor", hi: "राज्यपाल", isCorrect: false },
+                { en: "Chief Minister", hi: "मुख्यमंत्री", isCorrect: false },
+                { en: "Council Chairman", hi: "विधानपरिषद सभापति को", isCorrect: false }
+            ]
+        },
+        {
+            en_q: "The selection/election of the Deputy Speaker of the Assembly is by:",
+            hi_q: "विधानसभा उपाध्यक्ष का चयन/निर्वाचन होता है-",
+            options: [
+                { en: "Election by Assembly members", hi: "विधानसभा सदस्यों के द्वारा निर्वाचन", isCorrect: true },
+                { en: "Election by Speaker", hi: "विधानसभा अध्यक्ष द्वारा निर्वाचन", isCorrect: false },
+                { en: "Nomination by Governor", hi: "राज्यपाल द्वारा मनोनयन", isCorrect: false },
+                { en: "Nomination by CM", hi: "मुख्यमंत्री द्वारा मनोनयन", isCorrect: false }
+            ]
+        },
+        {
+            en_q: "How many days' prior notice is required for a resolution to remove the Assembly Speaker/Deputy Speaker?",
+            hi_q: "विधानसभा अध्यक्ष/उपाध्यक्ष को हटाने संबंधित प्रस्ताव की सूचना कितने दिन पूर्व दिया जाता है-",
+            options: [
+                { en: "13 Days", hi: "13 दिन", isCorrect: false },
+                { en: "14 Days", hi: "14 दिन", isCorrect: true },
+                { en: "42 Days", hi: "42 दिन", isCorrect: false },
+                { en: "24 Days", hi: "24 दिन", isCorrect: false }
+            ]
+        },
+        {
+            en_q: "In case of a tie in votes on a bill/proposal in the Assembly, who has the casting vote?",
+            hi_q: "विधानसभा में किसी विधेयक या प्रस्ताव पर बराबर मत की स्थिति में निर्णायक मत किसका होता है?",
+            options: [
+                { en: "Assembly Speaker", hi: "विधानसभा अध्यक्ष", isCorrect: true },
+                { en: "Governor", hi: "राज्यपाल", isCorrect: false },
+                { en: "Senior-most member", hi: "सबसे वरिष्ठ सदस्य", isCorrect: false },
+                { en: "Leader of Opposition", hi: "विपक्ष के नेता का", isCorrect: false }
+            ]
+        },
+        {
+            en_q: "Who elects the members of the Legislative Council?",
+            hi_q: "विधानपरिषद के सदस्यों का निर्वाचन करता है?",
+            options: [
+                { en: "Members of Assembly & Council", hi: "विधानसभा एवं विधानपरिषद के सदस्य", isCorrect: true },
+                { en: "Only Assembly & Council", hi: "केवल विधानसभा एवं विधानपरिषद के सदस्य", isCorrect: false },
+                { en: "Only Council members", hi: "केवल विधानपरिषद के सदस्य", isCorrect: false },
+                { en: "None of these", hi: "इनमें से कोई नहीं।", isCorrect: false }
+            ]
+        },
+        {
+            en_q: "Who summons the session of the State Legislature?",
+            hi_q: "राज्य विधानमंडल सत्र को आहूत कौन करता है?",
+            options: [
+                { en: "Assembly Speaker", hi: "विधानसभा अध्यक्ष", isCorrect: false },
+                { en: "Governor", hi: "राज्यपाल", isCorrect: true },
+                { en: "President", hi: "राष्ट्रपति", isCorrect: false },
+                { en: "Chief Minister", hi: "मुख्यमंत्री", isCorrect: false }
+            ]
+        },
+        {
+            en_q: "Who has the power to adjourn the Assembly session?",
+            hi_q: "विधानसभा सत्र को स्थगित करने का अधिकार है-",
+            options: [
+                { en: "Chief Minister", hi: "मुख्यमंत्री", isCorrect: false },
+                { en: "Assembly Speaker", hi: "विधानसभा अध्यक्ष", isCorrect: true },
+                { en: "Vice President", hi: "उपराष्ट्रपति", isCorrect: false },
+                { en: "Governor", hi: "राज्यपाल", isCorrect: false }
+            ]
+        },
+        {
+            en_q: "Who has the power to prorogue (conclude) the Assembly session?",
+            hi_q: "विधानसभा सत्र का सत्रावसान करने का अधिकार किसमें अंतर्निहित है?",
+            options: [
+                { en: "Governor", hi: "राज्यपाल", isCorrect: true },
+                { en: "Chief Minister", hi: "मुख्यमंत्री", isCorrect: false },
+                { en: "President", hi: "राष्ट्रपति", isCorrect: false },
+                { en: "Assembly Speaker", hi: "विधानसभा अध्यक्ष", isCorrect: false }
+            ]
+        },
+        {
+            en_q: "The prescribed quorum for Assembly/Council is:",
+            hi_q: "विधानसभा/विधानपरिषद के लिये निर्धारित कोरम है-",
+            options: [
+                { en: "1/20th of members", hi: "सदस्यों का 1/20वां भाग", isCorrect: false },
+                { en: "1/10th of members", hi: "सदस्यों का 1/10वां भाग", isCorrect: true },
+                { en: "1/15th of members", hi: "सदस्यों का 1/15वां भाग", isCorrect: false },
+                { en: "1/5th of members", hi: "सदस्यों का 1/5वां भाग", isCorrect: false }
+            ]
+        },
+        {
+            en_q: "Through how many stages does an ordinary bill pass in the originating house?",
+            hi_q: "कोई साधारण विधेयक प्रारंभिक सदन में कितने स्तरों से गुजरता है?",
+            options: [
+                { en: "Three stages", hi: "तीन स्तरों", isCorrect: true },
+                { en: "Four stages", hi: "चार स्तरों", isCorrect: false },
+                { en: "Two stages", hi: "दो स्तरों", isCorrect: false },
+                { en: "One stage", hi: "एक स्तरों", isCorrect: false }
+            ]
+        },
+        {
+            en_q: "For how long can the Legislative Council maximum delay an ordinary bill?",
+            hi_q: "कोई साधारण विधेयक को विधानपरिषद अधिकतम कितने समय तक अपने पास रोक सकता है?",
+            options: [
+                { en: "Two months", hi: "दो माह", isCorrect: false },
+                { en: "Three months", hi: "तीन माह", isCorrect: false },
+                { en: "Four months", hi: "चार माह", isCorrect: true },
+                { en: "Six months", hi: "छह माह", isCorrect: false }
+            ]
+        },
+        {
+            en_q: "In bicameralism, when a bill passed by houses is sent to the Governor, which options does he have?",
+            hi_q: "विधानसभा/द्विसदनीय व्यवस्था में विधेयक सदनों से पारित होने के बाद जब राज्यपाल के पास भेजा जाता है, राज्यपाल के पास निम्न में से कौन-सा विकल्प है-",
+            options: [
+                { en: "Can give assent", hi: "वह विधेयक को स्वीकृति प्रदान कर सकता है।", isCorrect: false },
+                { en: "Can withhold assent", hi: "वह विधेयक को अपनी स्वीकृति देने से रोक सकता है।", isCorrect: false },
+                { en: "Reserve for President", hi: "वह राष्ट्रपति के विचारार्थ विधेयक को सुरक्षित रख सकता है।", isCorrect: false },
+                { en: "All of the above", hi: "उपर्युक्त में सभी।", isCorrect: true }
+            ]
+        },
+        {
+            en_q: "A Money Bill can be introduced in:",
+            hi_q: "धन विधेयक प्रस्तुत किया जा सकता है?",
+            options: [
+                { en: "Legislative Council", hi: "विधानपरिषद में", isCorrect: false },
+                { en: "Legislative Assembly", hi: "विधानसभा में", isCorrect: true },
+                { en: "Rajya Sabha", hi: "राज्यसभा में", isCorrect: false },
+                { en: "Both a and c", hi: "a और c", isCorrect: false }
+            ]
+        },
+        {
+            en_q: "Consider: 1. No provision for joint sitting in state legislature. 2. Money Bill introduced only with Governor's prior assent. Which are true?",
+            hi_q: "कथनों पर विचार करें: 1. संविधान में किसी विधेयक के मसले पर विधानमंडल के दोनों सदनों की संयुक्त बैठक का उपबंध नहीं है। 2. राज्य विधानसभा में धन विधेयक राज्यपाल के पूर्व स्वीकृति पर ही प्रस्तुत किया जा सकता है। सही है?",
+            options: [
+                { en: "Only 1", hi: "केवल 1", isCorrect: false },
+                { en: "Only 2", hi: "केवल 2", isCorrect: false },
+                { en: "Both 1 and 2", hi: "1 और 2", isCorrect: true },
+                { en: "Neither 1 nor 2", hi: "न तो 1 न ही 2", isCorrect: false }
+            ]
+        },
+        {
+            en_q: "Who decides whether a bill introduced in the Assembly is a Money Bill or not?",
+            hi_q: "विधानसभा में प्रस्तुत कोई विधेयक धन विधेयक है या नहीं इसका जांच कौन करता है?",
+            options: [
+                { en: "Lok Sabha Speaker", hi: "लोकसभा अध्यक्ष", isCorrect: false },
+                { en: "Assembly Speaker", hi: "विधानसभा अध्यक्ष", isCorrect: true },
+                { en: "Assembly Deputy Speaker", hi: "विधानसभा उपाध्यक्ष", isCorrect: false },
+                { en: "Governor", hi: "राज्यपाल", isCorrect: false }
+            ]
+        },
+        {
+            en_q: "Which house is called 'Critic White Elephant'?",
+            hi_q: "निम्नलिखित में से किस सदन को आलोचक सफेद हाथी कहते हैं?",
+            options: [
+                { en: "Legislative Assembly", hi: "विधानसभा", isCorrect: false },
+                { en: "Legislative Council", hi: "विधानपरिषद", isCorrect: true },
+                { en: "Lok Sabha", hi: "लोकसभा", isCorrect: false },
+                { en: "Rajya Sabha", hi: "राज्यसभा", isCorrect: false }
+            ]
+        },
+        {
+            en_q: "Choose the correct: 1. Member cannot be arrested 40 days before/after session. 2. This applies only to civil cases.",
+            hi_q: "सही कथन चुनें: 1. विधानमंडल सदस्य को सदन चलने के 40 दिन पहले और 40 दिन बाद तक गिरफ्तार नहीं किया जा सकता 2. यह छूट केवल सिविल मामलों में है।",
+            options: [
+                { en: "Only 1", hi: "केवल 1", isCorrect: false },
+                { en: "Only 2", hi: "केवल 2", isCorrect: false },
+                { en: "Both 1 and 2", hi: "1 और 2", isCorrect: true },
+                { en: "Neither 1 nor 2", hi: "न तो 1 न ही 2", isCorrect: false }
+            ]
+        },
+        {
+            en_q: "Maximum number of members in Legislative Assembly can be:",
+            hi_q: "विधानसभा में अधिकतम सदस्यों की संख्या हो सकती है-",
+            options: [
+                { en: "500", hi: "500", isCorrect: true },
+                { en: "552", hi: "552", isCorrect: false },
+                { en: "403", hi: "403", isCorrect: false },
+                { en: "224", hi: "224", isCorrect: false }
+            ]
+        },
+        {
+            en_q: "Minimum number of members in Legislative Assembly can be:",
+            hi_q: "विधानसभा में निम्नतम सदस्यों की संख्या हो सकती है-",
+            options: [
+                { en: "70", hi: "70", isCorrect: false },
+                { en: "50", hi: "50", isCorrect: false },
+                { en: "60", hi: "60", isCorrect: true },
+                { en: "62", hi: "62", isCorrect: false }
+            ]
+        },
+        {
+            en_q: "Which Indian state has the highest number of Assembly seats?",
+            hi_q: "भारत के किस राज्य में सबसे अधिक विधानसभा सीटों की संख्या है-",
+            options: [
+                { en: "Uttar Pradesh", hi: "उत्तरप्रदेश", isCorrect: true },
+                { en: "Bihar", hi: "बिहार", isCorrect: false },
+                { en: "West Bengal", hi: "पश्चिम बंगाल", isCorrect: false },
+                { en: "Maharashtra", hi: "महाराष्ट्र", isCorrect: false }
+            ]
+        },
+        {
+            en_q: "Match State to Assembly Seats: Arunachal(3), Himachal(2), Uttarakhand(4), Jharkhand(1), Haryana(5)",
+            hi_q: "मिलान करें (राज्य-विधानसभा सीटें): अरुणाचल(3), हिमाचल(2), उत्तराखंड(4), झारखंड(1), हरियाणा(5)",
+            options: [
+                { en: "3 4 5 2 1", hi: "3 4 5 2 1", isCorrect: false },
+                { en: "3 2 4 1 5", hi: "3 2 4 1 5", isCorrect: true },
+                { en: "1 2 3 4 5", hi: "1 2 3 4 5", isCorrect: false },
+                { en: "2 3 1 4 5", hi: "2 3 1 4 5", isCorrect: false }
+            ]
+        },
+        {
+            en_q: "Which states have 40 Assembly seats?",
+            hi_q: "निम्नलिखित में से किन राज्यों में विधानसभा सीटों की संख्या 40 है-",
+            options: [
+                { en: "Goa", hi: "गोवा", isCorrect: false },
+                { en: "Tripura", hi: "त्रिपुरा", isCorrect: false },
+                { en: "Mizoram", hi: "मिजोरम", isCorrect: false },
+                { en: "Both a and c", hi: "a और c", isCorrect: true }
+            ]
+        },
+        {
+            en_q: "Match State: MP(1), Maharashtra(4), TN(2), Odisha(3), Punjab(5)",
+            hi_q: "मिलान करें: म.प्र.(1), महाराष्ट्र(4), तमिलनाडु(2), ओडिशा(3), पंजाब(5)",
+            options: [
+                { en: "2 1 3 4 5", hi: "2 1 3 4 5", isCorrect: false },
+                { en: "3 1 4 5 2", hi: "3 1 4 5 2", isCorrect: false },
+                { en: "4 1 2 3 5", hi: "4 1 2 3 5", isCorrect: true },
+                { en: "1 2 3 4 5", hi: "1 2 3 4 5", isCorrect: false }
+            ]
+        },
+        {
+            en_q: "Match: Bihar(5), Gujarat(1), Rajasthan(2), Telangana(3), WB(4)",
+            hi_q: "मिलान करें: बिहार(5), गुजरात(1), राजस्थान(2), तेलंगाना(3), प.बंगाल(4)",
+            options: [
+                { en: "1 2 3 4 5", hi: "1 2 3 4 5", isCorrect: false },
+                { en: "2 1 3 4 5", hi: "2 1 3 4 5", isCorrect: false },
+                { en: "5 1 2 3 4", hi: "5 1 2 3 4", isCorrect: true },
+                { en: "4 1 2 3 5", hi: "4 1 2 3 5", isCorrect: false }
+            ]
+        },
+        {
+            en_q: "Match: Arunachal(3), Himachal(2), Uttarakhand(1), Jharkhand(4), Haryana(5)",
+            hi_q: "मिलान करें: अरुणाचल(3), हिमाचल(2), उत्तराखंड(1), झारखंड(4), हरियाणा(5)",
+            options: [
+                { en: "3 5 4 2 1", hi: "3 5 4 2 1", isCorrect: false },
+                { en: "3 2 4 1 5", hi: "3 2 4 1 5", isCorrect: true },
+                { en: "2 3 4 1 5", hi: "2 3 4 1 5", isCorrect: false },
+                { en: "1 2 3 4 5", hi: "1 2 3 4 5", isCorrect: false }
+            ]
+        },
+        {
+            en_q: "Match Provision to Article: Assembly Const.(4), Special Address(3), Council Const.(1), Session(2)",
+            hi_q: "मिलान करें (प्रावधान - अनुच्छेद): विधानसभा गठन(4), राज्यपाल संबोधन(3), विधानपरिषद गठन(1), सत्र(2)",
+            options: [
+                { en: "4 3 1 2", hi: "4 3 1 2", isCorrect: true },
+                { en: "1 2 3 4", hi: "1 2 3 4", isCorrect: false },
+                { en: "2 1 3 4", hi: "2 1 3 4", isCorrect: false },
+                { en: "3 1 2 4", hi: "3 1 2 4", isCorrect: false }
+            ]
+        },
+        {
+            en_q: "In which UT does an Assembly exist?",
+            hi_q: "निम्नलिखित में से किन केंद्रशासित प्रदेश में विधानसभा का अस्तित्व है?",
+            options: [
+                { en: "Delhi", hi: "दिल्ली", isCorrect: false },
+                { en: "Puducherry", hi: "पुडुचेरी", isCorrect: false },
+                { en: "Jammu & Kashmir", hi: "जम्मू व कश्मीर", isCorrect: false },
+                { en: "All of the above", hi: "उपर्युक्त में सभी।", isCorrect: true }
+            ]
+        },
+        {
+            en_q: "Article 168 of Indian Constitution is related to:",
+            hi_q: "भारतीय संविधान का अनुच्छेद 168 का संबंध है-",
+            options: [
+                { en: "Formation of Assembly", hi: "विधानसभाओं का गठन", isCorrect: false },
+                { en: "Formation of State Legislatures", hi: "राज्यों में विधायिकाओं का गठन", isCorrect: true },
+                { en: "Dissolution of Assembly", hi: "विधानसभाओं का गठन", isCorrect: false },
+                { en: "Formation of Council", hi: "विधानपरिषद का गठन", isCorrect: false }
+            ]
+        },
+        {
+            en_q: "Which Article contains the power of Governor to issue ordinances?",
+            hi_q: "संविधान के किस अनुच्छेद में राज्यपाल की अध्यादेश जारी करने की शक्ति अंतर्निहित है?",
+            options: [
+                { en: "Art. 214", hi: "214", isCorrect: false },
+                { en: "Art. 215", hi: "215", isCorrect: false },
+                { en: "Art. 213", hi: "213", isCorrect: true },
+                { en: "Art. 205", hi: "205", isCorrect: false }
+            ]
+        },
+        {
+            en_q: "Which Article relates to the Budget in states?",
+            hi_q: "राज्यों में बजट का संबंध संविधान के किस अनुच्छेद से है?",
+            options: [
+                { en: "Art. 212", hi: "212", isCorrect: false },
+                { en: "Art. 202", hi: "202", isCorrect: true },
+                { en: "Art. 112", hi: "112", isCorrect: false },
+                { en: "Art. 114", hi: "114", isCorrect: false }
+            ]
+        },
+        {
+            en_q: "In which of the following states is the number of Assembly seats NOT 60?",
+            hi_q: "निम्नलिखित में से किन राज्यों में विधानसभा में सीटों की संख्या 60 नहीं है?",
+            options: [
+                { en: "Arunachal Pradesh", hi: "अरुणाचल प्रदेश", isCorrect: false },
+                { en: "Mizoram", hi: "मिजोरम", isCorrect: true },
+                { en: "Nagaland", hi: "नागालैंड", isCorrect: false },
+                { en: "Tripura", hi: "त्रिपुरा", isCorrect: false }
+            ]
+        }
+    ];
+
+    // --- State Variables ---
+    let currentQ = 0;
+    let score = 0;
+    let timerVal = 0;
+    let timerRef = null;
+    let quizData = [];
+    let audioCtx = null;
+
+    // --- Sound Synthesis ---
+    function playSound(type) {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        if (type === 'correct') {
+            osc.frequency.setValueAtTime(880, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.1);
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.3);
+        } else {
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.4);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.4);
+        }
+    }
+
+    // --- Confetti Effect ---
+    function startConfetti() {
+        const canvas = document.getElementById('confetti');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        let particles = [];
+        for(let i=0; i<100; i++) {
+            particles.push({
+                x: Math.random()*canvas.width,
+                y: Math.random()*canvas.height - canvas.height,
+                r: Math.random()*6 + 2,
+                d: Math.random()*10,
+                color: `hsl(${Math.random()*360}, 100%, 50%)`,
+                tilt: Math.random()*10 - 10
+            });
+        }
+        function draw() {
+            ctx.clearRect(0,0,canvas.width, canvas.height);
+            particles.forEach(p => {
+                ctx.beginPath();
+                ctx.lineWidth = p.r;
+                ctx.strokeStyle = p.color;
+                ctx.moveTo(p.x + p.tilt + p.r/2, p.y);
+                ctx.lineTo(p.x + p.tilt, p.y + p.tilt + p.r/2);
+                ctx.stroke();
+                p.y += Math.cos(p.d) + 1 + p.r/2;
+                p.x += Math.sin(p.d);
+                if(p.y > canvas.height) p.y = -20;
+            });
+            requestAnimationFrame(draw);
+        }
+        draw();
+        setTimeout(() => { canvas.width = 0; }, 2000);
+    }
+
+    // --- Core Logic ---
+    function startQuiz() {
+        const shuffle = document.getElementById('shuffle-toggle').checked;
+        timerVal = parseInt(document.getElementById('timer-input').value) || 0;
+        quizData = shuffle ? [...questions].sort(() => Math.random() - 0.5) : [...questions];
+        
+        document.getElementById('start-screen').classList.add('hidden');
+        document.getElementById('quiz-screen').classList.remove('hidden');
+        showQuestion();
+    }
+
+    function showQuestion() {
+        if (currentQ >= quizData.length) return showResults();
+        
+        const q = quizData[currentQ];
+        document.getElementById('en-q').innerText = q.en_q;
+        document.getElementById('hi-q').innerText = q.hi_q;
+        document.getElementById('q-counter').innerText = `Question: ${currentQ + 1}/${quizData.length}`;
+        document.getElementById('progress-bar').style.width = `${((currentQ) / quizData.length) * 100}%`;
+        
+        const grid = document.getElementById('options-grid');
+        grid.innerHTML = '';
+        
+        q.options.forEach((opt, idx) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerHTML = `<span class="en-o">${opt.en}</span><span class="hi-o">${opt.hi}</span>`;
+            btn.onclick = () => handleAnswer(idx, btn);
+            grid.appendChild(btn);
+        });
+
+        startTimer();
+    }
+
+    function startTimer() {
+        clearInterval(timerRef);
+        const timerEl = document.getElementById('timer');
+        if (timerVal <= 0) {
+            timerEl.innerText = "Time: ∞";
+            return;
+        }
+
+        let timeLeft = timerVal;
+        timerEl.classList.remove('pulse-red');
+        
+        timerRef = setInterval(() => {
+            timerEl.innerText = `Time: ${timeLeft}s`;
+            if (timeLeft < 5) timerEl.classList.add('pulse-red');
+            if (timeLeft <= 0) {
+                clearInterval(timerRef);
+                handleAnswer(-1, null); // Timeout
+            }
+            timeLeft--;
+        }, 1000);
+    }
+
+    function handleAnswer(index, btn) {
+        clearInterval(timerRef);
+        const q = quizData[currentQ];
+        const buttons = document.querySelectorAll('.option-btn');
+        buttons.forEach(b => b.disabled = true);
+
+        let isCorrect = index !== -1 && q.options[index].isCorrect;
+
+        if (isCorrect) {
+            btn.classList.add('correct');
+            score++;
+            document.getElementById('score-display').innerText = `Score: ${score}`;
+            playSound('correct');
+            startConfetti();
+        } else {
+            if (btn) btn.classList.add('wrong');
+            // Show correct one
+            buttons.forEach((b, i) => {
+                if (q.options[i].isCorrect) b.classList.add('correct');
+            });
+            
+            const sad = document.getElementById('sad-emoji');
+            sad.style.display = 'block';
+            sad.classList.add('shake');
+            playSound('wrong');
+            setTimeout(() => { 
+                sad.style.display = 'none'; 
+                sad.classList.remove('shake');
+            }, 1000);
+        }
+
+        setTimeout(() => {
+            currentQ++;
+            if (currentQ < quizData.length) showQuestion();
+            else showResults();
+        }, 1500);
+    }
+
+    function showResults() {
+        clearInterval(timerRef);
+        document.getElementById('quiz-screen').classList.add('hidden');
+        document.getElementById('result-screen').classList.remove('hidden');
+        document.getElementById('progress-bar').style.width = '100%';
+
+        const finalS = document.getElementById('final-score');
+        finalS.innerText = `${score}/${quizData.length}`;
+        
+        const perc = (score / quizData.length) * 100;
+        const msg = document.getElementById('result-msg');
+        if (perc >= 80) msg.innerText = "🏆 Outstanding Performance!";
+        else if (perc >= 50) msg.innerText = "👏 Well Done! Keep it up.";
+        else msg.innerText = "📚 Practice makes perfect! Try again.";
+
+        document.getElementById('final-stats').innerText = `Accuracy: ${perc.toFixed(1)}% | Questions Answered: ${currentQ}`;
+    }
+</script>
+</body>
+</html>

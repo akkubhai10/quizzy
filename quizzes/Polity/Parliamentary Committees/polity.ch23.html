@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chapter 23 Quiz - Parliamentary Committees</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --correct: #4dfd63;
+            --wrong: #ff4d4d;
+            --primary-text: #ffffff;
+            --secondary-text: #dddddd;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(45deg, #6a11cb, #2575fc, #ff0080);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            color: white;
+            overflow-x: hidden;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Glassmorphism Card */
+        .quiz-container {
+            width: 100%;
+            max-width: 600px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 25px;
+            padding: 30px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            position: relative;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .progress-bar-container {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 6px;
+            background: rgba(255,255,255,0.1);
+            z-index: 1000;
+        }
+
+        #progress-fill {
+            height: 100%; width: 0%;
+            background: linear-gradient(90deg, #00dbde, #fc00ff);
+            box-shadow: 0 0 10px #00dbde;
+            transition: width 0.3s;
+        }
+
+        .header-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        #timer.pulse {
+            color: var(--wrong);
+            animation: pulse 0.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .question-box { margin-bottom: 25px; }
+        .eng-txt { display: block; font-size: 1.2rem; font-weight: 600; margin-bottom: 5px; }
+        .hin-txt { display: block; font-size: 1rem; color: var(--secondary-text); margin-bottom: 15px; }
+
+        .options-grid { display: grid; gap: 12px; }
+
+        .option-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            padding: 15px;
+            border-radius: 12px;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.3s;
+            color: white;
+            outline: none;
+        }
+
+        .option-btn:hover:not([disabled]) {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .option-btn.correct { background: var(--correct) !important; color: #000; font-weight: bold; }
+        .option-btn.wrong { background: var(--wrong) !important; }
+
+        .btn-finish {
+            margin-top: 30px;
+            width: 100%;
+            padding: 12px;
+            border-radius: 10px;
+            border: none;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        /* Start Screen */
+        .setup-screen, .result-screen { text-align: center; }
+        .input-group { margin: 20px 0; }
+        input[type="number"] {
+            padding: 10px; border-radius: 8px; border: none; width: 80px; text-align: center;
+        }
+        .start-btn {
+            padding: 15px 40px; font-size: 1.2rem; border-radius: 50px; border: none;
+            background: white; color: #2575fc; font-weight: bold; cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .start-btn:hover { transform: scale(1.1); }
+
+        /* Animations */
+        #feedback-emoji {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 100px; z-index: 9999; display: none;
+        }
+        .shake { animation: shake 0.5s; }
+        @keyframes shake {
+            0%, 100% { transform: translate(-50%, -50%) rotate(0deg); }
+            25% { transform: translate(-55%, -50%) rotate(-5deg); }
+            75% { transform: translate(-45%, -50%) rotate(5deg); }
+        }
+
+        /* Confetti */
+        .confetti {
+            position: absolute; width: 10px; height: 10px; background: #fff;
+            z-index: 9999; pointer-events: none;
+        }
+
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+<div class="progress-bar-container"><div id="progress-fill"></div></div>
+
+<div class="quiz-container">
+    <div id="setup-screen" class="setup-screen">
+        <h1 style="margin-bottom: 10px;">Parliamentary Committees</h1>
+        <p>Chapter - 23 Quiz</p>
+        <div class="input-group">
+            <label>Timer (Seconds per question, 0 to disable): </label><br><br>
+            <input type="number" id="timer-input" value="30" min="0">
+        </div>
+        <div class="input-group">
+            <label><input type="checkbox" id="shuffle-input"> Shuffle Questions</label>
+        </div>
+        <button class="start-btn" onclick="startQuiz()">START QUIZ</button>
+    </div>
+
+    <div id="quiz-screen" class="hidden">
+        <div class="header-info">
+            <span id="question-count">Question 01/15</span>
+            <span id="timer">⏱ --</span>
+            <span id="score-count">Score: 0</span>
+        </div>
+        
+        <div class="question-box">
+            <span class="eng-txt" id="q-eng"></span>
+            <span class="hin-txt" id="q-hin"></span>
+        </div>
+
+        <div class="options-grid" id="options-container"></div>
+
+        <button class="btn-finish" onclick="showResults()">Finish & Show Results</button>
+    </div>
+
+    <div id="result-screen" class="result-screen hidden">
+        <h2 id="result-msg" style="font-size: 2rem;"></h2>
+        <p id="final-score" style="font-size: 1.5rem; margin: 20px 0;"></p>
+        <button class="start-btn" onclick="location.reload()">RESTART</button>
+    </div>
+</div>
+
+<div id="feedback-emoji">😢</div>
+
+<script>
+    const questions = [
+        {
+            qEng: "Which of the following is NOT included under the Financial Committees of Parliament?",
+            qHin: "संसद की वित्त समितियों के अंतर्गत सम्मिलित नहीं है-",
+            optionsEng: ["Public Accounts Committee", "Estimates Committee", "Committee on Public Undertakings", "Committee on Government Assurances"],
+            optionsHin: ["लोकलेखा समिति", "प्राक्कलन समिति", "सार्वजनिक उद्यमों के लिए गठित समिति", "सरकारी आश्वासन समिति"],
+            correct: 3
+        },
+        {
+            qEng: "When was the Public Accounts Committee first established?",
+            qHin: "लोकलेखा समिति की स्थापना कब हुई है?",
+            optionsEng: ["1921", "1920", "1923", "1924"],
+            optionsHin: ["1921", "1920", "1923", "1924"],
+            correct: 0
+        },
+        {
+            qEng: "What is the number of members in the Public Accounts Committee from Lok Sabha and Rajya Sabha respectively?",
+            qHin: "लोकलेखा समिति के सदस्यों की संख्या क्रमशः लोकसभा एवं राज्यसभा से होती है?",
+            optionsEng: ["15 + 5 = 20", "20 + 5 = 25", "15 + 7 = 22", "10 + 20 = 30"],
+            optionsHin: ["15 + 5 = 20", "20 + 5 = 25", "15 + 7 = 22", "10 + 20 = 30"],
+            correct: 2
+        },
+        {
+            qEng: "Who appoints the Chairman of the Public Accounts Committee?",
+            qHin: "लोकलेखा समिति का अध्यक्ष का नियुक्ति करता है-",
+            optionsEng: ["Speaker of Lok Sabha", "Prime Minister", "Chairman of Rajya Sabha", "President"],
+            optionsHin: ["लोकसभा अध्यक्ष", "प्रधानमंत्री", "राज्यसभा के सभापति", "राष्ट्रपति"],
+            correct: 0
+        },
+        {
+            qEng: "Which of the following committees audits the annual reports of the Comptroller and Auditor General (CAG)?",
+            qHin: "निम्नलिखित में से कौन-से समिति नियंत्रक एवं महालेखा परीक्षक की वार्षिक प्रतिवेदनों की जांच करता है?",
+            optionsEng: ["Estimates Committee", "Public Accounts Committee", "Committee on Public Undertakings", "Committee on Subordinate Legislation"],
+            optionsHin: ["प्राक्कलन समिति", "लोकलेखा समिति", "सार्वजनिक उद्यम समिति", "अधीनस्थ विधायन समिति"],
+            correct: 1
+        },
+        {
+            qEng: "When was the Estimates Committee first established?",
+            qHin: "प्राक्कलन समिति की स्थापना कब किया गया?",
+            optionsEng: ["1956", "1921", "1952", "1950"],
+            optionsHin: ["1956", "1921", "1952", "1950"],
+            correct: 3
+        },
+        {
+            qEng: "On the recommendation of which committee was the Estimates Committee established?",
+            qHin: "प्राक्कलन समिति की स्थापना किस समिति की सिफारिश पर की गई?",
+            optionsEng: ["John Mathai Committee", "P.C. Mahalanobis Committee", "A.C. Umda Committee", "S.N. Dhansukhwalia Committee"],
+            optionsHin: ["जॉन मथाई समिति", "पी. सी. महालनोबिस समिति", "उं. सी. उमदा समिति", "एस. एन. धनसुखवालिया समिति"],
+            correct: 0
+        },
+        {
+            qEng: "The number of members in the Estimates Committee is:",
+            qHin: "प्राक्कलन समिति में सदस्यों की संख्या होती है-",
+            optionsEng: ["25", "22", "30", "26"],
+            optionsHin: ["25", "22", "30", "26"],
+            correct: 2
+        },
+        {
+            qEng: "When was the Committee on Public Undertakings established?",
+            qHin: "सार्वजनिक उद्यम समिति की स्थापना किस वर्ष किया गया?",
+            optionsEng: ["1964", "1972", "1952", "1958"],
+            optionsHin: ["1964", "1972", "1952", "1958"],
+            correct: 0
+        },
+        {
+            qEng: "On the recommendation of which committee was the Committee on Public Undertakings established?",
+            qHin: "सार्वजनिक उद्यम समिति की स्थापना किस समिति के सिफारिश पर किया गया?",
+            optionsEng: ["Krishna Menon Committee", "John Mathai Committee", "L.K. Jha Committee", "Balwant Mehta Committee"],
+            optionsHin: ["कृष्ण मेनन समिति", "जॉन मथाई समिति", "एल. के. झा समिति", "बलराम मेहता समिति"],
+            correct: 0
+        },
+        {
+            qEng: "What is the number of members in the Petitions Committee from Lok Sabha and Rajya Sabha respectively?",
+            qHin: "याचिका समिति में लोकसभा एवं राज्यसभा से सदस्यों की संख्या क्रमशः होती है?",
+            optionsEng: ["15, 15", "15, 10", "15, 7", "15, 20"],
+            optionsHin: ["15, 15", "15, 10", "15, 7", "15, 20"],
+            correct: 1
+        },
+        {
+            qEng: "The number of members in the Privilege Committee from Rajya Sabha and Lok Sabha is:",
+            qHin: "विशेषाधिकार समिति में राज्यसभा एवं लोकसभा से सदस्यों की संख्या होती है-",
+            optionsEng: ["10, 15", "15, 10", "10, 22", "15, 7"],
+            optionsHin: ["10, 15", "15, 10", "10, 22", "15, 7"],
+            correct: 0
+        },
+        {
+            qEng: "Which committee examines whether the executive is properly exercising its power delegated by Parliament to make rules, sub-rules, and bylaws?",
+            qHin: "निम्न में से कौन-सी समिति विनियम, नियम, उपनियम तथा नियमावली बनाने के लिए संसद द्वारा कार्यपालिका को प्रतिनिधित्व का सही उपयोग हो रहा या नहीं, इसकी जांच करती है?",
+            optionsEng: ["Public Accounts Committee", "Committee on Subordinate Legislation", "Committee on Government Assurances", "Privilege Committee"],
+            optionsHin: ["लोक लेखा समिति", "अधीनस्थ विधायन समिति", "सरकारी आश्वासन समिति", "विशेषाधिकार समिति"],
+            correct: 1
+        },
+        {
+            qEng: "When was the Committee on Subordinate Legislation established?",
+            qHin: "अधीनस्थ विधायन समिति की स्थापना कब किया गया?",
+            optionsEng: ["1954", "1955", "1953", "1956"],
+            optionsHin: ["1954", "1955", "1953", "1956"],
+            correct: 2
+        },
+        {
+            qEng: "Consider the statement: The Committee on Absence of Members looks into matters related to leave of absence.",
+            qHin: "सदस्यों की अनुपस्थिति संबंधी समिति अवकाश से संबंधित मामलों को देखती है। (लोकसभा में 15 सदस्य होते हैं जबकि राज्यसभा में ऐसी कोई समिति नहीं होती)।",
+            optionsEng: ["Only 1 is correct", "Only 2 is correct", "Both 1 and 2 are correct", "Neither 1 nor 2 is correct"],
+            optionsHin: ["केवल 1", "केवल 2", "1 और 2 दोनों", "न तो 1 न ही 2"],
+            correct: 2
+        }
+    ];
+
+    let currentQ = 0;
+    let score = 0;
+    let timerInterval;
+    let quizQuestions = [];
+    let timePerQuestion = 0;
+
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    function playSound(type) {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        if(type === 'correct') {
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(880, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(1100, audioCtx.currentTime + 0.1);
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.2);
+        } else {
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.3);
+        }
+    }
+
+    function createConfetti() {
+        for(let i=0; i<50; i++) {
+            const c = document.createElement('div');
+            c.className = 'confetti';
+            c.style.left = Math.random() * 100 + 'vw';
+            c.style.backgroundColor = `hsl(${Math.random()*360}, 100%, 50%)`;
+            c.style.transform = `scale(${Math.random()})`;
+            document.body.appendChild(c);
+            const anim = c.animate([
+                { top: '-10px', opacity: 1 },
+                { top: '100vh', opacity: 0 }
+            ], { duration: 2000 + Math.random()*3000 });
+            anim.onfinish = () => c.remove();
+        }
+    }
+
+    function startQuiz() {
+        timePerQuestion = parseInt(document.getElementById('timer-input').value) || 0;
+        const shuffle = document.getElementById('shuffle-input').checked;
+        quizQuestions = shuffle ? [...questions].sort(() => Math.random() - 0.5) : [...questions];
+        
+        document.getElementById('setup-screen').classList.add('hidden');
+        document.getElementById('quiz-screen').classList.remove('hidden');
+        loadQuestion();
+    }
+
+    function loadQuestion() {
+        if(currentQ >= quizQuestions.length) return showResults();
+        
+        clearInterval(timerInterval);
+        const q = quizQuestions[currentQ];
+        document.getElementById('q-eng').innerText = q.qEng;
+        document.getElementById('q-hin').innerText = q.qHin;
+        document.getElementById('question-count').innerText = `Question ${String(currentQ + 1).padStart(2, '0')}/${quizQuestions.length}`;
+        document.getElementById('progress-fill').style.width = `${((currentQ) / quizQuestions.length) * 100}%`;
+
+        const container = document.getElementById('options-container');
+        container.innerHTML = '';
+
+        q.optionsEng.forEach((opt, i) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerHTML = `
+                <span style="display:block; font-weight:600;">${opt}</span>
+                <span style="display:block; font-size:0.85rem; opacity:0.8;">${q.optionsHin[i]}</span>
+            `;
+            btn.onclick = () => handleAnswer(i);
+            container.appendChild(btn);
+        });
+
+        if(timePerQuestion > 0) startTimer();
+        else document.getElementById('timer').innerText = "⏱ No Limit";
+    }
+
+    function startTimer() {
+        let timeLeft = timePerQuestion;
+        const display = document.getElementById('timer');
+        display.classList.remove('pulse');
+        
+        timerInterval = setInterval(() => {
+            timeLeft--;
+            display.innerText = `⏱ ${timeLeft}s`;
+            if(timeLeft < 5) display.classList.add('pulse');
+            if(timeLeft <= 0) {
+                clearInterval(timerInterval);
+                handleAnswer(-1);
+            }
+        }, 1000);
+    }
+
+    function handleAnswer(idx) {
+        clearInterval(timerInterval);
+        const btns = document.querySelectorAll('.option-btn');
+        btns.forEach(b => b.disabled = true);
+
+        const correctIdx = quizQuestions[currentQ].correct;
+
+        if(idx === correctIdx) {
+            score++;
+            btns[idx].classList.add('correct');
+            playSound('correct');
+            createConfetti();
+        } else {
+            if(idx !== -1) btns[idx].classList.add('wrong');
+            btns[correctIdx].classList.add('correct');
+            playSound('wrong');
+            const emoji = document.getElementById('feedback-emoji');
+            emoji.style.display = 'block';
+            emoji.classList.add('shake');
+            setTimeout(() => { 
+                emoji.style.display = 'none'; 
+                emoji.classList.remove('shake');
+            }, 1000);
+        }
+
+        document.getElementById('score-count').innerText = `Score: ${score}`;
+        
+        setTimeout(() => {
+            currentQ++;
+            if(currentQ < quizQuestions.length) loadQuestion();
+            else showResults();
+        }, 1500);
+    }
+
+    function showResults() {
+        clearInterval(timerInterval);
+        document.getElementById('quiz-screen').classList.add('hidden');
+        document.getElementById('result-screen').classList.remove('hidden');
+        document.getElementById('progress-fill').style.width = '100%';
+
+        const percent = (score / quizQuestions.length) * 100;
+        let msg = "";
+        if(percent >= 80) msg = "🏆 Outstanding Performance!";
+        else if(percent >= 50) msg = "👏 Well Done! Keep it up.";
+        else msg = "📚 Practice makes perfect! Try again.";
+
+        document.getElementById('result-msg').innerText = msg;
+        document.getElementById('final-score').innerText = `You scored ${score} out of ${quizQuestions.length}`;
+    }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Union & Territory Quiz - Full 82 Questions</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* --- CSS VARIABLES & RESET --- */
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            --primary-text: #ffffff;
+            --secondary-text: #e0e0e0;
+            --correct-color: #00e676;
+            --wrong-color: #ff1744;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(45deg, #1a2a6c, #b21f1f, #fdbb2d);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* --- GLASSMORPHISM CARD --- */
+        .app-container {
+            width: 100%;
+            max-width: 650px;
+            height: 100vh;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        @media (min-width: 650px) {
+            .app-container {
+                height: 95vh;
+                border-radius: 25px;
+                box-shadow: var(--glass-shadow);
+            }
+        }
+
+        /* --- SCREENS --- */
+        .screen {
+            display: none;
+            flex-direction: column;
+            height: 100%;
+            padding: 20px;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        .screen.active { display: flex; }
+
+        /* Scrollbar */
+        .screen::-webkit-scrollbar { width: 4px; }
+        .screen::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.3); border-radius: 10px; }
+
+        /* --- START SCREEN --- */
+        #start-screen { justify-content: center; align-items: center; text-align: center; color: white; }
+        h1 { font-size: 1.8rem; margin-bottom: 5px; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+        .subtitle { font-size: 0.9rem; color: #ddd; margin-bottom: 25px; }
+        
+        .settings-group {
+            width: 100%; margin-bottom: 15px; text-align: left;
+            background: rgba(0,0,0,0.2); padding: 15px; border-radius: 15px;
+        }
+        
+        input[type="number"] {
+            width: 100%; padding: 12px; border-radius: 10px; border: none;
+            background: rgba(255,255,255,0.2); color: white; font-size: 1rem; margin-top: 5px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none; padding: 15px; width: 100%; color: white;
+            font-size: 1.1rem; font-weight: bold; border-radius: 50px;
+            cursor: pointer; margin-top: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            transition: transform 0.2s;
+        }
+        .btn-primary:active { transform: scale(0.98); }
+
+        /* Toggle Switch */
+        .switch { position: relative; display: inline-block; width: 50px; height: 24px; float: right; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(255,255,255,0.3); transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--correct-color); }
+        input:checked + .slider:before { transform: translateX(26px); }
+
+        /* --- QUIZ SCREEN --- */
+        #quiz-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 15px; color: white; font-size: 0.9rem;
+            position: sticky; top: 0; background: rgba(0,0,0,0.0); z-index: 10;
+        }
+
+        .progress-bar-bg { width: 100%; height: 4px; background: rgba(255,255,255,0.2); border-radius: 2px; margin-bottom: 15px; }
+        .progress-bar-fill { height: 100%; width: 0%; background: #00e676; transition: width 0.3s ease; border-radius: 2px; }
+
+        .timer-badge { background: rgba(0,0,0,0.4); padding: 5px 10px; border-radius: 15px; font-weight: bold; min-width: 60px; text-align: center; }
+        .timer-pulse { animation: pulse 1s infinite; color: #ff4444; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+
+        .question-card {
+            background: rgba(255, 255, 255, 0.1); padding: 20px; border-radius: 20px;
+            margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.1);
+        }
+        .q-text-en { font-size: 1.1rem; font-weight: 700; color: white; margin-bottom: 8px; line-height: 1.3; }
+        .q-text-hi { font-size: 1rem; color: #ddd; font-weight: 400; line-height: 1.4; }
+
+        .options-grid { display: grid; grid-template-columns: 1fr; gap: 10px; padding-bottom: 60px; }
+        .option-btn {
+            background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 15px; border-radius: 12px; text-align: left; cursor: pointer; transition: 0.2s;
+        }
+        .opt-en { display: block; font-weight: 600; color: white; font-size: 0.95rem; margin-bottom: 2px; }
+        .opt-hi { display: block; font-size: 0.85rem; color: #ccc; }
+
+        .correct { background: var(--correct-color) !important; border-color: var(--correct-color) !important; }
+        .correct span { color: #003300 !important; }
+        .wrong { background: var(--wrong-color) !important; border-color: var(--wrong-color) !important; }
+
+        .btn-finish {
+            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+            background: rgba(0,0,0,0.6); color: white; padding: 10px 30px;
+            border-radius: 30px; border: 1px solid rgba(255,255,255,0.3);
+            backdrop-filter: blur(5px); z-index: 20; cursor: pointer;
+        }
+
+        /* --- FEEDBACK & RESULT --- */
+        #sad-emoji { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); font-size: 6rem; display: none; z-index: 100; text-shadow: 0 10px 20px rgba(0,0,0,0.5); }
+        .shake { animation: shake 0.5s; }
+        @keyframes shake { 0%, 100% {transform:translate(-50%,-50%);} 25% {transform:translate(-55%,-50%);} 75% {transform:translate(-45%,-50%);} }
+
+        #result-screen { justify-content: center; align-items: center; text-align: center; color: white; }
+        .score-circle {
+            width: 160px; height: 160px; border-radius: 50%; border: 5px solid white;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            margin-bottom: 30px; background: rgba(255,255,255,0.1);
+        }
+        .score-big { font-size: 3.5rem; font-weight: 800; line-height: 1; }
+        
+        #confetti-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 99; }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <canvas id="confetti-canvas"></canvas>
+    <div id="sad-emoji">😢</div>
+
+    <div id="start-screen" class="screen active">
+        <h1>Gyan Bindu GS</h1>
+        <div class="subtitle">Union & Territories (Complete 82 Questions)</div>
+        
+        <div class="settings-group">
+            <label>⏱ Timer (seconds)</label>
+            <input type="number" id="timer-input" placeholder="0 = No Timer" value="0">
+        </div>
+        <div class="settings-group">
+            <label>🔀 Shuffle Questions</label>
+            <label class="switch"><input type="checkbox" id="shuffle-toggle"><span class="slider"></span></label>
+            <div style="clear:both"></div>
+        </div>
+        <button class="btn-primary" onclick="startQuiz()">Start Quiz</button>
+    </div>
+
+    <div id="quiz-screen" class="screen">
+        <div class="progress-bar-bg"><div class="progress-bar-fill" id="progress-bar"></div></div>
+        <div id="quiz-header">
+            <span id="q-counter">Q 1</span>
+            <div class="timer-badge" id="timer-display">--</div>
+            <span id="score-display">Score: 0</span>
+        </div>
+        <div id="question-container"></div>
+        <button class="btn-finish" onclick="endQuiz()">Finish & Result</button>
+    </div>
+
+    <div id="result-screen" class="screen">
+        <div class="score-circle">
+            <span class="score-big" id="final-score">0</span>
+            <span style="opacity:0.8" id="final-total">/ 82</span>
+        </div>
+        <h2 id="result-message"></h2>
+        <button class="btn-primary" onclick="location.reload()">Restart</button>
+    </div>
+</div>
+
+<script>
+/* FULL DATABASE OF 82 QUESTIONS 
+   Transcribed and Translated from the provided Screenshots.
+   Answer Key Source: Image 5.
+*/
+const db = [
+  {qE:"In which part of the Constitution are the Union and its Territories discussed?",qH:"संविधान के किस भाग में संघ एवं इसके राज्य क्षेत्रों की चर्चा की गई है?",o:[{e:"Part 2",h:"भाग - 2"},{e:"Part 1",h:"भाग - 1"},{e:"Part 3",h:"भाग - 3"},{e:"Part 4",h:"भाग - 4"}],a:1},
+  {qE:"How is India defined in Article 1 of the Indian Constitution?",qH:"भारतीय संविधान के अनुच्छेद 1 में भारत को किस रूप में परिभाषित किया गया है?",o:[{e:"Result of agreement between states",h:"संघ का निर्माण राज्यों के बीच समझौता का परिणाम है"},{e:"As a group of states",h:"राज्यों के समूह के रूप में"},{e:"As a Union of States",h:"राज्यों के संघ के रूप में"},{e:"None of these",h:"इनमें से कोई नहीं"}],a:2},
+  {qE:"Consider the following statements:\n1. Indian Union is not the result of an agreement.\n2. States do not have the right to secede from the Union.",qH:"निम्नलिखित कथनों पर विचार कीजिये।\n1. भारतीय संघ राज्यों के बीच समझौते का परिणाम नहीं है।\n2. राज्यों से संघ से विभक्त होने का अधिकार नहीं है।",o:[{e:"Only 1",h:"केवल 1"},{e:"Only 2",h:"केवल 2"},{e:"Both 1 and 2",h:"1 और 2 दोनों"},{e:"Neither 1 nor 2",h:"न तो 1 और न ही 2"}],a:2},
+  {qE:"According to Article 1, Indian territory can be classified into which categories?",qH:"अनुच्छेद 1 के अनुसार भारतीय क्षेत्र को किन श्रेणियों में बाँटा जा सकता है?",o:[{e:"Territories of States",h:"राज्यों का क्षेत्र"},{e:"Union Territories",h:"संघ क्षेत्र"},{e:"Territories acquired by GoI at any time",h:"ऐसे क्षेत्र जिसे किसी भी समय भारत सरकार द्वारा अधिग्रहित किया जा सकता है"},{e:"All of the above",h:"इनमें से सभी"}],a:3},
+  {qE:"In which schedule are the names of States/UTs and their extent mentioned?",qH:"राज्यों एवं संघ शासित राज्यों के नाम, उनके क्षेत्र विस्तार को संविधान की किस अनुसूची में दर्शाया गया है?",o:[{e:"First",h:"पहली"},{e:"Second",h:"दूसरी"},{e:"Third",h:"तीसरी"},{e:"Fifth",h:"पाँचवी"}],a:0},
+  {qE:"At present, how many States and Union Territories are there in India?",qH:"वर्तमान में भारत में कितने राज्य एवं संघ शासित प्रदेश हैं?",o:[{e:"26 and 9",h:"26 एवं 9"},{e:"28 and 7",h:"28 एवं 7"},{e:"28 and 9",h:"28 एवं 9"},{e:"28 and 8",h:"28 एवं 8"}],a:3},
+  {qE:"Which schedules contain special provisions for administration of Scheduled/Tribal areas?",qH:"किस अनुसूचियों में राज्य के भीतर अनुसूचित एवं जनजातीय क्षेत्रों के प्रशासन के लिए विशेष उपबंध है?",o:[{e:"Fifth and Seventh",h:"पाँचवी एवं सातवीं"},{e:"Fifth and Sixth",h:"पाँचवी एवं छठी"},{e:"Fifth and Eighth",h:"पाँचवी एवं आठवी"},{e:"Tenth and Twelfth",h:"दसवीं एवं बारहवीं"}],a:1},
+  {qE:"Consider statements:\n1. India can acquire foreign territories.\n2. Dadra Nagar Haveli, Goa, etc. are examples of acquired territories.",qH:"1. एक संप्रभु राज्य होने के नाते भारत विदेशी राज्यों का अधिग्रहण कर सकता है।\n2. दादरा नगर हवेली, गोवा, दमन एवं दीव... विदेशी राज्यों के अधिग्रहण का उदाहरण है।",o:[{e:"Only 1",h:"केवल 1"},{e:"Only 2",h:"केवल 2"},{e:"Both 1 and 2",h:"1 और 2 दोनों"},{e:"Neither 1 nor 2",h:"न तो 1 और न ही 2"}],a:2},
+  {qE:"Under which Article can Parliament acquire foreign territories?",qH:"विदेशी क्षेत्रों या राज्यों का अधिग्रहण संसद भारतीय संविधान के किस अनुच्छेद द्वारा कर सकती है?",o:[{e:"Article 1",h:"अनुच्छेद- 1"},{e:"Article 3",h:"अनुच्छेद- 3"},{e:"Article 2",h:"अनुच्छेद- 2"},{e:"Article 4",h:"अनुच्छेद- 4"}],a:2},
+  {qE:"Formation of new states (e.g., Jharkhand from Bihar) is done under which Article?",qH:"भारतीय संघ के नये राज्यों का निर्माण अर्थात (बिहार से झारखंड राज्य का विभाजन) संविधान के किस अनुच्छेद द्वारा किया जाता है?",o:[{e:"Article 1",h:"अनुच्छेद- 1"},{e:"Article 2",h:"अनुच्छेद- 2"},{e:"Article 4",h:"अनुच्छेद- 4"},{e:"Article 3",h:"अनुच्छेद- 3"}],a:3},
+  {qE:"Which Article empowers Parliament to form a new state by separating territory?",qH:"संसद को किस अनुच्छेद द्वारा यह शक्ति प्राप्त है कि वह 'किसी राज्य में उसका राज्य क्षेत्र अलग करके... नये राज्य का निर्माण कर सकती है?",o:[{e:"Article 2",h:"अनुच्छेद- 2"},{e:"Article 3",h:"अनुच्छेद- 3"},{e:"Article 4",h:"अनुच्छेद- 4"},{e:"Article 14",h:"अनुच्छेद- 14"}],a:1},
+  {qE:"Which Article empowers Parliament to increase or decrease the area of any state?",qH:"संसद को संविधान के किस अनुच्छेद द्वारा यह शक्ति प्राप्त है कि वह किसी राज्य के क्षेत्र को बढ़ा सकती या घटा सकेगी?",o:[{e:"Article 2",h:"अनुच्छेद- 2"},{e:"Article 4",h:"अनुच्छेद- 4"},{e:"Article 1",h:"अनुच्छेद- 1"},{e:"Article 3",h:"अनुच्छेद- 3"}],a:3},
+  {qE:"Which Article empowers Parliament to alter the boundaries of any state?",qH:"संसद को संविधान के किस अनुच्छेद द्वारा यह शक्ति प्राप्त है कि वह 'किसी राज्य क्षेत्र के सीमाओं में परिवर्तन कर सकेगी'?",o:[{e:"Article 2",h:"अनुच्छेद- 2"},{e:"Article 3",h:"अनुच्छेद- 3"},{e:"Article 4",h:"अनुच्छेद- 4"},{e:"Article 5",h:"अनुच्छेद- 5"}],a:1},
+  {qE:"Which Article empowers Parliament to alter the name of any state?",qH:"संविधान किस अनुच्छेद द्वारा संसद को यह शक्ति प्राप्त है कि वह 'किसी राज्य के नाम में परिवर्तन कर सकेगी'?",o:[{e:"Article 3",h:"अनुच्छेद- 3"},{e:"Article 4",h:"अनुच्छेद- 4"},{e:"Article 2",h:"अनुच्छेद- 2"},{e:"Article 5",h:"अनुच्छेद- 5"}],a:0},
+  {qE:"Who has the power to form new states?",qH:"नये राज्य के निर्माण की शक्ति किसके पास है?",o:[{e:"Parliament",h:"संसद"},{e:"President",h:"राष्ट्रपति"},{e:"State Legislature",h:"राज्य विधानमंडल"},{e:"Governor",h:"राज्यपाल"}],a:0},
+  {qE:"Consider regarding formation of new states:\n1. Parliament is not bound to accept State Legislature's view.\n2. Bill can only be introduced after President's prior recommendation.",qH:"1. नये राज्यों के निर्माण के संदर्भ में संसद राज्य विधानमंडल के मत मानने को बाध्य नहीं है।\n2. नये राज्यों के निर्माण से संबंधित विधेयक राष्ट्रपति के पूर्व स्वीकृति के बाद ही संसद में पेश किया जा सकता है।",o:[{e:"Only 1",h:"केवल 1"},{e:"Only 2",h:"केवल 2"},{e:"Both 1 and 2",h:"1 और 2 दोनों"},{e:"Neither 1 nor 2",h:"न तो 1 और न ही 2"}],a:2},
+  {qE:"100th Constitutional Amendment is related to?",qH:"100वाँ संविधान संशोधन संबंधित है?",o:[{e:"Transfer of territory to Pakistan",h:"भारत द्वारा पाकिस्तान को कुछ भारतीय क्षेत्र प्रदान करने से"},{e:"Women's Reservation",h:"महिलाओं को न्यायपालिका में 50 प्रतिशत आरक्षण प्रदान करने से"},{e:"Exchange of enclaves with Bangladesh",h:"भारत एवं बांग्लादेश द्वारा कुछ क्षेत्रों के आदान-प्रदान से"},{e:"GST",h:"G.S.T से"}],a:2},
+  {qE:"Which Princely State was integrated into India by police action?",qH:"किस देशी रियासत को भारत में पुलिस कार्यवाही द्वारा मिलाया गया?",o:[{e:"Junagadh",h:"जूनागढ़"},{e:"Hyderabad",h:"हैदराबाद"},{e:"Kashmir",h:"कश्मीर"},{e:"Mysore",h:"मैसूर"}],a:1},
+  {qE:"Who chaired the Linguistic Provinces Commission appointed in 1948?",qH:"1948 में किसके अध्यक्षता में भाषायी प्रांत आयोग की नियुक्ति भारत सरकार द्वारा किया गया है?",o:[{e:"Sriramulu",h:"श्रीरामुल"},{e:"S.K. Dar",h:"एस.के. धर"},{e:"Fazl Ali",h:"फजल अली"},{e:"None of these",h:"इनमें से कोई नहीं"}],a:1},
+  {qE:"Who chaired the State Reorganization Commission established in 1953?",qH:"भारत सरकार द्वारा वर्ष 1953 में राज्य पुनर्गठन आयोग की स्थापना किसकी अध्यक्षता में हुआ?",o:[{e:"Fazl Ali",h:"फजल अली"},{e:"JVP Committee",h:"जे.वी.पी धर"},{e:"Sriramulu",h:"श्रीरामुल"},{e:"None of these",h:"इनमें से कोई नहीं"}],a:0},
+  {qE:"When was Maharashtra state established?",qH:"महाराष्ट्र राज्य की स्थापना कब किया गया?",o:[{e:"1954",h:"1954"},{e:"1965",h:"1965"},{e:"1960",h:"1960"},{e:"1961",h:"1961"}],a:2},
+  {qE:"When was Gujarat state established?",qH:"गुजरात राज्य की स्थापना कब किया गया?",o:[{e:"1960",h:"1960"},{e:"1965",h:"1965"},{e:"1956",h:"1956"},{e:"1961",h:"1961"}],a:0},
+  {qE:"Gujarat is the ___ state of the Indian Union.",qH:"गुजरात भारतीय संघ का राज्य है-",o:[{e:"15th",h:"15वाँ"},{e:"14th",h:"14वाँ"},{e:"16th",h:"16वाँ"},{e:"18th",h:"18वाँ"}],a:0},
+  {qE:"Before independence, Dadra Nagar Haveli was under whose rule?",qH:"दादरा नगर हवेली पर इसके स्वतंत्र होने से पूर्व किसका शासन था?",o:[{e:"British",h:"अंग्रेज"},{e:"Portuguese",h:"पुर्तगाल"},{e:"French",h:"फ्रांस"},{e:"Dutch",h:"हॉलैंड"}],a:1},
+  {qE:"When was Dadra Nagar Haveli merged into the Indian Union?",qH:"दादरा नगर हवेली को भारतीय संघ में कब विलय किया?",o:[{e:"1961",h:"1961"},{e:"1966",h:"1966"},{e:"1970",h:"1970"},{e:"1972",h:"1972"}],a:0},
+  {qE:"By which Amendment was Dadra Nagar Haveli merged into India?",qH:"किस संविधान संशोधन द्वारा दादरा नगर हवेली को भारतीय संघ में विलय कर दिया गया?",o:[{e:"11th",h:"11वाँ"},{e:"12th",h:"12वाँ"},{e:"10th",h:"10वाँ"},{e:"24th",h:"24वाँ"}],a:2},
+  {qE:"When was Goa merged into the Indian territory?",qH:"गोवा को भारतीय क्षेत्र में कब मिलाया गया?",o:[{e:"1961",h:"1961"},{e:"1972",h:"1972"},{e:"1987",h:"1987"},{e:"1960",h:"1960"}],a:0},
+  {qE:"When was Goa established as a Union Territory?",qH:"गोवा को संघ शासित क्षेत्र के रूप में कब स्थापित किया गया?",o:[{e:"1961",h:"1961"},{e:"1963",h:"1963"},{e:"1965",h:"1965"},{e:"1962",h:"1962"}],a:3},
+  {qE:"By which Amendment was Goa recognized as a Union Territory?",qH:"गोवा को किस संविधान संशोधन द्वारा संघ शासित क्षेत्र के रूप में मान्यता दिया गया?",o:[{e:"12th",h:"12वें"},{e:"14th",h:"14वें"},{e:"15th",h:"15वें"},{e:"17th",h:"17वें"}],a:0},
+  {qE:"Daman and Diu were established as a UT by which Amendment?",qH:"दमन एवं दीव को किस संविधान संशोधन द्वारा संघ शासित क्षेत्र के रूप में स्थापित किया गया?",o:[{e:"11th",h:"11वाँ"},{e:"12th",h:"12वें"},{e:"14th",h:"14वें"},{e:"27th",h:"27वें"}],a:1},
+  {qE:"When was Goa given the status of a full state?",qH:"गोवा को पूर्ण राज्य का दर्जा कब दिया गया?",o:[{e:"1987",h:"1987"},{e:"1962",h:"1962"},{e:"1988",h:"1988"},{e:"1961",h:"1961"}],a:0},
+  {qE:"Who ruled Puducherry?",qH:"पुडुचेरी पर किसका शासन था?",o:[{e:"France",h:"फ्रांस"},{e:"Germany",h:"जर्मनी"},{e:"Portugal",h:"पुर्तगाल"},{e:"Dutch",h:"डच"}],a:0},
+  {qE:"When did France hand over Puducherry to India?",qH:"फ्रांस ने पुडुचेरी को कब भारत को सौंप दिया?",o:[{e:"1954",h:"1954"},{e:"1956",h:"1956"},{e:"1958",h:"1958"},{e:"1969",h:"1969"}],a:0},
+  {qE:"When was Puducherry established as a Union Territory?",qH:"पुडुचेरी को संघ शासित प्रदेश के रूप में स्थापित किया गया?",o:[{e:"1962",h:"1962"},{e:"1964",h:"1964"},{e:"1966",h:"1966"},{e:"1967",h:"1967"}],a:0},
+  {qE:"Which State/UT was established by the 14th Amendment?",qH:"14वें संविधान संशोधन द्वारा किस राज्य या केंद्रशासित प्रदेश की स्थापना किया गया?",o:[{e:"Goa",h:"गोवा"},{e:"Daman & Diu",h:"दमन एवं दीव"},{e:"Puducherry",h:"पुडुचेरी"},{e:"Jharkhand",h:"झारखंड"}],a:2},
+  {qE:"Which areas are included in Puducherry?",qH:"पुडुचेरी के क्षेत्र में सम्मिलित है?",o:[{e:"Yanam",h:"यनम"},{e:"Karaikal",h:"कराइकल"},{e:"Mahe",h:"माहे"},{e:"All of these",h:"इनमें से सभी"}],a:3},
+  {qE:"When was Nagaland state established?",qH:"नागालैंड राज्य की स्थापना कब किया गया?",o:[{e:"1963",h:"1963"},{e:"1964",h:"1964"},{e:"1987",h:"1987"},{e:"1966",h:"1966"}],a:0},
+  {qE:"Which was established as the 16th state of India?",qH:"निम्नलिखित में से किसे भारत के 16वें राज्य के रूप में स्थापित किया गया था?",o:[{e:"Goa",h:"गोवा"},{e:"Nagaland",h:"नागालैंड"},{e:"Manipur",h:"मणिपुर"},{e:"Sikkim",h:"सिक्किम"}],a:1},
+  {qE:"When was Haryana separated from Punjab?",qH:"पंजाब से हरियाणा का विभाजन कब किया गया?",o:[{e:"1966",h:"1966"},{e:"1967",h:"1967"},{e:"1968",h:"1968"},{e:"1964",h:"1964"}],a:0},
+  {qE:"When was Chandigarh established as a Union Territory?",qH:"चंडीगढ़ को केंद्रशासित प्रदेश के रूप में कब स्थापित किया गया?",o:[{e:"1967",h:"1967"},{e:"1966",h:"1966"},{e:"1968",h:"1968"},{e:"1965",h:"1965"}],a:1},
+  {qE:"Himachal Pradesh was carved out from which state as a UT?",qH:"हिमाचल प्रदेश का निर्माण संघ शासित प्रदेश के रूप में किस राज्य से विभाजित कर किया गया?",o:[{e:"Punjab",h:"पंजाब"},{e:"Haryana",h:"हरियाणा"},{e:"Uttarakhand",h:"उत्तराखंड"},{e:"Rajasthan",h:"राजस्थान"}],a:0},
+  {qE:"Who was established as the 17th state of India in 1966?",qH:"भारत के 17वें राज्य के रूप में 1966 में किसे स्थापित किया गया?",o:[{e:"Haryana",h:"हरियाणा"},{e:"Punjab",h:"पंजाब"},{e:"Nagaland",h:"नागालैंड"},{e:"Delhi",h:"दिल्ली"}],a:0},
+  {qE:"When was Himachal Pradesh given full statehood?",qH:"हिमाचल प्रदेश को पूर्ण राज्य का दर्जा कब दिया गया?",o:[{e:"1988",h:"1988"},{e:"1987",h:"1987"},{e:"1986",h:"1986"},{e:"1971",h:"1971"}],a:3},
+  {qE:"Who was established as the 18th state of the Indian Union?",qH:"भारतीय संघ के 18वां राज्य के रूप में किसे स्थापित किया गया?",o:[{e:"Meghalaya",h:"मेघालय"},{e:"Himachal Pradesh",h:"हिमाचल प्रदेश"},{e:"Jharkhand",h:"झारखंड"},{e:"Mizoram",h:"मिजोरम"}],a:1},
+  {qE:"NEFA (North-East Frontier Agency) is known as?",qH:"NEFA अर्थात पूर्वोत्तर सीमांत राज्य के रूप में किसे जाना जाता है?",o:[{e:"Mizoram",h:"मिजोरम"},{e:"Arunachal Pradesh",h:"अरुणाचल प्रदेश"},{e:"Manipur",h:"मणिपुर"},{e:"a and b",h:"a और b"}],a:0},
+  {qE:"Manipur is which state of India?",qH:"मणिपुर भारत का राज्य है-",o:[{e:"21st",h:"21वाँ"},{e:"28th",h:"28वाँ"},{e:"19th",h:"19वाँ"},{e:"26th",h:"26वाँ"}],a:2},
+  {qE:"When was Meghalaya given full statehood?",qH:"मेघालय को पूर्ण राज्य का दर्जा कब दिया गया?",o:[{e:"1972",h:"1972"},{e:"1978",h:"1978"},{e:"1973",h:"1973"},{e:"1966",h:"1966"}],a:0},
+  {qE:"Meghalaya is which state of India?",qH:"मेघालय भारत का राज्य है-",o:[{e:"21st",h:"21वाँ"},{e:"19th",h:"19वाँ"},{e:"18th",h:"18वाँ"},{e:"20th",h:"20वाँ"}],a:0},
+  {qE:"When was Manipur state established?",qH:"मणिपुर राज्य की स्थापना कब किया गया?",o:[{e:"1987",h:"1987"},{e:"1966",h:"1966"},{e:"1987",h:"1987"},{e:"1972",h:"1972"}],a:3},
+  {qE:"When was Tripura state established?",qH:"त्रिपुरा राज्य की स्थापना कब हुई?",o:[{e:"1972",h:"1972"},{e:"1987",h:"1987"},{e:"1964",h:"1964"},{e:"1968",h:"1968"}],a:0},
+  {qE:"Tripura was established as which state of India?",qH:"त्रिपुरा राज्य की स्थापना भारत के किस राज्य के रूप में किया गया?",o:[{e:"20th",h:"20वाँ"},{e:"21st",h:"21वाँ"},{e:"22nd",h:"22वाँ"},{e:"26th",h:"26वाँ"}],a:0},
+  {qE:"By which Amendment was Meghalaya established as an autonomous state?",qH:"किस संविधान संशोधन द्वारा मेघालय को स्वायत्तशासी राज्य के रूप में स्थापित किया गया?",o:[{e:"22nd",h:"22वें"},{e:"23rd",h:"23वें"},{e:"26th",h:"26वें"},{e:"18th",h:"18वें"}],a:0},
+  {qE:"Which state was associated with India by the 35th Amendment?",qH:"निम्नलिखित में से किस राज्य का विलय भारत में 35वाँ संविधान संशोधन द्वारा किया गया?",o:[{e:"Goa",h:"गोवा"},{e:"Sikkim",h:"सिक्किम"},{e:"Mizoram",h:"मिजोरम"},{e:"Manipur",h:"मणिपुर"}],a:1},
+  {qE:"By which Amendment was Sikkim given full statehood?",qH:"सिक्किम को किस संविधान संशोधन द्वारा पूर्ण राज्य का दर्जा दिया गया?",o:[{e:"46th",h:"46वें"},{e:"37th",h:"37वें"},{e:"31st",h:"31वें"},{e:"36th",h:"36वें"}],a:3},
+  {qE:"When was Sikkim merged into India?",qH:"सिक्किम को भारत में कब विलय किया गया?",o:[{e:"1974",h:"1974"},{e:"1976",h:"1976"},{e:"1975",h:"1975"},{e:"1978",h:"1978"}],a:2},
+  {qE:"When was Mizoram established as the 23rd state?",qH:"मिजोरम राज्य की स्थापना 23वें राज्य के रूप में कब किया गया?",o:[{e:"1987",h:"1987"},{e:"1986",h:"1986"},{e:"1988",h:"1988"},{e:"1989",h:"1989"}],a:0},
+  {qE:"Arunachal Pradesh was formed as which state in 1987?",qH:"अरुणाचल प्रदेश की स्थापना 1987 में किस राज्य के रूप में हुआ है?",o:[{e:"22nd",h:"22वें"},{e:"25th",h:"25वें"},{e:"24th",h:"24वें"},{e:"21st",h:"21वें"}],a:2},
+  {qE:"When was Goa given full statehood?",qH:"गोवा को पूर्ण राज्य का दर्जा कब दिया गया?",o:[{e:"1986",h:"1986"},{e:"1987",h:"1987"},{e:"1989",h:"1989"},{e:"1988",h:"1988"}],a:1},
+  {qE:"Goa was established as which state of India?",qH:"गोवा भारत का किस राज्य के रूप में स्थापित हुआ है?",o:[{e:"26th",h:"26वें"},{e:"27th",h:"27वें"},{e:"25th",h:"25वें"},{e:"21st",h:"21वें"}],a:2},
+  {qE:"Who was established as the 26th state?",qH:"26वें राज्य के रूप में किसे स्थापित किया गया?",o:[{e:"Goa",h:"गोवा"},{e:"Jharkhand",h:"झारखंड"},{e:"Chhattisgarh",h:"छत्तीसगढ़"},{e:"Uttarakhand",h:"उत्तराखंड"}],a:2},
+  {qE:"When was Chhattisgarh established?",qH:"छत्तीसगढ़ राज्य की स्थापना कब किया गया?",o:[{e:"15 Nov 2000",h:"15 नवंबर 2000"},{e:"1 Nov 2000",h:"1 नवंबर 2000"},{e:"14 Nov 2000",h:"14 नवंबर 2000"},{e:"9 Nov 2000",h:"9 नवंबर 2000"}],a:1},
+  {qE:"When was Uttarakhand established?",qH:"उत्तराखंड राज्य की स्थापना कब किया गया?",o:[{e:"15 Nov 2000",h:"15 नवंबर 2000"},{e:"9 Nov 2000",h:"9 नवंबर 2000"},{e:"1 Nov 2000",h:"1 नवंबर 2000"},{e:"14 Nov 2000",h:"14 नवंबर 2000"}],a:1},
+  {qE:"Who was established as the 27th state of India?",qH:"भारत के 27वें राज्य के रूप में किसे स्थापित किया गया?",o:[{e:"Uttarakhand",h:"उत्तराखंड"},{e:"Jharkhand",h:"झारखंड"},{e:"Goa",h:"गोवा"},{e:"Chhattisgarh",h:"छत्तीसगढ़"}],a:0},
+  {qE:"When was Jharkhand established?",qH:"झारखंड राज्य की स्थापना कब हुई है?",o:[{e:"15 Nov 2000",h:"15 नवंबर 2000"},{e:"15 Nov 2001",h:"15 नवंबर 2001"},{e:"15 Nov 1999",h:"15 नवंबर 1999"},{e:"15 Nov 2002",h:"15 नवंबर 2002"}],a:0},
+  {qE:"Who was established as the 28th state of India?",qH:"भारत में 28वें राज्य के रूप में किस राज्य को स्थापित किया गया?",o:[{e:"Jharkhand",h:"झारखंड"},{e:"Goa",h:"गोवा"},{e:"Chhattisgarh",h:"छत्तीसगढ़"},{e:"Uttarakhand",h:"उत्तराखंड"}],a:0},
+  {qE:"When was Telangana established?",qH:"तेलंगना राज्य की स्थापना कब किया गया?",o:[{e:"2014",h:"2014"},{e:"2015",h:"2015"},{e:"2016",h:"2016"},{e:"2018",h:"2018"}],a:0},
+  {qE:"Who was established as the 29th state?",qH:"29वें राज्य के रूप में किसे स्थापित किया गया था?",o:[{e:"Telangana",h:"तेलंगना"},{e:"Goa",h:"गोवा"},{e:"Chhattisgarh",h:"छत्तीसगढ़"},{e:"Mizoram",h:"मिजोरम"}],a:0},
+  {qE:"When was the first state formed on a linguistic basis?",qH:"भाषा के आधार पर पहले राज्य का निर्माण कब हुआ?",o:[{e:"1954",h:"1954"},{e:"1955",h:"1955"},{e:"1953",h:"1953"},{e:"1966",h:"1966"}],a:2},
+  {qE:"Which was the first state formed on linguistic basis?",qH:"सर्वप्रथम भाषायी आधार पर गठित राज्य कौन था?",o:[{e:"Bengal",h:"बंगाल"},{e:"Bihar",h:"बिहार"},{e:"Andhra Pradesh",h:"आंध्रप्रदेश"},{e:"Sikkim",h:"सिक्किम"}],a:2},
+  {qE:"When was Ladakh established as a Union Territory?",qH:"लद्दाख की स्थापना संघ शासित प्रदेश के रूप में कब किया गया?",o:[{e:"2020",h:"2020"},{e:"2014",h:"2014"},{e:"2019",h:"2019"},{e:"2017",h:"2017"}],a:2},
+  {qE:"Which was the first state of India to have its name changed?",qH:"भारत का पहला राज्य जिसका नाम परिवर्तित किया गया?",o:[{e:"United Provinces",h:"संयुक्त प्रांत"},{e:"Uttar Pradesh",h:"उत्तरप्रदेश"},{e:"Mysore",h:"मैसूर"},{e:"Madras",h:"मद्रास"}],a:0},
+  {qE:"Which state was formerly named United Provinces?",qH:"निम्नलिखित में किस राज्य का पूर्ववर्ती नाम संयुक्त प्रांत था?",o:[{e:"Madhya Pradesh",h:"मध्यप्रदेश"},{e:"Uttar Pradesh",h:"उत्तरप्रदेश"},{e:"Karnataka",h:"कर्नाटक"},{e:"Rajasthan",h:"राजस्थान"}],a:1},
+  {qE:"When was United Provinces renamed as Uttar Pradesh?",qH:"संयुक्त प्रांत का नाम उत्तरप्रदेश कब किया गया?",o:[{e:"1952",h:"1952"},{e:"1966",h:"1966"},{e:"1950",h:"1950"},{e:"1977",h:"1977"}],a:2},
+  {qE:"Which state was formerly known as Madras?",qH:"किस राज्य का पूर्व में नाम मद्रास था?",o:[{e:"Goa",h:"गोवा"},{e:"Tamil Nadu",h:"तमिलनाडु"},{e:"Karnataka",h:"कर्नाटक"},{e:"Madhya Pradesh",h:"मध्यप्रदेश"}],a:1},
+  {qE:"When was Madras renamed as Tamil Nadu?",qH:"मद्रास राज्य का नाम तमिलनाडु कब किया गया?",o:[{e:"1967",h:"1967"},{e:"1969",h:"1969"},{e:"1973",h:"1973"},{e:"1950",h:"1950"}],a:1},
+  {qE:"Which state was formerly known as Mysore?",qH:"निम्नलिखित में से किस राज्य का पूर्ववर्ती नाम मैसूर था?",o:[{e:"Karnataka",h:"कर्नाटक"},{e:"Tamil Nadu",h:"तमिलनाडु"},{e:"Madhya Pradesh",h:"मध्यप्रदेश"},{e:"Telangana",h:"तेलंगना"}],a:0},
+  {qE:"When was Mysore renamed as Karnataka?",qH:"मैसूर का नाम बदलकर कर्नाटक कब कर दिया?",o:[{e:"1969",h:"1969"},{e:"1973",h:"1973"},{e:"1974",h:"1974"},{e:"1976",h:"1976"}],a:1},
+  {qE:"In which year were Laccadive, Minicoy and Amindivi renamed 'Lakshadweep'?",qH:"किस वर्ष लकादीव, मिनिकॉय एवं अमीनदीवी का नाम 'लक्ष्यद्वीप' रखा गया?",o:[{e:"1992",h:"1992"},{e:"1974",h:"1974"},{e:"1976",h:"1976"},{e:"1973",h:"1973"}],a:3},
+  {qE:"When was UT Delhi renamed as National Capital Territory of Delhi?",qH:"संघ शासित प्रदेश दिल्ली का नाम राष्ट्रीय राजधानी क्षेत्र दिल्ली कब किया गया?",o:[{e:"1992",h:"1992"},{e:"1996",h:"1996"},{e:"1997",h:"1997"},{e:"1992",h:"1992"}],a:0},
+  {qE:"69th Constitutional Amendment is related to?",qH:"69वें संविधान संशोधन संबंधित है?",o:[{e:"Change in Delhi's name",h:"दिल्ली के नाम में परिवर्तन से"},{e:"Voting age 21 to 18",h:"मताधिकार की आयु 21 से 18 करने से"},{e:"Establishment of Goa",h:"गोवा राज्य की स्थापना से"},{e:"None of these",h:"इनमें से कोई नहीं"}],a:0},
+  {qE:"Which state had its name changed in 2006?",qH:"वर्ष 2006 में किस राज्य के नाम में परिवर्तन किया गया?",o:[{e:"Odisha",h:"ओडिसा"},{e:"Uttaranchal",h:"उत्तरांचल"},{e:"Puducherry",h:"पुडुचेरी"},{e:"b and c",h:"b और c"}],a:3},
+  {qE:"Which state had its name changed in 2011?",qH:"वर्ष 2011 में किस राज्य के नाम में परिवर्तन किया गया?",o:[{e:"Orissa",h:"उड़ीसा"},{e:"Pondicherry",h:"पांडिचेरी"},{e:"Uttaranchal",h:"उत्तरांचल"},{e:"All of these",h:"इनमें से सभी"}],a:0}
+];
+
+/* --- LOGIC --- */
+let qList = [], idx = 0, score = 0, timerVal = 0, timerInt = null, active = false;
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+function startQuiz() {
+    timerVal = parseInt(document.getElementById('timer-input').value) || 0;
+    qList = [...db];
+    if(document.getElementById('shuffle-toggle').checked) qList.sort(()=>Math.random()-0.5);
+    
+    score = 0; idx = 0; active = true;
+    document.getElementById('start-screen').classList.remove('active');
+    document.getElementById('quiz-screen').classList.add('active');
+    loadQ();
+}
+
+function loadQ() {
+    if(idx >= qList.length) return endQuiz();
+    const q = qList[idx];
+    
+    document.getElementById('q-counter').innerText = `Q ${idx+1}/${qList.length}`;
+    document.getElementById('score-display').innerText = `Score: ${score}`;
+    document.getElementById('progress-bar').style.width = `${((idx)/qList.length)*100}%`;
+    
+    document.getElementById('question-container').innerHTML = `
+        <div class="question-card">
+            <div class="q-text-en">${q.qE}</div>
+            <div class="q-text-hi">${q.qH}</div>
+        </div>
+        <div class="options-grid">
+            ${q.o.map((opt, i) => `
+                <button class="option-btn" onclick="check(this, ${i}, ${q.a})">
+                    <span class="opt-en">${"ABCD"[i]}. ${opt.e}</span>
+                    <span class="opt-hi">${opt.h}</span>
+                </button>
+            `).join('')}
+        </div>
+    `;
+    runTimer();
+}
+
+function runTimer() {
+    clearInterval(timerInt);
+    const disp = document.getElementById('timer-display');
+    if(timerVal <= 0) { disp.style.display = 'none'; return; }
+    
+    disp.style.display = 'block';
+    let t = timerVal;
+    disp.innerText = t;
+    disp.classList.remove('timer-pulse');
+    
+    timerInt = setInterval(() => {
+        t--;
+        disp.innerText = t;
+        if(t < 5) disp.classList.add('timer-pulse');
+        if(t <= 0) { clearInterval(timerInt); tone('buzz'); timeOut(); }
+    }, 1000);
+}
+
+function check(btn, i, ans) {
+    if(!active) return;
+    clearInterval(timerInt);
+    active = false; // block clicks
+    
+    const btns = document.querySelectorAll('.option-btn');
+    btns.forEach(b => b.style.pointerEvents = 'none'); // disable all
+
+    if(i === ans) {
+        btn.classList.add('correct');
+        score++;
+        tone('ting');
+        confetti();
+    } else {
+        btn.classList.add('wrong');
+        btns[ans].classList.add('correct');
+        tone('buzz');
+        sadEmoji();
+    }
+    
+    setTimeout(() => {
+        active = true;
+        idx++;
+        loadQ();
+    }, 1500);
+}
+
+function timeOut() {
+    active = false;
+    const btns = document.querySelectorAll('.option-btn');
+    const q = qList[idx];
+    btns[q.a].classList.add('correct'); // show answer
+    setTimeout(() => { active=true; idx++; loadQ(); }, 1500);
+}
+
+function endQuiz() {
+    active = false; clearInterval(timerInt);
+    document.getElementById('quiz-screen').classList.remove('active');
+    document.getElementById('result-screen').classList.add('active');
+    
+    document.getElementById('final-score').innerText = score;
+    document.getElementById('final-total').innerText = `/ ${qList.length}`;
+    
+    const pct = (score/qList.length)*100;
+    const msg = document.getElementById('result-message');
+    if(pct >= 80) { msg.innerText = "🏆 Outstanding!"; msg.style.color="#00e676"; confetti(); }
+    else if(pct >= 50) { msg.innerText = "👏 Well Done!"; msg.style.color="#ffd700"; }
+    else { msg.innerText = "📚 Keep Practicing!"; msg.style.color="#ff4444"; }
+}
+
+function tone(type) {
+    if(audioCtx.state === 'suspended') audioCtx.resume();
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    o.connect(g); g.connect(audioCtx.destination);
+    
+    if(type==='ting') {
+        o.type='sine'; o.frequency.setValueAtTime(800, audioCtx.currentTime);
+        o.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime+0.1);
+        g.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime+0.5);
+        o.start(); o.stop(audioCtx.currentTime+0.5);
+    } else {
+        o.type='sawtooth'; o.frequency.setValueAtTime(150, audioCtx.currentTime);
+        o.frequency.linearRampToValueAtTime(100, audioCtx.currentTime+0.3);
+        g.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        g.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime+0.3);
+        o.start(); o.stop(audioCtx.currentTime+0.3);
+    }
+}
+
+function sadEmoji() {
+    const e = document.getElementById('sad-emoji');
+    e.style.display = 'block'; e.classList.add('shake');
+    setTimeout(() => { e.style.display = 'none'; e.classList.remove('shake'); }, 1000);
+}
+
+function confetti() {
+    const c = document.getElementById('confetti-canvas');
+    const x = c.getContext('2d');
+    c.width = window.innerWidth; c.height = window.innerHeight;
+    
+    let p = [];
+    for(let i=0; i<100; i++) p.push({
+        x: Math.random()*c.width, y: Math.random()*c.height-c.height,
+        color: `hsl(${Math.random()*360},100%,50%)`,
+        size: Math.random()*5+2, sy: Math.random()*4+2, sx: Math.random()*2-1
+    });
+    
+    function draw() {
+        x.clearRect(0,0,c.width,c.height);
+        let a = false;
+        p.forEach(k => {
+            k.y += k.sy; k.x += k.sx;
+            x.fillStyle = k.color; x.fillRect(k.x, k.y, k.size, k.size);
+            if(k.y < c.height) a = true;
+        });
+        if(a) requestAnimationFrame(draw);
+    }
+    draw();
+}
+</script>
+</body>
+</html>

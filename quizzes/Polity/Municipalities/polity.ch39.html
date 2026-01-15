@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chapter 39: Municipalities Quiz</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --glass: rgba(255, 255, 255, 0.1);
+            --border: rgba(255, 255, 255, 0.2);
+            --correct: #2ecc71;
+            --wrong: #e74c3c;
+            --accent: #f39c12;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+            background-size: 400% 400%;
+            animation: meshGradient 20s ease infinite;
+            display: flex; justify-content: center; align-items: center;
+            color: white; padding: 12px;
+        }
+
+        @keyframes meshGradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .glass-card {
+            width: 100%; max-width: 650px;
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1.5px solid var(--border);
+            border-radius: 30px;
+            padding: 25px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.4);
+            position: relative; overflow: hidden;
+        }
+
+        #progress-glow {
+            position: absolute; top: 0; left: 0; height: 5px;
+            background: linear-gradient(90deg, #00f2fe, #4facfe);
+            box-shadow: 0 0 15px #4facfe;
+            width: 0%; transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .meta { display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 20px; font-weight: 300; }
+        
+        h1 { font-size: 1.6rem; text-align: center; margin-bottom: 5px; letter-spacing: 1px; }
+        .sub-heading { text-align: center; opacity: 0.8; font-size: 0.9rem; margin-bottom: 25px; }
+
+        .config-box { background: rgba(0,0,0,0.25); padding: 20px; border-radius: 20px; margin-bottom: 20px; }
+        .config-box label { display: block; margin-bottom: 10px; font-size: 0.85rem; color: #ddd; }
+        
+        input[type="number"], .toggle-ui {
+            width: 100%; padding: 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.2);
+            background: rgba(255,255,255,0.1); color: white; outline: none; transition: 0.3s;
+        }
+
+        .btn-main {
+            width: 100%; padding: 16px; border: none; border-radius: 15px;
+            background: white; color: #1a2a6c; font-weight: 600; cursor: pointer;
+            transition: 0.3s transform; margin-top: 10px; font-size: 1rem;
+        }
+        .btn-main:hover { transform: scale(1.03); }
+
+        .option-btn {
+            width: 100%; padding: 14px 20px; border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 15px; background: rgba(255,255,255,0.1); color: white;
+            text-align: left; margin-bottom: 12px; cursor: pointer; transition: 0.2s;
+            display: flex; flex-direction: column;
+        }
+        .option-btn .hi { font-size: 0.85rem; color: #ddd; margin-top: 3px; font-weight: 300; }
+        .option-btn:hover:not(:disabled) { background: rgba(255,255,255,0.2); border-color: white; }
+
+        .question-area { margin-bottom: 25px; }
+        .q-txt { font-weight: 600; font-size: 1.1rem; line-height: 1.5; }
+        .q-txt .hi { display: block; font-weight: 400; color: #ddd; margin-top: 8px; font-size: 1rem; }
+
+        #timer-display.danger { color: #ff4d4d; animation: pulseRed 0.8s infinite; }
+        @keyframes pulseRed { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+
+        #sad-emoji {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 120px; display: none; z-index: 10000;
+        }
+        .shake-anim { animation: shake 0.5s ease-in-out; }
+        @keyframes shake { 0%, 100% { transform: translate(-50%, -50%); } 20%, 60% { transform: translate(-55%, -50%); } 40%, 80% { transform: translate(-45%, -50%); } }
+
+        .hidden { display: none; }
+        .scrollable-options { max-height: 55vh; overflow-y: auto; padding-right: 8px; }
+        .scrollable-options::-webkit-scrollbar { width: 5px; }
+        .scrollable-options::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.3); border-radius: 10px; }
+    </style>
+</head>
+<body>
+
+    <div id="sad-emoji">😢</div>
+
+    <div class="glass-card">
+        <div id="progress-glow"></div>
+
+        <div id="home">
+            <h1>Chapter - 39</h1>
+            <p class="sub-heading">Municipalities (नगर निगम)</p>
+            
+            <div class="config-box">
+                <label>Question Timer (Seconds) [0 = No Timer]:</label>
+                <input type="number" id="user-time" value="30" min="0">
+                <div style="margin-top: 20px; display: flex; align-items: center; gap: 10px;">
+                    <input type="checkbox" id="shuffle" style="width:18px; height:18px;">
+                    <label style="margin:0;">Shuffle Question Order</label>
+                </div>
+            </div>
+
+            <button class="btn-main" onclick="initQuiz()">Start Quiz / शुरू करें</button>
+        </div>
+
+        <div id="quiz-ui" class="hidden">
+            <div class="meta">
+                <span id="q-idx">Question 00/00</span>
+                <span id="timer-display">⏱ 00s</span>
+                <span id="score-val">Score: 0</span>
+            </div>
+            <div class="question-area">
+                <p class="q-txt" id="q-content"></p>
+            </div>
+            <div class="scrollable-options" id="opt-container"></div>
+            
+            <button class="btn-main" style="background:transparent; color:white; border:1px solid #fff; margin-top:30px;" onclick="finishQuiz()">Finish & Show Results</button>
+        </div>
+
+        <div id="results" class="hidden">
+            <h1 id="status-msg"></h1>
+            <div style="text-align: center; margin: 30px 0;">
+                <p style="font-size: 0.9rem; opacity: 0.8;">Your Final Score</p>
+                <h2 id="final-stats" style="font-size: 3.5rem;">0 / 0</h2>
+            </div>
+            <button class="btn-main" onclick="location.reload()">Restart Quiz / पुनः प्रयास</button>
+        </div>
+    </div>
+
+<script>
+    const db = [
+        { en: "In India, 'Urban Local Government' means-", hi: "भारत में 'शहरी स्थानीय शासन' का अर्थ है-", options: [{en: "Urban Local Self-Governance", hi: "नगरीय स्थानीय स्वशासन से", c: true}, {en: "Rural Local Self-Governance", hi: "ग्रामीण स्थानीय स्वशासन से", c: false}, {en: "Parliamentary Governance", hi: "संसदीय शासन से", c: false}, {en: "Presidential Governance", hi: "अध्याक्षात्मक शासन से", c: false}]},
+        { en: "How many types of urban local governments are there in India?", hi: "भारत में कितने प्रकार के शहरी स्थानीय शासन है-", options: [{en: "8", hi: "8", c: true}, {en: "6", hi: "6", c: false}, {en: "7", hi: "7", c: false}, {en: "12", hi: "12", c: false}]},
+        { en: "By which Constitutional Amendment was constitutional status granted to the urban governance system?", hi: "किस संविधान संशोधन द्वारा नगरीय शासन प्रणाली को संवैधानिक दर्जा प्रदान किया गया ?", options: [{en: "73rd", hi: "73वें", c: false}, {en: "74th", hi: "74वें", c: true}, {en: "76th", hi: "76वें", c: false}, {en: "72nd", hi: "72वें", c: false}]},
+        { en: "At the central level, the subject of 'Urban Local Government' is related to how many ministries?", hi: "केंद्र स्तर पर 'नगरीय स्थानीय शासन' का विषय कितने मंत्रालयों से संबंधित है ?", options: [{en: "Ministry of Housing and Urban Affairs", hi: "आवास और शहरी मामलों के मंत्रालय", c: false}, {en: "Ministry of Defence", hi: "रक्षा मंत्रालय", c: false}, {en: "Ministry of Home Affairs", hi: "गृह मंत्रालय", c: false}, {en: "All of the above", hi: "उपर्युक्त में सभी।", c: true}]},
+        { en: "When was India's first Municipal Corporation established?", hi: "भारत का पहला नगर निगम कब स्थापित किया गया ?", options: [{en: "1688", hi: "1688", c: true}, {en: "1664", hi: "1664", c: false}, {en: "1667", hi: "1667", c: false}, {en: "1668", hi: "1668", c: false}]},
+        { en: "Where was India's first Municipal Corporation established?", hi: "भारत का पहला नगर निगम कहाँ स्थापित किया गया ?", options: [{en: "Bombay", hi: "बंबई", c: false}, {en: "Madras", hi: "मद्रास", c: true}, {en: "Calcutta", hi: "कलकत्ता", c: false}, {en: "Indore", hi: "इंदौर", c: false}]},
+        { en: "When was the Municipal Corporation established in Bombay?", hi: "बंबई में नगर निगम की स्थापना कब किया गया ?", options: [{en: "1726", hi: "1726", c: true}, {en: "1725", hi: "1725", c: false}, {en: "1887", hi: "1887", c: false}, {en: "1722", hi: "1722", c: false}]},
+        { en: "When was the Municipal Corporation established in Calcutta?", hi: "कलकत्ता में नगर निगम की स्थापना कब किया गया ?", options: [{en: "1725", hi: "1725", c: false}, {en: "1726", hi: "1726", c: true}, {en: "1887", hi: "1887", c: false}, {en: "1722", hi: "1722", c: false}]},
+        { en: "In which year was the resolution of financial decentralization reflected in the development of local self-government institutions?", hi: "निम्नलिखित में से किस वर्ष का वित्तीय विकेंद्रीकरण का संकल्प स्थानीय स्वशासन की संस्थाओं के विकास में परिलक्षित हुआ ?", options: [{en: "1875", hi: "1875", c: false}, {en: "1870", hi: "1870", c: true}, {en: "1874", hi: "1874", c: false}, {en: "1875", hi: "1875", c: false}]},
+        { en: "Who is known as the father of local self-government in India?", hi: "भारत में स्थानीय स्वशासन का पिता किसे कहा जाता है ?", options: [{en: "Lord Ripon", hi: "लॉर्ड रिपन", c: true}, {en: "Lord Lytton", hi: "लॉर्ड लिटन", c: false}, {en: "Lord Mayo", hi: "लॉर्ड मेयो", c: false}, {en: "Lord Cornwallis", hi: "लॉर्ड कार्नवालिस", c: false}]},
+        { en: "In 1907, the Royal Commission on Decentralization was appointed; who was the chairman of this commission?", hi: "1907 में स्थानीय स्वशासन पर रॉयल कमीशन ऑन डीसेन्ट्रलाइजेशन की नियुक्ति हुई, इस आयोग के अध्यक्ष थे ?", options: [{en: "Benjamin Brooke", hi: "बेंजामिन ब्रुक", c: false}, {en: "Little Grant", hi: "लिटिल ग्रांट", c: false}, {en: "William Ward", hi: "विलियम वार्ड", c: false}, {en: "Hobhouse", hi: "हॉब हाउस", c: true}]},
+        { en: "Which Constitutional Amendment Bill was passed in the Lok Sabha to provide constitutional recognition to Municipalities for the first time?", hi: "भारत में नगरपालिका को सर्वप्रथम संवैधानिक मान्यता प्रदान करने के लिये कौन-सा संविधान संशोधन विधेयक लोकसभा में पारित हुआ ?", options: [{en: "65th", hi: "65वां", c: true}, {en: "54th", hi: "54वां", c: false}, {en: "66th", hi: "66वां", c: false}, {en: "67th", hi: "67वां", c: false}]},
+        { en: "When did the 74th Constitutional Amendment Act become effective?", hi: "74वें संविधान संशोधन अधिनियम कब से प्रभावी हुआ ?", options: [{en: "1 June 1993", hi: "1 जून 1993", c: true}, {en: "1 June 1994", hi: "1 जून 1994", c: false}, {en: "24 April 1993", hi: "24 अप्रैल 1993", c: false}, {en: "22 March 1993", hi: "22 मार्च 1993", c: false}]},
+        { en: "In which part of the Constitution are provisions related to urban self-government contained?", hi: "संविधान के किस भाग में नगरीय स्वशासन से संबंधित प्रावधान अंतर्निहित है ?", options: [{en: "9A", hi: "9A", c: true}, {en: "9", hi: "9", c: false}, {en: "10", hi: "10", c: false}, {en: "12", hi: "12", c: false}]},
+        { en: "Match the following: (A) Village Urban Area (B) Small Urban Area (C) Large Urban Area", hi: "मिलान करें: (A) गाँव की शहरी क्षेत्र (B) छोटे शहरी क्षेत्र (C) बड़े शहरी क्षेत्र", options: [{en: "3, 1, 2", hi: "3, 1, 2", c: true}, {en: "1, 2, 3", hi: "1, 2, 3", c: false}, {en: "2, 1, 3", hi: "2, 1, 3", c: false}, {en: "3, 2, 1", hi: "3, 2, 1", c: false}]},
+        { en: "The A.P. Jain Committee is related to:", hi: "एपी जैन समिति का संबंध है-", options: [{en: "Rural-Urban Relationship Committee", hi: "ग्रामीण नगरीय संबंध समिति", c: true}, {en: "National Commission on Urbanization", hi: "नगरीयकरण पर राष्ट्रीय आयोग", c: false}, {en: "Local Finance Enquiry Committee", hi: "स्थानीय वित्तीय जांच समिति", c: false}, {en: "Budgetary Reforms in Urban Admin", hi: "नगर प्रशासन में बजटीय सुधार", c: false}]},
+        { en: "The C.N. Kuriya Committee is related to:", hi: "सी. एन. कुरिया समिति संबंधित है ?", options: [{en: "Budgetary Reforms in Urban Admin", hi: "नगर प्रशासन में बजटीय सुधार", c: true}, {en: "National Commission on Urbanization", hi: "नगरीयकरण पर राष्ट्रीय आयोग", c: false}, {en: "Rural-Urban Relationship Committee", hi: "ग्रामीण नगरीय संबंध समिति", c: false}, {en: "Local Finance Enquiry Committee", hi: "स्थानीय वित्तीय जांच समिति", c: false}]},
+        { en: "On what basis can the Governor specify a transitional area, small urban area or large urban area?", hi: "राज्यपाल किस आधार पर किसी क्षेत्र को संक्रमण क्षेत्र, लघु शहरी क्षेत्र अथवा वृहत शहरी क्षेत्र विनिर्दिष्ट कर सकते हैं ?", options: [{en: "Population of the area", hi: "क्षेत्र की जनसंख्या", c: false}, {en: "Economic importance", hi: "आर्थिक महत्व", c: false}, {en: "Population density", hi: "जनसंख्या घनत्व", c: false}, {en: "All of the above", hi: "उपर्युक्त में सभी।", c: true}]},
+        { en: "What kind of qualified representatives are provided for in the Municipality?", hi: "नगरपालिका में निम्नलिखित में से किस प्रकार के योग्यता धारण करने वाले व्यक्तियों के लिये प्रतिनिधित्व की व्यवस्था की गई है ?", options: [{en: "Person with special knowledge of administration", hi: "वह व्यक्ति जिसे नगरपालिका के प्रशासन का विशेष ज्ञान हो।", c: false}, {en: "Members of Lok Sabha or State Assembly representing the area", hi: "निर्वाचन क्षेत्रों का प्रतिनिधित्व करने वाले लोकसभा या राज्य विधानसभा का सदस्य", c: false}, {en: "Members of Rajya Sabha and Legislative Council registered as voters", hi: "राज्यसभा और राज्य विधानपरिषद के सदस्य जो नगरपालिका क्षेत्र में मतदाता के रूप में पंजीकृत हों।", c: false}, {en: "All of the above", hi: "उपर्युक्त में सभी।", c: true}]},
+        { en: "What are the essential conditions for Ward Committees?", hi: "वार्ड समितियों के लिये आवश्यक शर्तें हैं-", options: [{en: "Population of three lakh or more", hi: "तीन लाख या अधिक जनसंख्या होना चाहिये।", c: true}, {en: "Population of four lakh or more", hi: "चार लाख या अधिक जनसंख्या होना चाहिये।", c: false}, {en: "Population of five lakh or more", hi: "पांच लाख या अधिक जनसंख्या होना चाहिये।", c: false}, {en: "Population of ten lakh or more", hi: "दस लाख या अधिक जनसंख्या होना चाहिये।", c: false}]},
+        { en: "The tenure of a Municipality is:", hi: "नगरपालिका का कार्यकाल होता है-", options: [{en: "6 years", hi: "6 वर्ष", c: false}, {en: "5 years", hi: "5 वर्ष", c: true}, {en: "7 years", hi: "7 वर्ष", c: false}, {en: "8 years", hi: "8 वर्ष", c: false}]},
+        { en: "In case of dissolution of Municipality, within how many months is it mandatory to hold elections?", hi: "नगरपालिका को विघटित होने के दशा में कितने महीने की अवधि के अंदर चुनाव कराना आवश्यक है ?", options: [{en: "7 months", hi: "7 महीने", c: false}, {en: "6 months", hi: "6 महीने", c: true}, {en: "8 months", hi: "8 महीने", c: false}, {en: "12 months", hi: "12 महीने", c: false}]},
+        { en: "What is the minimum age prescribed for a person to contest Municipality elections?", hi: "नगरपालिका चुनाव में कोई व्यक्ति के चुनाव लड़ने के लिये न्यूनतम आयु निर्धारित है ?", options: [{en: "25 years", hi: "25 वर्ष", c: false}, {en: "21 years", hi: "21 वर्ष", c: true}, {en: "20 years", hi: "20 वर्ष", c: false}, {en: "18 years", hi: "18 वर्ष", c: false}]},
+        { en: "Who is responsible for conducting the election of the Municipality?", hi: "नगरपालिका का निर्वाचन का संचालन करने हेतु जिम्मेदार है-", options: [{en: "Election Commission of India", hi: "भारत निर्वाचन आयोग", c: false}, {en: "High Court", hi: "हाईकोर्ट", c: false}, {en: "State Election Commission", hi: "राज्य निर्वाचन आयोग", c: true}, {en: "All of the above", hi: "उपर्युक्त में सभी।", c: false}]},
+        { en: "The 12th Schedule is related to:", hi: "12वीं अनुसूची संबंधित है-", options: [{en: "Municipality", hi: "नगरपालिका से", c: true}, {en: "Panchayati Raj", hi: "पंचायती राज से", c: false}, {en: "Scheduled Tribe Area", hi: "अनुसूचित जनजाति क्षेत्र से", c: false}, {en: "Allocation of seats in Rajya Sabha", hi: "राज्यसभा में सीटों के आवंटन से।", c: false}]},
+        { en: "The State Finance Commission is constituted:", hi: "राज्य वित्त आयोग का गठन किया जाता है-", options: [{en: "Every 6 years", hi: "प्रत्येक 6 वर्ष पर", c: false}, {en: "Every 5 years", hi: "प्रत्येक 5 वर्ष पर", c: true}, {en: "Every 2 years", hi: "प्रत्येक 2 वर्ष पर", c: false}, {en: "Every 7 years", hi: "प्रत्येक 7 वर्ष पर", c: false}]},
+        { en: "To whom does the State Finance Commission submit its report?", hi: "राज्य वित्त आयोग अपनी रिपोर्ट किसे सौंपता है ?", options: [{en: "Governor", hi: "राज्यपाल", c: true}, {en: "State Legislative Assembly", hi: "राज्य विधानसभा", c: false}, {en: "Chief Minister", hi: "मुख्यमंत्री", c: false}, {en: "State Finance Minister", hi: "राज्य के वित्त मंत्री", c: false}]},
+        { en: "Consider the following statements: 1. Central Finance Commission can also recommend supplementary sources for municipalities. 2. Recommendations of State Finance Commission are binding.", hi: "निम्नलिखित कथनों पर विचार कीजिये: 1. केंद्रीय वित्त आयोग भी राज्य में नगरपालिकाओं के पूरक स्रोतों की सिफारिश कर सकता है। 2. राज्य वित्त आयोग की सिफारिश बाध्यकारी होती है।", options: [{en: "Only 1", hi: "केवल 1", c: true}, {en: "Only 2", hi: "केवल 2", c: false}, {en: "1 and 2", hi: "1 और 2", c: false}, {en: "Neither 1 nor 2", hi: "न तो 1 न ही 2", c: false}]},
+        { en: "The Municipality Act does not apply to which of the following areas?", hi: "नगरपालिका अधिनियम निम्नलिखित में से किन क्षेत्रों पर लागू नहीं होता है ?", options: [{en: "Scheduled Caste Area", hi: "अनुसूचित जाति क्षेत्र", c: false}, {en: "Scheduled Tribe Area", hi: "अनुसूचित जनजाति क्षेत्र", c: false}, {en: "Darjeeling Gorkha Hill Council", hi: "दार्जिलिंग गोरखा हिल परिषद", c: false}, {en: "All of the above", hi: "उपर्युक्त में सभी।", c: true}]},
+        { en: "How many members of the District Planning Committee are elected by the elected members of the Zila Panchayat and Municipality?", hi: "जिला योजना समिति के कितना सदस्य जिला पंचायत और नगरपालिका के निर्वाचित सदस्य द्वारा स्वयं में से चुने जाते हैं ?", options: [{en: "4/6", hi: "4/6", c: false}, {en: "4/5", hi: "4/5", c: true}, {en: "5/4", hi: "5/4", c: false}, {en: "6/3", hi: "6/3", c: false}]},
+        { en: "How many members of the Metropolitan Planning Committee are elected by the elected members of the Municipalities and Chairpersons of the Panchayats?", hi: "महानगरीय योजना समिति के कितना सदस्य महानगर क्षेत्र में नगरपालिका के निर्वाचित सदस्यों एवं पंचायतों के अध्यक्ष द्वारा स्वयं चुने जायेंगे ?", options: [{en: "2/4", hi: "2/4", c: false}, {en: "2/6", hi: "2/6", c: false}, {en: "2/3", hi: "2/3", c: true}, {en: "2/12", hi: "2/12", c: false}]},
+        { en: "How many subjects are included in the 12th Schedule?", hi: "12वीं अनुसूची के अंतर्गत कितने विषय सम्मिलित हैं ?", options: [{en: "14", hi: "14", c: false}, {en: "18", hi: "18", c: true}, {en: "20", hi: "20", c: false}, {en: "22", hi: "22", c: false}]},
+        { en: "How many authorities are there in a Municipal Corporation?", hi: "नगर निगम में कितने प्राधिकरण होते हैं ?", options: [{en: "Three", hi: "तीन", c: true}, {en: "Four", hi: "चार", c: false}, {en: "Five", hi: "पांच", c: false}, {en: "Seven", hi: "सात", c: false}]},
+        { en: "The organs of the Municipal Corporation authority are-", hi: "नगर निगम प्राधिकरण के अंग हैं-", options: [{en: "Council", hi: "परिषद", c: false}, {en: "Standing Committee", hi: "स्थायी समिति", c: false}, {en: "Commissioner", hi: "आयुक्त", c: false}, {en: "All of the above", hi: "उपर्युक्त में सभी।", c: true}]},
+        { en: "What kind of branch is the Council of the Corporation?", hi: "परिषद निगम की किस प्रकार की शाखा है ?", options: [{en: "Legislative", hi: "विधायिका", c: false}, {en: "Temporary", hi: "अस्थायी", c: false}, {en: "Deliberative", hi: "विचारात्मक", c: true}, {en: "None of these", hi: "इनमें से सभी।", c: false}]},
+        { en: "The head of the Municipal Corporation is:", hi: "नगर निगम की प्रमुख होता/होती है ?", options: [{en: "Mayor", hi: "मेयर", c: true}, {en: "Chancellor", hi: "चांसलर", c: false}, {en: "President", hi: "सभापति", c: false}, {en: "Counselor", hi: "काउंसलर", c: false}]},
+        { en: "The head of the Municipal Council is:", hi: "नगर परिषद का प्रधान होता है-", options: [{en: "Mayor", hi: "मेयर", c: false}, {en: "President", hi: "अध्यक्ष", c: false}, {en: "Member", hi: "सभासद", c: true}, {en: "Chancellor", hi: "चांसलर", c: false}]},
+        { en: "The Cantonment Board is established by:", hi: "छावनी परिषद की स्थापना की जाती है-", options: [{en: "Cantonment Act, 2007", hi: "छावनी अधिनियम, 2007", c: false}, {en: "Cantonment Act, 2005", hi: "छावनी अधिनियम, 2005", c: false}, {en: "Cantonment Act, 2006", hi: "छावनी अधिनियम, 2006", c: true}, {en: "Cantonment Act, 2004", hi: "छावनी अधिनियम, 2004", c: false}]},
+        { en: "Under which ministry of the Government of India does the Cantonment Board work?", hi: "छावनी परिषद भारत सरकार के किस मंत्रालय के अंतर्गत कार्य करता है ?", options: [{en: "Ministry of Home Affairs", hi: "गृह मंत्रालय", c: false}, {en: "Ministry of Defence", hi: "रक्षा मंत्रालय", c: true}, {en: "Ministry of Housing", hi: "आवास मंत्रालय", c: false}, {en: "Ministry of Urban Affairs", hi: "शहरी मंत्रालय", c: false}]},
+        { en: "The tenure of the elected members of the Cantonment Board is:", hi: "छावनी परिषद के निर्वाचित सदस्य का कार्यकाल होता है-", options: [{en: "4 years", hi: "4 वर्ष", c: false}, {en: "3 years", hi: "3 वर्ष", c: false}, {en: "5 years", hi: "5 वर्ष", c: true}, {en: "2 years", hi: "2 वर्ष", c: false}]},
+        { en: "The Executive Officer of the Cantonment Board is appointed by:", hi: "छावनी परिषद के कार्यकारी अधिकारी की नियुक्ति की जाती है ?", options: [{en: "Home Ministry", hi: "गृह मंत्री", c: false}, {en: "President", hi: "राष्ट्रपति", c: true}, {en: "Defence Minister", hi: "रक्षामंत्री", c: false}, {en: "Army Chief", hi: "सेना अध्यक्ष", c: false}]},
+        { en: "When was the All India Institute of Local Self-Government established?", hi: "अखिल भारतीय स्थानीय स्वशासन संस्थान की स्थापना कब हुई ?", options: [{en: "1928", hi: "1928", c: false}, {en: "1925", hi: "1925", c: false}, {en: "1926", hi: "1926", c: true}, {en: "1927", hi: "1927", c: false}]},
+        { en: "Where is the headquarters of the All India Institute of Local Self-Government?", hi: "अखिल भारतीय स्थानीय स्वशासन संस्थान का मुख्यालय कहाँ है ?", options: [{en: "Mumbai", hi: "मुंबई", c: true}, {en: "Chennai", hi: "चेन्नई", c: false}, {en: "Delhi", hi: "दिल्ली", c: false}, {en: "Patna", hi: "पटना", c: false}]},
+        { en: "When was the Urban and Environmental Studies Center established?", hi: "नगरीय एवं पर्यावरणीय अध्ययन केंद्र की स्थापना कब किया गया ?", options: [{en: "1967", hi: "1967", c: true}, {en: "1968", hi: "1968", c: false}, {en: "1967 (Alternate)", hi: "1967", c: false}, {en: "1965", hi: "1965", c: false}]},
+        { en: "Where is the headquarters of the Urban and Environmental Studies Center?", hi: "नगरीय एवं पर्यावरणीय अध्ययन केंद्र का मुख्यालय कहाँ है ?", options: [{en: "Delhi", hi: "दिल्ली", c: true}, {en: "Visakhapatnam", hi: "विशाखापत्तनम", c: false}, {en: "Nanded", hi: "नांदेड", c: false}, {en: "Nangal", hi: "नांगल", c: false}]},
+        { en: "Where is the headquarters of the Regional Urban and Environmental Studies Center?", hi: "क्षेत्रीय एवं नगरीय पर्यावरणीय अध्ययन केंद्र का मुख्यालय है-", options: [{en: "Lucknow", hi: "लखनऊ", c: true}, {en: "Kolkata", hi: "कोलकाता", c: false}, {en: "Delhi", hi: "दिल्ली", c: false}, {en: "Rajgir", hi: "राजगीर", c: false}]},
+        { en: "Sources of Municipal revenue are-", hi: "निगम राजस्व के स्रोत हैं-", options: [{en: "Tax Revenue", hi: "कर-राजस्व", c: false}, {en: "Grants", hi: "अनुदान", c: false}, {en: "Transfers", hi: "हस्तांतरण", c: false}, {en: "All of the above", hi: "उपर्युक्त में सभी।", c: true}]},
+        { en: "Under which Article was the Central Council of Local Government established?", hi: "स्थानीय सरकार की केंद्रीय परिषद की स्थापना संविधान के किस अनुच्छेद के अंतर्गत किया गया ?", options: [{en: "263", hi: "263", c: true}, {en: "264", hi: "264", c: false}, {en: "266", hi: "266", c: false}, {en: "267", hi: "267", c: false}]},
+        { en: "In which Article is the Finance Commission for Municipalities discussed?", hi: "नगरपालिका के लिये वित्त आयोग की चर्चा संविधान के किस अनुच्छेद में है ?", options: [{en: "243Z", hi: "243Z", c: false}, {en: "243Y", hi: "243Y", c: true}, {en: "243ZC", hi: "243ZC", c: false}, {en: "243ZP", hi: "243ZP", c: false}]},
+        { en: "The District Planning Committee is mentioned in which Article?", hi: "जिला आयोजना समिति का उल्लेख संविधान के किस अनुच्छेद में है ?", options: [{en: "243ZA", hi: "243ZA", c: false}, {en: "243ZD", hi: "243ZD", c: true}, {en: "243XC", hi: "243XC", c: false}, {en: "243XP", hi: "243XP", c: false}]},
+        { en: "Article 243ZE is related to-", hi: "संविधान का अनुच्छेद 243 ZE का संबंध है ?", options: [{en: "Metropolitan Planning Committee", hi: "महानगरीय आयोजना समिति", c: true}, {en: "District Planning Committee", hi: "जिला आयोजना समिति", c: false}, {en: "Finance Commission", hi: "वित्त आयोग", c: false}, {en: "Election of Municipalities", hi: "नगरपालिकाओं का चुनाव", c: false}]},
+        { en: "In which Article is the Audit of Accounts of Municipalities mentioned?", hi: "संविधान के किस अनुच्छेद में नगरपालिकाओं के लेखा अंकेक्षण का उल्लेख है ?", options: [{en: "243ZA", hi: "243ZA", c: false}, {en: "243Z", hi: "243Z", c: true}, {en: "243X", hi: "243X", c: false}, {en: "243C", hi: "243C", c: false}]}
+    ];
+
+    let currentSet = [];
+    let curIdx = 0;
+    let score = 0;
+    let timer;
+    let timeLeft;
+    const aCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    function tone(f, t) {
+        const o = aCtx.createOscillator();
+        const g = aCtx.createGain();
+        o.connect(g); g.connect(aCtx.destination);
+        o.frequency.value = f; o.type = t === 'c' ? 'sine' : 'sawtooth';
+        g.gain.exponentialRampToValueAtTime(0.01, aCtx.currentTime + 0.5);
+        o.start(); o.stop(aCtx.currentTime + 0.5);
+    }
+
+    function initQuiz() {
+        const shuff = document.getElementById('shuffle').checked;
+        currentSet = shuff ? [...db].sort(() => Math.random() - 0.5) : [...db];
+        document.getElementById('home').classList.add('hidden');
+        document.getElementById('quiz-ui').classList.remove('hidden');
+        loadQ();
+    }
+
+    function loadQ() {
+        if(curIdx >= currentSet.length) return finishQuiz();
+        const q = currentSet[curIdx];
+        document.getElementById('q-idx').innerText = `Question ${curIdx + 1}/${currentSet.length}`;
+        document.getElementById('q-content').innerHTML = `${q.en}<span class="hi">${q.hi}</span>`;
+        
+        const container = document.getElementById('opt-container');
+        container.innerHTML = '';
+        q.options.forEach(o => {
+            const b = document.createElement('button');
+            b.className = 'option-btn';
+            b.innerHTML = `<span>${o.en}</span><span class="hi">${o.hi}</span>`;
+            b.onclick = () => validate(o, b);
+            container.appendChild(b);
+        });
+        
+        moveBar();
+        runTimer();
+    }
+
+    function runTimer() {
+        clearInterval(timer);
+        const setVal = parseInt(document.getElementById('user-time').value);
+        if(setVal <= 0) {
+            document.getElementById('timer-display').innerText = '';
+            return;
+        }
+        timeLeft = setVal;
+        const el = document.getElementById('timer-display');
+        el.innerText = `⏱ ${timeLeft}s`;
+        el.classList.remove('danger');
+        
+        timer = setInterval(() => {
+            timeLeft--;
+            el.innerText = `⏱ ${timeLeft}s`;
+            if(timeLeft < 5) el.classList.add('danger');
+            if(timeLeft <= 0) { clearInterval(timer); validate({c: false}, null); }
+        }, 1000);
+    }
+
+    function validate(o, b) {
+        clearInterval(timer);
+        const btns = document.querySelectorAll('.option-btn');
+        btns.forEach(x => x.disabled = true);
+
+        if(o.c) {
+            score++;
+            if(b) b.style.background = 'var(--correct)';
+            tone(800, 'c');
+            document.getElementById('score-val').innerText = `Score: ${score}`;
+        } else {
+            if(b) b.style.background = 'var(--wrong)';
+            tone(150, 'w');
+            showSad();
+            btns.forEach((x, i) => {
+                if(currentSet[curIdx].options[i].c) x.style.background = 'var(--correct)';
+            });
+        }
+        setTimeout(() => { curIdx++; loadQ(); }, 1500);
+    }
+
+    function moveBar() {
+        const p = (curIdx / currentSet.length) * 100;
+        document.getElementById('progress-glow').style.width = p + '%';
+    }
+
+    function showSad() {
+        const e = document.getElementById('sad-emoji');
+        e.style.display = 'block'; e.classList.add('shake-anim');
+        setTimeout(() => { e.style.display = 'none'; e.classList.remove('shake-anim'); }, 800);
+    }
+
+    function finishQuiz() {
+        clearInterval(timer);
+        document.getElementById('quiz-ui').classList.add('hidden');
+        document.getElementById('results').classList.remove('hidden');
+        document.getElementById('progress-glow').style.width = '100%';
+        
+        const p = (score / currentSet.length) * 100;
+        document.getElementById('status-msg').innerText = p >= 80 ? "🏆 Outstanding Performance!" : p >= 50 ? "👏 Well Done! Keep it up." : "📚 Practice makes perfect!";
+        document.getElementById('final-stats').innerText = `${score} / ${currentSet.length}`;
+    }
+</script>
+</body>
+</html>

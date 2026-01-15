@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chapter 46: GST Council Quiz</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --primary-text: #ffffff;
+            --secondary-text: #dddddd;
+            --accent-green: #00e676;
+            --accent-red: #ff5252;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: #0f0c29;
+            background: linear-gradient(135deg, #12100e, #2b4162, #12100e);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--primary-text);
+            overflow-x: hidden;
+        }
+
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 25px;
+            padding: 2rem;
+            width: 90%;
+            max-width: 650px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            position: relative;
+        }
+
+        .screen { display: none; flex-direction: column; gap: 1.5rem; animation: fadeIn 0.5s ease; }
+        .screen.active { display: flex; }
+
+        h1 { font-size: 1.8rem; text-align: center; font-weight: 700; background: linear-gradient(to right, #fff, #a5b4fc); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+        .progress-bar { position: absolute; top: 0; left: 0; height: 4px; background: #00c6ff; width: 0%; transition: width 0.5s ease; }
+
+        .quiz-header { display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 10px; }
+        .timer.pulse { color: var(--accent-red); animation: pulse 1s infinite; font-weight: bold; }
+
+        .question-box { background: rgba(0,0,0,0.2); padding: 15px; border-radius: 15px; border-left: 4px solid #667eea; }
+        .q-text-en { font-size: 1.1rem; font-weight: 600; margin-bottom: 5px; color: #fff; }
+        .q-text-hi { font-size: 0.95rem; color: #ddd; }
+
+        .options-grid { display: flex; flex-direction: column; gap: 10px; }
+        .option-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 12px 15px;
+            color: white;
+            text-align: left;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            flex-direction: column;
+        }
+        .option-btn:hover:not(:disabled) { background: rgba(255, 255, 255, 0.15); transform: translateX(5px); }
+        .opt-en { font-weight: 600; font-size: 0.95rem; }
+        .opt-hi { font-size: 0.85rem; color: #ccc; }
+
+        .correct { background: rgba(0, 230, 118, 0.4) !important; border-color: var(--accent-green) !important; }
+        .wrong { background: rgba(255, 82, 82, 0.4) !important; border-color: var(--accent-red) !important; }
+
+        .btn { padding: 15px; border: none; border-radius: 15px; font-weight: 600; cursor: pointer; transition: 0.2s; text-align: center; }
+        .btn-primary { background: linear-gradient(45deg, #667eea, #764ba2); color: white; }
+        .btn-primary:hover { transform: scale(1.02); }
+
+        .score-circle { width: 100px; height: 100px; border-radius: 50%; border: 5px solid #667eea; display: flex; justify-content: center; align-items: center; font-size: 2rem; font-weight: 700; margin: 0 auto; }
+        
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-10px); } 75% { transform: translateX(10px); } }
+        .shake { animation: shake 0.3s; }
+    </style>
+</head>
+<body>
+
+    <div class="glass-card">
+        <div class="progress-bar" id="progressBar"></div>
+
+        <div id="startScreen" class="screen active">
+            <h1>Chapter 46 Quiz</h1>
+            <p style="text-align: center;">GST Council<br>(वस्तु एवं सेवा कर परिषद्)</p>
+            <div style="display:flex; flex-direction:column; gap:10px;">
+                <label>Timer (Sec/Q): <input type="number" id="timerInput" value="15" style="width:50px; background:none; border:1px solid #fff; color:#fff; border-radius:5px;"></label>
+                <label>Shuffle: <input type="checkbox" id="shuffleToggle" checked></label>
+            </div>
+            <button class="btn btn-primary" onclick="startQuiz()">Start Quiz</button>
+        </div>
+
+        <div id="quizScreen" class="screen">
+            <div class="quiz-header">
+                <span id="qCounter"></span>
+                <span id="timerDisplay" class="timer"></span>
+                <span id="scoreDisplay"></span>
+            </div>
+            <div class="question-box">
+                <div id="qEn" class="q-text-en"></div>
+                <div id="qHi" class="q-text-hi"></div>
+            </div>
+            <div id="optionsContainer" class="options-grid"></div>
+            <button class="btn btn-primary" style="background:rgba(255,255,255,0.1); margin-top:10px;" onclick="showResults()">Finish Early</button>
+        </div>
+
+        <div id="resultScreen" class="screen">
+            <h1>Quiz Results</h1>
+            <div class="score-circle" id="finalScore"></div>
+            <div id="resultMsg" style="text-align:center; font-weight:bold; margin: 15px 0;"></div>
+            <button class="btn btn-primary" onclick="location.reload()">Restart Quiz</button>
+        </div>
+    </div>
+
+    <script>
+        const rawQuestions = [
+            {
+                qEn: "By which Constitutional Amendment was the Goods and Services Tax (GST) system introduced?",
+                qHi: "किस संविधान संसोधन द्वारा वस्तु एवं सेवा कर प्रणाली की शुरुआत किया गया ?",
+                optsEn: ["101st", "100th", "103rd", "102nd"],
+                optsHi: ["101वें", "100वें", "103वें", "102वें"],
+                correct: 0
+            },
+            {
+                qEn: "Which Article of the Constitution empowers the President to establish the GST Council?",
+                qHi: "संविधान का कौन-सा अनुच्छेद राष्ट्रपति की जी.एस.टी. काउंसिल स्थापित करने की शक्ति प्रदान करता है ?",
+                optsEn: ["Article 278", "Article 279", "Article 279A", "Article 276"],
+                optsHi: ["अनुच्छेद- 278", "अनुच्छेद- 279", "अनुच्छेद- 279A", "अनुच्छेद- 276"],
+                correct: 2
+            },
+            {
+                qEn: "Where is the headquarters of the GST Council located?",
+                qHi: "जी.एस.टी. काउंसिल का मुख्यालय कहाँ अवस्थित है ?",
+                optsEn: ["Delhi", "Chennai", "Mumbai", "Noida"],
+                optsHi: ["दिल्ली", "चेन्नई", "मुंबई", "नोएडा"],
+                correct: 0
+            },
+            {
+                qEn: "Who is the Chairman of the GST Council?",
+                qHi: "जी.एस.टी. काउंसिल का अध्यक्ष होता है-",
+                optsEn: ["Union Finance Secretary", "Prime Minister", "President", "Finance Minister"],
+                optsHi: ["केंद्रीय वित्त सचिव", "प्रधानमंत्री", "राष्ट्रपति", "वित्त मंत्री"],
+                correct: 3
+            },
+            {
+                qEn: "What is the minimum number of members (quorum) required for a meeting of the GST Council?",
+                qHi: "जी.एस.टी. काउंसिल के बैठक के लिये कम से कम कितने सदस्यों का होना अनिवार्य है ?",
+                optsEn: ["Two-third members", "Half of the members", "1/10 members", "One-third members"],
+                optsHi: ["दो तिहाई सदस्य", "आधे सदस्य", "1/10 सदस्य", "एक तिहाई"],
+                correct: 1
+            },
+            {
+                qEn: "Decisions of the GST Council are taken by?",
+                qHi: "जी.एस.टी. काउंसिल का निर्णय लिया जाता है ?",
+                optsEn: ["Three-fourth majority of members present", "Two-third majority of members present", "Simple majority of members present", "One-third majority of members present"],
+                optsHi: ["उपस्थित सदस्यों की तीन चौथाई बहुमत से", "उपस्थित सदस्यों की दो तिहाई बहुमत से", "उपस्थित सदस्यों की आधे बहुमत से", "उपस्थित सदस्यों के एक तिहाई बहुमत से"],
+                correct: 0
+            },
+            {
+                qEn: "What will be the weightage of the votes of the Central Government in the GST Council?",
+                qHi: "जी.एस.टी. काउंसिल केंद्र सरकारों के मतों का भार होगा-",
+                optsEn: ["One-third", "Two-third", "Three-fourth", "None of these"],
+                optsHi: ["एक तिहाई", "दो तिहाई", "तीन चौथाई", "इनमें से कोई नहीं"],
+                correct: 0
+            },
+            {
+                qEn: "What is the weightage of the votes of the States in the GST Council?",
+                qHi: "जी.एस.टी. काउंसिल में राज्यों के मतों का भार होता है-",
+                optsEn: ["One-third", "Two-third", "Three-fourth", "None of these"],
+                optsHi: ["एक तिहाई", "दो तिहाई", "तीन चौथाई", "इनमें से कोई नहीं"],
+                correct: 1
+            },
+            {
+                qEn: "When did GST start in India?",
+                qHi: "G.S.T. की शुरुआत भारत में कब हुई ?",
+                optsEn: ["2016", "2015", "2014", "2017"],
+                optsHi: ["2016", "2015", "2014", "2017"],
+                correct: 3
+            }
+        ];
+
+        let questions = [], currentIdx = 0, score = 0, timer, timeLeft;
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playSound(freq) {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.frequency.value = freq; osc.start();
+            gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.5);
+            osc.stop(audioCtx.currentTime + 0.5);
+        }
+
+        function startQuiz() {
+            questions = [...rawQuestions];
+            if(document.getElementById('shuffleToggle').checked) questions.sort(() => Math.random() - 0.5);
+            document.getElementById('startScreen').classList.remove('active');
+            document.getElementById('quizScreen').classList.add('active');
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            if(currentIdx >= questions.length) return showResults();
+            const q = questions[currentIdx];
+            document.getElementById('qCounter').innerText = `Q: ${currentIdx + 1}/${questions.length}`;
+            document.getElementById('scoreDisplay').innerText = `Score: ${score}`;
+            document.getElementById('progressBar').style.width = `${((currentIdx)/questions.length)*100}%`;
+            document.getElementById('qEn').innerText = q.qEn;
+            document.getElementById('qHi').innerText = q.qHi;
+            
+            const container = document.getElementById('optionsContainer');
+            container.innerHTML = '';
+            q.optsEn.forEach((opt, i) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerHTML = `<span class="opt-en">${opt}</span><span class="opt-hi">${q.optsHi[i]}</span>`;
+                btn.onclick = () => checkAnswer(i);
+                container.appendChild(btn);
+            });
+
+            timeLeft = parseInt(document.getElementById('timerInput').value) || 0;
+            if(timeLeft > 0) startTimer();
+            else document.getElementById('timerDisplay').innerText = "";
+        }
+
+        function startTimer() {
+            clearInterval(timer);
+            const display = document.getElementById('timerDisplay');
+            display.innerText = `⏳ ${timeLeft}s`;
+            timer = setInterval(() => {
+                timeLeft--;
+                display.innerText = `⏳ ${timeLeft}s`;
+                if(timeLeft < 5) display.classList.add('pulse');
+                else display.classList.remove('pulse');
+                if(timeLeft <= 0) { clearInterval(timer); checkAnswer(-1); }
+            }, 1000);
+        }
+
+        function checkAnswer(idx) {
+            clearInterval(timer);
+            const q = questions[currentIdx];
+            const btns = document.querySelectorAll('.option-btn');
+            btns.forEach(b => b.disabled = true);
+
+            if(idx === q.correct) {
+                btns[idx].classList.add('correct');
+                score++; playSound(800);
+            } else {
+                if(idx !== -1) btns[idx].classList.add('wrong');
+                btns[q.correct].classList.add('correct');
+                playSound(200);
+                document.querySelector('.glass-card').classList.add('shake');
+                setTimeout(() => document.querySelector('.glass-card').classList.remove('shake'), 300);
+            }
+
+            setTimeout(() => { currentIdx++; loadQuestion(); }, 1500);
+        }
+
+        function showResults() {
+            clearInterval(timer);
+            document.getElementById('quizScreen').classList.remove('active');
+            document.getElementById('resultScreen').classList.add('active');
+            document.getElementById('finalScore').innerText = score;
+            const per = (score/questions.length)*100;
+            document.getElementById('resultMsg').innerText = per >= 80 ? "🏆 Outstanding Performance!" : per >= 50 ? "👏 Well Done!" : "📚 Keep Studying!";
+        }
+    </script>
+</body>
+</html>

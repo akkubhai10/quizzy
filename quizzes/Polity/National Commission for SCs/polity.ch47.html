@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chapter 47: NCSC Quiz</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --primary-text: #ffffff;
+            --secondary-text: #dddddd;
+            --accent-green: #00e676;
+            --accent-red: #ff5252;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: #0f0c29;
+            background: linear-gradient(135deg, #1a1c2c, #4a192c, #1a1c2c);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--primary-text);
+            overflow-x: hidden;
+        }
+
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 25px;
+            padding: 2rem;
+            width: 95%;
+            max-width: 650px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            position: relative;
+        }
+
+        .screen { display: none; flex-direction: column; gap: 1.2rem; animation: fadeIn 0.5s ease; }
+        .screen.active { display: flex; }
+
+        h1 { font-size: 1.6rem; text-align: center; font-weight: 700; background: linear-gradient(to right, #fff, #fca5a5); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+        .progress-bar { position: absolute; top: 0; left: 0; height: 4px; background: #fca5a5; width: 0%; transition: width 0.5s ease; }
+
+        .quiz-header { display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 5px; }
+        .timer.pulse { color: var(--accent-red); animation: pulse 1s infinite; font-weight: bold; }
+
+        .question-box { background: rgba(0,0,0,0.3); padding: 15px; border-radius: 15px; border-left: 4px solid #fca5a5; }
+        .q-text-en { font-size: 1.05rem; font-weight: 600; margin-bottom: 8px; color: #fff; line-height: 1.4; }
+        .q-text-hi { font-size: 0.9rem; color: #ddd; line-height: 1.4; }
+
+        .options-grid { display: flex; flex-direction: column; gap: 10px; }
+        .option-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 12px 15px;
+            color: white;
+            text-align: left;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            flex-direction: column;
+        }
+        .option-btn:hover:not(:disabled) { background: rgba(255, 255, 255, 0.15); transform: translateX(5px); }
+        .opt-en { font-weight: 600; font-size: 0.9rem; }
+        .opt-hi { font-size: 0.8rem; color: #ccc; }
+
+        .correct { background: rgba(0, 230, 118, 0.4) !important; border-color: var(--accent-green) !important; }
+        .wrong { background: rgba(255, 82, 82, 0.4) !important; border-color: var(--accent-red) !important; }
+
+        .btn { padding: 15px; border: none; border-radius: 15px; font-weight: 600; cursor: pointer; transition: 0.2s; text-align: center; font-family: 'Poppins'; }
+        .btn-primary { background: linear-gradient(45deg, #f87171, #991b1b); color: white; }
+        .btn-primary:hover { transform: scale(1.02); }
+
+        .score-circle { width: 100px; height: 100px; border-radius: 50%; border: 5px solid #f87171; display: flex; justify-content: center; align-items: center; font-size: 2rem; font-weight: 700; margin: 0 auto; background: rgba(0,0,0,0.2); }
+        
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
+        .shake { animation: shake 0.3s; }
+    </style>
+</head>
+<body>
+
+    <div class="glass-card">
+        <div class="progress-bar" id="progressBar"></div>
+
+        <div id="startScreen" class="screen active">
+            <h1>Chapter 47 Quiz</h1>
+            <p style="text-align: center;">National Commission for SCs<br>(अनुसूचित जातियों के लिये राष्ट्रीय आयोग)</p>
+            <div style="display:flex; flex-direction:column; gap:12px; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 15px;">
+                <label style="font-size: 0.9rem;">⏱ Timer (Seconds per Question): <input type="number" id="timerInput" value="20" style="width:50px; background:none; border:1px solid #fff; color:#fff; border-radius:5px; padding: 2px;"></label>
+                <label style="font-size: 0.9rem;">🔀 Shuffle Questions: <input type="checkbox" id="shuffleToggle"></label>
+            </div>
+            <button class="btn btn-primary" onclick="startQuiz()">Start Quiz / शुरू करें</button>
+        </div>
+
+        <div id="quizScreen" class="screen">
+            <div class="quiz-header">
+                <span id="qCounter"></span>
+                <span id="timerDisplay" class="timer"></span>
+                <span id="scoreDisplay"></span>
+            </div>
+            <div class="question-box">
+                <div id="qEn" class="q-text-en"></div>
+                <div id="qHi" class="q-text-hi"></div>
+            </div>
+            <div id="optionsContainer" class="options-grid"></div>
+            <button class="btn btn-primary" style="background:rgba(255,255,255,0.1); margin-top:10px; font-size: 0.8rem;" onclick="showResults()">Finish Early (समाप्त करें)</button>
+        </div>
+
+        <div id="resultScreen" class="screen">
+            <h1>Result / परिणाम</h1>
+            <div class="score-circle" id="finalScore"></div>
+            <div id="resultMsg" style="text-align:center; font-weight:bold; margin: 10px 0;"></div>
+            <button class="btn btn-primary" onclick="location.reload()">Restart / पुनः प्रयास करें</button>
+        </div>
+    </div>
+
+    <script>
+        const rawQuestions = [
+            {
+                qEn: "By which Article of the Constitution was the National Commission for Scheduled Castes established?",
+                qHi: "संविधान के किस अनुच्छेद द्वारा राष्ट्रीय अनुसूचित जाति आयोग का गठन किया गया है ?",
+                optsEn: ["338", "340", "338A", "342"],
+                optsHi: ["338", "340", "338A", "342"],
+                correct: 0
+            },
+            {
+                qEn: "By which Constitutional Amendment was the National Commission for Scheduled Castes constituted?",
+                qHi: "किस संविधान संसोधन द्वारा राष्ट्रीय अनुसूचित जाति आयोग का गठन किया गया ?",
+                optsEn: ["96th", "93rd", "89th", "100th"],
+                optsHi: ["96वें", "93वें", "89वें", "100वें"],
+                correct: 2
+            },
+            {
+                qEn: "When was the National Commission for Scheduled Castes established?",
+                qHi: "राष्ट्रीय अनुसूचित जाति आयोग का गठन कब किया गया ?",
+                optsEn: ["Year 2004", "Year 1992", "Year 1999", "Year 2003"],
+                optsHi: ["वर्ष 2004", "वर्ष 1992", "वर्ष 1999", "वर्ष 2003"],
+                correct: 0
+            },
+            {
+                qEn: "What is the number of members in the National Commission for Scheduled Castes?",
+                qHi: "राष्ट्रीय अनुसूचित जाति आयोग में सदस्यों की संख्या कितनी होती है ?",
+                optsEn: ["Four", "Three", "Five", "Seven"],
+                optsHi: ["चार", "तीन", "पाँच", "सात"],
+                correct: 2
+            },
+            {
+                qEn: "The number of Vice-Chairmen in the National Commission for Scheduled Castes is?",
+                qHi: "राष्ट्रीय अनुसूचित जाति आयोग में उपाध्यक्ष की संख्या होती है-",
+                optsEn: ["One", "Two", "Three", "Four"],
+                optsHi: ["एक", "दो", "तीन", "चार"],
+                correct: 0
+            },
+            {
+                qEn: "What type of institution is the National Commission for Scheduled Castes?",
+                qHi: "राष्ट्रीय अनुसूचित जाति आयोग किस प्रकार की संस्था है ?",
+                optsEn: ["Statutory", "Constitutional", "Non-Constitutional", "None of these"],
+                optsHi: ["सांविधिक", "संवैधानिक", "गैर-संवैधानिक", "इनमें से कोई नहीं"],
+                correct: 1
+            },
+            {
+                qEn: "Who appoints the Chairman and members of the National Commission for Scheduled Castes?",
+                qHi: "राष्ट्रीय अनुसूचित जाति आयोग के अध्यक्ष एवं सदस्यों की नियुक्ति की जाती है-",
+                optsEn: ["Minister for SC Welfare", "President", "Prime Minister", "Parliament"],
+                optsHi: ["अनुसूचित जाति कल्याण मंत्री", "राष्ट्रपति", "प्रधानमंत्री", "संसद"],
+                correct: 1
+            },
+            {
+                qEn: "What is the tenure of the Chairman and members of the National Commission for Scheduled Castes?",
+                qHi: "राष्ट्रीय अनुसूचित जाति आयोग के अध्यक्ष एवं सदस्यों का कार्यकाल होता है-",
+                optsEn: ["Five years", "Two years", "Three years", "Not fixed"],
+                optsHi: ["पाँच वर्ष", "दो वर्ष", "तीन वर्ष", "निर्धारित नहीं है"],
+                correct: 2
+            },
+            {
+                qEn: "What are the functions of the National Commission for Scheduled Castes?",
+                qHi: "राष्ट्रीय अनुसूचित जाति आयोग के कार्य हैं-",
+                optsEn: [
+                    "Monitoring and inspection of all matters relating to constitutional safeguards for SCs",
+                    "Inquiry into specific complaints regarding deprivation of rights of SCs",
+                    "Informing the President about steps taken for SC protection",
+                    "All of the above"
+                ],
+                optsHi: [
+                    "अनुसूचित जातियों के संवैधानिक संरक्षण से संबंधित सभी मामलों का निरीक्षण एवं अधीक्षण",
+                    "अनुसूचित जातियों के हितों के उल्लंघन करने किसी मामले की सुनवाई।",
+                    "अनुसूचित जातियों के संरक्षण के लिये उठाये जा रहे कदमों के बारे में राष्ट्रपति को जानकारी देना।",
+                    "उपर्युक्त में सभी।"
+                ],
+                correct: 3
+            },
+            {
+                qEn: "To whom does the National Commission for Scheduled Castes submit its report?",
+                qHi: "राष्ट्रपति अनुसूचित जाति आयोग अपना रिपोर्ट किसे प्रस्तुत करता है ?",
+                optsEn: ["President", "Minister for Scheduled Castes", "Parliament", "Prime Minister"],
+                optsHi: ["राष्ट्रपति", "अनुसूचित जाति मंत्री", "संसद", "प्रधानमंत्री"],
+                correct: 0
+            },
+            {
+                qEn: "Consider the following statements:\n1. When the NCSC investigates any matter, it has the powers of a Civil Court.\n2. The Commission can summon any person from any part of India.\nWhich is correct?",
+                qHi: "निम्नलिखित कथनों पर विचार कीजिए।\n1. राष्ट्रीय अनुसूचित जाति आयोग जब किसी मामले का जांच पड़ताल करता है तो उसे दीवानी न्यायालय का अधिकार प्राप्त होता है।\n2. आयोग भारत के किसी भी भाग से किसी व्यक्ति को समन जारी कर सकता है।\nउपर्युक्त कथनों में से कौन-सा/से सही है/हैं ?",
+                optsEn: ["Only 1", "Only 2", "Both 1 and 2", "Neither 1 nor 2"],
+                optsHi: ["केवल 1", "केवल 2", "1 और 2", "न तो 1 न ही 2"],
+                correct: 2
+            }
+        ];
+
+        let questions = [], currentIdx = 0, score = 0, timer, timeLeft;
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playSound(freq) {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.frequency.value = freq; osc.start();
+            gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.5);
+            osc.stop(audioCtx.currentTime + 0.5);
+        }
+
+        function startQuiz() {
+            questions = [...rawQuestions];
+            if(document.getElementById('shuffleToggle').checked) questions.sort(() => Math.random() - 0.5);
+            document.getElementById('startScreen').classList.remove('active');
+            document.getElementById('quizScreen').classList.add('active');
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            if(currentIdx >= questions.length) return showResults();
+            const q = questions[currentIdx];
+            document.getElementById('qCounter').innerText = `Q: ${currentIdx + 1}/${questions.length}`;
+            document.getElementById('scoreDisplay').innerText = `Score: ${score}`;
+            document.getElementById('progressBar').style.width = `${((currentIdx)/questions.length)*100}%`;
+            document.getElementById('qEn').innerText = q.qEn;
+            document.getElementById('qHi').innerText = q.qHi;
+            
+            const container = document.getElementById('optionsContainer');
+            container.innerHTML = '';
+            q.optsEn.forEach((opt, i) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerHTML = `<span class="opt-en">${opt}</span><span class="opt-hi">${q.optsHi[i]}</span>`;
+                btn.onclick = () => checkAnswer(i);
+                container.appendChild(btn);
+            });
+
+            timeLeft = parseInt(document.getElementById('timerInput').value) || 0;
+            if(timeLeft > 0) startTimer();
+            else document.getElementById('timerDisplay').innerText = "";
+        }
+
+        function startTimer() {
+            clearInterval(timer);
+            const display = document.getElementById('timerDisplay');
+            display.innerText = `⏳ ${timeLeft}s`;
+            timer = setInterval(() => {
+                timeLeft--;
+                display.innerText = `⏳ ${timeLeft}s`;
+                if(timeLeft < 5) display.classList.add('pulse');
+                else display.classList.remove('pulse');
+                if(timeLeft <= 0) { clearInterval(timer); checkAnswer(-1); }
+            }, 1000);
+        }
+
+        function checkAnswer(idx) {
+            clearInterval(timer);
+            const q = questions[currentIdx];
+            const btns = document.querySelectorAll('.option-btn');
+            btns.forEach(b => b.disabled = true);
+
+            if(idx === q.correct) {
+                btns[idx].classList.add('correct');
+                score++; playSound(800);
+            } else {
+                if(idx !== -1) btns[idx].classList.add('wrong');
+                btns[q.correct].classList.add('correct');
+                playSound(200);
+                document.querySelector('.glass-card').classList.add('shake');
+                setTimeout(() => document.querySelector('.glass-card').classList.remove('shake'), 300);
+            }
+
+            setTimeout(() => { currentIdx++; loadQuestion(); }, 1500);
+        }
+
+        function showResults() {
+            clearInterval(timer);
+            document.getElementById('quizScreen').classList.remove('active');
+            document.getElementById('resultScreen').classList.add('active');
+            document.getElementById('finalScore').innerText = score;
+            const per = (score/questions.length)*100;
+            document.getElementById('resultMsg').innerText = per >= 80 ? "🏆 Excellent Work!" : per >= 50 ? "👏 Good Effort!" : "📚 Keep Learning!";
+        }
+    </script>
+</body>
+</html>

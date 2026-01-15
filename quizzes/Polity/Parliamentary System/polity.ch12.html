@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parliamentary System Quiz</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --correct: #4ade80;
+            --wrong: #f87171;
+            --hindi-text: #ddd;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(45deg, #4158D0, #C850C0, #FFCC70);
+            background-attachment: fixed;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            color: white;
+            overflow-x: hidden;
+        }
+
+        /* Glassmorphism Container */
+        .quiz-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 25px;
+            width: 100%;
+            max-width: 600px;
+            padding: 30px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            position: relative;
+            z-index: 10;
+        }
+
+        /* Progress Bar */
+        .progress-container {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 6px;
+            background: rgba(255,255,255,0.1);
+            z-index: 1000;
+        }
+        #progress-bar {
+            height: 100%; width: 0%;
+            background: linear-gradient(90deg, #00f2fe 0%, #4facfe 100%);
+            box-shadow: 0 0 10px #4facfe;
+            transition: width 0.3s ease;
+        }
+
+        /* Typography */
+        h1 { text-align: center; margin-bottom: 20px; font-weight: 700; }
+        .question-text { font-size: 1.2rem; font-weight: 600; margin-bottom: 5px; line-height: 1.4; }
+        .hindi-sub { font-size: 0.95rem; color: var(--hindi-text); display: block; margin-bottom: 20px; font-weight: 300; }
+
+        /* Inputs & Buttons */
+        .input-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-size: 0.9rem; }
+        input[type="number"] {
+            width: 100%; padding: 12px; border-radius: 10px; border: none;
+            background: rgba(255,255,255,0.2); color: white; outline: none;
+        }
+
+        .btn {
+            width: 100%; padding: 15px; margin: 10px 0; border: none; border-radius: 12px;
+            background: rgba(255,255,255,0.15); color: white; cursor: pointer;
+            transition: all 0.3s ease; text-align: left; position: relative;
+            overflow: hidden;
+        }
+        .btn:hover:not(:disabled) { background: rgba(255,255,255,0.25); transform: scale(1.02); }
+        .btn:disabled { cursor: not-allowed; }
+
+        .btn-main {
+            background: #fff; color: #764ba2; font-weight: 700; text-align: center;
+            margin-top: 20px;
+        }
+
+        /* State Classes */
+        .correct { background: var(--correct) !important; color: #1a2e1a !important; font-weight: bold; }
+        .wrong { background: var(--wrong) !important; color: #2e1a1a !important; font-weight: bold; }
+        .pulse-red { color: #ff4d4d; animation: pulse 0.5s infinite; font-weight: bold; }
+
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-10px); } 75% { transform: translateX(10px); } }
+
+        /* Layout Helpers */
+        .flex-between { display: flex; justify-content: space-between; margin-bottom: 15px; font-size: 0.85rem; }
+        .hidden { display: none !important; }
+
+        /* Animations */
+        #feedback-emoji {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 100px; z-index: 9999; pointer-events: none;
+        }
+        .shake { animation: shake 0.4s ease-in-out; }
+
+        /* Mobile Optimization */
+        @media (max-width: 480px) {
+            .quiz-card { padding: 20px; margin: 10px; }
+            .question-text { font-size: 1.05rem; }
+            .btn { padding: 12px; font-size: 0.9rem; }
+        }
+
+        /* Confetti Styles */
+        .confetti {
+            position: fixed; width: 10px; height: 10px; z-index: 9999;
+            animation: fall linear forwards;
+        }
+        @keyframes fall {
+            to { transform: translateY(100vh) rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="progress-container"><div id="progress-bar"></div></div>
+
+    <div id="start-screen" class="quiz-card">
+        <h1>Parliamentary System Quiz</h1>
+        <div class="input-group">
+            <label>Timer per Question (Seconds) - 0 for No Timer</label>
+            <input type="number" id="timer-input" placeholder="e.g. 15" value="15">
+        </div>
+        <div class="input-group" style="display: flex; align-items: center; gap: 10px;">
+            <input type="checkbox" id="shuffle-input" style="width: 20px; height: 20px;">
+            <label for="shuffle-input" style="margin: 0;">Shuffle Question Order</label>
+        </div>
+        <button class="btn btn-main" onclick="startQuiz()">START QUIZ</button>
+    </div>
+
+    <div id="quiz-screen" class="quiz-card hidden">
+        <div class="flex-between">
+            <span id="q-counter">Question: 1/15</span>
+            <span id="timer-display">⏱ 15s</span>
+            <span id="score-display">Score: 0</span>
+        </div>
+        
+        <div id="question-box">
+            <div class="question-text" id="eng-q"></div>
+            <div class="hindi-sub" id="hin-q"></div>
+            <div id="options-container"></div>
+        </div>
+
+        <button class="btn btn-main" style="background: rgba(255,255,255,0.05); color: #fff; font-size: 0.8rem;" onclick="endQuiz()">Finish & Show Results</button>
+    </div>
+
+    <div id="result-screen" class="quiz-card hidden" style="text-align: center;">
+        <h2 id="result-msg" style="margin-bottom: 10px;">🏆 Result</h2>
+        <div id="final-score" style="font-size: 2.5rem; font-weight: 700; margin: 20px 0;">0/15</div>
+        <p id="performance-text" style="margin-bottom: 30px;"></p>
+        <button class="btn btn-main" onclick="location.reload()">Restart Quiz</button>
+    </div>
+
+    <div id="feedback-emoji" class="hidden">😢</div>
+
+    <script>
+        const quizData = [
+            {
+                q_en: "Does the Constitution of India provide for a Parliamentary System?",
+                q_hi: "भारत का संविधान संसदीय व्यवस्था का प्रावधान करता है?",
+                options: [
+                    { en: "Only in Center", hi: "केवल केंद्र में" },
+                    { en: "Only in State", hi: "केवल राज्य में" },
+                    { en: "In Panchayats", hi: "पंचायतों में" },
+                    { en: "In Center and States", hi: "केंद्र एवं राज्यों में" }
+                ],
+                correct: 3
+            },
+            {
+                q_en: "Which of the following articles provides for the Parliamentary System at the Center?",
+                q_hi: "निम्नलिखित में कौन-सा अनुच्छेद केंद्र में संसदीय शासन व्यवस्था का प्रावधान करता है?",
+                options: [
+                    { en: "Article 74", hi: "अनुच्छेद 74" },
+                    { en: "Article 75", hi: "अनुच्छेद 75" },
+                    { en: "Article 76", hi: "अनुच्छेद 76" },
+                    { en: "Both a and b", hi: "a और b दोनों" }
+                ],
+                correct: 3
+            },
+            {
+                q_en: "Which of the following articles provides for the Parliamentary System in States?",
+                q_hi: "निम्न में से कौन-सा अनुच्छेद राज्य में संसदीय शासन व्यवस्था का प्रावधान करता है?",
+                options: [
+                    { en: "Article 163", hi: "अनुच्छेद 163" },
+                    { en: "Article 164", hi: "अनुच्छेद 164" },
+                    { en: "Article 165", hi: "अनुच्छेद 165" },
+                    { en: "Both a and b", hi: "a और b दोनों" }
+                ],
+                correct: 3
+            },
+            {
+                q_en: "What is meant by the Parliamentary System of government?",
+                q_hi: "सरकार की संसदीय व्यवस्था का अभिप्राय है?",
+                options: [
+                    { en: "Exec. is responsible to Judiciary", hi: "कार्यपालिका न्यायपालिका के प्रति जिम्मेदार होती है।" },
+                    { en: "Exec. is responsible to Legislature", hi: "कार्यपालिका अपनी कार्य के लिए विधायिका के प्रति उत्तरदायी होती है।" },
+                    { en: "Legislature is responsible to Exec.", hi: "विधायिका कार्यपालिका के प्रति जिम्मेदार होती है।" },
+                    { en: "All of these", hi: "इनमें से सभी।" }
+                ],
+                correct: 1
+            },
+            {
+                q_en: "What is meant by Presidential Government?",
+                q_hi: "राष्ट्रपति शासन या अध्यक्षात्मक शासन व्यवस्था का अभिप्राय है?",
+                options: [
+                    { en: "Exec. is independent of Legislature", hi: "कार्यपालिका, विधायिका से स्वतंत्र होती है" },
+                    { en: "Legislature is responsible to Exec.", hi: "विधायिका, कार्यपालिका के प्रति उत्तरदायी होती है।" },
+                    { en: "Legislature orders the Executive", hi: "विधायिका, कार्यपालिका को आदेश देती है" },
+                    { en: "Judiciary is responsible to Exec.", hi: "न्यायपालिका के प्रति कार्यपालिका उत्तरदायी होती है।" }
+                ],
+                correct: 0
+            },
+            {
+                q_en: "What is the popular name for Parliamentary Government?",
+                q_hi: "संसदीय सरकार का लोकप्रिय नाम है-",
+                options: [
+                    { en: "Cabinet Government", hi: "कैबिनेट सरकार" },
+                    { en: "Responsible Government", hi: "उत्तरदायी सरकार" },
+                    { en: "Westminster Model", hi: "सरकार का वेस्टमिंस्टर स्वरूप" },
+                    { en: "All of the above", hi: "इनमें से सभी।" }
+                ],
+                correct: 3
+            },
+            {
+                q_en: "Which thinker called the Parliamentary System 'Cabinet System'?",
+                q_hi: "निम्नलिखित में से किस विचारक ने संसदीय व्यवस्था को 'कैबिनेट व्यवस्था' कहा है?",
+                options: [
+                    { en: "Ivor Jennings", hi: "आइवर जेनिंग्स" },
+                    { en: "Granville Austin", hi: "ग्रीनविले ऑस्टिन" },
+                    { en: "Machiavelli", hi: "मैक्यावेली" },
+                    { en: "Harold Laski", hi: "हैरल्ड लास्की" }
+                ],
+                correct: 0
+            },
+            {
+                q_en: "Which of these is a feature of Parliamentary Government?",
+                q_hi: "संसदीय सरकार की विशेषता निम्न में से है-",
+                options: [
+                    { en: "Nominal & Real Executive", hi: "नामिक एवं वास्तविक कार्यपालिका" },
+                    { en: "Majority Party Rule", hi: "बहुमत प्राप्त दल का शासन" },
+                    { en: "Collective Responsibility", hi: "सामूहिक उत्तरदायित्व" },
+                    { en: "All of the above", hi: "उपर्युक्त में सभी।" }
+                ],
+                correct: 3
+            },
+            {
+                q_en: "Which of the following is NOT a feature of Parliamentary Government?",
+                q_hi: "निम्न में से कौन-सा संसदीय शासन की विशेषताएँ नहीं है?",
+                options: [
+                    { en: "Political Homogeneity", hi: "राजनीतिक एकरूपता" },
+                    { en: "Lack of definite policies", hi: "नीतियों की निश्चितता का अभाव" },
+                    { en: "Broad Representation", hi: "व्यापक प्रतिनिधित्व" },
+                    { en: "Single Membership", hi: "एकल सदस्यता" }
+                ],
+                correct: 3
+            },
+            {
+                q_en: "Which of the following is a feature of the Parliamentary System in India?",
+                q_hi: "निम्नलिखित में से भारत में संसदीय शासन व्यवस्था की विशेषता है-",
+                options: [
+                    { en: "Leadership of PM", hi: "प्रधानमंत्री का नेतृत्व" },
+                    { en: "Dissolution of Lower House", hi: "निचले सदन का विघटन" },
+                    { en: "Secrecy", hi: "गोपनीयता" },
+                    { en: "All of the above", hi: "उपर्युक्त में सभी।" }
+                ],
+                correct: 3
+            },
+            {
+                q_en: "Which of the following is a demerit of the Parliamentary System?",
+                q_hi: "निम्नलिखित में से कौन-सा संसदीय शासन व्यवस्था का दोष है?",
+                options: [
+                    { en: "Harmony between Legis. & Exec.", hi: "विधायिका एवं कार्यपालिका के मध्य सामंजस्य" },
+                    { en: "Responsible Government", hi: "उत्तरदायी सरकार" },
+                    { en: "Tyranny of Cabinet", hi: "मंत्रिमंडल की निरंकुशता" },
+                    { en: "Provision of Alt. Govt.", hi: "वैकल्पिक सरकार की व्यवस्था" }
+                ],
+                correct: 2
+            },
+            {
+                q_en: "What were the reasons for adopting the Parliamentary System in India?",
+                q_hi: "भारत में संसदीय व्यवस्था के स्वीकार्यता के कारण थे?",
+                options: [
+                    { en: "Familiarity with the system", hi: "व्यवस्था से निकटता" },
+                    { en: "Mixed nature of Indian society", hi: "भारतीय समाज की मिश्रित प्रकृति" },
+                    { en: "Preference to responsibility", hi: "उत्तरदायित्व की अधिक वरीयता" },
+                    { en: "All of the above", hi: "उपर्युक्त में सभी।" }
+                ],
+                correct: 3
+            },
+            {
+                q_en: "Which of the following is a merit of the Presidential System?",
+                q_hi: "निम्न में से कौन-सा राष्ट्रपति शासन व्यवस्था का गुण है?",
+                options: [
+                    { en: "Single Membership", hi: "एकल सदस्यता" },
+                    { en: "Dual Membership", hi: "दोहरी सदस्यता" },
+                    { en: "Fusion of powers", hi: "शक्तियों का सम्मिश्रण" },
+                    { en: "Political Homogeneity", hi: "राजनीतिक एकरूपता" }
+                ],
+                correct: 0
+            },
+            {
+                q_en: "Consider: 1. India has Republic instead of Monarchy. 2. British system is based on Sovereignty of Parliament, India is not.",
+                q_hi: "1. ब्रिटिश राजशाही के जगह भारत में गणतंत्र पद्धति है। 2. ब्रिटिश व्यवस्था संसद की संप्रभुता पर आधारित है, जबकि भारत में संसद सर्वोच्च नहीं है।",
+                options: [
+                    { en: "Only 1", hi: "केवल 1" },
+                    { en: "Only 2", hi: "केवल 2" },
+                    { en: "Both 1 and 2", hi: "1 और 2 दोनों" },
+                    { en: "Neither 1 nor 2", hi: "न तो 1, ना ही 2" }
+                ],
+                correct: 2
+            },
+            {
+                q_en: "Shadow Cabinet is a unique institution of?",
+                q_hi: "छाया कैबिनेट या शैडो कैबिनेट एक अनोखी संस्था है?",
+                options: [
+                    { en: "Britain", hi: "ब्रिटेन की" },
+                    { en: "Canada", hi: "कनाडा की" },
+                    { en: "India", hi: "भारत की" },
+                    { en: "America", hi: "अमेरिका की" }
+                ],
+                correct: 0
+            }
+        ];
+
+        let currentQ = 0;
+        let score = 0;
+        let timerSeconds = 15;
+        let timerInterval;
+        let activeQuestions = [];
+
+        // WEB AUDIO API
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playSound(type) {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            
+            if (type === 'correct') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(880, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.1);
+                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+            } else {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+            }
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.3);
+        }
+
+        function startQuiz() {
+            const timeVal = document.getElementById('timer-input').value;
+            timerSeconds = timeVal ? parseInt(timeVal) : 0;
+            const shuffle = document.getElementById('shuffle-input').checked;
+            
+            activeQuestions = [...quizData];
+            if (shuffle) activeQuestions.sort(() => Math.random() - 0.5);
+
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('quiz-screen').classList.remove('hidden');
+            showQuestion();
+        }
+
+        function showQuestion() {
+            if (currentQ >= activeQuestions.length) return endQuiz();
+            
+            const q = activeQuestions[currentQ];
+            document.getElementById('eng-q').innerText = q.q_en;
+            document.getElementById('hin-q').innerText = q.q_hi;
+            document.getElementById('q-counter').innerText = `Question: ${currentQ + 1}/${activeQuestions.length}`;
+            
+            const container = document.getElementById('options-container');
+            container.innerHTML = '';
+            
+            q.options.forEach((opt, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'btn';
+                btn.innerHTML = `<div>${opt.en}</div><div style="font-size:0.8rem; opacity:0.8;">${opt.hi}</div>`;
+                btn.onclick = () => checkAnswer(index);
+                container.appendChild(btn);
+            });
+
+            updateProgress();
+            startTimer();
+        }
+
+        function startTimer() {
+            clearInterval(timerInterval);
+            if (timerSeconds <= 0) {
+                document.getElementById('timer-display').classList.add('hidden');
+                return;
+            }
+            
+            let timeLeft = timerSeconds;
+            const display = document.getElementById('timer-display');
+            display.classList.remove('hidden', 'pulse-red');
+            display.innerText = `⏱ ${timeLeft}s`;
+
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                display.innerText = `⏱ ${timeLeft}s`;
+                if (timeLeft < 5) display.classList.add('pulse-red');
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    checkAnswer(-1); // Timeout
+                }
+            }, 1000);
+        }
+
+        function checkAnswer(choice) {
+            clearInterval(timerInterval);
+            const q = activeQuestions[currentQ];
+            const btns = document.querySelectorAll('#options-container .btn');
+            btns.forEach(b => b.disabled = true);
+
+            if (choice === q.correct) {
+                btns[choice].classList.add('correct');
+                score++;
+                playSound('correct');
+                createConfetti();
+            } else {
+                if (choice !== -1) btns[choice].classList.add('wrong');
+                btns[q.correct].classList.add('correct');
+                playSound('wrong');
+                showSadEmoji();
+            }
+
+            document.getElementById('score-display').innerText = `Score: ${score}`;
+            
+            setTimeout(() => {
+                currentQ++;
+                if (currentQ < activeQuestions.length) {
+                    showQuestion();
+                } else {
+                    endQuiz();
+                }
+            }, 1500);
+        }
+
+        function updateProgress() {
+            const prog = ((currentQ) / activeQuestions.length) * 100;
+            document.getElementById('progress-bar').style.width = prog + '%';
+        }
+
+        function endQuiz() {
+            clearInterval(timerInterval);
+            document.getElementById('quiz-screen').classList.add('hidden');
+            document.getElementById('result-screen').classList.remove('hidden');
+            document.getElementById('progress-bar').style.width = '100%';
+            
+            const finalScoreElem = document.getElementById('final-score');
+            finalScoreElem.innerText = `${score} / ${activeQuestions.length}`;
+            
+            const percent = (score / activeQuestions.length) * 100;
+            const msg = document.getElementById('performance-text');
+            if (percent >= 80) msg.innerText = "🏆 Outstanding Performance!";
+            else if (percent >= 50) msg.innerText = "👏 Well Done! Keep it up.";
+            else msg.innerText = "📚 Practice makes perfect! Try again.";
+        }
+
+        function createConfetti() {
+            for(let i=0; i<30; i++) {
+                const conf = document.createElement('div');
+                conf.className = 'confetti';
+                conf.style.left = Math.random() * 100 + 'vw';
+                conf.style.backgroundColor = `hsl(${Math.random() * 360}, 100%, 50%)`;
+                conf.style.animationDuration = (Math.random() * 2 + 1) + 's';
+                document.body.appendChild(conf);
+                setTimeout(() => conf.remove(), 3000);
+            }
+        }
+
+        function showSadEmoji() {
+            const emoji = document.getElementById('feedback-emoji');
+            emoji.classList.remove('hidden');
+            emoji.classList.add('shake');
+            setTimeout(() => {
+                emoji.classList.add('hidden');
+                emoji.classList.remove('shake');
+            }, 1000);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bilingual Constitution Quiz</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --primary-text: #ffffff;
+            --secondary-text: #dddddd;
+            --correct: #4caf50;
+            --wrong: #f44336;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #ff6a88 100%);
+            background-attachment: fixed;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            color: var(--primary-text);
+            overflow-x: hidden;
+        }
+
+        /* Glassmorphism Container */
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 25px;
+            padding: 30px;
+            width: 100%;
+            max-width: 600px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            position: relative;
+            z-index: 10;
+        }
+
+        /* Progress Bar */
+        #progress-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 6px;
+            background: rgba(255,255,255,0.1);
+            z-index: 1000;
+        }
+        #progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(to right, #00f2fe, #4facfe);
+            box-shadow: 0 0 10px #4facfe;
+            transition: width 0.4s ease;
+        }
+
+        .header-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        /* Quiz Components */
+        .question-box { margin-bottom: 25px; }
+        .en-txt { font-weight: 600; font-size: 1.1rem; display: block; margin-bottom: 5px; }
+        .hi-txt { font-weight: 400; font-size: 0.95rem; color: var(--secondary-text); display: block; }
+
+        .options-container { display: grid; gap: 12px; }
+        .option-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            padding: 15px;
+            border-radius: 12px;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.2s ease;
+            color: white;
+            display: flex;
+            flex-direction: column;
+        }
+        .option-btn:hover:not([disabled]) {
+            background: rgba(255, 255, 255, 0.15);
+            transform: scale(1.02);
+        }
+        .option-btn[disabled] { cursor: not-allowed; }
+
+        /* Animation States */
+        .correct { background: var(--correct) !important; border-color: transparent; }
+        .wrong { background: var(--wrong) !important; border-color: transparent; }
+        
+        .timer-pulse { color: #ff4d4d; animation: pulse 1s infinite; font-weight: bold; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+        
+        .shake { animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both; }
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+            40%, 60% { transform: translate3d(4px, 0, 0); }
+        }
+
+        /* Inputs & Buttons */
+        input[type="number"] {
+            background: rgba(0,0,0,0.2);
+            border: 1px solid var(--glass-border);
+            padding: 10px;
+            color: white;
+            border-radius: 8px;
+            width: 80px;
+            margin-bottom: 20px;
+        }
+        .start-btn, .finish-btn {
+            width: 100%;
+            padding: 15px;
+            border-radius: 12px;
+            border: none;
+            background: #fff;
+            color: #764ba2;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: transform 0.2s;
+        }
+        .start-btn:hover { transform: scale(1.05); }
+
+        /* Overlays */
+        #emoji-overlay {
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 100px;
+            z-index: 1000;
+            display: none;
+            pointer-events: none;
+        }
+
+        canvas#confetti {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 9999;
+            pointer-events: none;
+        }
+
+        .hidden { display: none !important; }
+
+        @media (max-width: 480px) {
+            .glass-card { padding: 20px; width: 95vw; }
+            .en-txt { font-size: 1rem; }
+            .hi-txt { font-size: 0.85rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="progress-container"><div id="progress-bar"></div></div>
+    <canvas id="confetti"></canvas>
+    <div id="emoji-overlay">😢</div>
+
+    <div class="glass-card" id="setup-screen">
+        <h2 style="margin-bottom:20px">Quiz Setup</h2>
+        <div style="margin-bottom:15px">
+            <label>Timer (Seconds per Q, 0 to disable):</label><br>
+            <input type="number" id="timer-input" value="30" min="0">
+        </div>
+        <div style="margin-bottom:20px">
+            <input type="checkbox" id="shuffle-input">
+            <label for="shuffle-input">Shuffle Questions</label>
+        </div>
+        <button class="start-btn" onclick="startQuiz()">Start Quiz</button>
+    </div>
+
+    <div class="glass-card hidden" id="quiz-screen">
+        <div class="header-info">
+            <span id="q-counter">Question 01/13</span>
+            <span id="timer-display"></span>
+            <span id="score-display">Score: 00</span>
+        </div>
+        
+        <div class="question-box">
+            <span class="en-txt" id="q-en"></span>
+            <span class="hi-txt" id="q-hi"></span>
+        </div>
+
+        <div class="options-container" id="options"></div>
+
+        <button class="finish-btn" onclick="endQuiz()">Finish & Show Results</button>
+    </div>
+
+    <div class="glass-card hidden" id="result-screen">
+        <h2 id="result-msg" style="text-align:center; margin-bottom:10px"></h2>
+        <p style="text-align:center; font-size: 1.5rem; margin-bottom:20px">Final Score: <span id="final-score"></span></p>
+        <button class="start-btn" onclick="location.reload()">Restart Quiz</button>
+    </div>
+
+    <script>
+        const questions = [
+            {
+                en: "In which part of the Constitution are Scheduled Areas and Tribal Areas designated and special administrative arrangements envisaged?",
+                hi: "संविधान के किस भाग में अनुसूचित क्षेत्र और जनजातीय क्षेत्र नामित किया गया है एवं प्रशासन की विशेष व्यवस्था की परिकल्पना की गई है?",
+                options: [
+                    { en: "Part - 12", hi: "भाग- 12", correct: false },
+                    { en: "Part - 11", hi: "भाग- 11", correct: false },
+                    { en: "Part - 10", hi: "भाग- 10", correct: true },
+                    { en: "Part - 15", hi: "भाग- 15", correct: false }
+                ]
+            },
+            {
+                en: "In which schedule of the Constitution are the administration and control of Scheduled Areas and Scheduled Tribes in states discussed?",
+                hi: "संविधान के किस अनुसूची में राज्यों अनुसूचित क्षेत्र व अनुसूचित जनजातियों के प्रशासन व नियंत्रण के बारे में चर्चा की गई है?",
+                options: [
+                    { en: "5th", hi: "5वीं", correct: true },
+                    { en: "7th", hi: "7वीं", correct: false },
+                    { en: "8th", hi: "8वीं", correct: false },
+                    { en: "9th", hi: "9वीं", correct: false }
+                ]
+            },
+            {
+                en: "In which schedule of the Constitution are special provisions made for Assam, Meghalaya, Tripura, and Mizoram?",
+                hi: "संविधान के किस अनुसूची में असम, मेघालय, त्रिपुरा व मिजोरम के बारे में विशेष प्रावधान किया गया है-",
+                options: [
+                    { en: "Fifth", hi: "पांचवीं", correct: false },
+                    { en: "Sixth", hi: "छठी", correct: true },
+                    { en: "Seventh", hi: "सातवीं", correct: false },
+                    { en: "Eighth", hi: "आठवीं", correct: false }
+                ]
+            },
+            {
+                en: "Who has the power to declare any area as a Scheduled Area?",
+                hi: "निम्नलिखित में से किसे किसी भी क्षेत्र को अनुसूचित क्षेत्र घोषित करने का अधिकार है?",
+                options: [
+                    { en: "Prime Minister", hi: "प्रधानमंत्री", correct: false },
+                    { en: "Governor", hi: "राज्यपाल", correct: false },
+                    { en: "Parliament", hi: "संसद", correct: false },
+                    { en: "President", hi: "राष्ट्रपति", correct: true }
+                ]
+            },
+            {
+                en: "Consider the statements: 1. Executive power of state doesn't apply to Scheduled Areas. 2. Governor is related to administration of Scheduled Areas via President.",
+                hi: "निम्नलिखित कथनों पर विचार कीजिए: 1. राज्य की कार्यकारी शक्ति उनके राज्य के अंदर अनुसूचित क्षेत्रों पर लागू नहीं होता है। 2. राज्यपाल, राष्ट्रपति को अनुसूचित क्षेत्रों के प्रशासन से संबंधित होता है।",
+                options: [
+                    { en: "Only 1", hi: "केवल 1", correct: false },
+                    { en: "Only 2", hi: "केवल 2", correct: true },
+                    { en: "1 and 2", hi: "1 और 2", correct: false },
+                    { en: "Neither 1 nor 2", hi: "न तो 1 न ही 2", correct: false }
+                ]
+            },
+            {
+                en: "How many members are there in the Tribal Advisory Council?",
+                hi: "जनजातीय सलाहकार परिषद में कितने सदस्य होते हैं-",
+                options: [
+                    { en: "25", hi: "25", correct: false },
+                    { en: "22", hi: "22", correct: false },
+                    { en: "20", hi: "20", correct: true },
+                    { en: "24", hi: "24", correct: false }
+                ]
+            },
+            {
+                en: "What representation of Scheduled members from the State Assembly is necessary in the Tribal Advisory Council?",
+                hi: "जनजातीय सलाहकार परिषद में राज्य विधानसभा के कितने अनुसूचित सदस्यों का प्रतिनिधित्व होना आवश्यक है?",
+                options: [
+                    { en: "Two-thirds", hi: "दो तिहाई", correct: false },
+                    { en: "One-third", hi: "एक तिहाई", correct: false },
+                    { en: "Three-fourths", hi: "तीन चौथाई", correct: true },
+                    { en: "Two-fourths", hi: "दो चौथाई", correct: false }
+                ]
+            },
+            {
+                en: "Who has the authority to decide whether an Act of Parliament or State Legislature applies to Scheduled Areas?",
+                hi: "निम्नलिखित में से यह किसे अधिकार है कि वह संसद या राज्य विधानमंडल के किसी विशेष अधिनियम को अनुसूचित क्षेत्रों में लागू करें या ना करें?",
+                options: [
+                    { en: "Chief Minister", hi: "मुख्यमंत्री", correct: false },
+                    { en: "Governor", hi: "राज्यपाल", correct: true },
+                    { en: "President", hi: "राष्ट्रपति", correct: false },
+                    { en: "District Magistrate", hi: "जिलाधिकारी", correct: false }
+                ]
+            },
+            {
+                en: "From whom does the Constitution expect the state to form a commission for the welfare of Scheduled Tribes?",
+                hi: "निम्नलिखित में से संविधान यह किससे अपेक्षा करता है कि राज्य में अनुसूचित जनजातियों के कल्याण हेतु एक आयोग का गठन करें?",
+                options: [
+                    { en: "Governor", hi: "राज्यपाल", correct: false },
+                    { en: "Chief Minister", hi: "मुख्यमंत्री", correct: false },
+                    { en: "President", hi: "राष्ट्रपति", correct: true },
+                    { en: "Prime Minister", hi: "प्रधानमंत्री", correct: false }
+                ]
+            },
+            {
+                en: "The U.N. Dhebar Commission is related to:",
+                hi: "यू. एन. ढेबर आयोग का संबंध है-",
+                options: [
+                    { en: "Welfare of Scheduled Tribes", hi: "अनुसूचित जनजातियों के कल्याण से", correct: true },
+                    { en: "Data Protection", hi: "डेटा संरक्षण से", correct: false },
+                    { en: "Buffer Stock", hi: "बफर स्टॉक से", correct: false },
+                    { en: "Privatization of Banks", hi: "बैंकों का निजीकरण से", correct: false }
+                ]
+            },
+            {
+                en: "Who has the power to establish or re-establish Autonomous Districts?",
+                hi: "निम्नलिखित में से किसे स्वशासी जिलों को स्थापित या पुर्नस्थापित करने का अधिकार है?",
+                options: [
+                    { en: "District Magistrate", hi: "जिलाधिकारी", correct: false },
+                    { en: "Governor", hi: "राज्यपाल", correct: true },
+                    { en: "Tribal Welfare Minister", hi: "जनजाति कल्याण मंत्री", correct: false },
+                    { en: "State Legislature", hi: "राज्य विधानमंडल", correct: false }
+                ]
+            },
+            {
+                en: "What will be the number of members in the District Council in each Autonomous District in Scheduled Areas?",
+                hi: "अनुसूचित क्षेत्रों में प्रत्येक स्वशासी जिले में जिला परिषद में कितने सदस्यों की संख्या होगी?",
+                options: [
+                    { en: "40", hi: "40", correct: false },
+                    { en: "20", hi: "20", correct: false },
+                    { en: "30", hi: "30", correct: true },
+                    { en: "36", hi: "36", correct: false }
+                ]
+            },
+            {
+                en: "How many members will be nominated by the Governor in an Autonomous District?",
+                hi: "स्वायतशासी जिले में राज्यपाल द्वारा कितने सदस्यों को नामित किया जायेगा?",
+                options: [
+                    { en: "4", hi: "4", correct: true },
+                    { en: "5", hi: "5", correct: false },
+                    { en: "7", hi: "7", correct: false },
+                    { en: "8", hi: "8", correct: false }
+                ]
+            }
+        ];
+
+        let currentQuestions = [];
+        let currentIndex = 0;
+        let score = 0;
+        let timerInterval;
+        let timePerQ = 0;
+        let timeLeft = 0;
+
+        // Audio Synthesis
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playTone(freq, type, duration) {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + duration);
+        }
+
+        function startQuiz() {
+            const shuffle = document.getElementById('shuffle-input').checked;
+            timePerQ = parseInt(document.getElementById('timer-input').value) || 0;
+            currentQuestions = shuffle ? [...questions].sort(() => Math.random() - 0.5) : [...questions];
+            
+            document.getElementById('setup-screen').classList.add('hidden');
+            document.getElementById('quiz-screen').classList.remove('hidden');
+            showQuestion();
+        }
+
+        function showQuestion() {
+            if (currentIndex >= currentQuestions.length) return endQuiz();
+            
+            const q = currentQuestions[currentIndex];
+            document.getElementById('q-counter').innerText = `Question ${String(currentIndex + 1).padStart(2, '0')}/${currentQuestions.length}`;
+            document.getElementById('score-display').innerText = `Score: ${String(score).padStart(2, '0')}`;
+            document.getElementById('q-en').innerText = q.en;
+            document.getElementById('q-hi').innerText = q.hi;
+            
+            const optionsDiv = document.getElementById('options');
+            optionsDiv.innerHTML = '';
+            
+            q.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerHTML = `<span class="en-txt">${opt.en}</span><span class="hi-txt">${opt.hi}</span>`;
+                btn.onclick = () => handleAnswer(idx, btn);
+                optionsDiv.appendChild(btn);
+            });
+
+            // Progress Bar
+            document.getElementById('progress-bar').style.width = `${(currentIndex / currentQuestions.length) * 100}%`;
+
+            // Timer Logic
+            if (timePerQ > 0) {
+                timeLeft = timePerQ;
+                updateTimerUI();
+                clearInterval(timerInterval);
+                timerInterval = setInterval(() => {
+                    timeLeft--;
+                    updateTimerUI();
+                    if (timeLeft <= 0) {
+                        clearInterval(timerInterval);
+                        handleAnswer(-1, null); // Time out
+                    }
+                }, 1000);
+            }
+        }
+
+        function updateTimerUI() {
+            const timerEl = document.getElementById('timer-display');
+            timerEl.innerText = `⏱ ${timeLeft}s`;
+            if (timeLeft < 5) timerEl.classList.add('timer-pulse');
+            else timerEl.classList.remove('timer-pulse');
+        }
+
+        function handleAnswer(selectedIdx, btn) {
+            clearInterval(timerInterval);
+            const q = currentQuestions[currentIndex];
+            const buttons = document.querySelectorAll('.option-btn');
+            buttons.forEach(b => b.disabled = true);
+
+            let isCorrect = selectedIdx !== -1 && q.options[selectedIdx].correct;
+
+            if (isCorrect) {
+                score++;
+                btn.classList.add('correct');
+                playTone(880, 'sine', 0.5); // Ting
+                triggerConfetti();
+            } else {
+                if (btn) btn.classList.add('wrong');
+                // Show correct answer
+                q.options.forEach((opt, i) => {
+                    if (opt.correct) buttons[i].classList.add('correct');
+                });
+                playTone(150, 'sawtooth', 0.5); // Buzz
+                triggerSadEmoji();
+            }
+
+            setTimeout(() => {
+                currentIndex++;
+                showQuestion();
+            }, 1500);
+        }
+
+        function triggerSadEmoji() {
+            const emoji = document.getElementById('emoji-overlay');
+            emoji.style.display = 'block';
+            emoji.classList.add('shake');
+            setTimeout(() => {
+                emoji.style.display = 'none';
+                emoji.classList.remove('shake');
+            }, 1000);
+        }
+
+        function triggerConfetti() {
+            const canvas = document.getElementById('confetti');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            let pieces = [];
+            for (let i = 0; i < 50; i++) {
+                pieces.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height - canvas.height,
+                    size: Math.random() * 10 + 5,
+                    color: `hsl(${Math.random() * 360}, 70%, 50%)`,
+                    speed: Math.random() * 3 + 2
+                });
+            }
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                pieces.forEach(p => {
+                    p.y += p.speed;
+                    ctx.fillStyle = p.color;
+                    ctx.fillRect(p.x, p.y, p.size, p.size);
+                });
+                if (pieces[0].y < canvas.height) requestAnimationFrame(animate);
+                else ctx.clearRect(0,0, canvas.width, canvas.height);
+            }
+            animate();
+        }
+
+        function endQuiz() {
+            clearInterval(timerInterval);
+            document.getElementById('quiz-screen').classList.add('hidden');
+            document.getElementById('result-screen').classList.remove('hidden');
+            document.getElementById('progress-bar').style.width = '100%';
+            
+            const percent = (score / currentQuestions.length) * 100;
+            const finalScoreEl = document.getElementById('final-score');
+            const msgEl = document.getElementById('result-msg');
+            
+            finalScoreEl.innerText = `${score} / ${currentQuestions.length}`;
+            
+            if (percent >= 80) msgEl.innerText = "🏆 Outstanding Performance!";
+            else if (percent >= 50) msgEl.innerText = "👏 Well Done! Keep it up.";
+            else msgEl.innerText = "📚 Practice makes perfect! Try again.";
+        }
+    </script>
+</body>
+</html>

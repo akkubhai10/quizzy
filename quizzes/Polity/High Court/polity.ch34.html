@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chapter 34: High Court Quiz</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --correct: #4caf50;
+            --wrong: #f44336;
+            --text-en: #ffffff;
+            --text-hi: #dddddd;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+
+        body {
+            background: var(--primary-bg);
+            background-attachment: fixed;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 15px;
+            overflow-x: hidden;
+        }
+
+        #progress-bar {
+            position: fixed;
+            top: 0; left: 0; height: 6px;
+            background: linear-gradient(90deg, #00f2fe 0%, #4facfe 100%);
+            box-shadow: 0 0 10px #4facfe;
+            width: 0%; transition: width 0.4s ease;
+            z-index: 1000;
+        }
+
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 25px;
+            padding: 30px;
+            width: 100%;
+            max-width: 650px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            color: white;
+            position: relative;
+        }
+
+        h1 { text-align: center; margin-bottom: 20px; font-weight: 700; font-size: 1.5rem; }
+
+        .settings-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-size: 0.9rem; }
+        input[type="number"] {
+            width: 100%; padding: 12px; border-radius: 12px; border: none;
+            background: rgba(255, 255, 255, 0.2); color: white; outline: none;
+        }
+
+        .toggle-container {
+            display: flex; align-items: center; justify-content: space-between; margin: 15px 0;
+        }
+
+        .btn-start, .btn-finish, .btn-restart {
+            width: 100%; padding: 15px; border-radius: 15px; border: none;
+            background: #fff; color: #764ba2; font-weight: 700; cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .btn-start:hover { transform: scale(1.02); box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+
+        .quiz-header { display: flex; justify-content: space-between; margin-bottom: 20px; font-size: 0.85rem; }
+
+        #timer.pulse-red { color: #ff4d4d; animation: pulse 0.5s infinite; font-weight: bold; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+
+        .question-text { margin-bottom: 20px; }
+        .en-q { font-size: 1.1rem; font-weight: 600; display: block; margin-bottom: 5px; }
+        .hi-q { font-size: 0.95rem; color: var(--text-hi); display: block; line-height: 1.4; }
+
+        .options-grid { display: grid; gap: 12px; }
+        .option-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--glass-border);
+            padding: 15px; border-radius: 12px; text-align: left; color: white;
+            cursor: pointer; transition: 0.3s; width: 100%;
+        }
+        .option-btn:hover:not(:disabled) { background: rgba(255, 255, 255, 0.2); }
+        .option-btn.correct { background: var(--correct) !important; border-color: transparent; }
+        .option-btn.wrong { background: var(--wrong) !important; border-color: transparent; }
+
+        .en-o { display: block; font-weight: 500; font-size: 0.95rem; }
+        .hi-o { display: block; font-size: 0.85rem; color: #ccc; }
+
+        #sad-emoji {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 80px; display: none; z-index: 10;
+        }
+        .shake { animation: shake 0.5s; }
+        @keyframes shake {
+            0%, 100% { transform: translate(-50%, -50%); }
+            25% { transform: translate(-55%, -50%); }
+            75% { transform: translate(-45%, -50%); }
+        }
+
+        .hidden { display: none; }
+
+        #finish-early { margin-top: 20px; background: rgba(255, 77, 77, 0.2); color: white; border: 1px solid #ff4d4d; }
+
+        .result-screen { text-align: center; }
+        .score-circle {
+            width: 120px; height: 120px; border-radius: 50%; border: 5px solid #fff;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 2rem; font-weight: 700; margin: 20px auto;
+        }
+
+        canvas#confetti {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 9999;
+        }
+    </style>
+</head>
+<body>
+
+<div id="progress-bar"></div>
+<canvas id="confetti"></canvas>
+
+<div class="glass-card" id="start-screen">
+    <h1>Chapter 34: High Court<br><span style="font-size: 0.8em;">उच्च न्यायालय</span></h1>
+    <div class="settings-group">
+        <label>Timer per Question (seconds, 0 for no timer):</label>
+        <input type="number" id="timer-input" value="30" min="0">
+    </div>
+    <div class="toggle-container">
+        <span>Shuffle Questions</span>
+        <input type="checkbox" id="shuffle-toggle" checked>
+    </div>
+    <button class="btn-start" onclick="startQuiz()">Start Quiz</button>
+</div>
+
+<div class="glass-card hidden" id="quiz-screen">
+    <div class="quiz-header">
+        <span id="q-counter">Question: 1/25</span>
+        <span id="timer">Time: --</span>
+        <span id="score-display">Score: 0</span>
+    </div>
+
+    <div class="question-container">
+        <div class="question-text">
+            <span class="en-q" id="en-q"></span>
+            <span class="hi-q" id="hi-q"></span>
+        </div>
+        <div class="options-grid" id="options-grid"></div>
+    </div>
+
+    <div id="sad-emoji">😢</div>
+    
+    <button id="finish-early" class="btn-finish" onclick="showResults()">Finish & Show Results</button>
+</div>
+
+<div class="glass-card hidden" id="result-screen">
+    <div class="result-screen">
+        <h2>Quiz Completed!</h2>
+        <div class="score-circle" id="final-score">0/25</div>
+        <h3 id="result-msg"></h3>
+        <p id="final-stats" style="margin: 15px 0;"></p>
+        <button class="btn-restart" onclick="location.reload()">Restart Quiz</button>
+    </div>
+</div>
+
+<script>
+    const questions = [
+        {
+            en_q: "Which is the highest court in the judicial administration of a state?",
+            hi_q: "राज्य के न्यायिक प्रशासन में शीर्ष न्यायालय होता है?",
+            options: [
+                { en: "Subordinate Court", hi: "अधीनस्थ न्यायालय", isCorrect: false },
+                { en: "High Court", hi: "उच्च न्यायालय", isCorrect: true },
+                { en: "Supreme Court", hi: "उच्चतम न्यायालय", isCorrect: false },
+                { en: "Tribunal", hi: "अधिकरण", isCorrect: false }
+            ]
+        },
+        {
+            en_q: "When was the High Court first established in India?",
+            hi_q: "भारत में उच्च न्यायालय का सर्वप्रथम गठन कब हुआ?",
+            options: [
+                { en: "1861", hi: "1861", isCorrect: false },
+                { en: "1863", hi: "1863", isCorrect: false },
+                { en: "1862", hi: "1862", isCorrect: true },
+                { en: "1865", hi: "1865", isCorrect: false }
+            ]
+        },
+        {
+            en_q: "In which of the following places was a High Court established in 1862?",
+            hi_q: "निम्नलिखित में से किन जगहों पर 1862 में उच्च न्यायालय का स्थापना किया गया?",
+            options: [
+                { en: "Calcutta", hi: "कोलकाता", isCorrect: false },
+                { en: "Madras", hi: "मद्रास", isCorrect: false },
+                { en: "Bombay", hi: "बंबई", isCorrect: false },
+                { en: "All of the above", hi: "उपर्युक्त में सभी", isCorrect: true }
+            ]
+        },
+        {
+            en_q: "Through which Constitutional Amendment was it provided that Parliament can establish a common High Court for two or more states/UTs?",
+            hi_q: "निम्नलिखित में से किस संविधान संशोधन द्वारा यह प्रावधान किया गया कि संसद दो या दो से अधिक राज्यों एवं एक संघ राज्य क्षेत्र के लिये साझा उच्च न्यायालय की स्थापना कर सकती है?",
+            options: [
+                { en: "7th", hi: "सातवां", isCorrect: true },
+                { en: "6th", hi: "छठा", isCorrect: false },
+                { en: "8th", hi: "आठवां", isCorrect: false },
+                { en: "9th", hi: "नौवां", isCorrect: false }
+            ]
+        },
+        {
+            en_q: "What is the current number of High Courts in India?",
+            hi_q: "वर्तमान में भारत में उच्च न्यायालयों की संख्या है?",
+            options: [
+                { en: "24", hi: "24", isCorrect: false },
+                { en: "32", hi: "32", isCorrect: false },
+                { en: "25", hi: "25", isCorrect: true },
+                { en: "29", hi: "29", isCorrect: false }
+            ]
+        },
+        {
+            en_q: "How many High Courts have jurisdiction over more than one state?",
+            hi_q: "निम्नलिखित में से कितने ऐसे उच्च न्यायालय हैं जिनके क्षेत्राधिकार एक से अधिक राज्यों तक हैं?",
+            options: [
+                { en: "Three", hi: "तीन", isCorrect: true },
+                { en: "Four", hi: "चार", isCorrect: false },
+                { en: "Eight", hi: "आठ", isCorrect: false },
+                { en: "Two", hi: "दो", isCorrect: false }
+            ]
+        },
+        {
+            en_q: "Which Union Territory has its own separate High Court?",
+            hi_q: "निम्नलिखित में से किन संघ शासित क्षेत्र में अपना एक अलग उच्च न्यायालय है?",
+            options: [
+                { en: "Puducherry", hi: "पुडुचेरी", isCorrect: false },
+                { en: "Jammu-Kashmir", hi: "जम्मू-कश्मीर", isCorrect: false },
+                { en: "Delhi", hi: "दिल्ली", isCorrect: true },
+                { en: "Andaman & Nicobar Islands", hi: "अंडमान एवं निकोबार", isCorrect: false }
+            ]
+        },
+        {
+            en_q: "In which part of the Constitution is the formation, independence, power, and procedure of High Courts mentioned?",
+            hi_q: "संविधान के किस भाग में उच्च न्यायालयों के गठन, स्वतंत्रता, न्यायिक क्षेत्र शक्तियां प्रक्रिया आदि के बारे में बताया गया है?",
+            options: [
+                { en: "Part 5", hi: "5वां", isCorrect: false },
+                { en: "Part 6", hi: "6वां", isCorrect: true },
+                { en: "Part 9", hi: "9वां", isCorrect: false },
+                { en: "Part 7", hi: "7वां", isCorrect: false }
+            ]
+        },
+        {
+            en_q: "Who is empowered by the Constitution to appoint High Court judges?",
+            hi_q: "उच्च न्यायालय के न्यायाधीशों की नियुक्ति करने का अधिकार संविधान द्वारा प्रदान किया गया है-",
+            options: [
+                { en: "President", hi: "राष्ट्रपति", isCorrect: true },
+                { en: "Governor", hi: "राज्यपाल", isCorrect: false },
+                { en: "Prime Minister", hi: "प्रधानमंत्री", isCorrect: false },
+                { en: "Chief Justice of India", hi: "भारत के मुख्य न्यायाधीश", isCorrect: false }
+            ]
+        },
+        {
+            en_q: "What is the qualification required to be appointed as a High Court judge?",
+            hi_q: "उच्च न्यायालय के न्यायाधीश नियुक्त होने के लिये निर्धारित योग्यता है-",
+            options: [
+                { en: "Must be a citizen of India", hi: "वह भारत का नागरिक हो।", isCorrect: false },
+                { en: "10 years experience in judicial office", hi: "उसे भारत के न्यायिक कार्य में 10 वर्ष का अनुभव हो।", isCorrect: false },
+                { en: "Advocate in HC for at least 10 years", hi: "वह उच्च न्यायालय में लगातार 10 वर्ष तक अधिवक्ता रह चुका हो।", isCorrect: false },
+                { en: "All of the above", hi: "उपर्युक्त में सभी।", isCorrect: true }
+            ]
+        },
+        {
+            en_q: "What is the minimum age prescribed to become a High Court judge?",
+            hi_q: "भारतीय संविधान द्वारा उच्च न्यायालय के न्यायाधीश बनने के लिये न्यूनतम आयु निर्धारित है?",
+            options: [
+                { en: "35 Years", hi: "35 वर्ष", isCorrect: false },
+                { en: "30 Years", hi: "30 वर्ष", isCorrect: false },
+                { en: "25 Years", hi: "25 वर्ष", isCorrect: false },
+                { en: "Not prescribed", hi: "निर्धारित नहीं है।", isCorrect: true }
+            ]
+        },
+        {
+            en_q: "Who administers the oath or affirmation to High Court judges?",
+            hi_q: "उच्च न्यायालय के न्यायाधीशों को शपथ या प्रतिज्ञान कौन दिलवाता है?",
+            options: [
+                { en: "President", hi: "राष्ट्रपति", isCorrect: false },
+                { en: "Governor", hi: "राज्यपाल", isCorrect: true },
+                { en: "Advocate General", hi: "महाधिवक्ता", isCorrect: false },
+                { en: "Chief Minister", hi: "मुख्यमंत्री", isCorrect: false }
+            ]
+        },
+        {
+            en_q: "What is the current salary of the Chief Justice of a High Court?",
+            hi_q: "वर्तमान में उच्च न्यायालय के मुख्य न्यायाधीश का वेतन है-",
+            options: [
+                { en: "2.50 Lakh", hi: "2.50 लाख", isCorrect: true },
+                { en: "2.28 Lakh", hi: "2.28 लाख", isCorrect: false },
+                { en: "2.25 Lakh", hi: "2.25 लाख", isCorrect: false },
+                { en: "3 Lakh", hi: "3 लाख", isCorrect: false }
+            ]
+        },
+        {
+            en_q: "What is the current salary of other judges of a High Court?",
+            hi_q: "वर्तमान में उच्च न्यायालय के अन्य न्यायाधीशों का वेतन है-",
+            options: [
+                { en: "2.50 Lakh", hi: "2.50 लाख", isCorrect: false },
+                { en: "2.28 Lakh", hi: "2.28 लाख", isCorrect: false },
+                { en: "2.25 Lakh", hi: "2.25 लाख", isCorrect: true },
+                { en: "4 Lakh", hi: "4 लाख", isCorrect: false }
+            ]
+        },
+        {
+            en_q: "What is the retirement age prescribed for High Court judges?",
+            hi_q: "संविधान द्वारा उच्च न्यायालय के न्यायाधीशों की सेवानिवृत्ति आयु कितना निर्धारित किया गया है?",
+            options: [
+                { en: "65 Years", hi: "65 वर्ष", isCorrect: false },
+                { en: "64 Years", hi: "64 वर्ष", isCorrect: false },
+                { en: "60 Years", hi: "60 वर्ष", isCorrect: false },
+                { en: "62 Years", hi: "62 वर्ष", isCorrect: true }
+            ]
+        },
+        {
+            en_q: "To whom does a High Court judge submit their resignation?",
+            hi_q: "उच्च न्यायालय के न्यायाधीश अपना त्यागपत्र किसे सौंपता है?",
+            options: [
+                { en: "Chief Justice of HC", hi: "उच्च न्यायालय के मुख्य न्यायाधीश को", isCorrect: false },
+                { en: "Chief Justice of India", hi: "उच्चतम न्यायालय के मुख्य न्यायाधीश को", isCorrect: false },
+                { en: "President", hi: "राष्ट्रपति को", isCorrect: true },
+                { en: "Governor", hi: "राज्यपाल को", isCorrect: false }
+            ]
+        },
+        {
+            en_q: "High Court judges can be removed on the basis of proved misbehavior or incapacity by:",
+            hi_q: "उच्च न्यायालय के न्यायाधीश को सिद्ध कदाचार और अक्षमता के आधार पर हटाया जा सकता है?",
+            options: [
+                { en: "President at his discretion", hi: "राष्ट्रपति द्वारा अपने विवेक से", isCorrect: false },
+                { en: "By the Supreme Court", hi: "उच्चतम न्यायालय द्वारा", isCorrect: false },
+                { en: "Process of Impeachment", hi: "महाभियोग की प्रक्रिया द्वारा", isCorrect: true },
+                { en: "By the Governor", hi: "राज्यपाल द्वारा", isCorrect: false }
+            ]
+        },
+        {
+            en_q: "How many signatures of Lok Sabha and Rajya Sabha members are required on the motion to remove a High Court judge?",
+            hi_q: "उच्च न्यायालय के न्यायाधीश को हटाने वाला प्रस्ताव पर लोकसभा एवं राज्यसभा के कितने सदस्यों का हस्ताक्षर आवश्यक है?",
+            options: [
+                { en: "100 and 50", hi: "100 एवं 50", isCorrect: true },
+                { en: "50 and 100", hi: "50 एवं 100", isCorrect: false },
+                { en: "50 and 50", hi: "50 एवं 50", isCorrect: false },
+                { en: "60 and 70", hi: "60 एवं 70", isCorrect: false }
+            ]
+        },
+        {
+            en_q: "Transfer of High Court judges is done by:",
+            hi_q: "उच्च न्यायालयों के न्यायाधीश का स्थानांतरण किसके द्वारा किया जाता है?",
+            options: [
+                { en: "Governor", hi: "राज्यपाल", isCorrect: false },
+                { en: "President", hi: "राष्ट्रपति", isCorrect: true },
+                { en: "Prime Minister", hi: "प्रधानमंत्री", isCorrect: false },
+                { en: "Transfer is not allowed", hi: "स्थानांतरण नहीं होता है", isCorrect: false }
+            ]
+        },
+        {
+            en_q: "Additional or acting judges appointed in High Court cannot remain in office after reaching what age?",
+            hi_q: "उच्च न्यायालय में नियुक्त अतिरिक्त या कार्यकारी न्यायाधीशों कितने वर्ष की उम्र के पश्चात् अपने पद पर नहीं रह सकता है?",
+            options: [
+                { en: "64 Years", hi: "64 वर्ष", isCorrect: false },
+                { en: "62 Years", hi: "62 वर्ष", isCorrect: true },
+                { en: "63 Years", hi: "63 वर्ष", isCorrect: false },
+                { en: "65 Years", hi: "65 वर्ष", isCorrect: false }
+            ]
+        },
+        {
+            en_q: "Which of the following falls under the Original Jurisdiction of the High Court?",
+            hi_q: "उच्च न्यायालय के प्रारंभिक क्षेत्राधिकार के अंतर्गत है-",
+            options: [
+                { en: "Contempt of court matters", hi: "अधिकारिता का मामला एवं न्यायालय की अवमानना", isCorrect: false },
+                { en: "Enforcement of Fundamental Rights", hi: "नागरिकों के मूल अधिकारों का प्रवर्तन", isCorrect: false },
+                { en: "Revenue matters", hi: "राजस्व मामले", isCorrect: false },
+                { en: "All of the above", hi: "उपर्युक्त में सभी।", isCorrect: true }
+            ]
+        },
+        {
+            en_q: "Who hears election disputes related to Members of Parliament and State Legislature?",
+            hi_q: "संसद सदस्यों और राज्य विधानमंडल सदस्यों के निर्वाचन संबंधी विवाद का सुनवाई करता है-",
+            options: [
+                { en: "Election Commission", hi: "निर्वाचन आयोग", isCorrect: false },
+                { en: "Supreme Court", hi: "उच्चतम न्यायालय", isCorrect: false },
+                { en: "High Court", hi: "उच्च न्यायालय", isCorrect: true },
+                { en: "Tribunal", hi: "अधिकरण", isCorrect: false }
+            ]
+        },
+        {
+            en_q: "In which Article of the Constitution is it mentioned that every state shall have a High Court?",
+            hi_q: "संविधान के किस अनुच्छेद में यह उल्लिखित है कि राज्य का एक उच्च न्यायालय होगा?",
+            options: [
+                { en: "Art. 215", hi: "215", isCorrect: false },
+                { en: "Art. 214", hi: "214", isCorrect: true },
+                { en: "Art. 221", hi: "221", isCorrect: false },
+                { en: "Art. 222", hi: "222", isCorrect: false }
+            ]
+        },
+        {
+            en_q: "Match HC to Jurisdiction: (A) Bombay, (B) Kolkata, (C) Guwahati, (D) Madras with (1) Puducherry, (2) Dadra Nagar Haveli, (3) Andaman Nicobar, (4) Mizoram.",
+            hi_q: "मिलान करें: उच्च न्यायालय (A) बंबई, (B) कोलकाता, (C) गुवाहाटी, (D) मद्रास को क्षेत्राधिकार (1) पुडुचेरी, (2) दादरा नगर हवेली, (3) अंडमान निकोबार, (4) मिजोरम से।",
+            options: [
+                { en: "A-2, B-3, C-4, D-1", hi: "A-2, B-3, C-4, D-1", isCorrect: true },
+                { en: "A-1, B-2, C-3, D-4", hi: "A-1, B-2, C-3, D-4", isCorrect: false },
+                { en: "A-2, B-1, C-3, D-4", hi: "A-2, B-1, C-3, D-4", isCorrect: false },
+                { en: "A-3, B-2, C-4, D-1", hi: "A-3, B-2, C-4, D-1", isCorrect: false }
+            ]
+        },
+        {
+            en_q: "Match Article to Provision: (A) 215, (B) 225, (C) 223, (D) 221 with (1) HC Jurisdiction, (2) HC as Court of Record, (3) Judge Salary, (4) Acting Chief Justice Appointment.",
+            hi_q: "मिलान करें: अनुच्छेद (A) 215, (B) 225, (C) 223, (D) 221 को प्रावधान (1) क्षेत्राधिकार, (2) अभिलेख न्यायालय, (3) वेतन, (4) कार्यकारी मुख्य न्यायाधीश नियुक्ति से।",
+            options: [
+                { en: "A-2, B-1, C-4, D-3", hi: "A-2, B-1, C-4, D-3", isCorrect: true },
+                { en: "A-1, B-2, C-3, D-4", hi: "A-1, B-2, C-3, D-4", isCorrect: false },
+                { en: "A-2, B-1, C-3, D-4", hi: "A-2, B-1, C-3, D-4", isCorrect: false },
+                { en: "A-1, B-3, C-4, D-2", hi: "A-1, B-3, C-4, D-2", isCorrect: false }
+            ]
+        }
+    ];
+
+    let currentQ = 0, score = 0, timerVal = 0, timerRef = null, quizData = [], audioCtx = null;
+
+    function playSound(type) {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        if (type === 'correct') {
+            osc.frequency.setValueAtTime(880, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.3);
+        } else {
+            osc.type = 'sawtooth'; osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+            gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.4);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.4);
+        }
+    }
+
+    function startConfetti() {
+        const canvas = document.getElementById('confetti');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+        let particles = [];
+        for(let i=0; i<100; i++) particles.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height - canvas.height, r: Math.random()*6 + 2, d: Math.random()*10, color: `hsl(${Math.random()*360}, 100%, 50%)`, tilt: Math.random()*10 - 10 });
+        function draw() {
+            ctx.clearRect(0,0,canvas.width, canvas.height);
+            particles.forEach(p => { ctx.beginPath(); ctx.lineWidth = p.r; ctx.strokeStyle = p.color; ctx.moveTo(p.x + p.tilt + p.r/2, p.y); ctx.lineTo(p.x + p.tilt, p.y + p.tilt + p.r/2); ctx.stroke(); p.y += Math.cos(p.d) + 1 + p.r/2; p.x += Math.sin(p.d); if(p.y > canvas.height) p.y = -20; });
+            requestAnimationFrame(draw);
+        }
+        draw(); setTimeout(() => { canvas.width = 0; }, 2000);
+    }
+
+    function startQuiz() {
+        const shuffle = document.getElementById('shuffle-toggle').checked;
+        timerVal = parseInt(document.getElementById('timer-input').value) || 0;
+        quizData = shuffle ? [...questions].sort(() => Math.random() - 0.5) : [...questions];
+        document.getElementById('start-screen').classList.add('hidden');
+        document.getElementById('quiz-screen').classList.remove('hidden');
+        showQuestion();
+    }
+
+    function showQuestion() {
+        if (currentQ >= quizData.length) return showResults();
+        const q = quizData[currentQ];
+        document.getElementById('en-q').innerText = q.en_q;
+        document.getElementById('hi-q').innerText = q.hi_q;
+        document.getElementById('q-counter').innerText = `Question: ${currentQ + 1}/${quizData.length}`;
+        document.getElementById('progress-bar').style.width = `${((currentQ) / quizData.length) * 100}%`;
+        const grid = document.getElementById('options-grid');
+        grid.innerHTML = '';
+        q.options.forEach((opt, idx) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerHTML = `<span class="en-o">${opt.en}</span><span class="hi-o">${opt.hi}</span>`;
+            btn.onclick = () => handleAnswer(idx, btn);
+            grid.appendChild(btn);
+        });
+        startTimer();
+    }
+
+    function startTimer() {
+        clearInterval(timerRef);
+        const timerEl = document.getElementById('timer');
+        if (timerVal <= 0) { timerEl.innerText = "Time: ∞"; return; }
+        let timeLeft = timerVal; timerEl.classList.remove('pulse-red');
+        timerRef = setInterval(() => {
+            timerEl.innerText = `Time: ${timeLeft}s`;
+            if (timeLeft < 5) timerEl.classList.add('pulse-red');
+            if (timeLeft <= 0) { clearInterval(timerRef); handleAnswer(-1, null); }
+            timeLeft--;
+        }, 1000);
+    }
+
+    function handleAnswer(index, btn) {
+        clearInterval(timerRef);
+        const q = quizData[currentQ];
+        const buttons = document.querySelectorAll('.option-btn');
+        buttons.forEach(b => b.disabled = true);
+        let isCorrect = index !== -1 && q.options[index].isCorrect;
+        if (isCorrect) {
+            btn.classList.add('correct'); score++;
+            document.getElementById('score-display').innerText = `Score: ${score}`;
+            playSound('correct'); startConfetti();
+        } else {
+            if (btn) btn.classList.add('wrong');
+            buttons.forEach((b, i) => { if (q.options[i].isCorrect) b.classList.add('correct'); });
+            const sad = document.getElementById('sad-emoji');
+            sad.style.display = 'block'; sad.classList.add('shake');
+            playSound('wrong'); setTimeout(() => { sad.style.display = 'none'; sad.classList.remove('shake'); }, 1000);
+        }
+        setTimeout(() => { currentQ++; if (currentQ < quizData.length) showQuestion(); else showResults(); }, 1500);
+    }
+
+    function showResults() {
+        clearInterval(timerRef);
+        document.getElementById('quiz-screen').classList.add('hidden');
+        document.getElementById('result-screen').classList.remove('hidden');
+        document.getElementById('progress-bar').style.width = '100%';
+        document.getElementById('final-score').innerText = `${score}/${quizData.length}`;
+        const perc = (score / quizData.length) * 100;
+        const msg = document.getElementById('result-msg');
+        if (perc >= 80) msg.innerText = "🏆 Outstanding Performance!";
+        else if (perc >= 50) msg.innerText = "👏 Well Done! Keep it up.";
+        else msg.innerText = "📚 Practice makes perfect! Try again.";
+        document.getElementById('final-stats').innerText = `Accuracy: ${perc.toFixed(1)}% | Questions Answered: ${currentQ}`;
+    }
+</script>
+</body>
+</html>

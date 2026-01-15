@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chapter 40: Union Territories Quiz</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --glass: rgba(255, 255, 255, 0.1);
+            --border: rgba(255, 255, 255, 0.2);
+            --correct: #27ae60;
+            --wrong: #c0392b;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #4158D0 0%, #C850C0 46%, #FFCC70 100%);
+            background-size: 400% 400%;
+            animation: bgMove 15s ease infinite;
+            display: flex; justify-content: center; align-items: center;
+            color: white; padding: 15px;
+        }
+
+        @keyframes bgMove {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .container {
+            width: 100%; max-width: 550px;
+            background: var(--glass);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid var(--border);
+            border-radius: 30px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            position: relative; overflow: hidden;
+        }
+
+        #progress-bar {
+            position: absolute; top: 0; left: 0; height: 6px;
+            background: linear-gradient(to right, #00f2fe, #4facfe);
+            width: 0%; transition: width 0.4s ease;
+        }
+
+        .header { text-align: center; margin-bottom: 25px; }
+        h1 { font-size: 1.7rem; margin-bottom: 5px; }
+        .sub-text { font-size: 0.9rem; opacity: 0.8; }
+
+        .config-box { background: rgba(0,0,0,0.2); padding: 20px; border-radius: 20px; margin-bottom: 20px; }
+        input[type="number"] {
+            width: 100%; padding: 12px; border-radius: 12px; border: none;
+            background: rgba(255,255,255,0.2); color: white; margin-top: 10px;
+        }
+
+        .btn-start {
+            width: 100%; padding: 15px; border: none; border-radius: 15px;
+            background: white; color: #4158D0; font-weight: 600; cursor: pointer;
+            transition: 0.3s; font-size: 1rem;
+        }
+        .btn-start:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+
+        .question-box { margin-bottom: 25px; }
+        .q-text { font-size: 1.15rem; font-weight: 600; line-height: 1.4; }
+        .q-text .hi { display: block; font-size: 1rem; font-weight: 400; color: #eee; margin-top: 8px; }
+
+        .option-btn {
+            width: 100%; padding: 14px 20px; border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 15px; background: rgba(255,255,255,0.1); color: white;
+            text-align: left; margin-bottom: 12px; cursor: pointer; transition: 0.2s;
+            display: flex; flex-direction: column;
+        }
+        .option-btn .hi { font-size: 0.85rem; color: #ccc; margin-top: 2px; }
+
+        #timer { font-weight: 600; display: block; text-align: center; margin-bottom: 15px; font-size: 1.2rem; }
+        .pulse-red { color: #ff4d4d; animation: pulse 0.8s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+
+        #emoji-layer {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 100px; display: none; z-index: 99;
+        }
+        .shake { animation: shake 0.5s; }
+        @keyframes shake { 0%,100%{transform:translate(-50%,-50%)} 25%{transform:translate(-55%,-50%)} 75%{transform:translate(-45%,-50%)} }
+
+        .hidden { display: none; }
+        .scroll-area { max-height: 50vh; overflow-y: auto; padding-right: 5px; }
+    </style>
+</head>
+<body>
+
+    <div id="emoji-layer">😢</div>
+
+    <div class="container">
+        <div id="progress-bar"></div>
+
+        <div id="start-screen">
+            <div class="header">
+                <h1>Chapter - 40</h1>
+                <p class="sub-text">Union Territories | केन्द्रशासित प्रदेश</p>
+            </div>
+            <div class="config-box">
+                <label>Timer per Question (Seconds, 0 = No Timer):</label>
+                <input type="number" id="time-input" value="30">
+            </div>
+            <button class="btn-start" onclick="beginQuiz()">Start Quiz</button>
+        </div>
+
+        <div id="quiz-screen" class="hidden">
+            <div style="display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 10px;">
+                <span id="q-count">0/13</span>
+                <span id="score">Score: 0</span>
+            </div>
+            <span id="timer">⏱ 0s</span>
+            <div class="question-box">
+                <p class="q-text" id="main-q"></p>
+            </div>
+            <div class="scroll-area" id="options-grid"></div>
+            <button class="btn-start" style="background:transparent; border:1px solid white; color:white; margin-top:20px;" onclick="showFinal()">Finish Quiz</button>
+        </div>
+
+        <div id="end-screen" class="hidden">
+            <h1 id="result-title"></h1>
+            <div style="text-align:center; margin:30px 0;">
+                <p>Final Score</p>
+                <h2 id="final-stats" style="font-size: 3rem;">0/0</h2>
+            </div>
+            <button class="btn-start" onclick="location.reload()">Restart</button>
+        </div>
+    </div>
+
+<script>
+    const data = [
+        { en: "In how many categories is the Indian territory divided by the Constitution?", hi: "संविधान द्वारा भारतीय राज्य क्षेत्र को कितने श्रेणियों में बाँटा गया है ?", options: [{en: "State territory", hi: "राज्य क्षेत्र", c:false}, {en: "Union territory", hi: "केंद्रशासित प्रदेश", c:false}, {en: "Acquired territories", hi: "अर्जित किया जाय", c:false}, {en: "All of the above", hi: "उपर्युक्त में सभी।", c:true}]},
+        { en: "What is the current number of Union Territories in India?", hi: "वर्तमान में भारत में केंद्रशासित प्रदेशों की संख्या कितनी है ?", options: [{en: "7", hi: "7", c:false}, {en: "8", hi: "8", c:true}, {en: "9", hi: "9", c:false}, {en: "10", hi: "10", c:false}]},
+        { en: "In which year were some 'Scheduled Districts' created during the British period?", hi: "ब्रिटिश काल में से किस वर्ष में कुछ अनुसूचित जिले बनाये गये ?", options: [{en: "1882", hi: "1882", c:false}, {en: "1883", hi: "1883", c:false}, {en: "1874", hi: "1874", c:true}, {en: "1876", hi: "1876", c:false}]},
+        { en: "When did Delhi come to be known as the National Capital Region (NCR)?", hi: "दिल्ली को राष्ट्रीय राजधानी क्षेत्र (NCR) के रूप में कब से जाना जाता है ?", options: [{en: "1993", hi: "1993", c:false}, {en: "1992", hi: "1992", c:true}, {en: "1994", hi: "1994", c:false}, {en: "1995", hi: "1995", c:false}]},
+        { en: "In which part of the Constitution are the provisions relating to Union Territories mentioned?", hi: "संविधान के किस भाग में केंद्रशासित प्रदेश से संबंधी उपबंध का उल्लेख है-", options: [{en: "Part - 5", hi: "भाग- 5", c:false}, {en: "Part - 8", hi: "भाग- 8", c:true}, {en: "Part - 6", hi: "भाग- 6", c:false}, {en: "Part - 4", hi: "भाग- 4", c:false}]},
+        { en: "The administration of a Union Territory is carried out by:", hi: "केंद्रशासित प्रदेश का प्रशासन का संचालन किया जाता है-", options: [{en: "Prime Minister", hi: "प्रधानमंत्री", c:false}, {en: "President", hi: "राष्ट्रपति", c:true}, {en: "Home Minister", hi: "गृह मंत्री", c:false}, {en: "None of these", hi: "उपर्युक्त में से कोई नहीं", c:false}]},
+        { en: "Consider the statements: 1. Administrator of UT is an agent of President. 2. President can appoint Governor of a state as Administrator of adjacent UT.", hi: "कथनों पर विचार कीजिये: 1. केंद्रशासित प्रदेश का प्रशासक राष्ट्रपति का एजेंट होता है। 2. राष्ट्रपति किसी राज्य के राज्यपाल को राज्य से सटे केंद्रशासित प्रदेशों का प्रशासक नियुक्त कर सकता है।", options: [{en: "Only 1", hi: "केवल 1", c:false}, {en: "Only 2", hi: "केवल 2", c:false}, {en: "1 and 2 both", hi: "1 और 2 दोनों", c:true}, {en: "Neither 1 nor 2", hi: "न तो 1 न ही 2", c:false}]},
+        { en: "Which of the following UTs does not have a Legislative Assembly?", hi: "निम्नलिखित में से किन केंद्रशासित प्रदेश में विधानसभा की व्यवस्था नहीं है ?", options: [{en: "Jammu-Kashmir", hi: "जम्मू-कश्मीर", c:false}, {en: "Ladakh", hi: "लद्दाख", c:true}, {en: "Delhi", hi: "दिल्ली", c:false}, {en: "Puducherry", hi: "पुडुचेरी", c:false}]},
+        { en: "On which subjects can the Delhi government make laws from the State List?", hi: "दिल्ली सरकार किन विषयों को छोड़कर राज्य सूची पर कानून बना सकती है ?", options: [{en: "Public Order", hi: "लोक व्यवस्था", c:false}, {en: "Land", hi: "भूमि", c:false}, {en: "Police", hi: "पुलिस", c:false}, {en: "All of these", hi: "इनमें से सभी।", c:true}]},
+        { en: "The number of members in the Delhi Legislative Assembly is:", hi: "दिल्ली विधानसभा में सदस्यों की संख्या है-", options: [{en: "70", hi: "70", c:true}, {en: "75", hi: "75", c:false}, {en: "76", hi: "76", c:false}, {en: "84", hi: "84", c:false}]},
+        { en: "The number of ministers in Delhi's Cabinet is fixed at:", hi: "दिल्ली में मंत्रिमंडल की संख्या निर्धारित है-", options: [{en: "10% of Assembly seats", hi: "विधानसभा सीटों की 10%", c:true}, {en: "20% of Assembly seats", hi: "विधानसभा सीटों की 20%", c:false}, {en: "30% of Assembly seats", hi: "विधानसभा सीटों की 30%", c:false}, {en: "15% of Assembly seats", hi: "विधानसभा सीटों की 15%", c:false}]},
+        { en: "Which is the nodal agency for legislation, finance, and budget services in UTs under Govt of India Rules 1961?", hi: "भारत सरकार नियमावली 1961 के अंतर्गत संघीय क्षेत्रों में विधायन, वित्त एवं बजट सेवाओं के लिये नोडल एजेंसी है ?", options: [{en: "Ministry of Defence", hi: "रक्षा मंत्रालय", c:false}, {en: "Ministry of Home Affairs", hi: "गृह मंत्रालय", c:true}, {en: "Ministry of Housing", hi: "आवास मंत्रालय", c:false}, {en: "PMO", hi: "प्रधानमंत्री कार्यालय", c:false}]},
+        { en: "In which of the following UTs is a Lieutenant Governor appointed?", hi: "निम्नलिखित में से किन केंद्रशासित प्रदेशों में उपराज्यपाल की नियुक्ति की जाती है ?", options: [{en: "Jammu-Kashmir", hi: "जम्मू-कश्मीर", c:false}, {en: "Delhi", hi: "दिल्ली", c:false}, {en: "Puducherry", hi: "पुडुचेरी", c:false}, {en: "All of the above", hi: "उपर्युक्त में सभी।", c:true}]}
+    ];
+
+    let idx = 0, score = 0, timer, timeLeft;
+    const aCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    function play(type) {
+        const o = aCtx.createOscillator(), g = aCtx.createGain();
+        o.connect(g); g.connect(aCtx.destination);
+        o.frequency.value = type === 'c' ? 880 : 200;
+        g.gain.exponentialRampToValueAtTime(0.01, aCtx.currentTime + 0.3);
+        o.start(); o.stop(aCtx.currentTime + 0.3);
+    }
+
+    function beginQuiz() {
+        document.getElementById('start-screen').classList.add('hidden');
+        document.getElementById('quiz-screen').classList.remove('hidden');
+        loadQuestion();
+    }
+
+    function loadQuestion() {
+        if(idx >= data.length) return showFinal();
+        const q = data[idx];
+        document.getElementById('q-count').innerText = `${idx+1}/${data.length}`;
+        document.getElementById('main-q').innerHTML = `${q.en}<span class="hi">${q.hi}</span>`;
+        const grid = document.getElementById('options-grid');
+        grid.innerHTML = '';
+        q.options.forEach(opt => {
+            const b = document.createElement('button');
+            b.className = 'option-btn';
+            b.innerHTML = `<span>${opt.en}</span><span class="hi">${opt.hi}</span>`;
+            b.onclick = () => check(opt, b);
+            grid.appendChild(b);
+        });
+        document.getElementById('progress-bar').style.width = ((idx/data.length)*100)+'%';
+        startTimer();
+    }
+
+    function startTimer() {
+        clearInterval(timer);
+        const limit = parseInt(document.getElementById('time-input').value);
+        if(limit <= 0) { document.getElementById('timer').innerText = ''; return; }
+        timeLeft = limit;
+        const el = document.getElementById('timer');
+        el.innerText = `⏱ ${timeLeft}s`;
+        el.classList.remove('pulse-red');
+        timer = setInterval(() => {
+            timeLeft--;
+            el.innerText = `⏱ ${timeLeft}s`;
+            if(timeLeft < 5) el.classList.add('pulse-red');
+            if(timeLeft <= 0) { clearInterval(timer); check({c:false}, null); }
+        }, 1000);
+    }
+
+    function check(opt, btn) {
+        clearInterval(timer);
+        const btns = document.querySelectorAll('.option-btn');
+        btns.forEach(b => b.disabled = true);
+        if(opt.c) {
+            score++; play('c'); if(btn) btn.style.background = 'var(--correct)';
+        } else {
+            play('w'); if(btn) btn.style.background = 'var(--wrong)';
+            const em = document.getElementById('emoji-layer');
+            em.style.display = 'block'; em.classList.add('shake');
+            setTimeout(() => { em.style.display = 'none'; em.classList.remove('shake'); }, 800);
+            btns.forEach((b, i) => { if(data[idx].options[i].c) b.style.background = 'var(--correct)'; });
+        }
+        document.getElementById('score').innerText = `Score: ${score}`;
+        setTimeout(() => { idx++; loadQuestion(); }, 1500);
+    }
+
+    function showFinal() {
+        clearInterval(timer);
+        document.getElementById('quiz-screen').classList.add('hidden');
+        document.getElementById('end-screen').classList.remove('hidden');
+        document.getElementById('progress-bar').style.width = '100%';
+        const p = (score/data.length)*100;
+        document.getElementById('result-title').innerText = p >= 80 ? "🏆 Outstanding!" : p >= 50 ? "👏 Well Done!" : "📚 Keep Practicing!";
+        document.getElementById('final-stats').innerText = `${score} / ${data.length}`;
+    }
+</script>
+</body>
+</html>
